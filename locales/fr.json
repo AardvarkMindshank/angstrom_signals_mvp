@@ -2470,5 +2470,19 @@
   "**Price around the trade**": "**Le prix autour du trade**",
   "No clear patterns yet. They show once there are enough trades behind them.": "Pas encore de tendance nette. Elles apparaissent dès qu'il y a assez de trades derrière.",
   "Describes your past trades. Not advice.": "Décrit vos trades passés. Pas un conseil.",
-  "**Patterns in your own trades**": "**Tendances dans vos propres trades**"
+  "**Patterns in your own trades**": "**Tendances dans vos propres trades**",
+  "Review": "Revue",
+  "What happened": "Ce qui s'est passé",
+  "One pattern worth noticing": "Une tendance à remarquer",
+  "One question for you": "Une question pour vous",
+  "A plain summary of the facts: the written review didn't pass our checks this time.": "Un simple résumé des faits : la revue rédigée n'a pas passé nos vérifications cette fois.",
+  "The weekly review is being set up. Please check back soon.": "La revue hebdomadaire est en cours de mise en place. Revenez bientôt.",
+  "No trades closed that week.": "Aucun trade clôturé cette semaine-là.",
+  "Write my review": "Rédiger ma revue",
+  "Writing your review…": "Rédaction de votre revue…",
+  "Trades mentioned": "Trades mentionnés",
+  "{a} to {b}": "{a} au {b}",
+  "Written once from your own trades, then kept. Describes, never advises.": "Rédigée une fois à partir de vos propres trades, puis conservée. Décrit, ne conseille jamais.",
+  "A short review of your week, written for you each week. Comes with Pro.": "Une courte revue de votre semaine, rédigée pour vous chaque semaine. Incluse avec Pro.",
+  "**Weekly review**": "**Revue hebdomadaire**"
 }

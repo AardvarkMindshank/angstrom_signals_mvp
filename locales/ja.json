@@ -2470,5 +2470,19 @@
   "**Price around the trade**": "**取引前後の価格**",
   "No clear patterns yet. They show once there are enough trades behind them.": "まだはっきりしたパターンはありません。十分な取引がたまると表示されます。",
   "Describes your past trades. Not advice.": "過去の取引の記述です。助言ではありません。",
-  "**Patterns in your own trades**": "**あなた自身の取引のパターン**"
+  "**Patterns in your own trades**": "**あなた自身の取引のパターン**",
+  "Review": "レビュー",
+  "What happened": "何が起きたか",
+  "One pattern worth noticing": "注目したいパターン",
+  "One question for you": "あなたへの問い",
+  "A plain summary of the facts: the written review didn't pass our checks this time.": "事実のみの簡単なまとめです。今回は文章のレビューがチェックを通りませんでした。",
+  "The weekly review is being set up. Please check back soon.": "週次レビューを準備中です。しばらくしてからご確認ください。",
+  "No trades closed that week.": "その週に決済された取引はありません。",
+  "Write my review": "レビューを書く",
+  "Writing your review…": "レビューを作成中…",
+  "Trades mentioned": "言及された取引",
+  "{a} to {b}": "{a}〜{b}",
+  "Written once from your own trades, then kept. Describes, never advises.": "あなた自身の取引から一度だけ書かれ、保存されます。記述のみで、助言はしません。",
+  "A short review of your week, written for you each week. Comes with Pro.": "1週間を振り返る短いレビューを毎週お届けします。Pro に含まれます。",
+  "**Weekly review**": "**週次レビュー**"
 }

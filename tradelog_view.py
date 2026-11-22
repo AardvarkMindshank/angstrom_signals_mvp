@@ -283,6 +283,75 @@ def _patterns_html(trips: list[dict], copied: bool) -> str:
             + f"<div class='tl-note'>{html.escape(t('Describes your past trades. Not advice.'))}</div>")
 
 
+def _review_card(st, supabase, trips: list[dict], snaps: dict, plan: str, ai: str | None, zone) -> None:
+    """🧭 The weekly review (Pro and Elite): last week's trades, written by the AI from checked facts when first
+    opened, then kept. Narrow it to an asset class or a platform."""
+    import i18n
+    import plans
+    import tradelog_coach
+
+    with st.container(key="tl_card_review"):
+        if not plans.includes(plan, "pro"):
+            st.html(CSS + f"<div class='tl-h'>{html.escape(t('**Weekly review**').strip('*'))}</div>"
+                    f"<div style='font-size:.9rem;opacity:.8'>{html.escape(t('A short review of your week, written for you each week. Comes with Pro.'))}</div>")
+            return
+        start, end = tradelog_coach.week_of(datetime.now(zone).date())
+        st.html(CSS + f"<div class='tl-h'>{html.escape(t('**Weekly review**').strip('*'))} · "
+                + html.escape(t("{a} to {b}", a=start.strftime("%d %b"), b=end.strftime("%d %b %Y"))) + "</div>")
+        own = [x for x in trips if not x.get("copied")]
+        scopes = ["all"] + [f"class:{c}" for c in sorted({x.get("asset_class") for x in own if x.get("asset_class")})]
+        if len({x.get("platform") for x in own}) > 1:
+            scopes += [f"platform:{p}" for p in sorted({x.get("platform") for x in own})]
+        scope = st.pills(t("Review"), scopes, default="all", key="tl_review_scope", label_visibility="collapsed",
+                         format_func=lambda sc: t("All") if sc == "all" else (
+                             t(CLASS_WORDS.get(sc[6:], "Other")) if sc.startswith("class:") else
+                             PLATFORMS.get(sc[9:], sc[9:]))) or "all"
+        try:
+            saved = (supabase.table("trade_reviews").select("review").eq("week_start", start.isoformat())
+                     .eq("scope", scope).limit(1).execute().data or [])
+        except Exception:
+            st.caption(t("The weekly review is being set up. Please check back soon."))
+            return
+        review = (saved[0] or {}).get("review") if saved else None
+        fact = tradelog_coach.facts(trips, snaps, (start, end), zone, scope)
+        if review is None:
+            if not fact["trades"]:
+                st.caption(t("No trades closed that week."))
+                return
+            if not st.button(t("Write my review"), key=f"tl_review_go_{scope}", type="primary",
+                             icon=":material/edit_note:",
+                             help=t("Written once from your own trades, then kept. Describes, never advises.")):
+                return
+            import ai_providers
+
+            code = i18n.current()
+            language = next((x["english"] for x in i18n.LANGUAGES if x["code"] == code), "English")
+            with st.spinner(t("Writing your review…")):
+                review = tradelog_coach.write(fact, ai_providers.pick("navigator", ai), language=language)
+            try:
+                supabase.table("trade_reviews").upsert({
+                    "user_id": trips[0]["user_id"], "week_start": start.isoformat(), "scope": scope,
+                    "review": review, "provider": ai_providers.pick("navigator", ai)[:20], "language": code[:10],
+                }, on_conflict="user_id,week_start,scope").execute()
+            except Exception:
+                pass
+        parts = [(t("What happened"), review.get("happened")), (t("One pattern worth noticing"), review.get("pattern")),
+                 (t("One question for you"), review.get("question"))]
+        st.html(CSS + "".join(f"<div style='margin:6px 0 10px'><div style='font-size:.78rem;letter-spacing:.04em;"
+                              f"text-transform:uppercase;opacity:.7'>{html.escape(h)}</div>"
+                              f"<div style='font-size:.95rem;line-height:1.5'>{html.escape(str(b or ''))}</div></div>"
+                              for h, b in parts))
+        if review.get("plain"):
+            st.caption(t("A plain summary of the facts: the written review didn't pass our checks this time."))
+        cited = [x for x in fact["trades"] if x["id"] in set(review.get("cited") or [])]
+        if cited:
+            with st.expander(t("Trades mentioned")):
+                st.dataframe(pd.DataFrame([{"": x["id"], t("Asset"): x["asset"], t("Result (USD)"): x["result_usd"],
+                                            t("Held (days)"): x["held_days"]} for x in cited]),
+                             hide_index=True, width="stretch", column_config=_usd_cols(st, t("Result (USD)")))
+        st.caption(t("Describes your past trades. Not advice."))
+
+
 def _overview(st, trips: list[dict], snaps: dict, copied: bool) -> None:
     _headline(st, tradelog.stats(trips, copied))
     curve = tradelog.equity_curve(trips, copied)
@@ -468,12 +537,12 @@ def _detail(st, supabase, trip: dict, snaps: dict, notes: dict, zone) -> None:
 
 # ---- the page ------------------------------------------------------------------------------------------------
 
-def render(st, supabase, plan: str) -> None:
+def render(st, supabase, plan: str, ai: str | None = None) -> None:
     """The main-page Trade Log, as a fragment: a filter, tab or row picked redraws only this section."""
-    _render_fragment(st, supabase, plan)
+    _render_fragment(st, supabase, plan, ai)
 
 
-def _render(st, supabase, plan: str) -> None:
+def _render(st, supabase, plan: str, ai: str | None = None) -> None:
     if CONNECTIONS.get(plan, 0) == 0:
         st.info(t("The Trade Log comes with Plus: connect eToro read-only and see your own trades against the "
                   "market conditions at the time."))
@@ -516,6 +585,7 @@ def _render(st, supabase, plan: str) -> None:
         pick, copied = _filters(st, "all")
         shown = [x for x in trips if pick is None or x.get("asset_class") == pick]
         _overview(st, shown, snaps, copied)
+        _review_card(st, supabase, trips, snaps, plan, ai, zone)
     for tab, conn in zip(tabs[1:], conns):
         with tab:
             pick, copied = _filters(st, conn["id"])

@@ -2470,5 +2470,19 @@
   "**Price around the trade**": "**거래 전후 가격**",
   "No clear patterns yet. They show once there are enough trades behind them.": "아직 뚜렷한 패턴이 없습니다. 거래가 충분히 쌓이면 표시됩니다.",
   "Describes your past trades. Not advice.": "지난 거래에 대한 설명입니다. 조언이 아닙니다.",
-  "**Patterns in your own trades**": "**내 거래의 패턴**"
+  "**Patterns in your own trades**": "**내 거래의 패턴**",
+  "Review": "리뷰",
+  "What happened": "무슨 일이 있었나",
+  "One pattern worth noticing": "눈여겨볼 패턴 하나",
+  "One question for you": "당신에게 드리는 질문 하나",
+  "A plain summary of the facts: the written review didn't pass our checks this time.": "사실만 담은 간단한 요약입니다. 이번에는 작성된 리뷰가 검사를 통과하지 못했습니다.",
+  "The weekly review is being set up. Please check back soon.": "주간 리뷰를 준비하고 있습니다. 잠시 후 다시 확인해 주세요.",
+  "No trades closed that week.": "그 주에 청산된 거래가 없습니다.",
+  "Write my review": "내 리뷰 쓰기",
+  "Writing your review…": "리뷰를 작성하는 중…",
+  "Trades mentioned": "언급된 거래",
+  "{a} to {b}": "{a} ~ {b}",
+  "Written once from your own trades, then kept. Describes, never advises.": "내 거래로 한 번 작성한 뒤 보관합니다. 설명만 하고 조언하지 않습니다.",
+  "A short review of your week, written for you each week. Comes with Pro.": "한 주를 돌아보는 짧은 리뷰를 매주 작성해 드립니다. Pro에 포함됩니다.",
+  "**Weekly review**": "**주간 리뷰**"
 }

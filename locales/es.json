@@ -2470,5 +2470,19 @@
   "**Price around the trade**": "**El precio alrededor de la operación**",
   "No clear patterns yet. They show once there are enough trades behind them.": "Aún no hay patrones claros. Aparecen cuando hay suficientes operaciones detrás.",
   "Describes your past trades. Not advice.": "Describe tus operaciones pasadas. No es un consejo.",
-  "**Patterns in your own trades**": "**Patrones en tus propias operaciones**"
+  "**Patterns in your own trades**": "**Patrones en tus propias operaciones**",
+  "Review": "Repaso",
+  "What happened": "Qué pasó",
+  "One pattern worth noticing": "Un patrón que vale la pena notar",
+  "One question for you": "Una pregunta para ti",
+  "A plain summary of the facts: the written review didn't pass our checks this time.": "Un resumen sencillo de los hechos: el repaso escrito no pasó nuestras comprobaciones esta vez.",
+  "The weekly review is being set up. Please check back soon.": "El repaso semanal se está preparando. Vuelve pronto.",
+  "No trades closed that week.": "No se cerró ninguna operación esa semana.",
+  "Write my review": "Escribir mi repaso",
+  "Writing your review…": "Escribiendo tu repaso…",
+  "Trades mentioned": "Operaciones mencionadas",
+  "{a} to {b}": "{a} al {b}",
+  "Written once from your own trades, then kept. Describes, never advises.": "Se escribe una vez a partir de tus propias operaciones y se guarda. Describe, nunca aconseja.",
+  "A short review of your week, written for you each week. Comes with Pro.": "Un breve repaso de tu semana, escrito para ti cada semana. Incluido con Pro.",
+  "**Weekly review**": "**Repaso semanal**"
 }

@@ -2470,5 +2470,19 @@
   "**Price around the trade**": "**交易前后的价格**",
   "No clear patterns yet. They show once there are enough trades behind them.": "还没有明显的规律。交易足够多时才会显示。",
   "Describes your past trades. Not advice.": "描述你过去的交易，不构成建议。",
-  "**Patterns in your own trades**": "**你自己交易中的规律**"
+  "**Patterns in your own trades**": "**你自己交易中的规律**",
+  "Review": "回顾",
+  "What happened": "发生了什么",
+  "One pattern worth noticing": "值得注意的一个规律",
+  "One question for you": "给你的一个问题",
+  "A plain summary of the facts: the written review didn't pass our checks this time.": "仅为事实的简要汇总：这次写出的回顾未通过我们的检查。",
+  "The weekly review is being set up. Please check back soon.": "每周回顾正在准备中，请稍后再来。",
+  "No trades closed that week.": "那一周没有平仓的交易。",
+  "Write my review": "写我的回顾",
+  "Writing your review…": "正在撰写你的回顾…",
+  "Trades mentioned": "提到的交易",
+  "{a} to {b}": "{a} 至 {b}",
+  "Written once from your own trades, then kept. Describes, never advises.": "根据你自己的交易写一次并保存。只描述，从不提供建议。",
+  "A short review of your week, written for you each week. Comes with Pro.": "每周为你撰写的一份简短周回顾。随 Pro 提供。",
+  "**Weekly review**": "**每周回顾**"
 }

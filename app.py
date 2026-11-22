@@ -17129,7 +17129,7 @@ def _tradelog_section() -> None:
         try:
             import tradelog_view
 
-            tradelog_view.render(st, supabase, current_plan())
+            tradelog_view.render(st, supabase, current_plan(), (prefs.get("settings") or {}).get("ai_navigator"))
         except Exception as exc:
             st.caption(t("The Trade Log could not load just now."))
             print(f"Trade Log view failed: {type(exc).__name__}")

@@ -2470,5 +2470,19 @@
   "**Price around the trade**": "**Giá quanh giao dịch**",
   "No clear patterns yet. They show once there are enough trades behind them.": "Chưa có mô thức rõ ràng. Chúng sẽ hiện khi có đủ giao dịch.",
   "Describes your past trades. Not advice.": "Mô tả các giao dịch đã qua của bạn. Không phải lời khuyên.",
-  "**Patterns in your own trades**": "**Mô thức trong giao dịch của chính bạn**"
+  "**Patterns in your own trades**": "**Mô thức trong giao dịch của chính bạn**",
+  "Review": "Đánh giá",
+  "What happened": "Chuyện gì đã xảy ra",
+  "One pattern worth noticing": "Một mô thức đáng chú ý",
+  "One question for you": "Một câu hỏi cho bạn",
+  "A plain summary of the facts: the written review didn't pass our checks this time.": "Tóm tắt đơn giản các dữ kiện: bản đánh giá viết lần này chưa qua được bước kiểm tra.",
+  "The weekly review is being set up. Please check back soon.": "Đánh giá hằng tuần đang được thiết lập. Vui lòng quay lại sau.",
+  "No trades closed that week.": "Không có giao dịch nào đóng trong tuần đó.",
+  "Write my review": "Viết đánh giá cho tôi",
+  "Writing your review…": "Đang viết đánh giá…",
+  "Trades mentioned": "Các giao dịch được nhắc đến",
+  "{a} to {b}": "{a} đến {b}",
+  "Written once from your own trades, then kept. Describes, never advises.": "Viết một lần từ chính giao dịch của bạn rồi lưu lại. Chỉ mô tả, không bao giờ khuyên.",
+  "A short review of your week, written for you each week. Comes with Pro.": "Một bản đánh giá ngắn về tuần của bạn, viết riêng cho bạn mỗi tuần. Có trong gói Pro.",
+  "**Weekly review**": "**Đánh giá hằng tuần**"
 }

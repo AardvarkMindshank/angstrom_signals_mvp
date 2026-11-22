@@ -2470,5 +2470,19 @@
   "**Price around the trade**": "**İşlem çevresindeki fiyat**",
   "No clear patterns yet. They show once there are enough trades behind them.": "Henüz net bir örüntü yok. Arkasında yeterli işlem olunca görünür.",
   "Describes your past trades. Not advice.": "Geçmiş işlemlerinizi anlatır. Tavsiye değildir.",
-  "**Patterns in your own trades**": "**Kendi işlemlerinizdeki örüntüler**"
+  "**Patterns in your own trades**": "**Kendi işlemlerinizdeki örüntüler**",
+  "Review": "Değerlendirme",
+  "What happened": "Ne oldu",
+  "One pattern worth noticing": "Dikkat çeken bir örüntü",
+  "One question for you": "Size bir soru",
+  "A plain summary of the facts: the written review didn't pass our checks this time.": "Olguların sade bir özeti: yazılı değerlendirme bu kez kontrollerimizden geçemedi.",
+  "The weekly review is being set up. Please check back soon.": "Haftalık değerlendirme hazırlanıyor. Lütfen yakında tekrar bakın.",
+  "No trades closed that week.": "O hafta kapanan işlem yok.",
+  "Write my review": "Değerlendirmemi yaz",
+  "Writing your review…": "Değerlendirmeniz yazılıyor…",
+  "Trades mentioned": "Bahsedilen işlemler",
+  "{a} to {b}": "{a} - {b}",
+  "Written once from your own trades, then kept. Describes, never advises.": "Kendi işlemlerinizden bir kez yazılır ve saklanır. Anlatır, asla tavsiye vermez.",
+  "A short review of your week, written for you each week. Comes with Pro.": "Haftanızın kısa bir değerlendirmesi, her hafta sizin için yazılır. Pro ile gelir.",
+  "**Weekly review**": "**Haftalık değerlendirme**"
 }

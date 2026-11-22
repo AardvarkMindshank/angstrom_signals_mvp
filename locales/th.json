@@ -2470,5 +2470,19 @@
   "**Price around the trade**": "**ราคาช่วงที่เทรด**",
   "No clear patterns yet. They show once there are enough trades behind them.": "ยังไม่เห็นรูปแบบชัดเจน จะแสดงเมื่อมีจำนวนเทรดมากพอ",
   "Describes your past trades. Not advice.": "บรรยายเทรดที่ผ่านมาของคุณ ไม่ใช่คำแนะนำ",
-  "**Patterns in your own trades**": "**รูปแบบในเทรดของคุณเอง**"
+  "**Patterns in your own trades**": "**รูปแบบในเทรดของคุณเอง**",
+  "Review": "รีวิว",
+  "What happened": "เกิดอะไรขึ้น",
+  "One pattern worth noticing": "รูปแบบหนึ่งที่น่าสังเกต",
+  "One question for you": "คำถามหนึ่งข้อสำหรับคุณ",
+  "A plain summary of the facts: the written review didn't pass our checks this time.": "สรุปข้อเท็จจริงแบบเรียบง่าย: รีวิวที่เขียนไม่ผ่านการตรวจสอบของเราในครั้งนี้",
+  "The weekly review is being set up. Please check back soon.": "กำลังตั้งค่ารีวิวรายสัปดาห์ โปรดกลับมาอีกครั้งเร็วๆ นี้",
+  "No trades closed that week.": "ไม่มีเทรดที่ปิดในสัปดาห์นั้น",
+  "Write my review": "เขียนรีวิวของฉัน",
+  "Writing your review…": "กำลังเขียนรีวิวของคุณ…",
+  "Trades mentioned": "เทรดที่กล่าวถึง",
+  "{a} to {b}": "{a} ถึง {b}",
+  "Written once from your own trades, then kept. Describes, never advises.": "เขียนครั้งเดียวจากเทรดของคุณเอง แล้วเก็บไว้ บรรยาย ไม่แนะนำ",
+  "A short review of your week, written for you each week. Comes with Pro.": "รีวิวสั้นๆ ของสัปดาห์คุณ เขียนให้คุณทุกสัปดาห์ มาพร้อม Pro",
+  "**Weekly review**": "**รีวิวรายสัปดาห์**"
 }

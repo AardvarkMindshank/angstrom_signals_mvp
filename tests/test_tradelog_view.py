@@ -45,7 +45,10 @@ def _app(plan, empty=False, setup=False):
                            "fear": {"name": "VIX", "value": 16.2}, "asset_sentiment": {"value": None},
                            "market_sentiment": {"value": 55}}}]
     tables = {"trade_connections": [] if empty else [conn], "trade_round_trips": [] if empty else trips,
-              "trade_snapshots": snaps, "trade_notes": []}
+              "trade_snapshots": snaps, "trade_notes": [],
+              "trade_reviews": [{"review": {"happened": "Seven trades closed (T1).", "pattern": "Held losers longer (T2).",
+                                            "question": "What made you close T1 when you did?", "cited": ["T1"],
+                                            "plain": False}}]}
 
     class Db:
         def table(self, name):
@@ -64,6 +67,7 @@ def test_page_draws_for_pro_with_trades():
     assert not at.exception
     page = "".join(h.proto.body for h in at.get("html"))
     assert "Net result" in page and "tl-tiles" in page and "tl-bars" in page
+    assert "What made you close T1 when you did?" in page and "Patterns in your own trades" in page
     assert len(at.tabs) == 2                                       # Overview, eToro
     assert not at.text_input                                       # keys are set up in the sidebar, not here
 
