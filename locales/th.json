@@ -2456,5 +2456,10 @@
   "At exit": "ตอนออก",
   "Not known": "ไม่ทราบ",
   "too few to say": "น้อยเกินจะสรุป",
-  "**Manage connections**": "**จัดการการเชื่อมต่อ**"
+  "**Manage connections**": "**จัดการการเชื่อมต่อ**",
+  "None for this day.": "ไม่มีสำหรับวันที่เลือก",
+  "Edition": "ฉบับ",
+  "Today": "วันนี้",
+  "Yesterday": "เมื่อวาน",
+  "Pick a date": "เลือกวันที่"
 }

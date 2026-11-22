@@ -20,7 +20,7 @@ import app_version
 from score_colours import SENTIMENT_SHOWN_STEPS, reading_tone, sentiment_category_score, sentiment_spread, sentiment_stored, sentiment_text, sentiment_tone, sentiment_tone_js, sentiment_value
 from sentiment_spread import spread_html
 import traceback
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
@@ -9473,9 +9473,9 @@ def _video_urls(base: str, day: str) -> dict:
     return {"land": u("land.mp4"), "port": u("port.mp4"), "land_poster": u("land.jpg"), "port_poster": u("port.jpg")}
 
 
-def _video_player(key: str, pick: bool = False) -> None:
+def _video_player(key: str, pick: bool = False, day: str | None = None) -> None:
     """🎬 The daily video, laid out like the two briefings: name (and day) , the player, then Read it. The wide video on
-    a computer, the tall one on a phone. Logbook (pick): a date selector over the week kept."""
+    a computer, the tall one on a phone. Logbook: `day` is the date picked at the top of the Logbook."""
     base = _secret("url")
     meta = _videos_meta(base) if base else {}
     days = sorted((d for d, v in meta.items() if isinstance(v, dict)), reverse=True)
@@ -9491,7 +9491,13 @@ def _video_player(key: str, pick: bool = False) -> None:
         _briefing_title("🎬 " + t("Daily video"), "", tip)
         st.caption(t("The first video is on its way."))
         return
-    if pick:
+    if day is not None:
+        if day not in days:
+            _briefing_title("🎬 " + t("Daily video"), "", tip)
+            st.caption(t("None for this day."))
+            return
+        _briefing_title("🎬 " + t("Daily video"), label(day), tip)
+    elif pick:
         _briefing_title("🎬 " + t("Daily video"), "", tip)
         day = _briefing_pick(key, days, {d: label(d) for d in days})
     else:
@@ -9598,7 +9604,7 @@ if not _POPOUT_VIEW:
         print(f"Daily video pop-up failed: {type(exc).__name__}")
 
 
-def _forecast_player(key: str, pick: bool = False) -> None:
+def _forecast_player(key: str, pick: bool = False, day: str | None = None) -> None:
     """🌍 The Morning forecast (the same for everyone). Quick Snapshot: the newest edition, the day beside the name.
     Logbook (pick): the name, a date selector over the week kept, then the player and Read it, like the Passage Plan."""
     base = _secret("url")
@@ -9618,7 +9624,20 @@ def _forecast_player(key: str, pick: bool = False) -> None:
         _briefing_title("🌍 " + t("Morning forecast"), "", tip)
         st.caption(t("The first edition is on its way."))
         return
-    if pick:
+    if day is not None:                                  # Logbook: that day's editions, newest first
+        ids = sorted((k for k, v in meta.items() if isinstance(v, dict) and k[:10] == day),
+                     key=lambda k: str((meta.get(k) or {}).get("made_at") or ""), reverse=True)
+        if not ids:
+            _briefing_title("🌍 " + t("Morning forecast"), "", tip)
+            st.caption(t("None for this day."))
+            return
+        eid = ids[0]
+        if len(ids) > 1:
+            eid = st.segmented_control(
+                t("Edition"), ids, default=ids[0], key=f"forecast_edition_{key}_{day}", label_visibility="collapsed",
+                format_func=lambda k: t(briefing.EDITIONS.get(k[11:], {}).get("name", k[11:]))) or ids[0]
+        _briefing_title("🌍 " + t("Morning forecast"), label(eid), tip)
+    elif pick:
         _briefing_title("🌍 " + t("Morning forecast"), "", tip)
         ids = sorted((k for k, v in meta.items() if isinstance(v, dict)),
                      key=lambda k: str((meta.get(k) or {}).get("made_at") or ""), reverse=True)
@@ -9630,7 +9649,7 @@ def _forecast_player(key: str, pick: bool = False) -> None:
         st.write(_briefing_text(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.txt")) or t("Not available."))
 
 
-def _passage_player(key: str, show_button: bool = True, pick: bool = False) -> None:
+def _passage_player(key: str, show_button: bool = True, pick: bool = False, day: str | None = None) -> None:
     """🧭 The spoken Passage Plan (Pro and Elite), or a line saying it comes with Pro. Quick Snapshot: today's, the day
     beside the name. Logbook (pick): the name, a date selector over the week kept (spoken or written), then the player
     and Read it, like the Morning forecast."""
@@ -9651,7 +9670,8 @@ def _passage_player(key: str, show_button: bool = True, pick: bool = False) -> N
               if isinstance(meta.get(k), dict)}                       # day -> episode id (the newest that day)
     zone = briefing.local_now(b["zone"]).tzinfo
     written = {}
-    if pick:
+    chosen = day
+    if pick or chosen is not None:
         for r in navigator.recent_plans(supabase, user_id, 14):     # newest first: keep the newest plan of each day
             day_key = pd.Timestamp(r["created_at"]).tz_convert(zone).strftime("%Y-%m-%d")
             written.setdefault(day_key, r.get("body") or "")
@@ -9663,7 +9683,13 @@ def _passage_player(key: str, show_button: bool = True, pick: bool = False) -> N
         return t("{day} · {length}", day=pd.Timestamp(d).strftime("%a %d %b"), length=length)
 
     day = briefing.newest(meta)[:10]
-    if pick:
+    if chosen is not None:
+        day = chosen if chosen in days else ""
+        _briefing_title("🧭 " + t("Your Passage Plan"), label(day) if day else "", tip)
+        if not day:
+            st.caption(t("None for this day."))
+            return
+    elif pick:
         _briefing_title("🧭 " + t("Your Passage Plan"), "", tip)
         day = _briefing_pick(key, days, {d: label(d) for d in days}) if days else ""
     else:
@@ -9692,12 +9718,50 @@ def _passage_player(key: str, show_button: bool = True, pick: bool = False) -> N
         st.rerun(scope="fragment")
 
 
+def _logbook_days() -> list[str]:
+    """Every day the Logbook has something for (video, Morning forecast or Passage Plan), newest first."""
+    base = _secret("url")
+    if not base:
+        return []
+    days = {d for d, v in _videos_meta(base).items() if isinstance(v, dict)}
+    days |= {k[:10] for k, v in _briefing_meta(base, briefing.GENERAL).items() if isinstance(v, dict)}
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    token = briefing.settings_of(stored).get("token")
+    if token and plans.includes(current_plan(), "pro"):
+        days |= {k[:10] for k, v in _briefing_meta(base, token).items() if isinstance(v, dict)}
+    return sorted(days, reverse=True)
+
+
+def _logbook_date() -> str:
+    """📓 The Logbook's one date, at the top: Today, Yesterday, or a date picked back to the oldest one kept. The video,
+    the Morning forecast and the Passage Plan below all follow it."""
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    today = briefing.local_now(briefing.settings_of(stored)["zone"]).date()
+    days = _logbook_days()
+    oldest = min([pd.Timestamp(days[-1]).date()] if days else [today - timedelta(days=1)])
+    oldest = min(oldest, today - timedelta(days=1))
+    choice = st.segmented_control(
+        t("Date"), ["today", "yesterday", "pick"], default="today", key="logbook_when", label_visibility="collapsed",
+        format_func=lambda c: {"today": t("Today"), "yesterday": t("Yesterday"), "pick": "📅 " + t("Pick a date")}[c])
+    if choice == "pick":
+        when = st.date_input(t("Date"), value=st.session_state.get("logbook_picked", today - timedelta(days=2)),
+                             min_value=oldest, max_value=today, key="logbook_picked", label_visibility="collapsed",
+                             format="DD/MM/YYYY")
+    elif choice == "yesterday":
+        when = today - timedelta(days=1)
+    else:
+        when = today
+    day = pd.Timestamp(when).strftime("%Y-%m-%d")
+    st.session_state["logbook_day"] = day
+    return day
+
+
 @st.fragment
 def _logbook_panel() -> None:
     """📓 The Logbook's Passage Plan box (title, date selector, player, Read it: the same as the Morning forecast box
     above it), then its settings and podcast feeds."""
     with st.container(key="logbook_passage"):
-        _passage_player("logbook", show_button=False, pick=True)    # made each morning: no button needed
+        _passage_player("logbook", show_button=False, day=st.session_state.get("logbook_day"))   # made each morning
     if not plans.includes(current_plan(), "pro"):
         return
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
@@ -17116,10 +17180,11 @@ if _POPOUT_VIEW == "logbook":
     # 📓 The Logbook, in the left pull-out (inpanel=1) or its own window: the Passage Plan, the Morning forecast.
     if str(st.query_params.get("inpanel") or "") != "1":
         st.markdown("### 📓 " + t("Logbook"))
+    _day = _logbook_date()
     with st.container(key="logbook_video"):
-        _video_player("logbook_video", pick=True)
+        _video_player("logbook_video", day=_day)
     with st.container(key="logbook_forecast"):
-        _forecast_player("logbook_view", pick=True)
+        _forecast_player("logbook_view", day=_day)
     _logbook_panel()
     st.stop()
 

@@ -2456,5 +2456,10 @@
   "At exit": "Na saída",
   "Not known": "Desconhecido",
   "too few to say": "poucas para concluir",
-  "**Manage connections**": "**Gerenciar conexões**"
+  "**Manage connections**": "**Gerenciar conexões**",
+  "None for this day.": "Nada para este dia.",
+  "Edition": "Edição",
+  "Today": "Hoje",
+  "Yesterday": "Ontem",
+  "Pick a date": "Escolher data"
 }

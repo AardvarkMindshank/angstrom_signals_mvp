@@ -2456,5 +2456,10 @@
   "At exit": "出场时",
   "Not known": "未知",
   "too few to say": "太少，无法判断",
-  "**Manage connections**": "**管理连接**"
+  "**Manage connections**": "**管理连接**",
+  "None for this day.": "这一天没有。",
+  "Edition": "版本",
+  "Today": "今天",
+  "Yesterday": "昨天",
+  "Pick a date": "选择日期"
 }

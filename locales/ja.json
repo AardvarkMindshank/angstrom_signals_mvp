@@ -2456,5 +2456,10 @@
   "At exit": "エグジット時",
   "Not known": "不明",
   "too few to say": "判断するには少なすぎます",
-  "**Manage connections**": "**接続を管理**"
+  "**Manage connections**": "**接続を管理**",
+  "None for this day.": "この日の分はありません。",
+  "Edition": "版",
+  "Today": "今日",
+  "Yesterday": "昨日",
+  "Pick a date": "日付を選ぶ"
 }

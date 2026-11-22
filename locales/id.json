@@ -2456,5 +2456,10 @@
   "At exit": "Saat keluar",
   "Not known": "Tidak diketahui",
   "too few to say": "terlalu sedikit untuk disimpulkan",
-  "**Manage connections**": "**Kelola koneksi**"
+  "**Manage connections**": "**Kelola koneksi**",
+  "None for this day.": "Tidak ada untuk tanggal tersebut.",
+  "Edition": "Edisi",
+  "Today": "Hari ini",
+  "Yesterday": "Kemarin",
+  "Pick a date": "Pilih tanggal"
 }

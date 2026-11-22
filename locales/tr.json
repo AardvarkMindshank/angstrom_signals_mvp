@@ -2456,5 +2456,10 @@
   "At exit": "Çıkışta",
   "Not known": "Bilinmiyor",
   "too few to say": "sonuç için çok az",
-  "**Manage connections**": "**Bağlantıları yönet**"
+  "**Manage connections**": "**Bağlantıları yönet**",
+  "None for this day.": "Bu gün için yok.",
+  "Edition": "Baskı",
+  "Today": "Bugün",
+  "Yesterday": "Dün",
+  "Pick a date": "Tarih seç"
 }

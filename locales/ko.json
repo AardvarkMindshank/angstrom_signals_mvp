@@ -2456,5 +2456,10 @@
   "At exit": "청산 시",
   "Not known": "알 수 없음",
   "too few to say": "판단하기엔 너무 적음",
-  "**Manage connections**": "**연결 관리**"
+  "**Manage connections**": "**연결 관리**",
+  "None for this day.": "이 날에는 없습니다.",
+  "Edition": "판",
+  "Today": "오늘",
+  "Yesterday": "어제",
+  "Pick a date": "날짜 선택"
 }

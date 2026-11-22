@@ -2456,5 +2456,10 @@
   "At exit": "Lúc ra",
   "Not known": "Không rõ",
   "too few to say": "quá ít để kết luận",
-  "**Manage connections**": "**Quản lý kết nối**"
+  "**Manage connections**": "**Quản lý kết nối**",
+  "None for this day.": "Không có cho ngày này.",
+  "Edition": "Ấn bản",
+  "Today": "Hôm nay",
+  "Yesterday": "Hôm qua",
+  "Pick a date": "Chọn ngày"
 }
