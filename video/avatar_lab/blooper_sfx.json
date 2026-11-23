@@ -1,0 +1,83 @@
+{
+ "about": "Sound effects for the bloopers (23 Nov 2026), made to match each clip's movement (MMAudio).",
+ "jobs": [
+  {
+   "id": "blooper_cat_chase_1_sfx",
+   "model": "fal-ai/mmaudio-v2",
+   "input": {
+    "video_url": "reports:avatar_lab/blooper_src/blooper_cat_chase_1.mp4",
+    "prompt": "cartoon chase: tiny scurrying rat feet on paper, a cat's surprised meow and hiss, paper maps rustling and flying, a comic skid and a soft thump, wooden ship cabin creaks",
+    "negative_prompt": "music, speech, talking, singing, voice, words",
+    "duration": 5.0,
+    "num_steps": 25,
+    "cfg_strength": 4.5,
+    "seed": 7
+   }
+  },
+  {
+   "id": "blooper_rat_pocket_1_sfx",
+   "model": "fal-ai/mmaudio-v2",
+   "input": {
+    "video_url": "reports:avatar_lab/blooper_src/blooper_rat_pocket_1.mp4",
+    "prompt": "cartoon kitchen: a tiny rat squeak, little nibbling and munching sounds, cloth rustling, a man's surprised 'hmm', pots clinking softly",
+    "negative_prompt": "music, speech, talking, singing, voice, words",
+    "duration": 5.04,
+    "num_steps": 25,
+    "cfg_strength": 4.5,
+    "seed": 7
+   }
+  },
+  {
+   "id": "blooper_admiral_cheese_1_sfx",
+   "model": "fal-ai/mmaudio-v2",
+   "input": {
+    "video_url": "reports:avatar_lab/blooper_src/blooper_admiral_cheese_1.mp4",
+    "prompt": "on a ship's deck: sails flapping gently in the wind, ropes creaking, seagulls far away, a tiny guilty rat squeak, a man's unimpressed 'hmph'",
+    "negative_prompt": "music, speech, talking, singing, voice, words",
+    "duration": 5.0,
+    "num_steps": 25,
+    "cfg_strength": 4.5,
+    "seed": 7
+   }
+  },
+  {
+   "id": "blooper_rat_wave_1_sfx",
+   "model": "fal-ai/mmaudio-v2",
+   "input": {
+    "video_url": "reports:avatar_lab/blooper_src/blooper_rat_wave_1.mp4",
+    "prompt": "a ship rolling on a big wave: timbers creaking and groaning, objects sliding across a wooden table, brass clinking, a candle sputtering, a tiny alarmed squeak",
+    "negative_prompt": "music, speech, talking, singing, voice, words",
+    "duration": 3.2,
+    "num_steps": 25,
+    "cfg_strength": 4.5,
+    "seed": 7
+   }
+  },
+  {
+   "id": "blooper_cook_wave_1_sfx",
+   "model": "fal-ai/mmaudio-v2",
+   "input": {
+    "video_url": "reports:avatar_lab/blooper_src/blooper_cook_wave_1.mp4",
+    "prompt": "a ship's galley rolling on a wave: copper pans clanging and swinging, timbers creaking, a man's comic 'whoa', plates rattling",
+    "negative_prompt": "music, speech, talking, singing, voice, words",
+    "duration": 3.0,
+    "num_steps": 25,
+    "cfg_strength": 4.5,
+    "seed": 7
+   }
+  },
+  {
+   "id": "blooper_cook_back_1_sfx",
+   "model": "fal-ai/mmaudio-v2",
+   "input": {
+    "video_url": "reports:avatar_lab/blooper_src/blooper_cook_back_1.mp4",
+    "prompt": "a cartoon comedy moment in a galley: a comic slide whistle, a man's embarrassed chuckle, gentle steam hissing, pans clinking softly",
+    "negative_prompt": "music, speech, talking, singing, voice, words",
+    "duration": 5.04,
+    "num_steps": 25,
+    "cfg_strength": 4.5,
+    "seed": 7
+   }
+  }
+ ]
+}

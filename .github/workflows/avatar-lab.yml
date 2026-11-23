@@ -110,7 +110,9 @@ jobs:
         env:
           FAL_KEY: ${{ secrets.FAL_KEY }}
           RECOVER: ${{ inputs.recover }}
-        run: python video/avatar_lab.py "video/avatar_lab/${{ inputs.spec }}" lab_in out/avatar_lab
+        run: |
+          git fetch -q origin reports || true     # for jobs that read a plain file from it (reports:...)
+          python video/avatar_lab.py "video/avatar_lab/${{ inputs.spec }}" lab_in out/avatar_lab
       - name: Keep (encrypted when the lab key is set)
         if: always() && inputs.check == '' && inputs.unlock == ''
         env:
