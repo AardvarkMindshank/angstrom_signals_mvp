@@ -121,3 +121,20 @@ jobs:
               gh workflow run daily-video.yml -R "$GITHUB_REPOSITORY" --ref main -f publish=true || true
             fi
           fi
+      - name: Post today's video to the socials at 08:00 Bangkok
+        # Once it is 08:00 in Bangkok and today's video is published, social-post.yml posts it once (it claims the day
+        # first, so a second start posts nothing). Not started again within 20 minutes of the last start.
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: |
+          day=$(python social_post.py --due 2>/dev/null | tail -1 || echo 0)
+          if [ "${day:-0}" != "0" ]; then
+            since=$(date -u -d "20 minutes ago" +%Y-%m-%dT%H:%M:%SZ)
+            recent=$(gh run list -R "$GITHUB_REPOSITORY" --workflow social-post.yml -L 5 --json createdAt \
+                     -q "[.[] | select(.createdAt > \"$since\")] | length" || echo 1)
+            if [ "${recent:-1}" = "0" ]; then
+              gh workflow run social-post.yml -R "$GITHUB_REPOSITORY" --ref main -f day="$day" -f claim=true || true
+            fi
+          fi

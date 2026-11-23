@@ -204,10 +204,52 @@ def post_x(day: str, caps: dict, links: dict) -> str:
 PLATFORMS = {"telegram": post_telegram, "youtube": post_youtube, "x": post_x, "email": post_email}
 
 
+POST_AT_HOUR = 8                           # 08:00 Bangkok (Angus, 23 Nov 2026): the video is made earlier, posted then
+POST_ZONE = "Asia/Bangkok"
+POST_FROM = "2026-11-24"                   # the first day posted this way (Monday 23 Nov was handled by hand)
+
+
+def due(now: datetime | None = None) -> str:
+    """Today's day (YYYY-MM-DD, Bangkok) when its video should be posted now: from 08:00, once the video is
+    published, and not posted yet. "" otherwise. The 5-minute worker (alerts.yml) asks this."""
+    from zoneinfo import ZoneInfo
+
+    local = (now or datetime.now(ZoneInfo(POST_ZONE))).astimezone(ZoneInfo(POST_ZONE))
+    if local.hour < POST_AT_HOUR:
+        return ""
+    day = local.date().isoformat()
+    if day < POST_FROM:
+        return ""
+    try:
+        meta = _get("video/videos.json").json()
+    except Exception:
+        return ""
+    if day not in meta or _get(f"video/{day}.posted").status_code == 200:
+        return ""
+    return day
+
+
+def claim(day: str) -> bool:
+    """Mark the day as posted before anything goes out, so two runs can never post it twice. True when this run
+    claimed it; False when another already had (the storage refuses to overwrite the marker)."""
+    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or ""
+    r = requests.post(f"{_base().rstrip('/')}/storage/v1/object/{briefing.BUCKET}/video/{day}.posted",
+                      headers={"Authorization": f"Bearer {key}", "apikey": key, "Content-Type": "text/plain",
+                               "x-upsert": "false"}, data=datetime.now().isoformat().encode(), timeout=30)
+    return r.status_code in (200, 201)
+
+
 def main() -> int:
     a = sys.argv
+    if "--due" in a:
+        print(due() or "0")
+        return 0
     day = a[a.index("--day") + 1] if "--day" in a else None
     only = set(a[a.index("--only") + 1].split(",")) if "--only" in a else set(PLATFORMS)
+    if "--claim" in a:
+        if not day or not claim(day):
+            print(f"{day or 'No day'}: already posted (or no day given); nothing sent.")
+            return 0
     day, entry, words = latest(day)
     caps, links = captions(day, entry, words), urls(day)
     for name, post in PLATFORMS.items():

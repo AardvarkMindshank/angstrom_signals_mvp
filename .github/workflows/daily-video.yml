@@ -84,22 +84,7 @@ jobs:
       - name: Make the video
         id: make
         run: NODE_PATH="$PWD/node_modules" python daily_video.py --library lib/avatar_lab --music music --out out/daily_video --edition "${{ inputs.edition }}" --presenter "${{ inputs.presenter }}" ${{ inputs.publish && '--publish' || '' }}
-      - name: Post to the social channels
-        if: inputs.publish
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHANNEL: ${{ secrets.TELEGRAM_CHANNEL }}
-          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
-          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
-          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
-          X_API_KEY: ${{ secrets.X_API_KEY }}
-          X_API_SECRET: ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_SECRET: ${{ secrets.X_ACCESS_SECRET }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          RESEND_FROM: ${{ secrets.RESEND_FROM }}
-          SOCIAL_PACK_TO: angus@marketnavi.ai
-        run: python social_post.py ${{ steps.make.outputs.day && format('--day {0}', steps.make.outputs.day) || '' }}
+      # The social channels are posted at 08:00 Bangkok by the 5-minute worker (alerts.yml → social-post.yml).
       - name: Keep (encrypted)
         if: always() && !inputs.publish
         run: |
