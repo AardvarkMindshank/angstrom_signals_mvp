@@ -336,6 +336,24 @@ def duration(path: Path) -> float:
     return float(out.strip())
 
 
+SPEECH_TAIL = 0.35              # the presenter holds still this long after the last word, then the shot ends
+
+
+def speech_seconds(path: Path) -> float:
+    """How long a presenter clip runs until the last word (plus a short tail). The talking-avatar tool sometimes pads
+    a clip with a second or two of mouth movement after the voice ends (23 Nov 2026: the Admiral's sign-off), so the
+    shot is cut where the clip's own sound goes quiet for good. The whole clip when it has no quiet tail."""
+    whole = duration(path)
+    out = subprocess.run(["ffmpeg", "-v", "info", "-i", str(path), "-vn", "-af", "silencedetect=n=-38dB:d=0.25",
+                          "-f", "null", "-"], capture_output=True, text=True).stderr
+    starts = [float(x) for x in re.findall(r"silence_start: ([0-9.]+)", out)]
+    ends = [float(x) for x in re.findall(r"silence_end: ([0-9.]+)", out)]
+    runs_out = starts and (len(ends) < len(starts) or ends[-1] >= whole - 0.1)   # ffmpeg closes it at the end
+    if runs_out and 0.5 < starts[-1] < whole:                                  # a silence that runs to the end
+        return round(min(whole, starts[-1] + SPEECH_TAIL), 3)
+    return whole
+
+
 def big_day(day: datetime, facts: dict | None) -> bool:
     """A CPI or jobs-report day (the week's events in the facts name it with today's date)."""
     when = day.strftime("%d %B").lstrip("0")
@@ -440,6 +458,7 @@ def rounded_mask(path: Path, w: int, h: int, radius: int = 36) -> None:
 
 
 EFFECTS = {"cook": "sway", "rat": "flicker", "ratd": "flicker", "nav": "zoom"}
+SWAY = 0.03                      # the Cook's galley rolls about 1.7 degrees each way (was 0.7; 23 Nov 2026)
 ZOOM = 0.72                      # the Navigator's clips: framed above the ship's wheel, which doesn't turn with her hands
 
 
@@ -449,9 +468,9 @@ def clip_effect(clip: str, bw: int, bh: int) -> str:
     fit = f"scale={bw}:{bh}:force_original_aspect_ratio=increase,crop={bw}:{bh},"
     effect = EFFECTS.get(clip.split("_")[0])
     if effect == "sway":
-        big_w, big_h = int(bw * 1.06) // 2 * 2, int(bh * 1.06) // 2 * 2
+        big_w, big_h = int(bw * 1.1) // 2 * 2, int(bh * 1.1) // 2 * 2
         return (f"scale={big_w}:{big_h}:force_original_aspect_ratio=increase,crop={big_w}:{big_h},"
-                f"rotate=a='0.012*sin(2*PI*t/4.5)':c=black,crop={bw}:{bh},")
+                f"rotate=a='{SWAY}*sin(2*PI*t/4.5)':c=black,crop={bw}:{bh},")
     if effect == "zoom":
         return f"crop=iw*{ZOOM}:ih*{ZOOM}:(iw-ow)/2:0," + fit
     if effect == "flicker":
@@ -545,15 +564,15 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     caps = {}
     for kind, clip in captain_clips(spec["weather"], rng, weekend, who):
         clip = pick_look(library, clip, rng)
-        caps[kind] = {"file": clip, "seconds": duration(library / clip)}
+        caps[kind] = {"file": clip, "seconds": speech_seconds(library / clip)}
     tag = f"ratd_tag_{rng.choice((1, 2))}_1.mp4"
     if who == "rat" and rng.random() < RAT_TAG_CHANCE and (library / tag).exists():
-        caps["tag"] = {"file": tag, "seconds": duration(library / tag)}
+        caps["tag"] = {"file": tag, "seconds": speech_seconds(library / tag)}
     guest = guest_for(day, facts, library)
     if guest:
         for kind, line in (("welcome", "welcome"), ("signoff", "signoff")):
             clip = pick_look(library, f"{guest}_{line}_1_1.mp4", rng)
-            caps[kind] = {"file": clip, "seconds": duration(library / clip), "title": GUESTS[guest]}
+            caps[kind] = {"file": clip, "seconds": speech_seconds(library / clip), "title": GUESTS[guest]}
         spec["guest"] = {"key": guest, "title": GUESTS[guest]}
     segs = timeline(caps, narr)
     music = music_dir / MUSIC.get(spec["weather"], "3-Cloudy.mp3")

@@ -224,3 +224,23 @@ def test_the_admiral_comes_on_big_days_and_the_new_crew_moves(tmp_path):
     narr = {k: {"file": f"{k}.wav", "seconds": 2.0} for k in ("date", "close")}
     kinds = [s["kind"] for s in dv.timeline(caps, narr)]
     assert kinds.index("tag") == kinds.index("signoff") + 1 and kinds[-1] == "close"
+
+
+def test_speech_seconds_cuts_a_silent_tail(tmp_path):
+    """A presenter clip padded with silent mouth movement ends shortly after the last word."""
+    import subprocess
+    clip = tmp_path / "admiral_signoff_1_1.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=blue:s=64x64:d=5",
+                    "-f", "lavfi", "-i", "sine=f=300:d=3", "-af", "apad=whole_dur=5", "-t", "5",
+                    "-c:v", "libx264", "-c:a", "aac", str(clip)], check=True)
+    secs = dv.speech_seconds(clip)
+    assert 3.0 < secs < 3.6
+
+
+def test_speech_seconds_keeps_a_clip_that_talks_to_the_end(tmp_path):
+    import subprocess
+    clip = tmp_path / "cap_welcome_1_1.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "lavfi", "-i", "color=c=blue:s=64x64:d=3",
+                    "-f", "lavfi", "-i", "sine=f=300:d=3", "-t", "3", "-c:v", "libx264", "-c:a", "aac", str(clip)],
+                   check=True)
+    assert abs(dv.speech_seconds(clip) - dv.duration(clip)) < 0.01
