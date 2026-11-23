@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import sys
 from datetime import datetime
 
@@ -27,7 +28,10 @@ def _base() -> str:
 
 
 def _get(path: str) -> requests.Response:
-    return requests.get(briefing.public_url(_base(), path), timeout=30)
+    """A fresh copy, never a cached one: the index is read seconds after the new video is uploaded (23 Nov 2026 the
+    cached index still named Sunday, so Sunday's video went out on Monday)."""
+    return requests.get(briefing.public_url(_base(), path), params={"fresh": str(int(time.time()))},
+                        headers={"Cache-Control": "no-cache"}, timeout=30)
 
 
 def latest(day: str | None = None) -> tuple[str, dict, str]:

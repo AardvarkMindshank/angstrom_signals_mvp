@@ -18,6 +18,7 @@ music is the morning's weather track, dipping under the voice. No brand name app
 from __future__ import annotations
 
 import json
+import os
 import random
 import re
 import subprocess
@@ -514,6 +515,10 @@ def compress(src: Path, dst: Path, layout: str) -> Path:
 def publish(db, made: dict, work: Path) -> None:
     import run_briefings
     day = made["day"]
+    out = os.getenv("GITHUB_OUTPUT")                  # the social step posts exactly this day (not a cached "newest")
+    if out:
+        with open(out, "a", encoding="utf-8") as f:
+            f.write(f"day={day}\n")
     for layout, path in made["files"].items():
         small = compress(Path(path), work / f"{day}_{layout}.mp4", layout)
         run_briefings._upload(db, f"{VIDEO_FOLDER}/{day}_{layout}.mp4", small.read_bytes(), "video/mp4")
