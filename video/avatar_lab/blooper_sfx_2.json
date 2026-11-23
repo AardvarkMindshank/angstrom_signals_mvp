@@ -1,0 +1,57 @@
+{
+ "about": "Sound effects round 2: more squeaks for the Rat beside the Admiral; meows and squeaks in the cat chase (two takes each).",
+ "jobs": [
+  {
+   "id": "blooper_admiral_cheese_1_sfx11",
+   "model": "fal-ai/mmaudio-v2",
+   "input": {
+    "video_url": "reports:avatar_lab/blooper_src/blooper_admiral_cheese_1.mp4",
+    "prompt": "repeated high-pitched cartoon mouse squeaks, squeak squeak squeak, a tiny mouse squeaking nervously, sails flapping softly in the wind, a man's unimpressed hmph",
+    "negative_prompt": "music, speech, talking, singing, words",
+    "duration": 5.0,
+    "num_steps": 30,
+    "cfg_strength": 6.0,
+    "seed": 11
+   }
+  },
+  {
+   "id": "blooper_admiral_cheese_1_sfx29",
+   "model": "fal-ai/mmaudio-v2",
+   "input": {
+    "video_url": "reports:avatar_lab/blooper_src/blooper_admiral_cheese_1.mp4",
+    "prompt": "repeated high-pitched cartoon mouse squeaks, squeak squeak squeak, a tiny mouse squeaking nervously, sails flapping softly in the wind, a man's unimpressed hmph",
+    "negative_prompt": "music, speech, talking, singing, words",
+    "duration": 5.0,
+    "num_steps": 30,
+    "cfg_strength": 6.0,
+    "seed": 29
+   }
+  },
+  {
+   "id": "blooper_cat_chase_1_sfx11",
+   "model": "fal-ai/mmaudio-v2",
+   "input": {
+    "video_url": "reports:avatar_lab/blooper_src/blooper_cat_chase_1.mp4",
+    "prompt": "a cartoon cat and mouse fight: loud cat meows and yowls, angry cat hissing, frantic high-pitched mouse squeaks, scurrying tiny feet, paper maps rustling and flying, a comic skid and a thump",
+    "negative_prompt": "music, speech, talking, singing, words",
+    "duration": 5.0,
+    "num_steps": 30,
+    "cfg_strength": 6.0,
+    "seed": 11
+   }
+  },
+  {
+   "id": "blooper_cat_chase_1_sfx29",
+   "model": "fal-ai/mmaudio-v2",
+   "input": {
+    "video_url": "reports:avatar_lab/blooper_src/blooper_cat_chase_1.mp4",
+    "prompt": "a cartoon cat and mouse fight: loud cat meows and yowls, angry cat hissing, frantic high-pitched mouse squeaks, scurrying tiny feet, paper maps rustling and flying, a comic skid and a thump",
+    "negative_prompt": "music, speech, talking, singing, words",
+    "duration": 5.0,
+    "num_steps": 30,
+    "cfg_strength": 6.0,
+    "seed": 29
+   }
+  }
+ ]
+}
