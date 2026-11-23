@@ -102,7 +102,10 @@ def _finite(value):
     return number if math.isfinite(number) else None
 
 
-def series_item(closes, unit: str) -> dict | None:
+TRADING_DAY_POINTS = 22      # about 30 calendar days of weekday closes, so a "30-day line" covers 30 days
+
+
+def series_item(closes, unit: str, points: int = SPARK_POINTS) -> dict | None:
     """Value, day change and sparkline points from a list of daily closes (oldest first)."""
     values = [v for v in (_finite(c) for c in closes or []) if v is not None]
     if not values:
@@ -112,7 +115,7 @@ def series_item(closes, unit: str) -> dict | None:
     change = None
     if before:
         change = (last - before) if unit == "yield" else (last / before - 1) * 100
-    return {"value": last, "change": change, "spark": [round(v, 6) for v in values[-SPARK_POINTS:]]}
+    return {"value": last, "change": change, "spark": [round(v, 6) for v in values[-points:]]}
 
 
 def _yahoo_closes(errors: list | None = None) -> dict[str, list[float]]:
@@ -165,8 +168,8 @@ def fetch_overview() -> dict:
     except Exception as exc:
         errors.append(f"Yahoo: {str(exc)[:160]}")
         closes = {}
-    for key, _label, symbol, _group, unit, _exchange, _invert in SPECS:
-        item = series_item(closes.get(symbol), unit)
+    for key, _label, symbol, group, unit, _exchange, _invert in SPECS:
+        item = series_item(closes.get(symbol), unit, SPARK_POINTS if group == "crypto" else TRADING_DAY_POINTS)
         if item:
             items[key] = item
     try:
@@ -393,6 +396,9 @@ def card_list(overview: dict | None, crypto: bool, stocks: bool, now: datetime |
     return cards
 
 
+CRYPTO_KEYS = ("btc", "eth", "crypto_cap", "btc_dom", "fng")
+
+
 def _card_html(card: dict) -> str:
     key, unit = card["key"], card["unit"]
     hint = t(HINTS.get(key, ""))
@@ -407,6 +413,12 @@ def _card_html(card: dict) -> str:
         )
         hint = f"{hint} " + (t("{place} is open now (public holidays are not shown).", place=place) if card["open"]
                              else t("{place} is closed now (public holidays are not shown).", place=place))
+    if key in CRYPTO_KEYS:
+        hint += " " + (t("The change is over the last 24 hours.") if key == "crypto_cap" else
+                       t("The change is since 00:00 UTC.") if key in ("btc", "eth") else "")
+    else:
+        hint += " " + t("The change is since the previous close; while the market is closed it is the last trading "
+                        "session's move.")
     value = value_text(key, unit, card["value"])
     sub = ""
     if key == "fng":

@@ -8,6 +8,7 @@ so neither can send or hide the other's alerts.
 
 from __future__ import annotations
 
+import i18n
 from i18n import t
 
 import html
@@ -244,6 +245,11 @@ def pick_watchlist(results, limit: int = WATCHLIST_SHOWN) -> list[tuple[str, lis
     return picked
 
 
+# What the % beside each price covers (23 Nov 2026): never "today" for a share before New York opens.
+DAY_NOTE = i18n.mark("% beside a price: the change since the previous daily close. Crypto: since 00:00 UTC. Shares: since the "
+            "last New York close, so before the market opens it is the last trading session's move.")
+
+
 def _watchlist_row(row: dict) -> tuple[str, str]:
     name = " ".join(str(row.get("symbol") or row.get("key") or "").split())
     trend = _number(row.get("trend"))
@@ -452,6 +458,8 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
         if section_html:
             html_parts.append(f'<hr style="border:none;border-top:2px solid {_RULE};margin:22px 0 4px;">')
             html_parts.append(section_title(t("Your watchlist today")))
+            html_parts.append(f'<p style="margin:0 0 8px;font:400 12px/1.5 {_FONT};color:{_MUTED};">'
+                              f'{html.escape(t(DAY_NOTE))}</p>')
             html_parts.append(section_html)
             plain += ["----------------------------------------", t("Your watchlist today"), section_plain]
 

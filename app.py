@@ -7665,8 +7665,16 @@ def _header_boxes(key: str, items: list[dict]) -> None:
         _header_score(key=f"section_score_{key}", data={"items": items})
 
 
+# What each change column covers (23 Nov 2026: say the period exactly; a share's "day" before the open is the last
+# session, and the week and month are calendar ones).
+DAY_CHANGE_HINT = i18n.mark("Change since the previous daily close. Crypto: since 00:00 UTC. Shares: since the last New York close, so before the market opens it is the last trading session's move.")
+PERIOD_HINTS = {"1d %": DAY_CHANGE_HINT, "7d %": i18n.mark("Change over the last 7 calendar days."),
+                "30d %": i18n.mark("Change over the last 30 calendar days."),
+                "30-day trend": i18n.mark("Price over the last 30 calendar days.")}
+
+
 def _paint_chart_header(kind: str, asset_id: str, rows) -> None:
-    """📊 Interactive Chart: today's move for the asset on the chart."""
+    """📊 Interactive Chart: the change since the previous daily close for the asset on the chart."""
     row = next((r for r in rows or [] if str(r.get("key")) == str(asset_id)), None)
     try:
         change = float((row or {}).get("change_1d"))
@@ -7676,7 +7684,7 @@ def _paint_chart_header(kind: str, asset_id: str, rows) -> None:
         return
     up = change >= 0
     _header_box("chart", f"{'▲' if up else '▼'} {abs(change):.1f}%", "#166534" if up else "#991b1b",
-                "#dcfce7" if up else "#fee2e2", t("Price change over the last day"))
+                "#dcfce7" if up else "#fee2e2", t(DAY_CHANGE_HINT))
 
 
 def _paint_readings_header(result: dict) -> None:
@@ -8240,7 +8248,7 @@ def notifications_panel() -> None:
                         value=watchlist_on,
                         key="alert_digest_watchlist_cb",
                         help=(
-                            t("Adds a colour-coded summary of your watchlist below the alerts: price, today's move, "
+                            t("Adds a colour-coded summary of your watchlist below the alerts: price, the change since the previous daily close, "
                             "score and sentiment for your strongest and weakest assets (up to 10). "
                             "With this on, the email comes every day; with it off, only on days with alerts.")
                         ),
@@ -8483,12 +8491,12 @@ because they measure different things and are never added together.
 
 **A quick tour**
 1. **Quick Snapshot** opens with 🌍 **Markets**: the major indices, VIX, the US 10-year yield, the dollar,
-   gold, oil and crypto totals, each with today's move and a 30-day line (a green dot means that exchange is
+   gold, oil and crypto totals, each with the change since the previous daily close and a 30-day line (a green dot means that exchange is
    open; hover a card for what it measures). Under it: the 🌊 **Tides line** (tide, sea state and the next big
    event; click it for the Tides panel), 🔻 **your funnels** (Candidates, Flagged, the stage counts and what came in
    or left since your last visit; click one to open its table), and 📈📉 the **highest and lowest Trend** in
    your own watchlist, whatever your tables show. Then *What changed*: Trend readings that crossed a colour border you
-   alert on, and the biggest Trend moves, each with the reading before and now, the price and today's move, a 7-day line, and
+   alert on, and the biggest Trend moves, each with the reading before and now, the price and the change since the previous daily close, a 7-day line, and
    badges for 📅 earnings within two weeks, 📰 headline sentiment and 🎯 how close it is to an alert line.
 2. **Crypto Signals** and **Equity Signals** list your watchlists, strongest Trend first. The reading columns are
    the Groups and Sets you choose with the column icon in the table header (📈 Trend, 🎯 Stretch and 🔊 Flow to start). Click a name to open it
@@ -8595,7 +8603,7 @@ is moving, never which way it will go.
 
 **Freshness.** Prices are saved about every 5 minutes and sentiment about every 12 hours, for everyone.
 The readings use the last *finished* daily bar (crypto: the UTC day; stocks: after the New York close),
-so they change once a day; price, today's move and RSI in the table are live.
+so they change once a day; price, the change since the previous daily close and RSI in the table are live.
 """))
 
     with tab_chart:
@@ -9027,7 +9035,7 @@ that checks the same Set, so funnels stay quick as more people use them.
   On a computer or Android phone they work straight from the browser, and Chrome and Edge also offer to install
   Angstrom as an app (the install icon in the address bar).
 - 📋 **Include watchlist summary** (under the daily summary, on by default): adds a colour-coded look at your
-  watchlist with price, today's move, the Trend, Stretch and Flow readings and sentiment for your strongest
+  watchlist with price, the change since the previous daily close, the Trend, Stretch and Flow readings and sentiment for your strongest
   and weakest Trends. With it on,
   the email comes every day; with it off, only on days with alerts.
 
@@ -12889,7 +12897,7 @@ def _mini_badge(text: str, colour: str, background: str, hint: str = "") -> str:
 
 def _change_extras(row: dict, previous_score: float, current_score: float, bull: float, bear: float,
                    crossed: bool, shared_row: dict | None) -> str:
-    """Score move, price and today's move, a 7-day line and context badges for one changed asset."""
+    """Score move, price and the change since the previous daily close, a 7-day line and context badges for one changed asset."""
     parts = []
     old_fg, old_bg, _a, _b = reading_tone(previous_score)
     new_fg, new_bg, _a, _b = reading_tone(current_score)
@@ -12912,11 +12920,11 @@ def _change_extras(row: dict, previous_score: float, current_score: float, bull:
             change = float(change)
             if change == change:
                 if abs(change) < 0.05:
-                    pill = _mini_badge("0.0%", "#6b7280", "#f3f4f6", t("Today's price move"))
+                    pill = _mini_badge("0.0%", "#6b7280", "#f3f4f6", t(DAY_CHANGE_HINT))
                 elif change > 0:
-                    pill = _mini_badge(f"▲ {change:.1f}%", "#15803d", "#dcfce7", t("Today's price move"))
+                    pill = _mini_badge(f"▲ {change:.1f}%", "#15803d", "#dcfce7", t(DAY_CHANGE_HINT))
                 else:
-                    pill = _mini_badge(f"▼ {abs(change):.1f}%", "#b91c1c", "#fee2e2", t("Today's price move"))
+                    pill = _mini_badge(f"▼ {abs(change):.1f}%", "#b91c1c", "#fee2e2", t(DAY_CHANGE_HINT))
         except (TypeError, ValueError):
             pass
         parts.append(
@@ -12925,9 +12933,11 @@ def _change_extras(row: dict, previous_score: float, current_score: float, bull:
         )
     closes = row.get("closes") or []
     if len(closes) >= 3:
+        # 7 calendar days: 8 daily closes for crypto, 6 trading-day closes for shares.
+        week = 6 if str(row.get("type") or "").lower().startswith("stock") else 8
         parts.append(
-            "<span title='Price over the last 7 days' style='display:inline-block;'>"
-            + sparkline_svg(list(closes)[-8:]).replace("margin-left:auto;", "")
+            f"<span title='{html.escape(t('Price over the last 7 days'), quote=True)}' style='display:inline-block;'>"
+            + sparkline_svg(list(closes)[-week:]).replace("margin-left:auto;", "")
             + "</span>"
         )
     badges = []
@@ -13795,7 +13805,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                     continue
 
                 if df is not None and not df.empty and "close" in df.columns:
-                    result["closes"] = recent_closes(df["close"].tolist())
+                    # The "30-day trend" line covers 30 calendar days (shares: about 21 closes, not 30).
+                    result["closes"] = signals_view.closes_since(df, 30) or recent_closes(df["close"].tolist())
 
                 if df is not None and not df.empty and len(df) >= 15:
                     try:
@@ -14307,6 +14318,8 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                             f"{html.escape(t('Show the {name} columns', name=long), quote=True)}' "
                             "style='background:none;border:none;padding:0;margin:0;color:inherit;font:inherit;"
                             f"font-weight:600;cursor:pointer;'>▸ {word}</button></th>")
+                if name in PERIOD_HINTS:
+                    hint = f" title='{html.escape(t(PERIOD_HINTS[name]), quote=True)}'"
                 if cluster_key:
                     hint = f" title='{html.escape(signals_view.header_hint(cluster_key), quote=True)}'"
                     shown = f"{signals_v2.CLUSTERS[cluster_key]['icon']} {signals_v2.CLUSTERS[cluster_key]['name']}"

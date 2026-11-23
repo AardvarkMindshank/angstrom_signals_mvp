@@ -38,6 +38,36 @@ def signed(value) -> str:
     return f"{int(round(number)):+d}"
 
 
+def change_since(frame, days: int):
+    """% change from the last close on or before `days` calendar days before the latest bar, to the latest close.
+    None without dates or enough history."""
+    try:
+        close = frame["close"].dropna()
+        idx = close.index
+        if not hasattr(idx[-1], "date"):
+            return None
+        cut = idx[-1] - __import__("pandas").Timedelta(days=days)
+        before = close[idx <= cut]
+        if before.empty:
+            return None
+        a, b = float(before.iloc[-1]), float(close.iloc[-1])
+        return (b / a - 1) * 100 if a else None
+    except Exception:
+        return None
+
+
+def closes_since(frame, days: int) -> list[float]:
+    """The closes of the last `days` calendar days (oldest first), for a price line that covers what its title says."""
+    try:
+        close = frame["close"].dropna()
+        idx = close.index
+        if not hasattr(idx[-1], "date"):
+            return [float(x) for x in close.tolist()[-days:]]
+        return [float(x) for x in close[idx >= idx[-1] - __import__("pandas").Timedelta(days=days)].tolist()]
+    except Exception:
+        return []
+
+
 def row_fields(frame, kind: str, now=None) -> dict:
     """Everything a watchlist row needs: the v2 readings (last finished bar) and the live display figures
     (price, today's move, RSI and so on from the latest row, as before)."""
@@ -62,6 +92,12 @@ def row_fields(frame, kind: str, now=None) -> dict:
         out["latest_price"] = round(close, 4) if close < 1 else round(close, 2)
     for name in ("change_1d", "change_7d", "change_30d", "rsi"):
         out[name] = num(name, 1)
+    # The week and month shown are calendar ones (23 Nov 2026): the readings' own 7- and 30-bar changes count trading
+    # days for shares (about 9 and 42 calendar days), so the table works these out by date instead.
+    for name, days in (("change_7d", 7), ("change_30d", 30)):
+        got = change_since(frame, days)
+        if got is not None:
+            out[name] = round(got, 1)
     out["adx"] = num("adx", 1)
     out["volume_ratio"] = num("volume_ratio", 2)
     atr = num("atr", 10)
