@@ -1,0 +1,27 @@
+{
+ "about": "Bloopers, animated (23 Nov 2026): the Cook's rear reveal (only at the end of his own videos) and the Ship's Rat in his pocket. Silent; the video's music plays under them.",
+ "jobs": [
+  {
+   "id": "blooper_cook_back",
+   "model": "fal-ai/kling-video/v2.5-turbo/standard/image-to-video",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/bloopers/cook_back.png",
+    "prompt": "Animated comedy moment. The chubby cook, seen from behind, realises he has been caught on camera: he glances back over his shoulder with a sheepish embarrassed grin, raises his eyebrows, gives a little shrug and a small wiggle of his hips, then holds the pie up in front of his face to hide. The copper pans hanging behind him sway gently and steam drifts through the galley. The camera stays still.",
+    "duration": "5",
+    "negative_prompt": "blur, distort, low quality, extra limbs, morphing face, text",
+    "cfg_scale": 0.5
+   }
+  },
+  {
+   "id": "blooper_rat_pocket",
+   "model": "fal-ai/kling-video/v2.5-turbo/standard/image-to-video",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/bloopers/cook_rat.png",
+    "prompt": "Animated comedy moment. The little brown rat in the cook's apron pocket pops up higher, nibbles his piece of cheese and grins cheekily at the camera. The cook looks down at the rat, raises his eyebrows in surprise, then gently pushes the rat back down into the pocket with one finger and looks back at the camera with an innocent smile. The camera stays still.",
+    "duration": "5",
+    "negative_prompt": "blur, distort, low quality, extra limbs, morphing face, text",
+    "cfg_scale": 0.5
+   }
+  }
+ ]
+}
