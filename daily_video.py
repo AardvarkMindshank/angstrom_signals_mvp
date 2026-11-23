@@ -46,10 +46,18 @@ PRESENTERS = {
     "deck": {"title": "The Deckhand", "voice": "bm_lewis", "speed": 1.08},
 }
 PRESENTERS["cat"] = {"title": "The Ship's Cat", "voice": "af_nicole", "speed": 1.25}
+# The new crew (23 Nov 2026): the Cook (Italian, a little lower; his galley sways with the ship), the Admiral (rare, and
+# more likely on CPI and jobs-report days) and the Rat (raised voice, flickering candle; only on days the cat isn't on).
+PRESENTERS["cook"] = {"title": "The Ship's Cook", "voice": "im_nicola", "speed": 1.05, "pitch": -3, "effect": "sway"}
+PRESENTERS["admiral"] = {"title": "The Admiral", "voice": "bm_fable", "speed": 1.0}
+PRESENTERS["rat"] = {"title": "The Ship's Rat", "voice": "am_echo", "speed": 1.2, "pitch": 7, "effect": "flicker"}
 # Who presents is a surprise each day (Angus, 23 Nov 2026), a weighted draw seeded by the date, so a video re-made
 # the same day keeps its presenter. No clips are tied to a weekday. Presenters whose clip set isn't in the library
 # yet are left out of the draw; the captain is always in it.
-CHANCES = {"cap": 0.40, "mate": 0.25, "nav": 0.14, "deck": 0.14, "cat": 0.07}
+CHANCES = {"cap": 0.34, "mate": 0.20, "nav": 0.12, "deck": 0.12, "cook": 0.08, "cat": 0.06, "rat": 0.05,
+           "admiral": 0.03}
+BIG_DAY_WORDS = ("CPI", "inflation", "jobs report", "Employment", "payrolls")   # the Admiral's inspection days
+RAT_TAG_CHANCE = 0.5            # on the Rat's days, his candlelit midnight-snack tag after the sign-off
 # 🎁 Guests on special days: a cameo (their own welcome and sign-off; the day's presenter does the rest).
 GUESTS = {"santa": "Father Christmas", "ghost": "The Ghost Captain", "bunny": "The Easter Bunny",
           "neptune": "King Neptune"}
@@ -294,7 +302,7 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
 
 # ------------------------------------------------------------------------------------------------ voice and timeline
 
-def speak(text: str, path: Path, models: Path, voice: str = VOICE, speed: float = SPEED) -> float:
+def speak(text: str, path: Path, models: Path, voice: str = VOICE, speed: float = SPEED, pitch: float = 0) -> float:
     from kokoro_onnx import Kokoro
 
     kokoro = Kokoro(str(models / "kokoro-v1.0.onnx"), str(models / "voices-v1.0.bin"))
@@ -306,7 +314,20 @@ def speak(text: str, path: Path, models: Path, voice: str = VOICE, speed: float 
         wf.setsampwidth(2)
         wf.setframerate(rate)
         wf.writeframes(pcm.tobytes())
+    if pitch:
+        pitch_shift(path, pitch)
     return len(pcm) / rate
+
+
+def pitch_shift(path: Path, semitones: float) -> None:
+    """Raise (+) or lower (-) a voice by semitones, keeping its speed, in place (the same as the avatar lab)."""
+    with wave.open(str(path)) as wf:
+        rate = wf.getframerate()
+    f = 2 ** (semitones / 12)
+    tmp = path.with_suffix(".shift.wav")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(path), "-af",
+                    f"asetrate={rate}*{f},aresample={rate},atempo={1 / f}", str(tmp)], check=True)
+    tmp.replace(path)
 
 
 def duration(path: Path) -> float:
@@ -315,12 +336,25 @@ def duration(path: Path) -> float:
     return float(out.strip())
 
 
-def presenter_for(day: datetime, library: Path | None = None, override: str | None = None) -> str:
+def big_day(day: datetime, facts: dict | None) -> bool:
+    """A CPI or jobs-report day (the week's events in the facts name it with today's date)."""
+    when = day.strftime("%d %B").lstrip("0")
+    for e in (facts or {}).get("events") or []:
+        text = f"{e.get('what', '')} {e.get('when_utc', '')}"
+        if any(w.lower() in text.lower() for w in BIG_DAY_WORDS) and when in text.replace(" 0", " "):
+            return True
+    return False
+
+
+def presenter_for(day: datetime, library: Path | None = None, override: str | None = None,
+                  facts: dict | None = None) -> str:
     """Who presents: the override, else a weighted draw for the day (CHANCES) among presenters whose clips are in the
-    library; the captain when nobody else's are."""
+    library; the captain when nobody else's are. On CPI and jobs-report days the Admiral comes aboard 4 times in 10."""
     if override in PRESENTERS:
         return override if library is None or override == "cap" or has_set(library, override) else "cap"
     pool = {who: w for who, w in CHANCES.items() if who == "cap" or library is None or has_set(library, who)}
+    if "admiral" in pool and big_day(day, facts):
+        pool["admiral"] = (sum(pool.values()) - pool["admiral"]) * 2 / 3
     roll = random.Random(f"presenter-{day.date().isoformat()}").random() * sum(pool.values())
     for who, weight in pool.items():
         roll -= weight
@@ -368,7 +402,7 @@ def timeline(caps: dict, narr: dict) -> list[dict]:
     order = [("cap", "welcome"), ("narr", "date"), ("cap", "weather"), ("cap", "sign_story"), ("narr", "story"),
              ("cap", "sign_tides"), ("narr", "tides"), ("cap", "sign_equities"), ("narr", "equities"),
              ("cap", "sign_crypto"), ("narr", "crypto"), ("cap", "sign_horizon"), ("narr", "horizon"),
-             ("cap", "signoff"), ("narr", "close")]
+             ("cap", "signoff"), ("cap", "tag"), ("narr", "close")]
     order = [(who, kind) for who, kind in order if kind in (caps if who == "cap" else narr)]   # weekends: no equities
     if "intro" in narr:
         order = [("narr", "intro")] + order
@@ -405,6 +439,23 @@ def rounded_mask(path: Path, w: int, h: int, radius: int = 36) -> None:
     m.save(path)
 
 
+EFFECTS = {"cook": "sway", "rat": "flicker", "ratd": "flicker"}
+
+
+def clip_effect(clip: str, bw: int, bh: int) -> str:
+    """The ffmpeg filters that fit a presenter clip into its box, with the presenter's movement (23 Nov 2026): the
+    Cook's galley sways gently with the roll of the ship; the Rat's candle flickers over him."""
+    fit = f"scale={bw}:{bh}:force_original_aspect_ratio=increase,crop={bw}:{bh},"
+    effect = EFFECTS.get(clip.split("_")[0])
+    if effect == "sway":
+        big_w, big_h = int(bw * 1.06) // 2 * 2, int(bh * 1.06) // 2 * 2
+        return (f"scale={big_w}:{big_h}:force_original_aspect_ratio=increase,crop={big_w}:{big_h},"
+                f"rotate=a='0.012*sin(2*PI*t/4.5)':c=black,crop={bw}:{bh},")
+    if effect == "flicker":
+        return fit + "eq=brightness='0.035*sin(2*PI*t*1.7)+0.02*sin(2*PI*t*4.3)':eval=frame,"
+    return fit
+
+
 def render_layout(layout: str, spec: dict, segs: list[dict], library: Path, music: Path, work: Path, out: Path) -> Path:
     W, H = LAYOUTS[layout]["size"]
     bx, by, bw, bh = LAYOUTS[layout]["box"]
@@ -430,8 +481,7 @@ def render_layout(layout: str, spec: dict, segs: list[dict], library: Path, musi
     last = "[0:v]"
     for i, s in enumerate(caps):
         k = 2 + i
-        f.append(f"[{k}:v]scale={bw}:{bh}:force_original_aspect_ratio=increase,crop={bw}:{bh},fps={FPS},format=rgba,"
-                 f"setpts=PTS-STARTPTS[c{i}]")
+        f.append(f"[{k}:v]{clip_effect(s['clip'], bw, bh)}fps={FPS},format=rgba,setpts=PTS-STARTPTS[c{i}]")
         f.append(f"[m{i}]fps={FPS},trim=duration={s['end'] - s['start']:.3f},setpts=PTS-STARTPTS[mm{i}];"
                  f"[c{i}][mm{i}]alphamerge,setpts=PTS-STARTPTS+{s['start']}/TB[ca{i}]")
         f.append(f"{last}[ca{i}]overlay={bx}:{by}:enable='between(t,{s['start']},{s['end']})':eof_action=pass[v{i}]")
@@ -472,7 +522,7 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     plan = sections_for(day)
     sections, writer = write_sections(supabase, facts, sections=plan, weekend=weekend)
     spec = graphics_data(facts, sections, day)
-    who = presenter_for(day, library, presenter)
+    who = presenter_for(day, library, presenter, facts)
     crew = PRESENTERS[who]
     spec["presenter"] = {"key": who, "title": crew["title"]}
     date_line = f"{day.strftime('%A')}, the {_ordinal(day.day)} of {day.strftime('%B')}. {sections['headline']}."
@@ -485,13 +535,17 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     narr = {}
     for kind, text in texts.items():
         path = work / f"narr_{kind}.wav"
-        narr[kind] = {"file": str(path), "seconds": speak(text, path, models, crew["voice"], crew["speed"]),
+        narr[kind] = {"file": str(path), "seconds": speak(text, path, models, crew["voice"], crew["speed"],
+                                                          crew.get("pitch", 0)),
                       "text": text}
     rng = random.Random(day.date().isoformat())
     caps = {}
     for kind, clip in captain_clips(spec["weather"], rng, weekend, who):
         clip = pick_look(library, clip, rng)
         caps[kind] = {"file": clip, "seconds": duration(library / clip)}
+    tag = f"ratd_tag_{rng.choice((1, 2))}_1.mp4"
+    if who == "rat" and rng.random() < RAT_TAG_CHANCE and (library / tag).exists():
+        caps["tag"] = {"file": tag, "seconds": duration(library / tag)}
     guest = guest_for(day, facts, library)
     if guest:
         for kind, line in (("welcome", "welcome"), ("signoff", "signoff")):

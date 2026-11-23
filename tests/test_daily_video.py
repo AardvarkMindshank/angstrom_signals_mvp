@@ -80,7 +80,7 @@ def test_presenter_is_a_weighted_daily_surprise_with_the_captain_as_fallback(tmp
     assert {dv.presenter_for(d, tmp_path) for d in days} == {"cap"}       # nobody else's clips yet: the captain
     (tmp_path / "mate_signoff_1_1.mp4").write_bytes(b"")
     assert {dv.presenter_for(d, tmp_path) for d in days[:200]} == {"cap"}  # one clip is not a set
-    for who in ("mate", "nav", "deck", "cat"):
+    for who in ("mate", "nav", "deck", "cat", "cook", "rat", "admiral"):
         for line in dv.SET_LINES:
             (tmp_path / f"{who}_{line}_1_1.mp4").write_bytes(b"")
     picks = [dv.presenter_for(d, tmp_path) for d in days]
@@ -201,3 +201,25 @@ def test_moves_name_their_session_and_today_is_sent_back():
         assert who != "template" and got["equities"] == "On Friday the S&P 500 rose." and not replies
     finally:
         ai_providers.available, ai_providers.app_choice = old
+
+
+def test_the_admiral_comes_on_big_days_and_the_new_crew_moves(tmp_path):
+    """23 Nov 2026: the Admiral is likelier on CPI and jobs-report days; the Cook's galley sways, the Rat's candle
+    flickers; the Rat's candlelit tag follows his sign-off."""
+    from datetime import timedelta
+
+    for who in ("mate", "nav", "deck", "cat", "cook", "rat", "admiral"):
+        for line in dv.SET_LINES:
+            (tmp_path / f"{who}_{line}_1_1.mp4").write_bytes(b"")
+    days = [datetime(2026, 1, 1) + timedelta(days=i) for i in range(600)]
+    cpi = lambda d: {"events": [{"what": "CPI (inflation)", "when_utc": d.strftime("%A %d %B, 13:30")}]}   # noqa: E731
+    share = sum(dv.presenter_for(d, tmp_path, facts=cpi(d)) == "admiral" for d in days) / len(days)
+    assert 0.3 < share < 0.5
+    assert sum(dv.presenter_for(d, tmp_path) == "admiral" for d in days) / len(days) < 0.07
+    assert "rotate=" in dv.clip_effect("cook_welcome_1_1.mp4", 600, 812)
+    assert "eq=brightness" in dv.clip_effect("ratd_tag_1_1.mp4", 600, 812)
+    assert "rotate" not in dv.clip_effect("admiral_welcome_1_1.mp4", 600, 812)
+    caps = {k: {"file": f"{k}.mp4", "seconds": 2.0} for k in ("welcome", "weather", "signoff", "tag")}
+    narr = {k: {"file": f"{k}.wav", "seconds": 2.0} for k in ("date", "close")}
+    kinds = [s["kind"] for s in dv.timeline(caps, narr)]
+    assert kinds.index("tag") == kinds.index("signoff") + 1 and kinds[-1] == "close"

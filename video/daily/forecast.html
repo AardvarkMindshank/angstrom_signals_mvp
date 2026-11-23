@@ -102,7 +102,7 @@ function capCaption(seg) {
     sign_story: ["The story<br>of the day", esc(d.story?.title || "")],
     sign_tides: ["The tide &amp;<br>currents", "The big picture"], sign_equities: ["Equity<br>markets", "S&amp;P 500 · Nasdaq"],
     sign_crypto: ["The crypto<br>seas", "Bitcoin and the top coins"], sign_horizon: ["On the<br>horizon", "What's coming up"],
-    signoff: ["Fair winds", "and following seas"] };
+    signoff: ["Fair winds", "and following seas"], tag: ["Shh…", "Don't tell the cat"] };
   const [k, s] = titles[seg.kind] || ["", ""];
   const icon = seg.kind === "weather" ? `<div class="it" style="font-size:${P ? 120 : 130}px;line-height:1.1">${d.weather_icon}</div>` : "";
   return icon + `<div class="it kicker" style="font-size:${P ? 112 : 120}px">${k}</div><div class="it sub" style="font-size:${P ? 54 : 46}px;margin-top:22px">${s}</div>`;
@@ -225,7 +225,7 @@ function narrContent(seg) {
 // 🖥️ The matching app screen behind each section: dim, angled and drifting slowly (fixed pictures from the app).
 const SCREEN_OF = { welcome: "snapshot", date: "snapshot", weather: "tides", sign_story: "chart", story: "chart",
   sign_tides: "tides", tides: "tides", sign_equities: "table", equities: "table", sign_crypto: "chart", crypto: "chart",
-  sign_horizon: "tides", horizon: "tides", signoff: "funnel" };          // no app screen behind the closing logo card
+  sign_horizon: "tides", horizon: "tides", signoff: "funnel", tag: "funnel" };          // no app screen behind the closing logo card
 const SCREEN_DIM = 0.13;
 let SPANS = [];
 function buildScreens(segments) {
