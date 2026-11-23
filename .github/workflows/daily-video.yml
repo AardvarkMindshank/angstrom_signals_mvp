@@ -44,6 +44,8 @@ jobs:
       - name: Install
         timeout-minutes: 25
         run: |
+          # A stuck Ubuntu mirror once held this step for 25 minutes: give up on a silent mirror after 30 s and retry
+          echo 'Acquire::http::Timeout "30"; Acquire::https::Timeout "30"; Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/99timeouts > /dev/null
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install kokoro-onnx
