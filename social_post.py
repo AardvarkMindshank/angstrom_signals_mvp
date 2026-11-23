@@ -42,8 +42,12 @@ def latest(day: str | None = None) -> tuple[str, dict, str]:
     return day, meta[day], (words.text if words.status_code == 200 else "")
 
 
-def urls(day: str) -> dict:
-    u = lambda n: briefing.public_url(_base(), f"video/{day}_{n}")    # noqa: E731
+def urls(day: str, made_at=None) -> dict:
+    """The day's files. With the video's made_at, each link carries its version, so a platform that fetches by link
+    (Telegram) or a CDN never hands out an earlier copy of a re-made video (23 Nov 2026: Telegram posted the earlier
+    cat video under the new Captain caption)."""
+    stamp = "".join(ch for ch in str(made_at or "") if ch.isdigit())[:14]
+    u = lambda n: briefing.public_url(_base(), f"video/{day}_{n}") + (f"?v={stamp}" if stamp else "")    # noqa: E731
     return {"tall": u("port.mp4"), "wide": u("land.mp4"), "tall_poster": u("port.jpg"), "wide_poster": u("land.jpg")}
 
 
@@ -251,7 +255,7 @@ def main() -> int:
             print(f"{day or 'No day'}: already posted (or no day given); nothing sent.")
             return 0
     day, entry, words = latest(day)
-    caps, links = captions(day, entry, words), urls(day)
+    caps, links = captions(day, entry, words), urls(day, entry.get("made_at"))
     for name, post in PLATFORMS.items():
         if name not in only:
             continue

@@ -51,3 +51,10 @@ def test_claim_is_refused_when_the_marker_exists(monkeypatch):
     codes = iter([200, 409])
     monkeypatch.setattr(sp.requests, "post", lambda *a, **k: type("R", (), {"status_code": next(codes)})())
     assert sp.claim("2026-11-25") is True and sp.claim("2026-11-25") is False
+
+
+def test_links_carry_the_video_version():
+    """A re-made video keeps its name, so each link carries its version (Telegram fetched an earlier copy)."""
+    links = s.urls("2026-11-23", "2026-11-23T02:58:11+00:00")
+    assert links["tall"].endswith("video/2026-11-23_port.mp4?v=20261123025811")
+    assert "?v=" not in s.urls("2026-11-23")["wide"]
