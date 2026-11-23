@@ -1,0 +1,42 @@
+# 🔍 Clip check: unpack the clip library and save frame strips of one presenter's clips (invented characters only,
+# never the captain), to spot faulty clips. Saved unencrypted on the reports branch under avatar_lab/check_<who>.
+name: clip-check
+on:
+  workflow_dispatch:
+    inputs:
+      who:
+        description: "Clip prefix (mate, nav, deck, cat ...; never cap)"
+        default: mate
+permissions:
+  contents: write
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Frames
+        env:
+          LAB_KEY: ${{ secrets.AVATAR_LAB_KEY }}
+          WHO: ${{ inputs.who }}
+        run: |
+          [ "$WHO" != "cap" ] || { echo "Not the captain's clips"; exit 1; }
+          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null
+          git fetch -q origin reports
+          mkdir -p lib out/check
+          for f in $(git ls-tree --name-only origin/reports avatar_lab/library_captain/); do
+            git show "origin/reports:$f" > lib.enc
+            openssl enc -d -aes-256-cbc -pbkdf2 -in lib.enc -out lib.tgz -pass env:LAB_KEY
+            tar -xzf lib.tgz -C lib --wildcards "avatar_lab/${WHO}_*.mp4" 2>/dev/null || true
+            rm -f lib.enc lib.tgz
+          done
+          for c in lib/avatar_lab/${WHO}_*.mp4; do
+            n=$(basename "$c" .mp4)
+            d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$c")
+            for i in 1 2 3 4 5; do
+              ffmpeg -v error -y -ss "$(python3 -c "print($d*($i-0.5)/5)")" -i "$c" -frames:v 1 -vf scale=-1:300 "f$i.jpg"
+            done
+            ffmpeg -v error -y -i f1.jpg -i f2.jpg -i f3.jpg -i f4.jpg -i f5.jpg -filter_complex hstack=5 "out/check/$n.jpg"
+          done
+          ls out/check | wc -l
+          rm -rf lib f*.jpg
+          bash .github/scripts/save_to_reports.sh "avatar_lab/check_${WHO}" out/check
