@@ -61,18 +61,27 @@ RAT_TAG_CHANCE = 0.5            # on the Rat's days, his candlelit midnight-snac
 # 🎬 Bloopers (23 Nov 2026): silent comic clips under the music. The Cook's rear reveal closes every video he presents;
 # the others drop in between two sections in about one video in four (never inside a section, so never over a number).
 COOK_REVEAL = "blooper_cook_back_1.mp4"
-BLOOPERS = {"blooper_rat_pocket_1.mp4": {"caption": ["Outtake", "Meanwhile, in the galley"],
-                                         "not_with": ("cat",)}}      # the Rat never shares a video with the cat
+ROUGH = ("rough", "stormy")
+BLOOPERS = {      # not_with: presenters it never plays beside (the Rat keeps out of the cat's videos); weather: only then
+    "blooper_rat_pocket_1.mp4": {"caption": ["Outtake", "Meanwhile, in the galley"], "not_with": ("cat",)},
+    "blooper_admiral_cheese_1.mp4": {"caption": ["Outtake", "Who's been at the cheese?"], "not_with": ("cat",)},
+    "blooper_cat_chase_1.mp4": {"caption": ["Outtake", "Meanwhile, on the chart table"], "not_with": ()},
+    "blooper_rat_wave_1.mp4": {"caption": ["Outtake", "Rough seas below decks"], "not_with": ("cat",),
+                               "weather": ROUGH},
+    "blooper_cook_wave_1.mp4": {"caption": ["Outtake", "Rough seas in the galley"], "not_with": (), "weather": ROUGH},
+}
 BLOOPER_CHANCE = 0.25
 BLOOPER_AFTER = ("story", "tides", "equities", "crypto")             # it plays after one of these sections
 
 
-def blooper_for(day: datetime, who: str, library: Path | None, sections) -> dict | None:
+def blooper_for(day: datetime, who: str, library: Path | None, sections, weather: str | None = None) -> dict | None:
     """The day's blooper, if any: {file, after}, drawn from the date so a re-run gives the same video."""
     rng = random.Random(f"blooper-{day.date().isoformat()}")
     if rng.random() >= BLOOPER_CHANCE:
         return None
-    pool = sorted(f for f, b in BLOOPERS.items() if who not in b["not_with"] and (library is None or (library / f).exists()))
+    pool = sorted(f for f, b in BLOOPERS.items() if who not in b["not_with"]
+                  and (weather in b.get("weather", (weather,)))
+                  and (library is None or (library / f).exists()))
     slots = [k for k in BLOOPER_AFTER if k in sections]
     if not pool or not slots:
         return None
@@ -593,7 +602,7 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
         caps["tag"] = {"file": tag, "seconds": speech_seconds(library / tag)}
     if who == "cook" and (library / COOK_REVEAL).exists():
         caps["reveal"] = {"file": COOK_REVEAL, "seconds": duration(library / COOK_REVEAL)}
-    blooper = blooper_for(day, who, library, narr)
+    blooper = blooper_for(day, who, library, narr, spec["weather"])
     if blooper:
         caps["blooper"] = {"file": blooper["file"], "seconds": duration(library / blooper["file"]),
                            "after": blooper["after"], "title": "Blooper",

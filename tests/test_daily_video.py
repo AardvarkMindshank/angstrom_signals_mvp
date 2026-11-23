@@ -254,7 +254,8 @@ def test_bloopers_about_one_day_in_four_never_with_the_cat():
     share = sum(p is not None for p in picks) / len(picks)
     assert 0.18 < share < 0.32
     assert all(p["after"] in dv.BLOOPER_AFTER for p in picks if p)
-    assert all(dv.blooper_for(start + timedelta(days=i), "cat", None, sections) is None for i in range(400))
+    cat_days = [dv.blooper_for(start + timedelta(days=i), "cat", None, sections) for i in range(400)]
+    assert all(p["file"] in ("blooper_cat_chase_1.mp4", "blooper_cook_wave_1.mp4") for p in cat_days if p)
 
 
 def test_blooper_plays_between_sections_and_the_cook_reveal_at_the_end():
@@ -269,3 +270,12 @@ def test_blooper_plays_between_sections_and_the_cook_reveal_at_the_end():
     assert kinds[-2:] == ["reveal", "close"]
     seg = next(s for s in dv.timeline(caps, narr) if s["kind"] == "blooper")
     assert seg["title"] == "Blooper" and seg["caption"][0] == "Outtake"
+
+
+def test_wave_bloopers_only_in_rough_weather():
+    from datetime import timedelta
+    sections = {"story": {}, "tides": {}, "crypto": {}}
+    calm = [dv.blooper_for(datetime(2027, 1, 1) + timedelta(days=i), "cap", None, sections, "sunny") for i in range(400)]
+    assert not any(p and "wave" in p["file"] for p in calm)
+    rough = [dv.blooper_for(datetime(2027, 1, 1) + timedelta(days=i), "cap", None, sections, "stormy") for i in range(400)]
+    assert any(p and "wave" in p["file"] for p in rough)

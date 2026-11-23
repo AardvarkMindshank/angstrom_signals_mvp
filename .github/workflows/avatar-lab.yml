@@ -22,6 +22,9 @@ on:
       check:
         description: "Instead of making clips: frame strips of one presenter's library clips (e.g. mate; never cap)"
         default: ""
+      unlock:
+        description: "Save these private inputs unencrypted: invented guests only, names starting guest_ (e.g. guest_cat_1.png)"
+        default: ""
       recover:
         description: "Fetch clips fal already made instead of making new ones: '<start>,<end>' in UTC (blank: make)"
         default: ""
@@ -87,17 +90,29 @@ jobs:
             openssl enc -d -aes-256-cbc -pbkdf2 -in enc.bin -out "lab_in/$(basename "${f%.enc}")" -pass env:LAB_KEY
           done
           rm -f enc.bin
+      - name: Unlock invented characters
+        if: inputs.unlock != ''
+        env:
+          NAMES: ${{ inputs.unlock }}
+        run: |
+          # The ship's cat and the holiday guests are original designs, saved encrypted only because the lab saves
+          # everything that way by default. Never anything else (the captain stays encrypted).
+          mkdir -p out/unlocked
+          for n in ${NAMES//,/ }; do
+            case "$n" in guest_*) cp "lab_in/$n" out/unlocked/ ;; *) echo "Refused: $n"; exit 1 ;; esac
+          done
+          bash .github/scripts/save_to_reports.sh "avatar_lab/unlocked" out/unlocked
       - name: ffmpeg (to match recovered clips by their sound)
         if: inputs.recover != '' || inputs.voice
         run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null
       - name: Make
-        if: inputs.check == ''
+        if: inputs.check == '' && inputs.unlock == ''
         env:
           FAL_KEY: ${{ secrets.FAL_KEY }}
           RECOVER: ${{ inputs.recover }}
         run: python video/avatar_lab.py "video/avatar_lab/${{ inputs.spec }}" lab_in out/avatar_lab
       - name: Keep (encrypted when the lab key is set)
-        if: always() && inputs.check == ''
+        if: always() && inputs.check == '' && inputs.unlock == ''
         env:
           LAB_KEY: ${{ secrets.AVATAR_LAB_KEY }}
           PLAIN: ${{ inputs.plain && inputs.private_inputs == '' }}
