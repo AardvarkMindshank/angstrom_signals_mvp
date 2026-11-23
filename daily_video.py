@@ -58,9 +58,10 @@ CHANCES = {"cap": 0.34, "mate": 0.20, "nav": 0.12, "deck": 0.12, "cook": 0.08, "
            "admiral": 0.03}
 BIG_DAY_WORDS = ("CPI", "inflation", "jobs report", "Employment", "payrolls")   # the Admiral's inspection days
 RAT_TAG_CHANCE = 0.5            # on the Rat's days, his candlelit midnight-snack tag after the sign-off
-# 🎬 Bloopers (23 Nov 2026): silent comic clips under the music. The Cook's rear reveal closes every video he presents;
+# 🎬 Bloopers (23 Nov 2026): short comic clips. The Cook's rear reveal closes one in four of the videos he presents;
 # the others drop in between two sections in about one video in ten (never inside a section, so never over a number).
 COOK_REVEAL = "blooper_cook_back_1.mp4"
+COOK_REVEAL_CHANCE = 0.25                                            # one in four of his own videos (Angus, 23 Nov)
 ROUGH = ("rough", "stormy")
 BLOOPERS = {      # not_with: presenters it never plays beside (the Rat keeps out of the cat's videos); weather: only then
     "blooper_rat_pocket_1.mp4": {"caption": ["Outtake", "Meanwhile, in the galley"], "not_with": ("cat",)},
@@ -600,7 +601,8 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     tag = f"ratd_tag_{rng.choice((1, 2))}_1.mp4"
     if who == "rat" and rng.random() < RAT_TAG_CHANCE and (library / tag).exists():
         caps["tag"] = {"file": tag, "seconds": speech_seconds(library / tag)}
-    if who == "cook" and (library / COOK_REVEAL).exists():
+    reveal_roll = random.Random(f"reveal-{day.date().isoformat()}").random()
+    if who == "cook" and reveal_roll < COOK_REVEAL_CHANCE and (library / COOK_REVEAL).exists():
         caps["reveal"] = {"file": COOK_REVEAL, "seconds": duration(library / COOK_REVEAL)}
     blooper = blooper_for(day, who, library, narr, spec["weather"])
     if blooper:

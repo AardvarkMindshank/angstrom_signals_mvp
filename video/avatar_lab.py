@@ -29,6 +29,12 @@ def _resolve(value, inputs: Path, out: Path | None = None):
         return _data_uri(inputs / value[5:])
     if isinstance(value, str) and value.startswith("repo:"):
         return _data_uri(Path(value[5:]))          # a picked image kept in the repo (invented characters only)
+    if isinstance(value, str) and value.startswith("reports:"):    # a plain file on the reports branch (invented only)
+        import subprocess, tempfile
+        data = subprocess.run(["git", "show", f"origin/reports:{value[8:]}"], capture_output=True, check=True).stdout
+        tmp = Path(tempfile.mkdtemp()) / Path(value[8:]).name
+        tmp.write_bytes(data)
+        return _data_uri(tmp)
     if isinstance(value, str) and value.startswith("out:") and out is not None:
         return _data_uri(out / value[4:])          # a file made by an earlier job in the same spec
     if isinstance(value, dict):
