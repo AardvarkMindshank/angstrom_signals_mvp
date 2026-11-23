@@ -145,7 +145,9 @@ def system_prompt(sections: dict, weekend: bool) -> str:
         "only what the narrator says inside each section. Write for the ear: short sentences, plain words, numbers "
         "rounded and said naturally (\"about 2 percent\", \"sixty-two thousand dollars\"), no symbols, no lists, no "
         "brand or app names. Use only the facts given; never invent prices, news or events. Describe; never tell "
-        "anyone to buy, sell or hold. "
+        "anyone to buy, sell or hold. Each 1-day change covers exactly the period in its one_day_change_covers: name "
+        "that period (\"on Friday\", \"over the last 24 hours\") and never call it today's move unless it says "
+        "today. "
         + ("It is the weekend: stock markets are shut, so do not talk about today's stock moves. " if weekend else "")
         + "Reply with JSON only: {\"headline\": a punchy headline of at most 7 words for the day, " + parts + "}."
     )
@@ -157,19 +159,27 @@ def _template(facts: dict, sections: dict = SECTIONS) -> dict:
     coins = facts.get("cryptos") or []
     tide = (facts.get("tide") or ["The Tide is steady."])[0]
     spy = km.get("S&P 500 (the SPY fund)", {})
-    eq = f"The S&P 500 moved {spy.get('change_1d', 0):+.1f} percent on the day." if spy else "Equities were mixed."
+    eq = (f"The S&P 500 moved {spy.get('change_1d', 0):+.1f} percent {briefing.move_span(spy)}." if spy
+          else "Equities were mixed.")
     btc = coins[0] if coins else {}
-    cr = f"Bitcoin moved {btc.get('change_1d', 0):+.1f} percent on the day." if btc else "Crypto was mixed."
+    cr = f"Bitcoin moved {btc.get('change_1d', 0):+.1f} percent {briefing.move_span(btc)}." if btc else "Crypto was mixed."
     ev = facts.get("events") or []
     hz = f"Next up: {ev[0]['what']}, {ev[0]['when_utc']} UTC." if ev else "A quiet week on the calendar."
     movers = [a for a in (facts.get("key_markets") or []) + coins if a.get("change_1d") is not None]
     big = max(movers, key=lambda a: abs(a["change_1d"]), default=None)
     story = ({"title": f"{big['name']} on the move", "asset": big["name"],
-              "text": f"{big['name']} moved {big['change_1d']:+.1f} percent over the last day."} if big else
-             {"title": "A steady day", "asset": "", "text": "No single market stood out over the last day."})
+              "text": f"{big['name']} moved {big['change_1d']:+.1f} percent {briefing.move_span(big)}."} if big else
+             {"title": "A steady day", "asset": "", "text": "No single market stood out."})
     out = {"headline": "Your morning market forecast", "story": story, "tides": tide, "equities": eq, "crypto": cr,
            "horizon": hz}
     return {k: out[k] for k in ("headline", *sections)}
+
+
+def today_words(out: dict) -> list[str]:
+    """The sections that describe a market move as today's: the figures are the last finished session or day, so
+    "today" is wrong in them (the headline, the Tide's levels and the horizon may use it)."""
+    texts = {k: out.get(k) for k in ("equities", "crypto")} | {"story": (out.get("story") or {}).get("text")}
+    return [k for k, v in texts.items() if isinstance(v, str) and re.search(r"\btoday\b|\bthis morning\b", v, re.I)]
 
 
 def write_sections(supabase, facts: dict, chat=None, sections: dict = SECTIONS, weekend: bool = False) -> tuple[dict, str]:
@@ -178,26 +188,36 @@ def write_sections(supabase, facts: dict, chat=None, sections: dict = SECTIONS, 
 
     provider = ai_providers.pick("briefing", ai_providers.app_choice(supabase, "briefing"))
     if ai_providers.available(provider):
-        try:
-            data = {k: briefing.for_ai(facts).get(k) for k in ("conditions", "markets", "tide", "key_markets", "cryptos",
-                                                                "events")}
-            data["overall_weather"] = briefing.weather(facts)
-            reply = (chat or ai_providers.chat)(provider, system_prompt(sections, weekend), [{"role": "user", "content": json.dumps(
-                data, ensure_ascii=False, default=str)}], max_tokens=1200)
-            if isinstance(reply, (tuple, list)):
-                reply = reply[0]
-            text = reply.get("text") if isinstance(reply, dict) else str(reply)
-            got = json.loads(re.search(r"\{.*\}", text, re.S).group(0))
+        data = {k: briefing.for_ai(facts).get(k) for k in ("conditions", "markets", "tide", "key_markets", "cryptos",
+                                                            "events")}
+        data["overall_weather"] = briefing.weather(facts)
+        messages = [{"role": "user", "content": json.dumps(data, ensure_ascii=False, default=str)}]
+        for _attempt in range(2):
+            try:
+                reply = (chat or ai_providers.chat)(provider, system_prompt(sections, weekend), messages, max_tokens=1200)
+                if isinstance(reply, (tuple, list)):
+                    reply = reply[0]
+                text = reply.get("text") if isinstance(reply, dict) else str(reply)
+                got = json.loads(re.search(r"\{.*\}", text, re.S).group(0))
+            except Exception as exc:
+                print(f"Video script by AI failed: {str(exc)[:160]}")
+                break
             story = got.get("story") if isinstance(got.get("story"), dict) else None
             plain = [k for k in ("headline", *sections) if k != "story"]
-            if story and str(story.get("text") or "").strip() and all(
-                    isinstance(got.get(k), str) and got[k].strip() for k in plain):
-                out = {k: briefing.clean(got[k]) for k in plain}
-                out["story"] = {"title": briefing.clean(str(story.get("title") or "")) or "The story of the day",
-                                "text": briefing.clean(str(story["text"])), "asset": str(story.get("asset") or "")}
+            if not (story and str(story.get("text") or "").strip() and all(
+                    isinstance(got.get(k), str) and got[k].strip() for k in plain)):
+                break
+            out = {k: briefing.clean(got[k]) for k in plain}
+            out["story"] = {"title": briefing.clean(str(story.get("title") or "")) or "The story of the day",
+                            "text": briefing.clean(str(story["text"])), "asset": str(story.get("asset") or "")}
+            wrong = today_words(out)
+            if not wrong:
                 return out, provider
-        except Exception as exc:
-            print(f"Video script by AI failed: {str(exc)[:160]}")
+            # A move called "today" when it is Friday's session or the last 24 hours (feedback 23 Nov 2026).
+            messages = messages + [{"role": "assistant", "content": text},
+                                   {"role": "user", "content": "These parts call a move today's, but every change "
+                                    "covers the period in its one_day_change_covers: " + ", ".join(wrong) + ". Write "
+                                    "it again naming each period, JSON only."}]
     return _template(facts, sections), "template"
 
 
@@ -239,9 +259,10 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
                  "inverse": any(w in a["name"].lower() for w in INVERSE_WORDS)}
                 for a in km if a.get("value") is not None]
     stocks = [{"name": "S&P 500" if "S&P" in a["name"] else "Nasdaq 100", "change_1d": a.get("change_1d"),
+               "day_label": briefing.session_word(a.get("session_day")),
                "change_7d": a.get("change_7d"), "spark": _spark(load, *SPARK["SPY" if "S&P" in a["name"] else "QQQ"])}
               for a in km if a.get("value") is None]
-    coins = [{"name": c["name"], "price": c.get("latest_price"), "change_1d": c.get("change_1d"),
+    coins = [{"name": c["name"], "price": c.get("latest_price"), "change_1d": c.get("change_1d"), "day_label": "24h",
               "change_7d": c.get("change_7d"), "spark": _spark(load, *SPARK[c["name"]]) if c["name"] in SPARK else []}
              for c in facts.get("cryptos") or []]
     # The mood gauges show the news mood as the app does: -100..+100 and its words (feedback 23 Nov 2026).

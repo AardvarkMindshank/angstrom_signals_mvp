@@ -173,3 +173,31 @@ def test_figures_cover_the_same_week_and_the_mood_matches_the_app():
     spec = dv.graphics_data(facts, {"headline": "h", "story": {}}, datetime(2026, 11, 23), load=load)
     assert spec["crypto_mood"] == {"value": -14, "words": "mildly bearish"}
     assert "score_0_to_100" not in str(briefing.for_ai(facts)["markets"])
+
+
+def test_moves_name_their_session_and_today_is_sent_back():
+    """Feedback 23 Nov 2026: on a Monday morning the S&P 500's move is Friday's, never "today"."""
+    from datetime import timezone
+
+    import ai_providers
+    import briefing
+
+    monday = datetime(2026, 11, 23, 1, 0, tzinfo=timezone.utc)
+    assert briefing.one_day_covers("equity", "2026-11-20", monday) == \
+        "the US trading session of Friday 20 November (not today)"
+    assert "all of Sunday UTC" in briefing.one_day_covers("crypto", None, monday)
+    assert briefing.move_span({"session_day": "2026-11-20"}) == "on Friday"
+    assert briefing.move_span({"name": "Bitcoin"}) == "over the last 24 hours"
+    assert briefing.session_word("2026-11-20") == "Fri"
+
+    good = {"headline": "Up on Friday", "story": {"title": "t", "text": "Ether rose over the last 24 hours.", "asset": ""},
+            "tides": "x", "equities": "On Friday the S&P 500 rose.", "crypto": "y", "horizon": "z"}
+    bad = {**good, "equities": "The S&P 500 is up today."}
+    replies = [json.dumps(bad), json.dumps(good)]
+    old = ai_providers.available, ai_providers.app_choice
+    ai_providers.available, ai_providers.app_choice = (lambda p: True), (lambda db, k: "grok")
+    try:
+        got, who = dv.write_sections(None, {}, chat=lambda *a, **k: replies.pop(0))
+        assert who != "template" and got["equities"] == "On Friday the S&P 500 rose." and not replies
+    finally:
+        ai_providers.available, ai_providers.app_choice = old

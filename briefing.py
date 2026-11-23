@@ -221,7 +221,8 @@ def gather(supabase, user_id: str, prefs: dict, b: dict, now: datetime | None = 
         for key, (kind, asset_id, name) in keys.items():
             row = rows.get(key) or {}
             fields = ((row.get("readings") or {}).get("fields") or {}) if isinstance(row.get("readings"), dict) else {}
-            item = {"name": name, "kind": "crypto" if kind == "Crypto" else "stock"}
+            item = {"name": name, "kind": "crypto" if kind == "Crypto" else "stock",
+                    "one_day_change_covers": one_day_covers("crypto" if kind == "Crypto" else "equity", None, now)}
             for f in ("latest_price", "change_1d", "change_7d", "rsi"):
                 if fields.get(f) is not None:
                     item[f] = fields[f]
@@ -366,13 +367,44 @@ def _candle_moves(kind: str, asset_id: str, load=None) -> dict:
         got = load(kind, asset_id, "1D", "3M")
         c = got["candles"]
         c = c[~c["forming"]] if "forming" in c else c
-        closes = [float(x) for x in c["close"].dropna().tolist()]
+        c = c.dropna(subset=["close"])
+        closes = [float(x) for x in c["close"].tolist()]
+        last_day = c.index[-1].date().isoformat() if len(c) and hasattr(c.index[-1], "date") else None
     except Exception:
         return {}
     if len(closes) < 8:
         return {}
     return {"latest_price": round(closes[-1], 4), "change_1d": _pct(closes[-1], closes[-2]),
-            "change_7d": _pct(closes[-1], closes[-8 if kind == "crypto" else -6])}
+            "change_7d": _pct(closes[-1], closes[-8 if kind == "crypto" else -6]), "last_day": last_day}
+
+
+def one_day_covers(kind: str, last_day: str | None, now: datetime) -> str:
+    """What a market's 1-day change covers, in words the script can say (feedback 23 Nov 2026: on a Monday morning
+    the S&P 500's "today" was really Friday). Shares: the last finished US session, named by its day. Crypto: the
+    last full day, which ends at midnight UTC."""
+    if kind == "equity":
+        if not last_day:
+            return "the last finished US trading session"
+        d = datetime.fromisoformat(last_day)
+        when = "today" if d.date() >= now.astimezone(timezone.utc).date() else "not today"
+        return f"the US trading session of {d.strftime('%A')} {d.day} {d.strftime('%B')} ({when})"
+    end = now.astimezone(timezone.utc).date()
+    first = end - timedelta(days=1)
+    return f"the 24 hours to midnight UTC at the start of {end.strftime('%A')} (all of {first.strftime('%A')} UTC)"
+
+
+def move_span(a: dict) -> str:
+    """How a script names a 1-day move's period: "on Friday" for a share, "over the last 24 hours" for crypto."""
+    if a.get("session_day"):
+        return "on " + datetime.fromisoformat(a["session_day"]).strftime("%A")
+    if a.get("kind") == "stock" or "fund" in str(a.get("name", "")):
+        return "in the last trading session"
+    return "over the last 24 hours"
+
+
+def session_word(last_day: str | None) -> str:
+    """A share move's session as a short label: "Fri"."""
+    return datetime.fromisoformat(last_day).strftime("%a") if last_day else "Last session"
 
 
 def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
@@ -389,13 +421,18 @@ def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
         for asset_id, name in names.items():
             item = dict(by_name.get(name) or {"name": name})
             item.pop("kind", None)
+            moves = {}
             if item.get("change_1d") is None or item.get("latest_price") is None:
-                item.update({k: v for k, v in _candle_moves(kind, asset_id, load).items() if v is not None})
+                moves = _candle_moves(kind, asset_id, load)
+                item.update({k: v for k, v in moves.items() if v is not None and k != "last_day"})
             elif kind == "equity":
                 # The stored 7-day change counts 7 trading days (about 9 calendar days); the forecast's week is 5.
-                week = _candle_moves(kind, asset_id, load).get("change_7d")
-                if week is not None:
-                    item["change_7d"] = week
+                moves = _candle_moves(kind, asset_id, load)
+                if moves.get("change_7d") is not None:
+                    item["change_7d"] = moves["change_7d"]
+            if kind == "equity":
+                item["session_day"] = moves.get("last_day")
+            item["one_day_change_covers"] = one_day_covers(kind, moves.get("last_day"), now)
             if kind == "equity":
                 item.pop("latest_price", None)            # a fund's price means little to a listener; its moves do
             out.append(item)
@@ -439,7 +476,8 @@ GENERAL_SYSTEM = (
     "spoken figure (\"about sixty-two thousand dollars\", \"just under one dollar\") and changes to one decimal at "
     "most. Use only the facts given; never "
     "invent prices, news or events, and say nothing about a section that has no facts. Changes are percent unless "
-    "marked as points. Describe; never tell the listener to buy, sell or hold, and give no price targets. Trend, "
+    "marked as points. " + "Each market's 1-day change covers exactly the period in its one_day_change_covers: name that period "
+    "(\"on Friday\", \"over the last 24 hours\") and never call it today's move unless it says today. Describe; never tell the listener to buy, sell or hold, and give no price targets. Trend, "
     "stretch and flow readings run from minus 100 to plus 100 (above zero leans up). A market's news mood is given as "
     "news_mood, from minus 100 to plus 100 (0 is mixed), with its words; say it that way. Asset news sentiment runs "
     "from 0 to 100, with 50 neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
@@ -470,7 +508,7 @@ def plain_general(facts: dict, edition: str, day: datetime) -> str:
     for a in (facts.get("key_markets") or []) + (facts.get("cryptos") or []):
         move = a.get("change_1d") if a.get("change_1d") is not None else a.get("change_7d")
         if move is not None:
-            span = "over the last day" if a.get("change_1d") is not None else "over the week"
+            span = move_span(a) if a.get("change_1d") is not None else "over the week"
             out.append(f"{a['name']} moved {move:+.1f} percent {span}.")
     out += [str(x) for x in (facts.get("tide") or [])[:3]]
     for e in (facts.get("events") or [])[:4]:
@@ -582,7 +620,9 @@ SYSTEM = (
     "(\"about 3 percent\", \"sixty-two thousand dollars\"), no lists, no headings, no symbols, no emoji, no markdown, "
     "no URLs. Use only the facts given; never invent prices, news or events, and say nothing about a section that has "
     "no facts. Describe; never tell the listener to buy, sell or hold, and give no price targets. Trend, stretch and "
-    "flow readings run from minus 100 to plus 100 (above zero leans up). A market's news mood is given as news_mood, "
+    "flow readings run from minus 100 to plus 100 (above zero leans up). Each 1-day change covers exactly the period "
+    "in its one_day_change_covers: name that period (\"in the last session\", \"over the last 24 hours\") and "
+    "never call it today's move unless it says today. A market's news mood is given as news_mood, "
     "from minus 100 to plus 100 (0 is mixed), with its words; say it that way. Asset news sentiment runs from 0 to "
     "100, with 50 neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
     "opening line. Open with \"This is the MarketNavi morning forecast for\" the day and date, follow the sections "
@@ -612,7 +652,7 @@ def plain_script(facts: dict, b: dict, day: datetime) -> str:
     for a in facts.get("watchlist") or []:
         bits = [a["name"]]
         if a.get("change_1d") is not None:
-            bits.append(f"moved {a['change_1d']:+.1f} percent over the last day")
+            bits.append(f"moved {a['change_1d']:+.1f} percent {move_span(a)}")
         if a.get("news_sentiment_0_to_100") is not None:
             bits.append(f"with news sentiment at {round(a['news_sentiment_0_to_100'])}")
         out.append(", ".join(bits) + ".")

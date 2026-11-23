@@ -138,7 +138,7 @@ function narrContent(seg) {
         <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
           <div><div style="font-size:${z(48, 60)}px;font-weight:800">${esc(a.name)}</div>
           ${a.price ? `<div style="font-size:${z(40, 48)}px;color:#e2e8f0">${money(a.price)}</div>` : ""}</div>
-          <div style="text-align:right;line-height:1.15"><div>${per(a.change_1d, "1 day", z(64, 80))}</div>
+          <div style="text-align:right;line-height:1.15"><div>${per(a.change_1d, a.day_label || "1 day", z(64, 80))}</div>
           <div style="margin-top:6px">${per(a.change_7d, "1 week", z(40, 50))}</div></div></div>
         <div style="margin-top:20px">${spark(a.spark, z(1500, 900), z(280, 400), up(a.change_7d))}</div>
         <div style="font-size:${z(26, 34)}px;color:var(--soft);margin-top:6px">Last 7 days</div></div>`;
@@ -173,7 +173,7 @@ function narrContent(seg) {
   if (seg.kind === "equities") {
     const tiles = d.stocks.map((s) => `<div class="it card tile" style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:${z("26px 30px", "32px 40px")}">
       <div><div style="font-size:${z(38, 54)}px;font-weight:800">${esc(s.name)}</div>
-      <div style="margin-top:6px;line-height:1.05">${per(s.change_1d, "1 day", z(60, 84))}</div>
+      <div style="margin-top:6px;line-height:1.05">${per(s.change_1d, s.day_label || "1 day", z(60, 84))}</div>
       <div style="margin-top:8px">${per(s.change_7d, "1 week", z(38, 48))}</div></div>
       <div style="text-align:center">${spark(s.spark, z(420, 380), z(150, 190), up(s.change_7d))}
       <div style="font-size:${z(24, 32)}px;color:var(--soft)">Last 7 days</div></div></div>`).join("");
@@ -186,7 +186,7 @@ function narrContent(seg) {
       ? `<div class="it card" style="display:flex;align-items:center;gap:22px;padding:20px 34px">
           <div style="flex:1"><div style="font-size:50px;font-weight:800;line-height:1.1">${esc(c.name)}</div>
           <div style="font-size:40px;color:#e2e8f0;margin-top:2px">${money(c.price)}</div></div>
-          <div style="text-align:right;line-height:1.2"><div>${per(c.change_1d, "1 day", 44)}</div><div>${per(c.change_7d, "1 week", 44)}</div></div>
+          <div style="text-align:right;line-height:1.2"><div>${per(c.change_1d, "24h", 44)}</div><div>${per(c.change_7d, "1 week", 44)}</div></div>
           ${spark(c.spark, 190, 80, up(c.change_7d))}</div>`
       : `<div class="it card row"><div class="name" style="font-size:38px;width:190px">${esc(c.name)}</div>
           <div class="price" style="font-size:36px;width:200px;text-align:left">${money(c.price)}</div>
@@ -195,7 +195,7 @@ function narrContent(seg) {
           ${spark(c.spark, 320, 60, up(c.change_7d))}</div>`).join("");
     // Column titles (wide layout), so each figure says which period it covers.
     const head = P ? "" : `<div class="it row" style="padding:0 28px;font-size:26px;color:var(--soft);font-weight:700">
-          <div style="width:190px"></div><div style="width:200px">Price</div><div style="width:140px;text-align:right">1 day</div>
+          <div style="width:190px"></div><div style="width:200px">Price</div><div style="width:140px;text-align:right">24h</div>
           <div style="width:140px;text-align:right">1 week</div><div style="width:320px;text-align:center">Last 7 days</div></div>`;
     return `<div style="display:flex;flex-direction:${z("row", "column")};gap:${z(30, 28)}px;align-items:${z("center", "stretch")}">
       <div class="it card" style="padding:${z("26px 34px", "26px 34px 14px")};text-align:center"><div style="font-size:${z(34, 46)}px;color:var(--soft);font-weight:700">Crypto news mood</div>${gauge(d.crypto_mood, z(440, 640))}</div>
