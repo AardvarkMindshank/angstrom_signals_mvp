@@ -1,0 +1,25 @@
+{
+ "about": "Blooper stills (23 Nov 2026): the Cook turned round (bare tattooed back, pink-heart boxers) and the Rat popping out of his apron pocket. Stills first; animated after approval.",
+ "jobs": [
+  {
+   "id": "cook_back",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/cookF.png",
+    "prompt": "Show the same cook turned around with his back to the camera, glancing back over his shoulder with a sheepish, embarrassed grin under his big moustache. His broad, rounded bare back is hairy and covered in old sailor tattoos (an anchor, a ship and a rope design) in the same faded ink as his arms. Only the white apron strings are tied in a bow at his back, and below them he wears baggy pink boxer shorts with a pattern of small red hearts, reaching to mid-thigh. Keep his chef's hat, his face, the moustache, the galley kitchen with the copper pans, the warm lighting and the 3D animated style exactly the same. Comic, family friendly.",
+    "num_images": 2,
+    "output_format": "png"
+   }
+  },
+  {
+   "id": "cook_rat_pocket",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/cookF.png",
+    "prompt": "Add a small cheeky brown cartoon rat popping its head and front paws out of the cook's front apron pocket, grinning with big eyes, pink nose, rounded pink ears, a small gold hoop earring and a red and white neckerchief, nibbling a little wedge of yellow cheese. The cook looks down at the rat in surprise, eyebrows raised. Keep everything else exactly the same: the cook's face, moustache, chef's hat, stained apron, tattoos, the pies, the galley kitchen, the lighting and the 3D animated style.",
+    "num_images": 2,
+    "output_format": "png"
+   }
+  }
+ ]
+}
