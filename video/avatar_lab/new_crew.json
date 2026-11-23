@@ -1,0 +1,101 @@
+{
+ "about": "New crew (23 Nov 2026): portrait options for the Cook, the Admiral and the Rat, and free voice tries. Invented characters only; run with plain: true.",
+ "jobs": [
+  {
+   "id": "portrait_cook_a",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, waist-up, a rotund, rosy-cheeked ship's cook in his fifties with a big round belly, glowing red cheeks and a sweaty, flushed face, clearly hot and bothered as if he has just burst out of a steaming galley, bushy ginger-grey moustache, a crumpled white cook's hat sitting askew, a well-loved white apron heavily smeared with grease, gravy and flour, with one big front pocket at the chest, a tea towel over his shoulder and a wooden spoon in his hand, a cheerful man who obviously enjoys eating his own food, a ship's galley with hanging copper pans and steam behind him"
+   }
+  },
+  {
+   "id": "portrait_cook_b",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, waist-up, slightly from the side, a rotund, rosy-cheeked ship's cook in his fifties with a big round belly, glowing red cheeks and a sweaty, flushed face, clearly hot and bothered as if he has just burst out of a steaming galley, bushy ginger-grey moustache, a crumpled white cook's hat sitting askew, a well-loved white apron heavily smeared with grease, gravy and flour, with one big front pocket at the chest, a tea towel over his shoulder and a half-eaten pie in his hand, a cheerful man who obviously enjoys eating his own food, a ship's galley with hanging copper pans and steam behind him"
+   }
+  },
+  {
+   "id": "portrait_admiral_a",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, head-and-shoulders, a strikingly handsome Black British admiral in his forties with a strong athletic build, a strong jaw, a neatly trimmed short beard and a warm, confident half-smile, an immaculate navy-blue admiral's dress uniform with broad gold sleeve lace, gold epaulettes, rows of medal ribbons and one highly polished gold medal he is visibly proud of, a white peaked cap with gold oak-leaf braid, standing on the bridge of a sailing ship, distinguished, charismatic and very much in command"
+   }
+  },
+  {
+   "id": "portrait_admiral_b",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, head-and-shoulders, a strikingly handsome Black British admiral in his forties with a strong athletic build, a strong jaw, a neatly trimmed short beard and a warm, confident half-smile, an immaculate navy-blue admiral's dress uniform with broad gold sleeve lace, gold epaulettes, rows of medal ribbons and one highly polished gold medal he is visibly proud of, his white peaked cap with gold oak-leaf braid tucked under his arm, standing on the bridge of a sailing ship, distinguished, charismatic and very much in command"
+   }
+  },
+  {
+   "id": "portrait_rat_a",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, a scruffy, cheeky brown ship's rat with a chewed left ear, a tiny gold hoop earring, a knotted red-and-white spotted neckerchief, bright mischievous black eyes and a crooked closed-mouth grin, half glancing over his shoulder as if checking for the cat, peeking out from under a wooden ship's chart table, surrounded by his hoard: a huge wedge of yellow cheese with bites taken out, rolled old sea maps, brass binoculars and a candle stub, low camera at floor level"
+   }
+  },
+  {
+   "id": "portrait_rat_b",
+   "model": "fal-ai/flux-pro/kontext/text-to-image",
+   "input": {
+    "aspect_ratio": "3:4",
+    "num_images": 2,
+    "output_format": "png",
+    "prompt": "Portrait in a polished 3D animated film style, original character, warm cinematic lighting, looking at the camera, mouth closed, a scruffy, cheeky brown ship's rat with a chewed left ear, a tiny gold hoop earring, a knotted red-and-white spotted neckerchief, bright mischievous black eyes and a crooked closed-mouth grin, clutching a crumb of cheese, ears pricked, peeking out from under a wooden ship's chart table, surrounded by his hoard: a huge wedge of yellow cheese with bites taken out, rolled old sea maps, brass binoculars and a candle stub, low camera at floor level"
+   }
+  },
+  {
+   "id": "voice_admiral_daniel",
+   "speak": "Good morning, crew. The Admiral is aboard, so do stand up straight. Let us see how the markets have behaved.",
+   "voice": "bm_daniel",
+   "speed": 1.0
+  },
+  {
+   "id": "voice_admiral_fable",
+   "speak": "Good morning, crew. The Admiral is aboard, so do stand up straight. Let us see how the markets have behaved.",
+   "voice": "bm_fable",
+   "speed": 1.0
+  },
+  {
+   "id": "voice_cook_george",
+   "speak": "Phew! Hot in that galley. Right, quick forecast before the stew boils over.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "voice_cook_michael",
+   "speak": "Phew! Hot in that galley. Right, quick forecast before the stew boils over.",
+   "voice": "am_michael",
+   "speed": 1.1
+  },
+  {
+   "id": "voice_rat_puck",
+   "speak": "Psst. Cat's away. I'm doing the forecast. Keep your voice down.",
+   "voice": "am_puck",
+   "speed": 1.2
+  },
+  {
+   "id": "voice_rat_echo",
+   "speak": "Psst. Cat's away. I'm doing the forecast. Keep your voice down.",
+   "voice": "am_echo",
+   "speed": 1.2
+  }
+ ]
+}

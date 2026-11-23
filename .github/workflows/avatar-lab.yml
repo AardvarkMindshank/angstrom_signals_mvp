@@ -15,6 +15,10 @@ on:
         description: "Set up the free Kokoro voice (for specs with speak jobs)"
         type: boolean
         default: false
+      plain:
+        description: "Save the outputs unencrypted (invented characters only: never with private inputs)"
+        type: boolean
+        default: false
       recover:
         description: "Fetch clips fal already made instead of making new ones: '<start>,<end>' in UTC (blank: make)"
         default: ""
@@ -65,8 +69,10 @@ jobs:
         if: always()
         env:
           LAB_KEY: ${{ secrets.AVATAR_LAB_KEY }}
+          PLAIN: ${{ inputs.plain && inputs.private_inputs == '' }}
         run: |
           stamp="$(date -u +%Y-%m-%d_%H%M)_r${GITHUB_RUN_ID}"
+          if [ "$PLAIN" = "true" ]; then LAB_KEY=""; fi
           if [ -n "$LAB_KEY" ]; then
             mkdir -p out/avatar_lab_enc
             tar -C out -czf lab.tgz avatar_lab
