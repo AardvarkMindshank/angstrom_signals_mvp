@@ -246,13 +246,13 @@ def test_speech_seconds_keeps_a_clip_that_talks_to_the_end(tmp_path):
     assert abs(dv.speech_seconds(clip) - dv.duration(clip)) < 0.01
 
 
-def test_bloopers_about_one_day_in_four_never_with_the_cat():
+def test_bloopers_rare_and_the_rat_never_with_the_cat():
     from datetime import timedelta
     start = datetime(2027, 1, 1)
     sections = {"story": {}, "tides": {}, "equities": {}, "crypto": {}}
-    picks = [dv.blooper_for(start + timedelta(days=i), "cap", None, sections) for i in range(400)]
+    picks = [dv.blooper_for(start + timedelta(days=i), "cap", None, sections) for i in range(1000)]
     share = sum(p is not None for p in picks) / len(picks)
-    assert 0.18 < share < 0.32
+    assert 0.06 < share < 0.14
     assert all(p["after"] in dv.BLOOPER_AFTER for p in picks if p)
     cat_days = [dv.blooper_for(start + timedelta(days=i), "cat", None, sections) for i in range(400)]
     assert all(p["file"] in ("blooper_cat_chase_1.mp4", "blooper_cook_wave_1.mp4") for p in cat_days if p)

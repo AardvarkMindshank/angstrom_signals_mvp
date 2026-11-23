@@ -59,7 +59,7 @@ CHANCES = {"cap": 0.34, "mate": 0.20, "nav": 0.12, "deck": 0.12, "cook": 0.08, "
 BIG_DAY_WORDS = ("CPI", "inflation", "jobs report", "Employment", "payrolls")   # the Admiral's inspection days
 RAT_TAG_CHANCE = 0.5            # on the Rat's days, his candlelit midnight-snack tag after the sign-off
 # 🎬 Bloopers (23 Nov 2026): silent comic clips under the music. The Cook's rear reveal closes every video he presents;
-# the others drop in between two sections in about one video in four (never inside a section, so never over a number).
+# the others drop in between two sections in about one video in ten (never inside a section, so never over a number).
 COOK_REVEAL = "blooper_cook_back_1.mp4"
 ROUGH = ("rough", "stormy")
 BLOOPERS = {      # not_with: presenters it never plays beside (the Rat keeps out of the cat's videos); weather: only then
@@ -70,7 +70,7 @@ BLOOPERS = {      # not_with: presenters it never plays beside (the Rat keeps ou
                                "weather": ROUGH},
     "blooper_cook_wave_1.mp4": {"caption": ["Outtake", "Rough seas in the galley"], "not_with": (), "weather": ROUGH},
 }
-BLOOPER_CHANCE = 0.25
+BLOOPER_CHANCE = 0.10              # rare on purpose (Angus, 23 Nov 2026)
 BLOOPER_AFTER = ("story", "tides", "equities", "crypto")             # it plays after one of these sections
 
 
