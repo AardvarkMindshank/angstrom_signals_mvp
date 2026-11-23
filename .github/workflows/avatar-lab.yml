@@ -58,7 +58,7 @@ jobs:
           done
           rm -f enc.bin
       - name: ffmpeg (to match recovered clips by their sound)
-        if: inputs.recover != ''
+        if: inputs.recover != '' || inputs.voice
         run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null
       - name: Make
         env:

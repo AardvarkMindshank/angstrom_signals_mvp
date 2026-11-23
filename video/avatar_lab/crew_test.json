@@ -1,0 +1,82 @@
+{
+ "about": "New crew test clips (23 Nov 2026): one per character plus a Rat D snippet, before the full sets.",
+ "jobs": [
+  {
+   "id": "say_cook_test",
+   "speak": "Buongiorno! Phew, it is hot in that galley. Quick forecast, before the stew boils over!",
+   "voice": "im_nicola",
+   "speed": 1.05,
+   "pitch": -3
+  },
+  {
+   "id": "say_admiral_test",
+   "speak": "Good morning, crew. The Admiral is aboard, so do stand up straight. Let us see how the markets have behaved.",
+   "voice": "bm_fable",
+   "speed": 1.0
+  },
+  {
+   "id": "say_rat_test",
+   "speak": "Psst. The cat's away, so I'm doing the forecast. Keep your voice down.",
+   "voice": "am_echo",
+   "speed": 1.2,
+   "pitch": 7
+  },
+  {
+   "id": "say_ratd_test",
+   "speak": "Midnight snack. Don't tell the cat.",
+   "voice": "am_echo",
+   "speed": 1.1,
+   "pitch": 7
+  },
+  {
+   "id": "ratD_bright",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/ratD.png",
+    "prompt": "Make the scene a little brighter so the rat's face, fur and paws are clearly visible on a small phone screen, still lit warmly by the candle. Keep everything else exactly the same.",
+    "num_images": 1,
+    "output_format": "png"
+   }
+  },
+  {
+   "id": "cook_test",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/cookF.png",
+    "audio_url": "out:say_cook_test.wav",
+    "prompt": "The animated ship's cook from the picture speaking to camera, jolly, flustered and out of breath, clear mouth movement in time with the voice, natural head movement and blinking; the copper pots and pans hanging behind him sway gently from side to side with the roll of the ship, and steam swirls and curls around the galley."
+   }
+  },
+  {
+   "id": "admiral_test",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/admiral4.png",
+    "audio_url": "out:say_admiral_test.wav",
+    "prompt": "The animated admiral from the picture speaking to camera with calm, charming authority and a slight proud smile, upright posture, clear mouth movement in time with the voice, natural head movement and blinking; the sails and rigging behind him move gently in the breeze."
+   }
+  },
+  {
+   "id": "rat_test",
+   "stage": 1,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/ratB.png",
+    "audio_url": "out:say_rat_test.wav",
+    "prompt": "The animated ship's rat from the picture speaking to camera, cheeky and conspiratorial, glancing quickly over his shoulder once, ears and whiskers twitching, clear mouth movement in time with the voice, natural head movement and blinking; the candle flame flickers and its warm light dances over his face and whiskers."
+   }
+  },
+  {
+   "id": "ratd_test",
+   "stage": 2,
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "out:ratD_bright_1.png",
+    "audio_url": "out:say_ratd_test.wav",
+    "prompt": "The animated ship's rat from the picture whispering to camera while nibbling a crumb of cheese, eyes darting, clear mouth movement in time with the voice, natural head movement and blinking; the candle flame flickers and its warm glow dances over his face."
+   }
+  }
+ ]
+}

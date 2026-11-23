@@ -88,7 +88,23 @@ def speak_job(job: dict, out: Path) -> list[Path]:
         wf.setsampwidth(2)
         wf.setframerate(rate)
         wf.writeframes(np.concatenate([pad, pcm, pad]).tobytes())
+    if job.get("pitch"):
+        pitch_shift(path, float(job["pitch"]))
     return [path]
+
+
+def pitch_shift(path: Path, semitones: float) -> None:
+    """Raise (+) or lower (-) a voice by semitones, keeping its speed (ffmpeg), in place. The same as the daily video."""
+    import subprocess
+    import wave
+
+    with wave.open(str(path)) as wf:
+        rate = wf.getframerate()
+    f = 2 ** (semitones / 12)
+    tmp = path.with_suffix(".shift.wav")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(path), "-af",
+                    f"asetrate={rate}*{f},aresample={rate},atempo={1 / f}", str(tmp)], check=True)
+    tmp.replace(path)
 
 
 def _envelope(pcm, rate: int):
