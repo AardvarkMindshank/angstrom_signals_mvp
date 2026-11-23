@@ -19,6 +19,9 @@ on:
         description: "Save the outputs unencrypted (invented characters only: never with private inputs)"
         type: boolean
         default: false
+      check:
+        description: "Instead of making clips: frame strips of one presenter's library clips (e.g. mate; never cap)"
+        default: ""
       recover:
         description: "Fetch clips fal already made instead of making new ones: '<start>,<end>' in UTC (blank: make)"
         default: ""
@@ -30,6 +33,33 @@ jobs:
     timeout-minutes: 150
     steps:
       - uses: actions/checkout@v7
+      - name: Clip check (frames)
+        if: inputs.check != ''
+        env:
+          LAB_KEY: ${{ secrets.AVATAR_LAB_KEY }}
+          WHO: ${{ inputs.check }}
+        run: |
+          [ "$WHO" != "cap" ] || { echo "Not the captain's clips"; exit 1; }
+          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null
+          git fetch -q origin reports
+          mkdir -p lib out/check
+          for f in $(git ls-tree --name-only origin/reports avatar_lab/library_captain/); do
+            git show "origin/reports:$f" > lib.enc
+            openssl enc -d -aes-256-cbc -pbkdf2 -in lib.enc -out lib.tgz -pass env:LAB_KEY
+            tar -xzf lib.tgz -C lib --wildcards "avatar_lab/${WHO}_*.mp4" 2>/dev/null || true
+            rm -f lib.enc lib.tgz
+          done
+          for c in lib/avatar_lab/${WHO}_*.mp4; do
+            n=$(basename "$c" .mp4)
+            d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$c")
+            for i in 1 2 3 4 5; do
+              ffmpeg -v error -y -ss "$(python3 -c "print($d*($i-0.5)/5)")" -i "$c" -frames:v 1 -vf scale=-1:300 "f$i.jpg"
+            done
+            ffmpeg -v error -y -i f1.jpg -i f2.jpg -i f3.jpg -i f4.jpg -i f5.jpg -filter_complex hstack=5 "out/check/$n.jpg"
+          done
+          ls out/check | wc -l
+          rm -rf lib f*.jpg
+          bash .github/scripts/save_to_reports.sh "avatar_lab/check_${WHO}" out/check
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
@@ -61,12 +91,13 @@ jobs:
         if: inputs.recover != '' || inputs.voice
         run: sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends ffmpeg >/dev/null
       - name: Make
+        if: inputs.check == ''
         env:
           FAL_KEY: ${{ secrets.FAL_KEY }}
           RECOVER: ${{ inputs.recover }}
         run: python video/avatar_lab.py "video/avatar_lab/${{ inputs.spec }}" lab_in out/avatar_lab
       - name: Keep (encrypted when the lab key is set)
-        if: always()
+        if: always() && inputs.check == ''
         env:
           LAB_KEY: ${{ secrets.AVATAR_LAB_KEY }}
           PLAIN: ${{ inputs.plain && inputs.private_inputs == '' }}
