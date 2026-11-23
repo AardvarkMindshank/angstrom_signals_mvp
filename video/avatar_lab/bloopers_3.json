@@ -1,0 +1,27 @@
+{
+ "about": "Bloopers round 3 (23 Nov 2026): the Admiral and the cheese animated; the cat chasing the Rat (still first).",
+ "jobs": [
+  {
+   "id": "blooper_admiral_cheese",
+   "model": "fal-ai/kling-video/v2.5-turbo/standard/image-to-video",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/bloopers/admiral_cheese.png",
+    "prompt": "Animated comedy moment, one continuous shot, no cuts. The admiral studies the nibbled wedge of cheese with one raised eyebrow, then slowly turns his head to look at the little rat sitting on his shoulder. The rat freezes, grins guiltily with crumbs on his whiskers, and slowly slides down behind the admiral's epaulette out of sight. The admiral looks back at the camera, unimpressed. The sails and rigging move gently in the breeze. The camera stays still and never leaves the scene.",
+    "duration": "5",
+    "negative_prompt": "blur, distort, low quality, extra limbs, morphing face, text, scene change, cut, zoom out",
+    "cfg_scale": 0.5
+   }
+  },
+  {
+   "id": "cat_rat_still",
+   "model": "fal-ai/flux-pro/kontext/max/multi",
+   "input": {
+    "image_urls": ["repo:video/avatar_lab/picks/cat.png", "repo:video/avatar_lab/picks/ratB.png"],
+    "prompt": "On the ship's chart table in front of the porthole from the first picture, the black-and-white tuxedo cat in her navy knitted jumper from the first picture crouches low, about to pounce, eyes wide and tail up, while the small brown rat from the second picture, with his gold earring and red and white neckerchief, runs away across the charts hugging a big wedge of cheese, looking back over his shoulder in alarm. Rolled maps and a brass instrument on the table. Same 3D animated style and warm lighting as the pictures, wide shot showing both characters fully.",
+    "num_images": 2,
+    "output_format": "png",
+    "aspect_ratio": "3:4"
+   }
+  }
+ ]
+}
