@@ -27,6 +27,8 @@ def _data_uri(path: Path) -> str:
 def _resolve(value, inputs: Path, out: Path | None = None):
     if isinstance(value, str) and value.startswith("file:"):
         return _data_uri(inputs / value[5:])
+    if isinstance(value, str) and value.startswith("repo:"):
+        return _data_uri(Path(value[5:]))          # a picked image kept in the repo (invented characters only)
     if isinstance(value, str) and value.startswith("out:") and out is not None:
         return _data_uri(out / value[4:])          # a file made by an earlier job in the same spec
     if isinstance(value, dict):

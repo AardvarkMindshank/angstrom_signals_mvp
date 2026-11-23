@@ -1,0 +1,45 @@
+{
+ "about": "Picks refined (23 Nov 2026): Cook 3 with the pie, Cook 4 with a pocket and tattoos, Rat 1 with Rat 4's cheeky look, Rat 4 with Rat 1's candle glow.",
+ "jobs": [
+  {
+   "id": "cook3_pie",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/cook3.png",
+    "prompt": "Make the cook hold a half-eaten golden pie in one hand at chest height, as if he has just taken a bite. Keep everything else exactly the same: his face, the apron with its front chest pocket and stains, the tattoos, the kitchen, the lighting and the style.",
+    "num_images": 2,
+    "output_format": "png"
+   }
+  },
+  {
+   "id": "cook4_pocket",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/cook4.png",
+    "prompt": "Add a big front chest pocket to his apron, stitched on, and faded old sailor tattoos on both upper arms (an anchor and a rope). Keep everything else exactly the same: his face, the pie in his hand, the stains, the kitchen, the lighting and the style.",
+    "num_images": 2,
+    "output_format": "png"
+   }
+  },
+  {
+   "id": "rat1_cheeky",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/rat1.png",
+    "prompt": "Give the rat a cheeky, wide toothy grin with big bright excited eyes, holding a small crumb of cheese in both front paws. Keep everything else exactly the same: the chart table above him, the warm candle glow, the cheese wedge, the maps, the binoculars, the neckerchief, the earring and the style.",
+    "num_images": 2,
+    "output_format": "png"
+   }
+  },
+  {
+   "id": "rat4_candle",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/rat4.png",
+    "prompt": "Relight the scene as a dark, cosy space under the chart table lit only by the single candle's warm golden glow, with soft flickering shadows, like candlelight at night. Keep the rat exactly the same: his cheeky grin, his eyes, the cheese crumbs in his paws, his neckerchief and earring, and the style.",
+    "num_images": 2,
+    "output_format": "png"
+   }
+  }
+ ]
+}
