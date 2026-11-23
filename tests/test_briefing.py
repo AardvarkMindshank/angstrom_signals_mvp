@@ -212,3 +212,17 @@ def test_morning_plans_made_ahead_only_for_active_pro_and_elite(monkeypatch):
     assert got == ["pro_active"]
     assert any(uid == "pro_active" and ch.get("briefing", {}).get("token") for uid, ch in saved)   # its feed folder
     assert any(uid == "free_asked" and "Pro and Elite" in ch["briefing_state"]["error"] for uid, ch in saved)
+
+
+def test_the_email_links_only_today_s_passage_plan(monkeypatch):
+    """23 Nov 2026: Monday's email linked Sunday's plan. Only the plan for the member's own today is linked."""
+    from datetime import datetime, timezone
+
+    store = {"general/episodes.json": {}, "tok/episodes.json": {"2026-11-22": {"made_at": "2026-11-22T06:02:00+00:00"}}}
+    monkeypatch.setattr(briefing, "stored_json", lambda db, path: store.get(path.replace(briefing.GENERAL, "general"), {}))
+    monkeypatch.setattr(briefing, "personal_allowed", lambda plan: True)
+    settings = {"digest_tz": "Asia/Bangkok", "briefing": {"token": "tok"}}
+    monday_morning = datetime(2026, 11, 23, 0, 30, tzinfo=timezone.utc)             # 07:30 in Bangkok
+    assert briefing.listen_links(None, "https://b", settings, "pro", monday_morning) == []
+    sunday_evening = datetime(2026, 11, 22, 12, 0, tzinfo=timezone.utc)
+    assert [w for w, _ in briefing.listen_links(None, "https://b", settings, "pro", sunday_evening)] == ["🧭 Your Passage Plan"]

@@ -9477,12 +9477,27 @@ def _admin_ai() -> None:
 # 📓 Logbook (navigator.py, briefing.py, run_briefings.py): today's Passage Plan, written and spoken, the plans kept
 # before it, and the spoken plan's choices. The trades will join it (the Trader's Logbook brief).
 
-@st.cache_data(ttl=60, show_spinner=False)
-def _briefing_meta(base: str, token: str) -> dict:
+def _fresh_get(url: str):
+    """A fresh copy of a stored file, never the storage CDN's cached one (23 Nov 2026: the cached list still named an
+    older day, so the app showed Saturday's Passage Plan on Monday)."""
+    import time
+
     import requests
 
+    return requests.get(url, params={"fresh": str(int(time.time()))}, headers={"Cache-Control": "no-cache"}, timeout=6)
+
+
+def _version(url: str, made_at) -> str:
+    """The link to a file that can be re-made under the same name (a re-made video), with its version, so browsers
+    and the CDN fetch the new one."""
+    stamp = "".join(ch for ch in str(made_at or "") if ch.isdigit())[:14]
+    return f"{url}?v={stamp}" if stamp else url
+
+
+@st.cache_data(ttl=60, show_spinner=False)
+def _briefing_meta(base: str, token: str) -> dict:
     try:
-        r = requests.get(briefing.public_url(base, f"{token}/episodes.json"), timeout=6)
+        r = _fresh_get(briefing.public_url(base, f"{token}/episodes.json"))
         return r.json() if r.status_code == 200 else {}
     except Exception:
         return {}
@@ -9490,10 +9505,8 @@ def _briefing_meta(base: str, token: str) -> dict:
 
 @st.cache_data(ttl=600, show_spinner=False)
 def _briefing_text(url: str) -> str:
-    import requests
-
     try:
-        r = requests.get(url, timeout=6)
+        r = _fresh_get(url)
         return r.text if r.status_code == 200 else ""
     except Exception:
         return ""
@@ -9527,17 +9540,15 @@ def _briefing_pick(key: str, options: list, labels: dict) -> str:
 
 @st.cache_data(ttl=300, show_spinner=False)
 def _videos_meta(base: str) -> dict:
-    import requests
-
     try:
-        r = requests.get(briefing.public_url(base, "video/videos.json"), timeout=6)
+        r = _fresh_get(briefing.public_url(base, "video/videos.json"))
         return r.json() if r.status_code == 200 else {}
     except Exception:
         return {}
 
 
-def _video_urls(base: str, day: str) -> dict:
-    u = lambda name: briefing.public_url(base, f"video/{day}_{name}")      # noqa: E731
+def _video_urls(base: str, day: str, made_at=None) -> dict:
+    u = lambda name: _version(briefing.public_url(base, f"video/{day}_{name}"), made_at)      # noqa: E731
     return {"land": u("land.mp4"), "port": u("port.mp4"), "land_poster": u("land.jpg"), "port_poster": u("port.jpg")}
 
 
@@ -9571,7 +9582,7 @@ def _video_player(key: str, pick: bool = False, day: str | None = None) -> None:
     else:
         day = days[0]
         _briefing_title("🎬 " + t("Daily video"), label(day), tip)
-    v = _video_urls(base, day)
+    v = _video_urls(base, day, (meta.get(day) or {}).get("made_at"))
     st.html(
         "<style>.ang-dv video{display:block;width:100%;border-radius:8px;background:#000}"
         ".ang-dv .port{display:none;max-height:70vh;width:auto;max-width:100%;margin:0 auto}"
@@ -9581,7 +9592,8 @@ def _video_player(key: str, pick: bool = False, day: str | None = None) -> None:
         f"<video class='port' controls playsinline preload='none' poster='{v['port_poster']}'>"
         f"<source src='{v['port']}' type='video/mp4'></video></div>")
     with st.expander("📜 " + t("Read it"), expanded=False):
-        st.write(_briefing_text(briefing.public_url(base, f"video/{day}.txt")) or t("Not available."))
+        st.write(_briefing_text(_version(briefing.public_url(base, f"video/{day}.txt"), (meta.get(day) or {}).get("made_at")))
+                 or t("Not available."))
 
 
 _DAILY_VIDEO_JS = """
@@ -9660,7 +9672,7 @@ def _daily_video_popup() -> None:
         st.session_state["daily_video_auto"] = False
 
     _daily_video_pop(key="daily_video_pop", on_stop_change=_stop,
-                     data={"day": day, "show": bool(auto and fresh), **_video_urls(base, day),
+                     data={"day": day, "show": bool(auto and fresh), **_video_urls(base, day, (meta.get(day) or {}).get("made_at")),
                            "words": {"sound": t("Tap for sound"), "close": t("Close"),
                                      "stop": t("Close and stop daily autoplay")}})
 
@@ -9712,7 +9724,8 @@ def _forecast_player(key: str, pick: bool = False, day: str | None = None) -> No
         eid = _briefing_pick(key, ids, {k: label(k) for k in ids})
     else:
         _briefing_title("🌍 " + t("Morning forecast"), label(eid), tip)
-    st.audio(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.mp3"), format="audio/mpeg")
+    st.audio(_version(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.mp3"), (meta.get(eid) or {}).get("made_at")),
+             format="audio/mpeg")
     with st.expander("📜 " + t("Read it"), expanded=False):
         st.write(_briefing_text(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.txt")) or t("Not available."))
 
@@ -9763,7 +9776,8 @@ def _passage_player(key: str, show_button: bool = True, pick: bool = False, day:
     else:
         _briefing_title("🧭 " + t("Your Passage Plan"), label(day) if day else "", tip)
     if day and spoken.get(day):
-        st.audio(briefing.public_url(base, f"{b['token']}/{spoken[day]}.mp3"), format="audio/mpeg")
+        st.audio(_version(briefing.public_url(base, f"{b['token']}/{spoken[day]}.mp3"),
+                          (meta.get(spoken[day]) or {}).get("made_at")), format="audio/mpeg")
     asked = str(state.get("requested") or "")
     made_at = max((str((v or {}).get("made_at") or "") for v in meta.values() if isinstance(v, dict)), default="")
     if asked and asked > made_at:

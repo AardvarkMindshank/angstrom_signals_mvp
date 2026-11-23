@@ -689,8 +689,9 @@ def stored_json(supabase, path: str) -> dict:
 
 def listen_links(supabase, base: str, settings: dict | None, plan: str, now: datetime | None = None
                  ) -> list[tuple[str, str]]:
-    """[(words, url)] for the daily email: the newest Morning forecast, and, for Pro and Elite, today's spoken
-    Passage Plan when made in the last 20 hours."""
+    """[(words, url)] for the daily email: the newest Morning forecast, and, for Pro and Elite, the spoken Passage
+    Plan only when it is today's in the member's own time zone (23 Nov 2026: Monday's email linked Sunday's plan,
+    made 18 hours before; one not made yet today is left out rather than an old one linked)."""
     now = now or datetime.now(timezone.utc)
     out = []
     general = stored_json(supabase, f"{GENERAL}/episodes.json")
@@ -703,6 +704,6 @@ def listen_links(supabase, base: str, settings: dict | None, plan: str, now: dat
     if b.get("token") and base and personal_allowed(plan):
         meta = stored_json(supabase, f"{b['token']}/episodes.json")
         day = newest(meta)
-        if day and _fresh((meta.get(day) or {}).get("made_at"), 20, now):
+        if day and day[:10] == local_now(b["zone"], now).date().isoformat():
             out.append(("🧭 Your Passage Plan", public_url(base, f"{b['token']}/{day}.mp3")))
     return out
