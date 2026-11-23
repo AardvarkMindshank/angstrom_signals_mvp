@@ -1,0 +1,38 @@
+{
+ "about": "Bloopers round 2 (23 Nov 2026): the Admiral finds the Rat's cheese (still first), and two wave rolls animated straight from the portraits (the Rat's chart table, the Cook's galley).",
+ "jobs": [
+  {
+   "id": "admiral_cheese_still",
+   "model": "fal-ai/flux-pro/kontext/max/multi",
+   "input": {
+    "image_urls": ["repo:video/avatar_lab/picks/admiral4.png", "repo:video/avatar_lab/picks/ratB.png"],
+    "prompt": "The admiral from the first picture, in the same uniform and setting, holds up a wedge of yellow cheese with tiny bite marks in it, inspecting it with one raised eyebrow and a puzzled, unimpressed look. Peeking out from behind his shoulder epaulette is the small brown rat from the second picture, with his gold earring and red and white neckerchief, looking guilty with cheese crumbs on his whiskers. Keep the admiral's face, uniform, medals and the ship behind him exactly as in the first picture, in the same 3D animated style and lighting.",
+    "num_images": 2,
+    "output_format": "png",
+    "aspect_ratio": "3:4"
+   }
+  },
+  {
+   "id": "blooper_rat_wave",
+   "model": "fal-ai/kling-video/v2.5-turbo/standard/image-to-video",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/ratB.png",
+    "prompt": "Animated comedy moment. The ship suddenly rolls on a big wave: the whole scene tilts, the candle flame leans and flickers, the rolled maps and brass instruments slide across the table, and the little rat grabs his big wedge of cheese with both arms and slides with it out of view to the side, then pops back in, hugging the cheese with a relieved grin. The camera rocks with the ship.",
+    "duration": "5",
+    "negative_prompt": "blur, distort, low quality, extra limbs, morphing face, text",
+    "cfg_scale": 0.5
+   }
+  },
+  {
+   "id": "blooper_cook_wave",
+   "model": "fal-ai/kling-video/v2.5-turbo/standard/image-to-video",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/cookF.png",
+    "prompt": "Animated comedy moment. The ship rolls on a big wave: the galley tilts, the copper pans hanging behind swing wildly, steam swirls, and the chubby cook wobbles and staggers sideways, juggling his pies to stop them falling, catches them all, then steadies himself and gives the camera a proud little nod. The camera rocks with the ship.",
+    "duration": "5",
+    "negative_prompt": "blur, distort, low quality, extra limbs, morphing face, text",
+    "cfg_scale": 0.5
+   }
+  }
+ ]
+}
