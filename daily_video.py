@@ -58,6 +58,25 @@ CHANCES = {"cap": 0.34, "mate": 0.20, "nav": 0.12, "deck": 0.12, "cook": 0.08, "
            "admiral": 0.03}
 BIG_DAY_WORDS = ("CPI", "inflation", "jobs report", "Employment", "payrolls")   # the Admiral's inspection days
 RAT_TAG_CHANCE = 0.5            # on the Rat's days, his candlelit midnight-snack tag after the sign-off
+# 🎬 Bloopers (23 Nov 2026): silent comic clips under the music. The Cook's rear reveal closes every video he presents;
+# the others drop in between two sections in about one video in four (never inside a section, so never over a number).
+COOK_REVEAL = "blooper_cook_back_1.mp4"
+BLOOPERS = {"blooper_rat_pocket_1.mp4": {"caption": ["Outtake", "Meanwhile, in the galley"],
+                                         "not_with": ("cat",)}}      # the Rat never shares a video with the cat
+BLOOPER_CHANCE = 0.25
+BLOOPER_AFTER = ("story", "tides", "equities", "crypto")             # it plays after one of these sections
+
+
+def blooper_for(day: datetime, who: str, library: Path | None, sections) -> dict | None:
+    """The day's blooper, if any: {file, after}, drawn from the date so a re-run gives the same video."""
+    rng = random.Random(f"blooper-{day.date().isoformat()}")
+    if rng.random() >= BLOOPER_CHANCE:
+        return None
+    pool = sorted(f for f, b in BLOOPERS.items() if who not in b["not_with"] and (library is None or (library / f).exists()))
+    slots = [k for k in BLOOPER_AFTER if k in sections]
+    if not pool or not slots:
+        return None
+    return {"file": rng.choice(pool), "after": rng.choice(slots)}
 # 🎁 Guests on special days: a cameo (their own welcome and sign-off; the day's presenter does the rest).
 GUESTS = {"santa": "Father Christmas", "ghost": "The Ghost Captain", "bunny": "The Easter Bunny",
           "neptune": "King Neptune"}
@@ -420,8 +439,10 @@ def timeline(caps: dict, narr: dict) -> list[dict]:
     order = [("cap", "welcome"), ("narr", "date"), ("cap", "weather"), ("cap", "sign_story"), ("narr", "story"),
              ("cap", "sign_tides"), ("narr", "tides"), ("cap", "sign_equities"), ("narr", "equities"),
              ("cap", "sign_crypto"), ("narr", "crypto"), ("cap", "sign_horizon"), ("narr", "horizon"),
-             ("cap", "signoff"), ("cap", "tag"), ("narr", "close")]
+             ("cap", "signoff"), ("cap", "tag"), ("cap", "reveal"), ("narr", "close")]
     order = [(who, kind) for who, kind in order if kind in (caps if who == "cap" else narr)]   # weekends: no equities
+    if "blooper" in caps and ("narr", caps["blooper"]["after"]) in order:
+        order.insert(order.index(("narr", caps["blooper"]["after"])) + 1, ("cap", "blooper"))
     if "intro" in narr:
         order = [("narr", "intro")] + order
     t, out = (0.3 if "intro" in narr else 0.6), []     # a breath of music first
@@ -437,6 +458,8 @@ def timeline(caps: dict, narr: dict) -> list[dict]:
         seg = {"kind": kind, "who": who, "start": round(t, 3), "end": round(t + length, 3)}
         if who == "cap" and src.get("title"):
             seg["title"] = src["title"]                 # a guest's cameo: their own name on the badge
+        if who == "cap" and src.get("caption"):
+            seg["caption"] = src["caption"]             # a blooper's own words beside it
         seg["clip" if who == "cap" else "audio"] = src["file"]
         out.append(seg)
         t += length + GAP
@@ -568,6 +591,13 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     tag = f"ratd_tag_{rng.choice((1, 2))}_1.mp4"
     if who == "rat" and rng.random() < RAT_TAG_CHANCE and (library / tag).exists():
         caps["tag"] = {"file": tag, "seconds": speech_seconds(library / tag)}
+    if who == "cook" and (library / COOK_REVEAL).exists():
+        caps["reveal"] = {"file": COOK_REVEAL, "seconds": duration(library / COOK_REVEAL)}
+    blooper = blooper_for(day, who, library, narr)
+    if blooper:
+        caps["blooper"] = {"file": blooper["file"], "seconds": duration(library / blooper["file"]),
+                           "after": blooper["after"], "title": "Blooper",
+                           "caption": BLOOPERS[blooper["file"]]["caption"]}
     guest = guest_for(day, facts, library)
     if guest:
         for kind, line in (("welcome", "welcome"), ("signoff", "signoff")):

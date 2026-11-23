@@ -83,6 +83,10 @@ jobs:
             openssl enc -d -aes-256-cbc -pbkdf2 -in lib.enc -out lib.tgz -pass env:LAB_KEY
             tar -xzf lib.tgz -C lib && rm -f lib.enc lib.tgz
           done
+          # Packs of invented characters only (the bloopers), kept unencrypted.
+          for f in $(git ls-tree --name-only origin/reports avatar_lab/library_plain/); do
+            git show "origin/reports:$f" > lib.tgz && tar -xzf lib.tgz -C lib && rm -f lib.tgz
+          done
           mkdir -p music
           for f in 1-Sunshine 2-Springtime 3-Cloudy 4-Rainy 5-Stormy; do
             git show "origin/reports:drive/1EKuY0a0mL0hsCwO98ok-K0t_Yh-L_hsm/drive/$f.mp3" > "music/$f.mp3"

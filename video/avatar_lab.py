@@ -33,6 +33,8 @@ def _resolve(value, inputs: Path, out: Path | None = None):
         return _data_uri(out / value[4:])          # a file made by an earlier job in the same spec
     if isinstance(value, dict):
         return {k: _resolve(v, inputs, out) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_resolve(v, inputs, out) for v in value]   # several pictures (e.g. two characters in one scene)
     return value
 
 

@@ -1,0 +1,16 @@
+{
+ "about": "Blooper stills round 3: the Ship's Rat (from his own portrait) in the Cook's apron pocket, using both pictures together.",
+ "jobs": [
+  {
+   "id": "cook_rat3",
+   "model": "fal-ai/flux-pro/kontext/max/multi",
+   "input": {
+    "image_urls": ["repo:video/avatar_lab/picks/cookF.png", "repo:video/avatar_lab/picks/ratB.png"],
+    "prompt": "Put the small brown rat from the second picture, with his gold earring, red and white neckerchief and cheeky grin, into the front apron pocket of the cook from the first picture, popping out from the waist up and nibbling a small wedge of cheese. The cook looks down at him in surprise, eyebrows raised. Keep the cook exactly as in the first picture (clean-shaven apart from his big moustache, chef's hat, stained apron, tattoos, the pies, the galley kitchen) and the same 3D animated style and warm lighting.",
+    "num_images": 2,
+    "output_format": "png",
+    "aspect_ratio": "3:4"
+   }
+  }
+ ]
+}

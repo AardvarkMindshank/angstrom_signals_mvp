@@ -244,3 +244,28 @@ def test_speech_seconds_keeps_a_clip_that_talks_to_the_end(tmp_path):
                     "-f", "lavfi", "-i", "sine=f=300:d=3", "-t", "3", "-c:v", "libx264", "-c:a", "aac", str(clip)],
                    check=True)
     assert abs(dv.speech_seconds(clip) - dv.duration(clip)) < 0.01
+
+
+def test_bloopers_about_one_day_in_four_never_with_the_cat():
+    from datetime import timedelta
+    start = datetime(2027, 1, 1)
+    sections = {"story": {}, "tides": {}, "equities": {}, "crypto": {}}
+    picks = [dv.blooper_for(start + timedelta(days=i), "cap", None, sections) for i in range(400)]
+    share = sum(p is not None for p in picks) / len(picks)
+    assert 0.18 < share < 0.32
+    assert all(p["after"] in dv.BLOOPER_AFTER for p in picks if p)
+    assert all(dv.blooper_for(start + timedelta(days=i), "cat", None, sections) is None for i in range(400))
+
+
+def test_blooper_plays_between_sections_and_the_cook_reveal_at_the_end():
+    caps = {k: {"file": f"cook_{k}.mp4", "seconds": 2.0} for k in ("welcome", "weather", "sign_story", "sign_tides",
+                                                                  "sign_crypto", "sign_horizon", "signoff")}
+    caps["reveal"] = {"file": dv.COOK_REVEAL, "seconds": 5.0}
+    caps["blooper"] = {"file": "blooper_rat_pocket_1.mp4", "seconds": 5.0, "after": "tides", "title": "Blooper",
+                       "caption": ["Outtake", "Meanwhile, in the galley"]}
+    narr = {k: {"file": f"{k}.wav", "seconds": 3.0} for k in ("date", "story", "tides", "crypto", "horizon", "close")}
+    kinds = [s["kind"] for s in dv.timeline(caps, narr)]
+    assert kinds[kinds.index("tides") + 1] == "blooper"
+    assert kinds[-2:] == ["reveal", "close"]
+    seg = next(s for s in dv.timeline(caps, narr) if s["kind"] == "blooper")
+    assert seg["title"] == "Blooper" and seg["caption"][0] == "Outtake"

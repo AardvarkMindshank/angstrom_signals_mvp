@@ -1,0 +1,25 @@
+{
+ "about": "Blooper stills round 2: the Cook's back rounder and hairier with a sheepish look over his shoulder; the Rat in his pocket made the same brown rat as the Ship's Rat, the Cook looking down at him.",
+ "jobs": [
+  {
+   "id": "cook_back2",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/bloopers/cook_back_r1.png",
+    "prompt": "Turn his head to look back over his shoulder at the camera so his face shows in profile: big curled moustache, rosy cheeks, a sheepish embarrassed grin and raised eyebrows. Make his back rounder, softer and chubbier, less muscular, with plenty of curly brown body hair across his shoulders and back around the tattoos. Keep the anchor tattoos, the apron bow, the pink boxer shorts with red hearts, the pie in his hand, the chef's hat, the galley kitchen, the lighting and the 3D animated style exactly the same.",
+    "num_images": 2,
+    "output_format": "png"
+   }
+  },
+  {
+   "id": "cook_rat2",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/bloopers/cook_rat_r1.png",
+    "prompt": "Make the rat in the pocket warm golden-brown with fluffy fur instead of grey, keeping his grin, big eyes, pink nose, pink ears, small gold hoop earring in one ear, red and white neckerchief and the wedge of cheese. Make the cook tilt his head down and look at the rat with a surprised, indignant face. Keep everything else exactly the same.",
+    "num_images": 2,
+    "output_format": "png"
+   }
+  }
+ ]
+}
