@@ -147,3 +147,29 @@ def test_video_due_after_the_asia_edition_and_only_once(monkeypatch):
     assert dv.video_due(None, now) == eid[:10]
     monkeypatch.setattr(dv, "videos_meta", lambda db: {eid[:10]: {}})
     assert dv.video_due(None, now) == ""
+
+
+def test_figures_cover_the_same_week_and_the_mood_matches_the_app():
+    """Feedback 23 Nov 2026: the line is the last 7 days (hourly), a share's week is 5 trading days, and the mood
+    gauge shows the app's -100..+100 number and words."""
+    import pandas as pd
+
+    import briefing
+
+    asked = []
+
+    def load(kind, aid, interval, rng):
+        asked.append((interval, rng))
+        return {"candles": pd.DataFrame({"close": [float(i) for i in 1 + pd.RangeIndex(20)], "forming": False})}
+    assert len(dv._spark(load, "crypto", "bitcoin")) == 20 and asked == [("1h", "7D")]
+    closes = list(range(100, 110))                     # 10 daily closes
+    daily = lambda *a: {"candles": pd.DataFrame({"close": [float(c) for c in closes], "forming": False})}  # noqa: E731
+    assert briefing._candle_moves("equity", "SPY", daily)["change_7d"] == round((109 / 104 - 1) * 100, 2)
+    assert briefing._candle_moves("crypto", "bitcoin", daily)["change_7d"] == round((109 / 102 - 1) * 100, 2)
+    assert briefing.news_mood(43) == {"news_mood": -14, "news_mood_words": "mildly bearish"}
+    assert briefing.mood_line({"market": "crypto", **briefing.news_mood(43)}) == \
+        "News about the crypto market reads mildly bearish, minus 14 on a scale of minus 100 to plus 100."
+    facts = {"markets": [{"market": "crypto", "score_0_to_100": 43, **briefing.news_mood(43)}], "cryptos": []}
+    spec = dv.graphics_data(facts, {"headline": "h", "story": {}}, datetime(2026, 11, 23), load=load)
+    assert spec["crypto_mood"] == {"value": -14, "words": "mildly bearish"}
+    assert "score_0_to_100" not in str(briefing.for_ai(facts)["markets"])

@@ -98,6 +98,7 @@ MUSIC = {"sunny": "1-Sunshine.mp3", "fair": "2-Springtime.mp3", "changeable": "3
          "rough": "4-Rainy.mp3", "stormy": "5-Stormy.mp3"}
 WEATHER_WORDS = {"sunny": ("☀️", "Fair and sunny"), "fair": ("🌤️", "Fair"), "changeable": ("⛅", "Changeable"),
                  "rough": ("🌧️", "Rough seas"), "stormy": ("⛈️", "Storm warning")}
+DOLLAR_CURRENTS = ("Gold", "Oil")                # prices in dollars: shown with a $
 INVERSE_WORDS = ("fear", "vix", "volatility")    # metrics where up is bad: their rises show red, falls green
 SPARK = {"SPY": ("equity", "SPY"), "QQQ": ("equity", "QQQ"), "Bitcoin": ("crypto", "bitcoin"),
          "Ether": ("crypto", "ethereum"), "Solana": ("crypto", "solana"), "XRP": ("crypto", "ripple"),
@@ -178,7 +179,8 @@ def write_sections(supabase, facts: dict, chat=None, sections: dict = SECTIONS, 
     provider = ai_providers.pick("briefing", ai_providers.app_choice(supabase, "briefing"))
     if ai_providers.available(provider):
         try:
-            data = {k: facts.get(k) for k in ("conditions", "markets", "tide", "key_markets", "cryptos", "events")}
+            data = {k: briefing.for_ai(facts).get(k) for k in ("conditions", "markets", "tide", "key_markets", "cryptos",
+                                                                "events")}
             data["overall_weather"] = briefing.weather(facts)
             reply = (chat or ai_providers.chat)(provider, system_prompt(sections, weekend), [{"role": "user", "content": json.dumps(
                 data, ensure_ascii=False, default=str)}], max_tokens=1200)
@@ -201,13 +203,22 @@ def write_sections(supabase, facts: dict, chat=None, sections: dict = SECTIONS, 
 
 # ------------------------------------------------------------------------------------------------ the graphics' data
 
-def _spark(load, kind: str, asset_id: str, n: int = 30) -> list[float]:
-    try:
-        c = load(kind, asset_id, "1D", "3M")["candles"]
-        c = c[~c["forming"]] if "forming" in c else c
-        return [round(float(x), 6) for x in c["close"].dropna().tolist()[-n:]]
-    except Exception:
-        return []
+def _spark(load, kind: str, asset_id: str) -> list[float]:
+    """The last 7 days as hourly closes (feedback 23 Nov 2026: the line, its colour and the week's change all cover
+    the same 7 days, and the latest move shows at the end instead of being squeezed into a 30-day line). Falls back
+    to daily closes when hourly candles aren't available."""
+    for interval, range_key in (("1h", "7D"), ("1D", "1M")):
+        try:
+            c = load(kind, asset_id, interval, range_key)["candles"]
+            c = c[~c["forming"]] if "forming" in c else c
+            if interval == "1D":
+                c = c.iloc[-8:]
+            vals = [round(float(x), 6) for x in c["close"].dropna().tolist()]
+            if len(vals) >= 2:
+                return vals
+        except Exception:
+            continue
+    return []
 
 
 def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict:
@@ -223,7 +234,7 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
     days = re.search(r"for (\d+) trading days", tide_line)
     km = facts.get("key_markets") or []
     currents = [{"name": a["name"], "value": a.get("value"), "change": a.get("change_7d"),
-                 "pts": a.get("unit_of_changes") == "points",
+                 "pts": a.get("unit_of_changes") == "points", "dollars": a["name"] in DOLLAR_CURRENTS,
                  # Colour by what the move means, not its sign: a rising fear index is bad news, so it shows red.
                  "inverse": any(w in a["name"].lower() for w in INVERSE_WORDS)}
                 for a in km if a.get("value") is not None]
@@ -233,7 +244,9 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
     coins = [{"name": c["name"], "price": c.get("latest_price"), "change_1d": c.get("change_1d"),
               "change_7d": c.get("change_7d"), "spark": _spark(load, *SPARK[c["name"]]) if c["name"] in SPARK else []}
              for c in facts.get("cryptos") or []]
-    moods = {m["market"]: m.get("score_0_to_100") for m in facts.get("markets") or []}
+    # The mood gauges show the news mood as the app does: -100..+100 and its words (feedback 23 Nov 2026).
+    moods = {m["market"]: ({"value": m["news_mood"], "words": m["news_mood_words"]}
+                           if m.get("news_mood") is not None else None) for m in facts.get("markets") or []}
     story = sections.get("story") or {}
     pool = {s_["name"]: s_ for s_ in stocks} | {c["name"]: c for c in coins}
     alias = {"S&P 500 (the SPY fund)": "S&P 500", "Nasdaq 100 (the QQQ fund)": "Nasdaq 100"}
@@ -241,7 +254,7 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
     if hit is None:                                    # a current (gold, oil, the fear index): no chart, its number
         cur = next((c for c in currents if c["name"] == story.get("asset")), None)
         hit = {"name": cur["name"], "value": cur["value"], "change_7d": cur["change"], "inverse": cur["inverse"],
-               "pts": cur["pts"]} if cur else None
+               "pts": cur["pts"], "dollars": cur["dollars"]} if cur else None
     events = []
     for e in (facts.get("events") or [])[:3]:
         events.append({"what": e.get("what"), "when": e.get("when_utc"), "why": e.get("why")})

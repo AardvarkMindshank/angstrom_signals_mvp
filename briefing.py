@@ -177,8 +177,11 @@ def gather(supabase, user_id: str, prefs: dict, b: dict, now: datetime | None = 
                 continue
             if not _fresh(row.get("sentiment_updated_at"), 48, now):
                 continue
+            score = _num(row.get("sentiment_score"))
+            # The app shows this news mood on -100..+100 with words (score_colours, market_store._coverage_label);
+            # the forecast says the same number and words. The stored 0..100 score only sets the weather.
             moods.append({"market": "crypto" if key == "crypto" else "stock market",
-                          "score_0_to_100": _num(row.get("sentiment_score")),
+                          "score_0_to_100": score, **news_mood(score),
                           "summary": _report_words(row.get("sentiment_report"))})
         facts["markets"] = moods
 
@@ -313,6 +316,38 @@ def newest(meta: dict) -> str:
     return best[1]
 
 
+def news_mood(score) -> dict:
+    """A stored 0..100 news-mood score as the app shows it: {"news_mood": -100..+100, "news_mood_words": "mildly
+    bearish"}, empty when missing."""
+    from score_colours import sentiment_category_score, sentiment_shown
+
+    shown, cat = sentiment_shown(score), sentiment_category_score(score)
+    if shown is None:
+        return {}
+    words = ("bullish" if cat >= 60 else "mildly bullish" if cat >= 53 else "mixed" if cat >= 47
+             else "mildly bearish" if cat >= 40 else "bearish")
+    return {"news_mood": shown, "news_mood_words": words}
+
+
+def for_ai(facts: dict) -> dict:
+    """The facts as the AI sees them: the markets' mood only as the app shows it (the stored 0..100 score is left
+    out, so it is never spoken)."""
+    out = dict(facts)
+    if out.get("markets"):
+        out["markets"] = [{k: v for k, v in m.items() if k != "score_0_to_100"} for m in out["markets"]]
+    return out
+
+
+def mood_line(m: dict) -> str:
+    """One spoken line for a market's news mood, as the app shows it."""
+    if m.get("news_mood") is None:
+        return ""
+    n = m["news_mood"]
+    market = "crypto market" if m["market"] == "crypto" else m["market"]
+    return (f"News about the {market} reads {m['news_mood_words']}, "
+            f"{'plus ' if n > 0 else 'minus ' if n < 0 else ''}{abs(n)} on a scale of minus 100 to plus 100.")
+
+
 def _pct(a, b):
     try:
         return round((float(a) / float(b) - 1) * 100, 2) if b else None
@@ -321,7 +356,8 @@ def _pct(a, b):
 
 
 def _candle_moves(kind: str, asset_id: str, load=None) -> dict:
-    """Last daily close and its 1-day and 7-day moves, from the chart's candles (Yahoo or Binance)."""
+    """Last daily close and its 1-day and 1-week moves, from the chart's candles (Yahoo or Binance). A week is 7
+    daily candles for crypto (it trades every day) and 5 for shares (trading days only), so both mean the same week."""
     try:
         if load is None:
             import chart_data
@@ -336,7 +372,7 @@ def _candle_moves(kind: str, asset_id: str, load=None) -> dict:
     if len(closes) < 8:
         return {}
     return {"latest_price": round(closes[-1], 4), "change_1d": _pct(closes[-1], closes[-2]),
-            "change_7d": _pct(closes[-1], closes[-8])}
+            "change_7d": _pct(closes[-1], closes[-8 if kind == "crypto" else -6])}
 
 
 def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
@@ -355,6 +391,11 @@ def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
             item.pop("kind", None)
             if item.get("change_1d") is None or item.get("latest_price") is None:
                 item.update({k: v for k, v in _candle_moves(kind, asset_id, load).items() if v is not None})
+            elif kind == "equity":
+                # The stored 7-day change counts 7 trading days (about 9 calendar days); the forecast's week is 5.
+                week = _candle_moves(kind, asset_id, load).get("change_7d")
+                if week is not None:
+                    item["change_7d"] = week
             if kind == "equity":
                 item.pop("latest_price", None)            # a fund's price means little to a listener; its moves do
             out.append(item)
@@ -399,8 +440,9 @@ GENERAL_SYSTEM = (
     "most. Use only the facts given; never "
     "invent prices, news or events, and say nothing about a section that has no facts. Changes are percent unless "
     "marked as points. Describe; never tell the listener to buy, sell or hold, and give no price targets. Trend, "
-    "stretch and flow readings run from minus 100 to plus 100 (above zero leans up); sentiment runs from 0 to 100, "
-    "with 50 neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
+    "stretch and flow readings run from minus 100 to plus 100 (above zero leans up). A market's news mood is given as "
+    "news_mood, from minus 100 to plus 100 (0 is mixed), with its words; say it that way. Asset news sentiment runs "
+    "from 0 to 100, with 50 neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
     "opening line. Open with \"This is the MarketNavi morning forecast, {edition}, for\" the day and date, follow "
     "the sections in the order given with a short spoken link between them, and close with one line saying this is a "
     "summary of the app's readings, not advice, then end with exactly \"Fair winds and following seas.\" Write about {words} "
@@ -414,7 +456,7 @@ def general_prompt(facts: dict, edition: str, day: datetime) -> tuple[str, list[
     user = {"date": day.strftime("%A %d %B %Y"), "edition": EDITIONS[edition]["name"],
             "overall_weather_from_market_mood": weather(facts),
             "sections_in_order": [GENERAL_SECTION_NAMES[s] for s in order],
-            "facts": {GENERAL_SECTION_NAMES[s]: facts.get({"tides": "tide"}.get(s, s)) for s in order}}
+            "facts": {GENERAL_SECTION_NAMES[s]: for_ai(facts).get({"tides": "tide"}.get(s, s)) for s in order}}
     system = GENERAL_SYSTEM.format(edition=EDITIONS[edition]["name"], words=GENERAL_MINUTES * WORDS_PER_MINUTE)
     return system, [{"role": "user", "content": json.dumps(user, ensure_ascii=False, default=str)}]
 
@@ -423,8 +465,8 @@ def plain_general(facts: dict, edition: str, day: datetime) -> str:
     """The forecast without AI, from the facts alone."""
     out = [f"This is the MarketNavi morning forecast, {EDITIONS[edition]['name']}, for {day.strftime('%A %d %B')}."]
     for m in facts.get("markets") or []:
-        if m.get("score_0_to_100") is not None:
-            out.append(f"The {m['market']} mood scores {round(m['score_0_to_100'])} out of 100.")
+        if mood_line(m):
+            out.append(mood_line(m))
     for a in (facts.get("key_markets") or []) + (facts.get("cryptos") or []):
         move = a.get("change_1d") if a.get("change_1d") is not None else a.get("change_7d")
         if move is not None:
@@ -540,8 +582,9 @@ SYSTEM = (
     "(\"about 3 percent\", \"sixty-two thousand dollars\"), no lists, no headings, no symbols, no emoji, no markdown, "
     "no URLs. Use only the facts given; never invent prices, news or events, and say nothing about a section that has "
     "no facts. Describe; never tell the listener to buy, sell or hold, and give no price targets. Trend, stretch and "
-    "flow readings run from minus 100 to plus 100 (above zero leans up); sentiment runs from 0 to 100, with 50 "
-    "neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
+    "flow readings run from minus 100 to plus 100 (above zero leans up). A market's news mood is given as news_mood, "
+    "from minus 100 to plus 100 (0 is mixed), with its words; say it that way. Asset news sentiment runs from 0 to "
+    "100, with 50 neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
     "opening line. Open with \"This is the MarketNavi morning forecast for\" the day and date, follow the sections "
     "in the order given with a short spoken link between them, and close with one line saying this is a summary of "
     "the app's readings, not advice, then end with exactly \"Fair winds and following seas.\" Write about {words} words. Reply "
@@ -554,7 +597,7 @@ def prompt(facts: dict, b: dict, day: datetime, name: str = "") -> tuple[str, li
     words = b["minutes"] * WORDS_PER_MINUTE
     user = {"listener_first_name": name or None, "date": day.strftime("%A %d %B %Y"),
             "overall_weather_from_market_mood": weather(facts),
-            "sections_in_order": order, "facts": {s: facts.get({"tides": "tide"}.get(s, s)) for s in order}}
+            "sections_in_order": order, "facts": {s: for_ai(facts).get({"tides": "tide"}.get(s, s)) for s in order}}
     return SYSTEM.format(words=words), [{"role": "user", "content": json.dumps(user, ensure_ascii=False, default=str)}]
 
 
@@ -562,8 +605,7 @@ def plain_script(facts: dict, b: dict, day: datetime) -> str:
     """A script without AI, from the facts alone (used when the AI is unavailable)."""
     out = [f"This is the MarketNavi morning forecast for {day.strftime('%A %d %B')}."]
     for m in facts.get("markets") or []:
-        score = m.get("score_0_to_100")
-        out.append(f"The {m['market']} mood scores {round(score)} out of 100." if score is not None else "")
+        out.append(mood_line(m))
         if m.get("summary"):
             out.append(m["summary"])
     out += [str(x) for x in (facts.get("tide") or [])[:3]]

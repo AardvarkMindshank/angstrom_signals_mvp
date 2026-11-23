@@ -77,18 +77,21 @@ function spark(vals, w, h, colour) {
   return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${colour}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 }
 let GID = 0;
-function gauge(score, size) {
+// The news mood as the app shows it (feedback 23 Nov 2026): -100..+100, 0 = mixed, with the app's words.
+function gauge(mood, size) {
   const gid = "g" + (++GID);
-  if (score == null) return "";
-  const a = Math.PI * (1 - clamp(score / 100)), r = size * 0.42, cx = size / 2, cy = size * 0.55;
+  if (!mood || mood.value == null) return "";
+  const v = mood.value;
+  const a = Math.PI * (1 - clamp((v + 100) / 200)), r = size * 0.42, cx = size / 2, cy = size * 0.55;
   const x = cx + r * Math.cos(a), y = cy - r * Math.sin(a);
-  const word = score < 35 ? "Fearful" : score < 45 ? "Cautious" : score < 55 ? "Neutral" : score < 65 ? "Confident" : "Greedy";
-  return `<svg width="${size}" height="${size * 0.68}" viewBox="0 0 ${size} ${size * 0.68}">
+  const w = String(mood.words || ""), word = w.charAt(0).toUpperCase() + w.slice(1);
+  const shown = (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v);
+  return `<svg width="${size}" height="${size * 0.72}" viewBox="0 0 ${size} ${size * 0.72}">
     <defs><linearGradient id="${gid}" x1="0" x2="1"><stop offset="0" stop-color="#f87171"/><stop offset=".5" stop-color="#facc15"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs>
     <path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}" fill="none" stroke="url(#${gid})" stroke-width="${size * 0.07}" stroke-linecap="round"/>
     <line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#fff" stroke-width="${size * 0.025}" stroke-linecap="round"/>
     <circle cx="${cx}" cy="${cy}" r="${size * 0.035}" fill="#fff"/>
-    <text x="${cx}" y="${cy + size * 0.13}" text-anchor="middle" font-size="${size * 0.11}" font-weight="800" fill="#fff">${Math.round(score)} · ${word}</text></svg>`;
+    <text x="${cx}" y="${cy + size * 0.13}" text-anchor="middle" font-size="${size * (word.length > 10 ? 0.085 : 0.1)}" font-weight="800" fill="#fff">${shown} · ${esc(word)}</text></svg>`;
 }
 
 // ---- each segment's content (absolute positions differ by shape)
@@ -108,7 +111,12 @@ function capCaption(seg) {
 // Sizes: z(wide, tall). The tall (phone) layout stacks everything full width with big type (feedback 20 Nov 2026):
 // nothing under about 40px on a 1080-wide frame.
 const z = (land, port) => (P ? port : land);
+// A change and the period it covers, each coloured by its own sign (feedback 23 Nov 2026).
+function per(v, label, size, inverse) {
+  return `<span class="chg ${cls(v, inverse)}" style="font-size:${size}px">${pct(v)}</span><span style="font-size:${Math.round(size * 0.62)}px;color:var(--soft);font-weight:600;margin-left:8px">${label}</span>`;
+}
 function chgText(c) { return c.pts ? (c.change >= 0 ? "+" : "−") + Math.abs(c.change ?? 0).toFixed(1) + " pts" : pct(c.change); }
+function val(c) { return (c.dollars ? "$" : "") + num(c.value); }
 function num(v) { return v == null ? "" : v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(2); }
 
 function narrContent(seg) {
@@ -130,14 +138,15 @@ function narrContent(seg) {
         <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px">
           <div><div style="font-size:${z(48, 60)}px;font-weight:800">${esc(a.name)}</div>
           ${a.price ? `<div style="font-size:${z(40, 48)}px;color:#e2e8f0">${money(a.price)}</div>` : ""}</div>
-          <div style="text-align:right"><div class="chg ${cls(a.change_1d)}" style="font-size:${z(72, 92)}px;line-height:1">${pct(a.change_1d)}</div>
-          <div class="sub" style="font-size:${z(32, 42)}px">${pct(a.change_7d)} · 7 days</div></div></div>
-        <div style="margin-top:20px">${spark(a.spark, z(1500, 900), z(300, 420), up(a.change_7d))}</div></div>`;
+          <div style="text-align:right;line-height:1.15"><div>${per(a.change_1d, "1 day", z(64, 80))}</div>
+          <div style="margin-top:6px">${per(a.change_7d, "1 week", z(40, 50))}</div></div></div>
+        <div style="margin-top:20px">${spark(a.spark, z(1500, 900), z(280, 400), up(a.change_7d))}</div>
+        <div style="font-size:${z(26, 34)}px;color:var(--soft);margin-top:6px">Last 7 days</div></div>`;
     } else if (a) {
       card = `<div class="it card" style="padding:40px;margin-top:34px;text-align:center">
         <div style="font-size:${z(52, 64)}px;font-weight:800">${esc(a.name)}</div>
-        <div style="font-size:${z(110, 140)}px;font-weight:900;margin-top:10px">${num(a.value)}</div>
-        <div class="chg ${cls(a.change_7d, a.inverse)}" style="font-size:${z(52, 64)}px">${chgText({ change: a.change_7d, pts: a.pts })} · 7 days</div></div>`;
+        <div style="font-size:${z(110, 140)}px;font-weight:900;margin-top:10px">${val(a)}</div>
+        <div class="chg ${cls(a.change_7d, a.inverse)}" style="font-size:${z(52, 64)}px">${chgText({ change: a.change_7d, pts: a.pts })} <span style="color:var(--soft);font-weight:600">· 1 week</span></div></div>`;
     }
     return `<div class="it" style="font-size:${z(40, 50)}px;color:var(--amber);font-weight:800;letter-spacing:2px">⭐ THE STORY OF THE DAY</div>
       <div class="it kicker" style="font-size:${z(96, 104)}px;margin-top:14px">${esc(d.story?.title || "")}</div>${card}`;
@@ -152,39 +161,45 @@ function narrContent(seg) {
     if (P) {
       const rows = d.currents.map((c) => `<div class="it card" style="padding:28px 40px;display:flex;align-items:center;justify-content:space-between">
           <div style="font-size:48px;font-weight:700;color:#dbe4f3">${esc(c.name)}</div>
-          <div style="text-align:right"><div style="font-size:72px;font-weight:800;line-height:1">${num(c.value)}</div>
-          <div class="chg ${cls(c.change, c.inverse)}" style="font-size:44px;margin-top:6px">${chgText(c)} <span style="color:var(--soft);font-weight:600">· 7d</span></div></div></div>`).join("");
+          <div style="text-align:right"><div style="font-size:72px;font-weight:800;line-height:1">${val(c)}</div>
+          <div class="chg ${cls(c.change, c.inverse)}" style="font-size:44px;margin-top:6px">${chgText(c)} <span style="color:var(--soft);font-weight:600">· 1 week</span></div></div></div>`).join("");
       return head + `<div class="grid" style="margin-top:34px;gap:22px">${rows}</div>`;
     }
     const tiles = d.currents.map((c) => `<div class="it card tile"><div class="n" style="font-size:30px">${esc(c.name)}</div>
-      <div class="v" style="font-size:56px">${num(c.value)}</div>
-      <div class="chg ${cls(c.change, c.inverse)}" style="font-size:34px;margin-top:4px">${chgText(c)} · 7 days</div></div>`).join("");
+      <div class="v" style="font-size:56px">${val(c)}</div>
+      <div class="chg ${cls(c.change, c.inverse)}" style="font-size:34px;margin-top:4px">${chgText(c)} <span style="color:var(--soft);font-weight:600">· 1 week</span></div></div>`).join("");
     return head + `<div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:28px">${tiles}</div>`;
   }
   if (seg.kind === "equities") {
     const tiles = d.stocks.map((s) => `<div class="it card tile" style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:${z("26px 30px", "32px 40px")}">
       <div><div style="font-size:${z(38, 54)}px;font-weight:800">${esc(s.name)}</div>
-      <div class="chg ${cls(s.change_1d)}" style="font-size:${z(64, 96)}px;margin-top:6px;line-height:1.05">${pct(s.change_1d)}</div>
-      <div class="sub" style="font-size:${z(32, 42)}px;margin-top:6px">${pct(s.change_7d)} · 7 days</div></div>
-      ${spark(s.spark, z(420, 380), z(150, 190), up(s.change_7d))}</div>`).join("");
+      <div style="margin-top:6px;line-height:1.05">${per(s.change_1d, "1 day", z(60, 84))}</div>
+      <div style="margin-top:8px">${per(s.change_7d, "1 week", z(38, 48))}</div></div>
+      <div style="text-align:center">${spark(s.spark, z(420, 380), z(150, 190), up(s.change_7d))}
+      <div style="font-size:${z(24, 32)}px;color:var(--soft)">Last 7 days</div></div></div>`).join("");
     return `<div style="display:flex;flex-direction:${z("row", "column")};gap:${z(30, 34)}px;align-items:${z("center", "stretch")}">
-      <div class="it card" style="padding:${z("26px 34px", "30px 34px 20px")};text-align:center"><div style="font-size:${z(34, 46)}px;color:var(--soft);font-weight:700">Stock-market mood</div>${gauge(d.stock_mood, z(460, 760))}</div>
+      <div class="it card" style="padding:${z("26px 34px", "30px 34px 20px")};text-align:center"><div style="font-size:${z(34, 46)}px;color:var(--soft);font-weight:700">Stock-market news mood</div>${gauge(d.stock_mood, z(460, 760))}</div>
       <div class="grid" style="flex:1;gap:${z(24, 30)}px">${tiles}</div></div>`;
   }
   if (seg.kind === "crypto") {
     const rows = d.coins.map((c) => P
-      ? `<div class="it card" style="display:flex;align-items:center;gap:22px;padding:22px 34px">
+      ? `<div class="it card" style="display:flex;align-items:center;gap:22px;padding:20px 34px">
           <div style="flex:1"><div style="font-size:50px;font-weight:800;line-height:1.1">${esc(c.name)}</div>
-          <div style="font-size:42px;color:#e2e8f0;margin-top:2px">${money(c.price)}</div></div>
-          <div class="chg ${cls(c.change_1d)}" style="font-size:52px;width:220px;text-align:right">${pct(c.change_1d)}</div>
-          ${spark(c.spark, 200, 80, up(c.change_7d))}</div>`
-      : `<div class="it card row"><div class="name" style="font-size:38px;width:200px">${esc(c.name)}</div>
-          <div class="price" style="font-size:36px;width:220px;text-align:left">${money(c.price)}</div>
-          <div class="chg ${cls(c.change_1d)}" style="font-size:36px;width:160px">${pct(c.change_1d)}</div>
-          ${spark(c.spark, 300, 60, up(c.change_7d))}</div>`).join("");
+          <div style="font-size:40px;color:#e2e8f0;margin-top:2px">${money(c.price)}</div></div>
+          <div style="text-align:right;line-height:1.2"><div>${per(c.change_1d, "1 day", 44)}</div><div>${per(c.change_7d, "1 week", 44)}</div></div>
+          ${spark(c.spark, 190, 80, up(c.change_7d))}</div>`
+      : `<div class="it card row"><div class="name" style="font-size:38px;width:190px">${esc(c.name)}</div>
+          <div class="price" style="font-size:36px;width:200px;text-align:left">${money(c.price)}</div>
+          <div class="chg ${cls(c.change_1d)}" style="font-size:36px;width:140px">${pct(c.change_1d)}</div>
+          <div class="chg ${cls(c.change_7d)}" style="font-size:36px;width:140px">${pct(c.change_7d)}</div>
+          ${spark(c.spark, 320, 60, up(c.change_7d))}</div>`).join("");
+    // Column titles (wide layout), so each figure says which period it covers.
+    const head = P ? "" : `<div class="it row" style="padding:0 28px;font-size:26px;color:var(--soft);font-weight:700">
+          <div style="width:190px"></div><div style="width:200px">Price</div><div style="width:140px;text-align:right">1 day</div>
+          <div style="width:140px;text-align:right">1 week</div><div style="width:320px;text-align:center">Last 7 days</div></div>`;
     return `<div style="display:flex;flex-direction:${z("row", "column")};gap:${z(30, 28)}px;align-items:${z("center", "stretch")}">
-      <div class="it card" style="padding:${z("26px 34px", "26px 34px 14px")};text-align:center"><div style="font-size:${z(34, 46)}px;color:var(--soft);font-weight:700">Crypto mood</div>${gauge(d.crypto_mood, z(440, 640))}</div>
-      <div class="grid" style="gap:${z(14, 18)}px;flex:1">${rows}</div></div>`;
+      <div class="it card" style="padding:${z("26px 34px", "26px 34px 14px")};text-align:center"><div style="font-size:${z(34, 46)}px;color:var(--soft);font-weight:700">Crypto news mood</div>${gauge(d.crypto_mood, z(440, 640))}</div>
+      <div class="grid" style="gap:${z(14, 18)}px;flex:1">${head}${rows}</div></div>`;
   }
   if (seg.kind === "horizon") {
     const cards = (d.events.length ? d.events : [{ what: "A quiet week", when: "", why: "No big scheduled releases." }]).map((e) =>
