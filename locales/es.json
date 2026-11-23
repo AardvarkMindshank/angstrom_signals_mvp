@@ -2487,5 +2487,6 @@
   "Back to today": "Volver a hoy",
   "Pick a date": "Elegir fecha",
   "Preset from this asset's regime ({regime}). Change it if you see it differently.": "Preajustado según el régimen de este activo ({regime}). Cámbialo si lo ves de otra forma.",
-  "The regime reads {regime}; you chose otherwise.": "El régimen indica {regime}; elegiste otra opción."
+  "The regime reads {regime}; you chose otherwise.": "El régimen indica {regime}; elegiste otra opción.",
+  "Starts on {side} by a simple rule: the regime reads {regime}. An illustration of a ladder, not a recommendation; pick either side.": "Empieza en {side} por una regla sencilla: el régimen indica {regime}. Una ilustración de escalera, no una recomendación; elige cualquier lado."
 }

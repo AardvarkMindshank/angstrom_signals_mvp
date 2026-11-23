@@ -2487,5 +2487,6 @@
   "Back to today": "Quay về hôm nay",
   "Pick a date": "Chọn ngày",
   "Preset from this asset's regime ({regime}). Change it if you see it differently.": "Đặt sẵn theo chế độ thị trường của tài sản này ({regime}). Hãy đổi nếu bạn thấy khác.",
-  "The regime reads {regime}; you chose otherwise.": "Chế độ thị trường là {regime}; bạn đã chọn khác."
+  "The regime reads {regime}; you chose otherwise.": "Chế độ thị trường là {regime}; bạn đã chọn khác.",
+  "Starts on {side} by a simple rule: the regime reads {regime}. An illustration of a ladder, not a recommendation; pick either side.": "Bắt đầu ở {side} theo một quy tắc đơn giản: chế độ thị trường là {regime}. Chỉ là minh họa một thang lệnh, không phải khuyến nghị; hãy chọn bên nào cũng được."
 }

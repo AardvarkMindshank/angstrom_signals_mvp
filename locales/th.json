@@ -2487,5 +2487,6 @@
   "Back to today": "กลับไปวันนี้",
   "Pick a date": "เลือกวันที่",
   "Preset from this asset's regime ({regime}). Change it if you see it differently.": "ตั้งไว้ล่วงหน้าตาม regime ของสินทรัพย์นี้ ({regime}) เปลี่ยนได้ถ้าคุณมองต่างออกไป",
-  "The regime reads {regime}; you chose otherwise.": "Regime อ่านได้ว่า {regime} แต่คุณเลือกอีกแบบ"
+  "The regime reads {regime}; you chose otherwise.": "Regime อ่านได้ว่า {regime} แต่คุณเลือกอีกแบบ",
+  "Starts on {side} by a simple rule: the regime reads {regime}. An illustration of a ladder, not a recommendation; pick either side.": "เริ่มที่ {side} ตามกฎง่ายๆ: regime อ่านได้ว่า {regime} เป็นตัวอย่างการวางบันได ไม่ใช่คำแนะนำ เลือกฝั่งไหนก็ได้"
 }

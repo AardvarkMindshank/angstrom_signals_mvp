@@ -74,3 +74,19 @@ def test_market_choice_starts_from_the_regime():
     assert lh.settings(st, "Crypto_bitcoin", 100.0, 5.0)["style"] == "trending"
     st.session_state["ladder_style_Crypto_bitcoin"] = "consolidating"          # the member's own choice wins
     assert lh.settings(st, "Crypto_bitcoin", 100.0, 5.0)["style"] == "consolidating"
+
+
+def test_side_starts_short_only_in_a_trending_down_regime():
+    import ladder_helper as lh
+
+    assert lh.auto_side("trending_down") == "short"
+    assert lh.auto_side("trending_up") == "long" and lh.auto_side("ranging") == "long" and lh.auto_side(None) == "long"
+
+    class St:
+        session_state = {}
+
+    st = St()
+    lh.note_regime(st, "Stock_TSLA", {"label": "trending_down"})
+    assert lh.settings(st, "Stock_TSLA", 100.0, 5.0)["side"] == "short"
+    st.session_state["ladder_side_Stock_TSLA"] = "long"                          # the member's own choice wins
+    assert lh.settings(st, "Stock_TSLA", 100.0, 5.0)["side"] == "long"

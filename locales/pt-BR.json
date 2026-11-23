@@ -2487,5 +2487,6 @@
   "Back to today": "Voltar para hoje",
   "Pick a date": "Escolher data",
   "Preset from this asset's regime ({regime}). Change it if you see it differently.": "Pré-definido pelo regime deste ativo ({regime}). Mude se você enxerga diferente.",
-  "The regime reads {regime}; you chose otherwise.": "O regime indica {regime}; você escolheu outra opção."
+  "The regime reads {regime}; you chose otherwise.": "O regime indica {regime}; você escolheu outra opção.",
+  "Starts on {side} by a simple rule: the regime reads {regime}. An illustration of a ladder, not a recommendation; pick either side.": "Começa em {side} por uma regra simples: o regime indica {regime}. Uma ilustração de escada, não uma recomendação; escolha qualquer lado."
 }

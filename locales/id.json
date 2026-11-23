@@ -2487,5 +2487,6 @@
   "Back to today": "Kembali ke hari ini",
   "Pick a date": "Pilih tanggal",
   "Preset from this asset's regime ({regime}). Change it if you see it differently.": "Diatur awal dari rezim aset ini ({regime}). Ubah jika Anda melihatnya berbeda.",
-  "The regime reads {regime}; you chose otherwise.": "Rezim terbaca {regime}; Anda memilih yang lain."
+  "The regime reads {regime}; you chose otherwise.": "Rezim terbaca {regime}; Anda memilih yang lain.",
+  "Starts on {side} by a simple rule: the regime reads {regime}. An illustration of a ladder, not a recommendation; pick either side.": "Dimulai di {side} menurut aturan sederhana: rezim terbaca {regime}. Ini contoh tangga order, bukan rekomendasi; pilih sisi mana pun."
 }

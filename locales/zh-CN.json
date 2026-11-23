@@ -2487,5 +2487,6 @@
   "Back to today": "回到今天",
   "Pick a date": "选择日期",
   "Preset from this asset's regime ({regime}). Change it if you see it differently.": "已按该资产的行情状态（{regime}）预设。如果你有不同看法，可以更改。",
-  "The regime reads {regime}; you chose otherwise.": "行情状态为 {regime}；你选择了另一项。"
+  "The regime reads {regime}; you chose otherwise.": "行情状态为 {regime}；你选择了另一项。",
+  "Starts on {side} by a simple rule: the regime reads {regime}. An illustration of a ladder, not a recommendation; pick either side.": "按一条简单规则默认选择{side}：行情状态为 {regime}。这只是阶梯挂单的示例，并非建议；两边都可以选。"
 }

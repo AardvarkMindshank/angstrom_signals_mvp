@@ -2487,5 +2487,6 @@
   "Back to today": "今日に戻る",
   "Pick a date": "日付を選ぶ",
   "Preset from this asset's regime ({regime}). Change it if you see it differently.": "この銘柄のレジーム（{regime}）から初期設定しました。違うと思えば変更してください。",
-  "The regime reads {regime}; you chose otherwise.": "レジームは {regime} ですが、別の選択をしています。"
+  "The regime reads {regime}; you chose otherwise.": "レジームは {regime} ですが、別の選択をしています。",
+  "Starts on {side} by a simple rule: the regime reads {regime}. An illustration of a ladder, not a recommendation; pick either side.": "簡単なルールで {side} から始まります（レジームは {regime}）。ラダーの例示であり推奨ではありません。どちらの側も選べます。"
 }

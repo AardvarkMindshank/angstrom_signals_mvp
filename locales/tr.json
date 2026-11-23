@@ -2487,5 +2487,6 @@
   "Back to today": "Bugüne dön",
   "Pick a date": "Tarih seç",
   "Preset from this asset's regime ({regime}). Change it if you see it differently.": "Bu varlığın rejimine göre önceden ayarlandı ({regime}). Farklı görüyorsanız değiştirin.",
-  "The regime reads {regime}; you chose otherwise.": "Rejim {regime} gösteriyor; siz farklısını seçtiniz."
+  "The regime reads {regime}; you chose otherwise.": "Rejim {regime} gösteriyor; siz farklısını seçtiniz.",
+  "Starts on {side} by a simple rule: the regime reads {regime}. An illustration of a ladder, not a recommendation; pick either side.": "Basit bir kurala göre {side} ile başlar: rejim {regime} gösteriyor. Bir merdiven örneğidir, tavsiye değildir; istediğiniz tarafı seçin."
 }

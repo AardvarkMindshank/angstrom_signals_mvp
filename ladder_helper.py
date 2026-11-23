@@ -138,6 +138,12 @@ def auto_style(label: str | None) -> str:
     return "trending" if str(label or "").startswith("trending") else "consolidating"
 
 
+def auto_side(label: str | None) -> str:
+    """The side the example ladder starts on: Short in a trending-down regime, else Long. A rule to illustrate a
+    ladder, said so on screen; the member picks either side."""
+    return "short" if str(label or "") == "trending_down" else "long"
+
+
 def note_regime(st, key: str, regime: dict | None) -> None:
     """Remember this asset's regime label, so the Market choice starts from it (the member can still change it)."""
     st.session_state[f"ladder_auto_{key}"] = (regime or {}).get("label")
@@ -147,7 +153,7 @@ def settings(st, key: str, price: float, atr: float) -> dict:
     """The helper's current choices for this asset, read before its controls are drawn (the chart above them needs
     them first). The same keys and defaults as render()."""
     ss = st.session_state
-    side = ss.get(f"ladder_side_{key}") or "long"
+    side = ss.get(f"ladder_side_{key}") or auto_side(ss.get(f"ladder_auto_{key}"))
     style = ss.get(f"ladder_style_{key}") or auto_style(ss.get(f"ladder_auto_{key}"))
     return {"show": bool(ss.get(f"ladder_show_{key}")), "side": side, "style": style,
             "place": ss.get(f"ladder_place_{key}") or "moves",
@@ -206,10 +212,11 @@ def render(st, t, price: float | None, atr: float | None, name: str, key: str, s
         st.caption(t("The ladder helper needs at least 15 days of prices for this asset."))
         return
     c1, c2, c3 = st.columns([1.2, 1.4, 1])
-    side = c1.segmented_control(t("Side"), ["long", "short"], default="long", key=f"ladder_side_{key}",
+    regime_label = st.session_state.get(f"ladder_auto_{key}")
+    side_preset = auto_side(regime_label)
+    side = c1.segmented_control(t("Side"), ["long", "short"], default=side_preset, key=f"ladder_side_{key}",
                                 format_func=lambda v: {"long": "📈 " + t("Long"), "short": "📉 " + t("Short")}[v],
                                 help=t("Long: orders below the price. Short: orders above it."))
-    regime_label = st.session_state.get(f"ladder_auto_{key}")
     preset = auto_style(regime_label)
     style = c2.segmented_control(t("Market"), ["consolidating", "trending"], default=preset,
                                  key=f"ladder_style_{key}",
@@ -218,7 +225,11 @@ def render(st, t, price: float | None, atr: float | None, name: str, key: str, s
                                  help=t("Consolidating: equal orders, close to the price. Trending: the order "
                                         "nearest the price smallest, the furthest largest."))
     orders = c3.number_input(t("Orders"), 2, 6, 3, key=f"ladder_n_{key}")
-    side, style = side or "long", style or preset
+    side, style = side or side_preset, style or preset
+    if str(regime_label or "").startswith("trending_") and regime_label in REGIME_WORDS:
+        c1.caption(t("Starts on {side} by a simple rule: the regime reads {regime}. An illustration of a ladder, "
+                     "not a recommendation; pick either side.",
+                     side=t("Short") if side_preset == "short" else t("Long"), regime=t(REGIME_WORDS[regime_label])))
     if regime_label in REGIME_WORDS:
         c2.caption(t("Preset from this asset's regime ({regime}). Change it if you see it differently.",
                      regime=t(REGIME_WORDS[regime_label])) if style == preset else
