@@ -10,8 +10,12 @@ on:
         description: "east (after the US close) or west"
         default: east
       presenter:
-        description: "Who presents (blank: the roster): cap, mate, nav or deck"
+        description: "Who presents (blank: the daily draw): cap, mate, nav, deck, cat, cook, admiral or rat"
         default: ""
+      plain:
+        description: "A test with a named presenter other than the captain: save it unencrypted (for review)"
+        type: boolean
+        default: false
       publish:
         description: "Publish to the app (the daily run does)"
         type: boolean
@@ -40,6 +44,8 @@ jobs:
       - name: Install
         timeout-minutes: 25
         run: |
+          # A stuck Ubuntu mirror once held this step for 25 minutes: give up on a silent mirror after 30 s and retry
+          echo 'Acquire::http::Timeout "30"; Acquire::https::Timeout "30"; Acquire::Retries "3";' | sudo tee /etc/apt/apt.conf.d/99timeouts > /dev/null
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install kokoro-onnx
@@ -92,5 +98,11 @@ jobs:
           [ -d out/daily_video ] || exit 0
           mkdir -p out/daily_video_enc
           tar -C out/daily_video -czf dv.tgz --exclude=work .
+          if [ "${{ inputs.plain }}" = "true" ] && [ -n "${{ inputs.presenter }}" ] && [ "${{ inputs.presenter }}" != "cap" ] \
+             && ! grep -q '"guest"' out/daily_video/script.json; then
+            mkdir -p out/daily_video_plain && cp out/daily_video/*.mp4 out/daily_video/script.json out/daily_video_plain/
+            bash .github/scripts/save_to_reports.sh "daily_video/test_${{ inputs.presenter }}_$(date -u +%Y-%m-%d_%H%M)" out/daily_video_plain
+            exit 0
+          fi
           openssl enc -aes-256-cbc -pbkdf2 -salt -in dv.tgz -out out/daily_video_enc/video.tgz.enc -pass env:LAB_KEY
           bash .github/scripts/save_to_reports.sh "daily_video/$(date -u +%Y-%m-%d_%H%M)" out/daily_video_enc

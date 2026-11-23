@@ -27,6 +27,8 @@ def _data_uri(path: Path) -> str:
 def _resolve(value, inputs: Path, out: Path | None = None):
     if isinstance(value, str) and value.startswith("file:"):
         return _data_uri(inputs / value[5:])
+    if isinstance(value, str) and value.startswith("repo:"):
+        return _data_uri(Path(value[5:]))          # a picked image kept in the repo (invented characters only)
     if isinstance(value, str) and value.startswith("out:") and out is not None:
         return _data_uri(out / value[4:])          # a file made by an earlier job in the same spec
     if isinstance(value, dict):
@@ -77,7 +79,7 @@ def speak_job(job: dict, out: Path) -> list[Path]:
     kokoro = Kokoro(str(models / "kokoro-v1.0.onnx"), str(models / "voices-v1.0.bin"))
     voice = job.get("voice", "bm_george")
     samples, rate = kokoro.create(job["speak"], voice=voice, speed=float(job.get("speed", 1.0)),
-                                  lang="en-gb" if voice.startswith("b") else "en-us")
+                                  lang=job.get("lang") or ("en-gb" if voice.startswith("b") else "en-us"))
     pcm = (np.clip(np.asarray(samples, dtype=np.float32), -1, 1) * 32767).astype(np.int16)
     pad = np.zeros(int(rate * 0.12), dtype=np.int16)             # a short breath before and after
     path = out / f"{job['id']}.wav"
@@ -86,7 +88,23 @@ def speak_job(job: dict, out: Path) -> list[Path]:
         wf.setsampwidth(2)
         wf.setframerate(rate)
         wf.writeframes(np.concatenate([pad, pcm, pad]).tobytes())
+    if job.get("pitch"):
+        pitch_shift(path, float(job["pitch"]))
     return [path]
+
+
+def pitch_shift(path: Path, semitones: float) -> None:
+    """Raise (+) or lower (-) a voice by semitones, keeping its speed (ffmpeg), in place. The same as the daily video."""
+    import subprocess
+    import wave
+
+    with wave.open(str(path)) as wf:
+        rate = wf.getframerate()
+    f = 2 ** (semitones / 12)
+    tmp = path.with_suffix(".shift.wav")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(path), "-af",
+                    f"asetrate={rate}*{f},aresample={rate},atempo={1 / f}", str(tmp)], check=True)
+    tmp.replace(path)
 
 
 def _envelope(pcm, rate: int):

@@ -1,0 +1,25 @@
+{
+ "about": "Cook final round: greasy apron back on C, and Cook 3 holding the pie with his mouth closed.",
+ "jobs": [
+  {
+   "id": "cookC_greasy",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/cookC.png",
+    "prompt": "Make his apron heavily soiled again: big smears of grease, gravy splashes and flour handprints all over it, including around the pocket. Make his face shinier with sweat and his cheeks even redder, hot and bothered. Keep everything else exactly the same: his closed mouth, the big chest pocket, the tattoos, the pie he holds at chest height, the kitchen and the style.",
+    "num_images": 2,
+    "output_format": "png"
+   }
+  },
+  {
+   "id": "cook3_pie_held",
+   "model": "fal-ai/flux-pro/kontext",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/cook3.png",
+    "prompt": "Make the cook hold a whole golden pie in one hand in front of his chest, mouth closed, looking proudly at the camera. Keep everything else exactly the same: his face, the stained apron with its front chest pocket, the tattoos, the kitchen, the lighting and the style.",
+    "num_images": 2,
+    "output_format": "png"
+   }
+  }
+ ]
+}
