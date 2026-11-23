@@ -1,0 +1,16 @@
+{
+ "about": "Bloopers round 4 (23 Nov 2026): the cat chases the Rat across the chart table.",
+ "jobs": [
+  {
+   "id": "blooper_cat_chase",
+   "model": "fal-ai/kling-video/v2.5-turbo/standard/image-to-video",
+   "input": {
+    "image_url": "repo:video/avatar_lab/picks/bloopers/cat_rat.png",
+    "prompt": "Animated comedy moment, one continuous shot, no cuts. The little rat grabs the wedge of cheese and scampers away across the charts; the tuxedo cat in her navy jumper pounces after him, skids on the slippery charts, sending the rolled maps flying, and lands in a heap while the rat escapes out of view with the cheese. The cat sits up, smooths her jumper and looks at the camera with dignified annoyance. The camera stays still and never leaves the cabin.",
+    "duration": "5",
+    "negative_prompt": "blur, distort, low quality, extra limbs, morphing face, text, scene change, cut, zoom out",
+    "cfg_scale": 0.5
+   }
+  }
+ ]
+}
