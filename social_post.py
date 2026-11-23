@@ -86,6 +86,12 @@ def post_telegram(day: str, caps: dict, links: dict) -> str:
     return "posted" if ok else f"failed (HTTP {r.status_code}: {r.json().get('description', '')[:120] if r.headers.get('content-type','').startswith('application/json') else ''})"
 
 
+def download_link(url: str, name: str) -> str:
+    """The link that saves the file instead of playing it in the browser (storage's download option; 23 Nov 2026: the
+    email's button only played the video)."""
+    return url + ("&" if "?" in url else "?") + "download=" + name
+
+
 def post_email(day: str, caps: dict, links: dict) -> str:
     """The morning pack for posting by hand (TikTok for now): the tall video and its caption."""
     to = os.getenv("SOCIAL_PACK_TO", "").strip()
@@ -98,7 +104,7 @@ def post_email(day: str, caps: dict, links: dict) -> str:
         f"Today's video is ready: {when}",
         ["It has gone out automatically to the connected channels. For TikTok, download the tall video and paste "
          "this caption:", caps["tiktok"]],
-        button=("Download the tall video", links["tall"]), tone="info",
+        button=("Download the tall video", download_link(links["tall"], f"MarketNavi-{day}-tall.mp4")), tone="info",
         footnote=f"Wide version: {links['wide']}", preheader="The daily video and its TikTok caption.")
     return "sent" if beta_worker._send_resend(to, f"Daily video {when}: TikTok pack", page, plain) else "failed"
 

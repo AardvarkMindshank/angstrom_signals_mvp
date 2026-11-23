@@ -58,3 +58,8 @@ def test_links_carry_the_video_version():
     links = s.urls("2026-11-23", "2026-11-23T02:58:11+00:00")
     assert links["tall"].endswith("video/2026-11-23_port.mp4?v=20261123025811")
     assert "?v=" not in s.urls("2026-11-23")["wide"]
+
+
+def test_the_email_button_downloads():
+    assert s.download_link("https://x/video/d_port.mp4?v=1", "a.mp4") == "https://x/video/d_port.mp4?v=1&download=a.mp4"
+    assert s.download_link("https://x/video/d_port.mp4", "a.mp4") == "https://x/video/d_port.mp4?download=a.mp4"
