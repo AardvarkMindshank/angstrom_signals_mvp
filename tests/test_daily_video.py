@@ -219,6 +219,7 @@ def test_the_admiral_comes_on_big_days_and_the_new_crew_moves(tmp_path):
     assert "rotate=" in dv.clip_effect("cook_welcome_1_1.mp4", 600, 812)
     assert "eq=brightness" in dv.clip_effect("ratd_tag_1_1.mp4", 600, 812)
     assert "rotate" not in dv.clip_effect("admiral_welcome_1_1.mp4", 600, 812)
+    assert dv.clip_effect("nav_signoff_1_1.mp4", 600, 812).startswith("crop=iw*0.72")       # above the wheel
     caps = {k: {"file": f"{k}.mp4", "seconds": 2.0} for k in ("welcome", "weather", "signoff", "tag")}
     narr = {k: {"file": f"{k}.wav", "seconds": 2.0} for k in ("date", "close")}
     kinds = [s["kind"] for s in dv.timeline(caps, narr)]

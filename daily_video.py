@@ -439,7 +439,8 @@ def rounded_mask(path: Path, w: int, h: int, radius: int = 36) -> None:
     m.save(path)
 
 
-EFFECTS = {"cook": "sway", "rat": "flicker", "ratd": "flicker"}
+EFFECTS = {"cook": "sway", "rat": "flicker", "ratd": "flicker", "nav": "zoom"}
+ZOOM = 0.72                      # the Navigator's clips: framed above the ship's wheel, which doesn't turn with her hands
 
 
 def clip_effect(clip: str, bw: int, bh: int) -> str:
@@ -451,6 +452,8 @@ def clip_effect(clip: str, bw: int, bh: int) -> str:
         big_w, big_h = int(bw * 1.06) // 2 * 2, int(bh * 1.06) // 2 * 2
         return (f"scale={big_w}:{big_h}:force_original_aspect_ratio=increase,crop={big_w}:{big_h},"
                 f"rotate=a='0.012*sin(2*PI*t/4.5)':c=black,crop={bw}:{bh},")
+    if effect == "zoom":
+        return f"crop=iw*{ZOOM}:ih*{ZOOM}:(iw-ow)/2:0," + fit
     if effect == "flicker":
         return fit + "eq=brightness='0.035*sin(2*PI*t*1.7)+0.02*sin(2*PI*t*4.3)':eval=frame,"
     return fit
