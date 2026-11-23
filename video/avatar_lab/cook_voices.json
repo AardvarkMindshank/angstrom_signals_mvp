@@ -1,0 +1,60 @@
+{
+ "about": "More free voice tries for the Cook (voice only, no fal cost).",
+ "jobs": [
+  {
+   "id": "voice_cook_adam",
+   "speak": "Phew! Hot in that galley. Right, quick forecast before the stew boils over.",
+   "voice": "am_adam",
+   "speed": 1.05
+  },
+  {
+   "id": "voice_cook_eric",
+   "speak": "Phew! Hot in that galley. Right, quick forecast before the stew boils over.",
+   "voice": "am_eric",
+   "speed": 1.05
+  },
+  {
+   "id": "voice_cook_fenrir",
+   "speak": "Phew! Hot in that galley. Right, quick forecast before the stew boils over.",
+   "voice": "am_fenrir",
+   "speed": 1.05
+  },
+  {
+   "id": "voice_cook_onyx",
+   "speak": "Phew! Hot in that galley. Right, quick forecast before the stew boils over.",
+   "voice": "am_onyx",
+   "speed": 1.05
+  },
+  {
+   "id": "voice_cook_santa",
+   "speak": "Phew! Hot in that galley. Right, quick forecast before the stew boils over.",
+   "voice": "am_santa",
+   "speed": 1.05
+  },
+  {
+   "id": "voice_cook_lewis",
+   "speak": "Phew! Hot in that galley. Right, quick forecast before the stew boils over.",
+   "voice": "bm_lewis",
+   "speed": 1.05
+  },
+  {
+   "id": "voice_cook_nicola",
+   "speak": "Phew! Hot in that galley. Right, quick forecast before the stew boils over.",
+   "voice": "im_nicola",
+   "speed": 1.05
+  },
+  {
+   "id": "voice_cook_nicola_strong",
+   "speak": "Phew! Hot in that galley. Right, quick forecast before the stew boils over.",
+   "voice": "im_nicola",
+   "speed": 1.0,
+   "lang": "it"
+  },
+  {
+   "id": "voice_cook_alex_spanish",
+   "speak": "Phew! Hot in that galley. Right, quick forecast before the stew boils over.",
+   "voice": "em_alex",
+   "speed": 1.05
+  }
+ ]
+}

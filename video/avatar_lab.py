@@ -77,7 +77,7 @@ def speak_job(job: dict, out: Path) -> list[Path]:
     kokoro = Kokoro(str(models / "kokoro-v1.0.onnx"), str(models / "voices-v1.0.bin"))
     voice = job.get("voice", "bm_george")
     samples, rate = kokoro.create(job["speak"], voice=voice, speed=float(job.get("speed", 1.0)),
-                                  lang="en-gb" if voice.startswith("b") else "en-us")
+                                  lang=job.get("lang") or ("en-gb" if voice.startswith("b") else "en-us"))
     pcm = (np.clip(np.asarray(samples, dtype=np.float32), -1, 1) * 32767).astype(np.int16)
     pad = np.zeros(int(rate * 0.12), dtype=np.int16)             # a short breath before and after
     path = out / f"{job['id']}.wav"
