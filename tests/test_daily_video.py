@@ -73,16 +73,22 @@ def test_fear_index_rises_are_bad_news():
     assert spec["story"]["asset"]["name"] == "Gold" and spec["story"]["asset"]["value"] == 3500.0
 
 
-def test_roster_and_fallback_to_the_captain(tmp_path):
-    tue = datetime(2026, 11, 24)
-    assert dv.ROSTER[tue.weekday()] == "mate"
-    assert dv.presenter_for(tue, tmp_path) == "cap"                     # no First Mate clips yet: the captain
+def test_presenter_is_a_weighted_daily_surprise_with_the_captain_as_fallback(tmp_path):
+    from datetime import timedelta
+
+    days = [datetime(2026, 1, 1) + timedelta(days=i) for i in range(2000)]
+    assert {dv.presenter_for(d, tmp_path) for d in days} == {"cap"}       # nobody else's clips yet: the captain
     (tmp_path / "mate_signoff_1_1.mp4").write_bytes(b"")
-    assert dv.presenter_for(tue, tmp_path) == "cap"                     # one clip is not a set
-    for line in dv.SET_LINES:
-        (tmp_path / f"mate_{line}_1_1.mp4").write_bytes(b"")
-    assert dv.presenter_for(tue, tmp_path) == "mate"
-    assert dv.presenter_for(tue, tmp_path, override="cap") == "cap"
+    assert {dv.presenter_for(d, tmp_path) for d in days[:200]} == {"cap"}  # one clip is not a set
+    for who in ("mate", "nav", "deck", "cat"):
+        for line in dv.SET_LINES:
+            (tmp_path / f"{who}_{line}_1_1.mp4").write_bytes(b"")
+    picks = [dv.presenter_for(d, tmp_path) for d in days]
+    share = {w: picks.count(w) / len(picks) for w in dv.CHANCES}
+    for who, chance in dv.CHANCES.items():
+        assert abs(share[who] - chance) < 0.04, (who, share[who])
+    assert dv.presenter_for(days[5], tmp_path) == dv.presenter_for(days[5], tmp_path)   # a re-made day keeps it
+    assert dv.presenter_for(days[5], tmp_path, override="deck") == "deck"
     clips = dict(dv.captain_clips("fair", random.Random(2), who="deck"))
     assert all(c.startswith("deck_") for c in clips.values())
 

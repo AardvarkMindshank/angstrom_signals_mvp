@@ -36,7 +36,7 @@ HERE = Path(__file__).resolve().parent
 PAGE = HERE / "video" / "daily" / "forecast.html"
 RENDER = HERE / "video" / "daily" / "render.js"
 VOICE, SPEED = "bm_george", 1.1
-# ⚓ The crew (21 Nov 2026): who presents comes from the roster; the presenter also narrates, so the voice matches.
+# ⚓ The crew (21 Nov 2026): who presents is a daily weighted draw (CHANCES below); the presenter also narrates, so the voice matches.
 # Clip names in the library: <prefix>_<line>_<1|2>_1.mp4 (avatar lab). A presenter whose clips are missing falls
 # back to the captain.
 PRESENTERS = {
@@ -45,9 +45,11 @@ PRESENTERS = {
     "nav": {"title": "The Navigator", "voice": "af_sarah", "speed": 1.08},
     "deck": {"title": "The Deckhand", "voice": "bm_lewis", "speed": 1.08},
 }
-ROSTER = {0: "cap", 1: "mate", 2: "cap", 3: "nav", 4: "cap", 5: "deck", 6: "mate"}     # Monday = 0
 PRESENTERS["cat"] = {"title": "The Ship's Cat", "voice": "af_nicole", "speed": 1.25}
-CAT_CHANCE = 1 / 14                 # the ship's cat takes a whole day now and then (once its full clip set exists)
+# Who presents is a surprise each day (Angus, 23 Nov 2026), a weighted draw seeded by the date, so a video re-made
+# the same day keeps its presenter. No clips are tied to a weekday. Presenters whose clip set isn't in the library
+# yet are left out of the draw; the captain is always in it.
+CHANCES = {"cap": 0.40, "mate": 0.25, "nav": 0.14, "deck": 0.14, "cat": 0.07}
 # 🎁 Guests on special days: a cameo (their own welcome and sign-off; the day's presenter does the rest).
 GUESTS = {"santa": "Father Christmas", "ghost": "The Ghost Captain", "bunny": "The Easter Bunny",
           "neptune": "King Neptune"}
@@ -280,14 +282,17 @@ def duration(path: Path) -> float:
 
 
 def presenter_for(day: datetime, library: Path | None = None, override: str | None = None) -> str:
-    """Who presents: the override, else the roster; the captain when that presenter's clips aren't in the library."""
-    who = override if override in PRESENTERS else ROSTER.get(day.weekday(), "cap")
-    if override is None and library is not None and has_set(library, "cat") and \
-            random.Random(f"cat-{day.date().isoformat()}").random() < CAT_CHANCE:
-        who = "cat"
-    if library is not None and who != "cap" and not has_set(library, who):
-        return "cap"
-    return who
+    """Who presents: the override, else a weighted draw for the day (CHANCES) among presenters whose clips are in the
+    library; the captain when nobody else's are."""
+    if override in PRESENTERS:
+        return override if library is None or override == "cap" or has_set(library, override) else "cap"
+    pool = {who: w for who, w in CHANCES.items() if who == "cap" or library is None or has_set(library, who)}
+    roll = random.Random(f"presenter-{day.date().isoformat()}").random() * sum(pool.values())
+    for who, weight in pool.items():
+        roll -= weight
+        if roll < 0:
+            return who
+    return "cap"
 
 
 def captain_clips(weather: str, rng: random.Random, weekend: bool = False, who: str = "cap") -> list[tuple[str, str]]:
