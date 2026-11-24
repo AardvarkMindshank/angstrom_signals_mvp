@@ -70,3 +70,11 @@ def test_a_note_that_contradicts_its_own_facts_is_rewritten():
 def test_no_answer_changes_nothing():
     report = sentiment.review_report(_report(), chat=lambda ask: "busy")
     assert report["headlines"][1]["score"] == 35.0 and report["checks"].get("skipped")
+
+
+def test_the_prior_day_is_the_close_before_the_latest_day():
+    day = 86400
+    t0 = 1795392000                                                      # 23 Nov 2026 00:00 UTC
+    result = {"timestamp": [t0 - 4 * day + 50000, t0 - 3 * day + 50000, t0 + 50000],
+              "indicators": {"quote": [{"close": [28.5, 35.89, 26.62]}]}}
+    assert mg._close_before(result, "2026-11-23") == 35.89

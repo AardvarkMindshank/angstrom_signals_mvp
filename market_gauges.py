@@ -219,16 +219,38 @@ def _yahoo_last(symbol: str):
     price = meta.get("regularMarketPrice")
     if price is None:
         return None
-    previous = meta.get("previousClose")
-    if previous is None:
-        previous = meta.get("chartPreviousClose")
     stamp = meta.get("regularMarketTime")
     try:
         date = datetime.fromtimestamp(int(stamp), timezone.utc).strftime("%Y-%m-%d")
     except (TypeError, ValueError, OSError):
         date = ""
+    # The prior day is the last daily close before the latest one's day. Yahoo's chartPreviousClose is the close before
+    # the 10-day range began (24 Nov 2026: VIX "up 7.2 points from the prior day" on a day it fell about 9).
+    previous = _close_before(result[0], date)
+    if previous is None:
+        previous = meta.get("previousClose")
     prior = (None, float(previous)) if previous is not None else None
     return (date, float(price)), prior
+
+
+def _close_before(result: dict, date: str):
+    """The last daily close in a Yahoo chart result dated before `date` (YYYY-MM-DD), or None."""
+    try:
+        stamps = result.get("timestamp") or []
+        closes = ((result.get("indicators") or {}).get("quote") or [{}])[0].get("close") or []
+    except (AttributeError, IndexError, TypeError):
+        return None
+    before = None
+    for stamp, close in zip(stamps, closes):
+        if close is None:
+            continue
+        try:
+            day = datetime.fromtimestamp(int(stamp), timezone.utc).strftime("%Y-%m-%d")
+        except (TypeError, ValueError, OSError):
+            continue
+        if not date or day < date:
+            before = float(close)
+    return before
 
 
 def _fear_greed():
