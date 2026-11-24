@@ -25,6 +25,6 @@ jobs:
                     "news scored", sum(h.get("score") is not None for h in hs), "of", len(hs),
                     "| readings scored", sum(i.get("score") is not None for i in items), "of", len(items),
                     "| langs", sorted((r.get("tr") or {}).keys()), "| parts", r.get("score_parts"), "| reused", r.get("reused_articles"))
-              for i in items: print("   reading", i.get("name"), "score", i.get("score"))
+              print("   LEAD", json.dumps(r.get("lead"), ensure_ascii=False)[:600])
               for h in hs: print("   news", (h.get("published_at") or h.get("published") or "")[:16], "score", h.get("score"), h.get("title","")[:70])
           PY
