@@ -17,7 +17,7 @@ from i18n import t
 
 _COMPONENT: list = []
 
-TIP = i18n.mark("📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.")
+TIP = i18n.mark("📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.")
 
 POP_SVG = ("<svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' "
            "stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/>"

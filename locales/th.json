@@ -2301,14 +2301,12 @@
   "Listen in a podcast app": "ฟังในแอปพอดแคสต์",
   "Make a new private link": "สร้างลิงก์ส่วนตัวใหม่",
   "🎧 Spoken briefing scripts": "🎧 บทของบรีฟฟิงแบบเสียง",
-  "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "เขียนพยากรณ์ยามเช้าที่ทุกคนฟังร่วมกัน และ Passage Plan ที่ระบบเบื้องหลังเขียนให้แผนแบบเสียงเมื่อสมาชิกยังไม่ได้เขียนเอง ทำงานบนระบบเบื้องหลังที่มีคีย์ของ Grok, ChatGPT และ Gemini",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "เหมือนกันสำหรับทุกคน วันละสองครั้ง: ฉบับเอเชียและยุโรปหลังตลาดสหรัฐฯ ปิด และฉบับอเมริกาก่อนเช้าที่นิวยอร์ก คุณจะได้ฉบับล่าสุดเสมอ ซึ่งคือฉบับที่ทำมาสำหรับเช้าของคุณ ตลาดหลัก เหรียญห้าอันดับแรก Tide และเหตุการณ์ของสัปดาห์ เป็นสรุปค่าที่แอปอ่านได้ ไม่ใช่คำแนะนำ",
   "{day} · {length}": "{day} · {length}",
   "Speak my plan every morning": "อ่านแผนของฉันทุกเช้า",
   "Also email me when it's ready (the daily summary email links it anyway)": "ส่งอีเมลแจ้งเมื่อพร้อมด้วย (อีเมลสรุปรายวันมีลิงก์อยู่แล้ว)",
   "Logbook": "สมุดบันทึกเดินเรือ",
-  "Morning forecast": "พยากรณ์ยามเช้า",
   "Read it": "อ่าน",
   "Your Passage Plan": "Passage Plan ของคุณ",
   "Being made: ready within about 15 minutes.": "กำลังทำ: พร้อมในประมาณ 15 นาที",
@@ -2327,7 +2325,6 @@
   "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "กลางวันและกลางคืนจะให้หน้าเว็บสว่างหรือมืดตลอด อัตโนมัติจะตามการตั้งค่าของอุปกรณ์ จึงเปลี่ยนตามโทรศัพท์หรือคอมพิวเตอร์ของคุณ บันทึกไว้ในบัญชี ทุกอุปกรณ์ที่คุณเข้าสู่ระบบจะทำตาม หน้าเว็บจะโหลดใหม่หนึ่งครั้งเพื่อสลับ",
   "Open this panel in its own window": "เปิดแผงนี้ในหน้าต่างแยก",
   "📓 Opening your Logbook…": "📓 กำลังเปิดสมุดบันทึกเดินเรือ…",
-  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 สมุดบันทึกเดินเรือ: Passage Plan ของวันนี้ให้อ่านหรือฟัง แผนก่อนหน้า และพยากรณ์ยามเช้า",
   "Dot build-up": "สัญญาณก่อตัวของจุด",
   "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "จุดจาง ๆ บนแถบ 📡 Sonar ที่เข้มขึ้นเมื่อจุดใหญ่สีแดงหรือเขียวใกล้เข้ามา และค่อย ๆ จางลงใน 3 แท่งหลังจากนั้น แต่ละจุดคำนวณจากแท่งของตัวเองและแท่งก่อนหน้าเท่านั้น จึงอ่านได้เหมือนกันทั้งบนแท่งที่กำลังวิ่งและในอดีต: ลึกในโซนซื้อมากเกินไป (หรือขายมากเกินไป) ขณะที่คลื่นสองเส้นเข้าใกล้กัน สัญญาณก่อตัวอาจจางไปโดยไม่มีจุดก็ได้ ค่าเดียวกันนี้คือสัญญาณ “สัญญาณก่อตัวของจุด Sonar” สำหรับ Set และฟันเนล",
   "Sonar dot build-up": "สัญญาณก่อตัวของจุด Sonar",
@@ -2498,5 +2495,8 @@
   "General News": "ข่าวทั่วไป",
   "Out of date, so not scored": "ข้อมูลเก่า จึงไม่นำมาให้คะแนน",
   "Most active stocks, up and down": "หุ้นที่ซื้อขายมากที่สุด ขึ้นและลง",
-  "US stocks, up and down": "หุ้นสหรัฐฯ ขึ้นและลง"
+  "US stocks, up and down": "หุ้นสหรัฐฯ ขึ้นและลง",
+  "Morning Outlook": "มุมมองยามเช้า",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "เขียนมุมมองยามเช้าที่ทุกคนฟังร่วมกัน และ Passage Plan ที่ระบบเบื้องหลังเขียนให้แผนแบบเสียงเมื่อสมาชิกยังไม่ได้เขียนเอง ทำงานบนระบบเบื้องหลังที่มีคีย์ของ Grok, ChatGPT และ Gemini",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 สมุดบันทึกเดินเรือ: Passage Plan ของวันนี้ให้อ่านหรือฟัง แผนก่อนหน้า และมุมมองยามเช้า"
 }

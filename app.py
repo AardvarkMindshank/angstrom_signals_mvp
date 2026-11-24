@@ -9709,14 +9709,14 @@ def _forecast_player(key: str, pick: bool = False, day: str | None = None) -> No
                  edition=t(briefing.EDITIONS.get(e[11:], {}).get("name", "")), length=_clock(m.get("seconds")))
 
     if not eid:
-        _briefing_title("🌍 " + t("Morning forecast"), "", tip)
+        _briefing_title("🌍 " + t("Morning Outlook"), "", tip)
         st.caption(t("The first edition is on its way."))
         return
     if day is not None:                                  # Logbook: that day's editions, newest first
         ids = sorted((k for k, v in meta.items() if isinstance(v, dict) and k[:10] == day),
                      key=lambda k: str((meta.get(k) or {}).get("made_at") or ""), reverse=True)
         if not ids:
-            _briefing_title("🌍 " + t("Morning forecast"), "", tip)
+            _briefing_title("🌍 " + t("Morning Outlook"), "", tip)
             st.caption(t("None for this day."))
             return
         eid = ids[0]
@@ -9724,14 +9724,14 @@ def _forecast_player(key: str, pick: bool = False, day: str | None = None) -> No
             eid = st.segmented_control(
                 t("Edition"), ids, default=ids[0], key=f"forecast_edition_{key}_{day}", label_visibility="collapsed",
                 format_func=lambda k: t(briefing.EDITIONS.get(k[11:], {}).get("name", k[11:]))) or ids[0]
-        _briefing_title("🌍 " + t("Morning forecast"), label(eid), tip)
+        _briefing_title("🌍 " + t("Morning Outlook"), label(eid), tip)
     elif pick:
-        _briefing_title("🌍 " + t("Morning forecast"), "", tip)
+        _briefing_title("🌍 " + t("Morning Outlook"), "", tip)
         ids = sorted((k for k, v in meta.items() if isinstance(v, dict)),
                      key=lambda k: str((meta.get(k) or {}).get("made_at") or ""), reverse=True)
         eid = _briefing_pick(key, ids, {k: label(k) for k in ids})
     else:
-        _briefing_title("🌍 " + t("Morning forecast"), label(eid), tip)
+        _briefing_title("🌍 " + t("Morning Outlook"), label(eid), tip)
     st.audio(_version(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.mp3"), (meta.get(eid) or {}).get("made_at")),
              format="audio/mpeg")
     with st.expander("📜 " + t("Read it"), expanded=False):
@@ -9898,7 +9898,7 @@ def _logbook_panel() -> None:
                          "can listen, so keep it to yourself. Spotify can't take private feeds."))
             st.caption("🧭 " + t("Your Passage Plan"))
             st.code(briefing.public_url(base, f"{b['token']}/feed.xml"), language=None)
-            st.caption("🌍 " + t("Morning forecast"))
+            st.caption("🌍 " + t("Morning Outlook"))
             st.code(briefing.public_url(base, f"{briefing.GENERAL}/feed.xml"), language=None)
             if st.button("🔄 " + t("Make a new private link"), key="briefing_new_link",
                          help=t("The old link stops getting new plans.")):

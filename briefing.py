@@ -509,7 +509,7 @@ def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
 
 
 GENERAL_SYSTEM = (
-    "You write the script for the MarketNavi Morning forecast, a short spoken market briefing that every member "
+    "You write the script for the MarketNavi Morning Outlook, a short spoken market briefing that every member "
     "of the app hears, the same for everyone. MarketNavi is a market-signals app whose market-conditions feature "
     "is called Tides. Style it like the shipping forecast sailors listen to at dawn: calm, measured, a steady rhythm, "
     "each area of the market given in turn (the tide, the sea state, the winds, storm warnings on the horizon), with a "
@@ -525,7 +525,7 @@ GENERAL_SYSTEM = (
     "stretch and flow readings run from minus 100 to plus 100 (above zero leans up). A market's news mood is given as "
     "news_mood, from minus 100 to plus 100 (0 is mixed), with its words; say it that way. Asset news sentiment runs "
     "from 0 to 100, with 50 neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
-    "opening line. Open with \"This is the MarketNavi morning forecast, {edition}, for\" the day and date, follow "
+    "opening line. Open with \"This is the MarketNavi Morning Outlook, {edition}, for\" the day and date, follow "
     "the sections in the order given with a short spoken link between them, and close with one line saying this is a "
     "summary of the app's readings, not advice, then end with exactly \"Fair winds and following seas.\" Write about {words} "
     "words. Reply with the script text only."
@@ -545,7 +545,7 @@ def general_prompt(facts: dict, edition: str, day: datetime) -> tuple[str, list[
 
 def plain_general(facts: dict, edition: str, day: datetime) -> str:
     """The forecast without AI, from the facts alone."""
-    out = [f"This is the MarketNavi morning forecast, {EDITIONS[edition]['name']}, for {day.strftime('%A %d %B')}."]
+    out = [f"This is the MarketNavi Morning Outlook, {EDITIONS[edition]['name']}, for {day.strftime('%A %d %B')}."]
     for m in facts.get("markets") or []:
         if mood_line(m):
             out.append(mood_line(m))
@@ -557,7 +557,7 @@ def plain_general(facts: dict, edition: str, day: datetime) -> str:
     out += [str(x) for x in (facts.get("tide") or [])[:3]]
     for e in (facts.get("events") or [])[:4]:
         out.append(f"{e['what']}, {e['when_utc']} UTC.")
-    out.append("That's the forecast. It summarises the app's readings and is not advice. Fair winds and following seas.")
+    out.append("That's the outlook. It summarises the app's readings and is not advice. Fair winds and following seas.")
     return " ".join(out)
 
 
@@ -669,7 +669,7 @@ SYSTEM = (
     "never call it today's move unless it says today. A market's news mood is given as news_mood, "
     "from minus 100 to plus 100 (0 is mixed), with its words; say it that way. Asset news sentiment runs from 0 to "
     "100, with 50 neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
-    "opening line. Open with \"This is the MarketNavi morning forecast for\" the day and date, follow the sections "
+    "opening line. Open with \"This is the MarketNavi Morning Outlook for\" the day and date, follow the sections "
     "in the order given with a short spoken link between them, and close with one line saying this is a summary of "
     "the app's readings, not advice, then end with exactly \"Fair winds and following seas.\" Write about {words} words. Reply "
     "with the script text only."
@@ -687,7 +687,7 @@ def prompt(facts: dict, b: dict, day: datetime, name: str = "") -> tuple[str, li
 
 def plain_script(facts: dict, b: dict, day: datetime) -> str:
     """A script without AI, from the facts alone (used when the AI is unavailable)."""
-    out = [f"This is the MarketNavi morning forecast for {day.strftime('%A %d %B')}."]
+    out = [f"This is the MarketNavi Morning Outlook for {day.strftime('%A %d %B')}."]
     for m in facts.get("markets") or []:
         out.append(mood_line(m))
         if m.get("summary"):
@@ -707,7 +707,7 @@ def plain_script(facts: dict, b: dict, day: datetime) -> str:
         out.append(f"Your funnel {f['funnel']} has {n} candidate{'s' if n != 1 else ''}.")
     for e in facts.get("events") or []:
         out.append(f"{e['what']}, {e['when_utc']} UTC.")
-    out.append("That's the forecast. It summarises the app's readings and is not advice. Fair winds and following seas.")
+    out.append("That's the outlook. It summarises the app's readings and is not advice. Fair winds and following seas.")
     return " ".join(x for x in out if x)
 
 
@@ -782,7 +782,7 @@ def listen_links(supabase, base: str, settings: dict | None, plan: str, now: dat
     eid = newest(general)
     if eid and base:
         name = EDITIONS.get(eid[11:], {}).get("name", "")
-        out.append((f"🌍 The Morning forecast ({name})" if name else "🌍 The Morning forecast",
+        out.append((f"🌍 The Morning Outlook ({name})" if name else "🌍 The Morning Outlook",
                     public_url(base, f"{GENERAL}/{eid}.mp3")))
     b = settings_of(settings)
     if b.get("token") and base and personal_allowed(plan):

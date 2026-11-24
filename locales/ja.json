@@ -2301,14 +2301,12 @@
   "Listen in a podcast app": "ポッドキャストアプリで聞く",
   "Make a new private link": "新しい非公開リンクを作る",
   "🎧 Spoken briefing scripts": "🎧 音声ブリーフィングの原稿",
-  "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "全員共通の「朝の予報」と、メンバーがまだ書いていないときに音声プラン用にバックグラウンドワーカーが書く Passage Plan を作成します。Grok、ChatGPT、Gemini のキーを持つバックグラウンドワーカーで動きます。",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "全員共通で1日2回：米国市場の引け直後の「アジア・欧州版」と、ニューヨークの朝の前の「南北アメリカ版」。いつも最新版、つまりあなたの朝向けの版が届きます。主要市場、上位5銘柄のコイン、Tide、今週のイベント。アプリの読み取り値の要約であり、助言ではありません。",
   "{day} · {length}": "{day} · {length}",
   "Speak my plan every morning": "毎朝プランを読み上げる",
   "Also email me when it's ready (the daily summary email links it anyway)": "準備ができたらメールでも知らせる（毎日のサマリーメールにもリンクが入ります）",
   "Logbook": "ログブック",
-  "Morning forecast": "朝の予報",
   "Read it": "読む",
   "Your Passage Plan": "あなたの Passage Plan",
   "Being made: ready within about 15 minutes.": "作成中：約15分で完成します。",
@@ -2327,7 +2325,6 @@
   "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "「昼」と「夜」はページを明るく、または暗く保ちます。「自動」は端末の設定に従うので、スマホやパソコンに合わせて切り替わります。アカウントに保存されるので、ログインしているすべての端末が従います。切り替えのためにページが一度再読み込みされます。",
   "Open this panel in its own window": "このパネルを別ウィンドウで開く",
   "📓 Opening your Logbook…": "📓 ログブックを開いています…",
-  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 ログブック：今日の Passage Plan（読む・聴く）、これまでのプラン、朝の予報。",
   "Dot build-up": "ドットの予兆",
   "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "📡 Sonar ストリップ上の薄いドット。大きな赤・緑のドットが近づくほど濃くなり、出現後の3本で薄れていきます。各ドットはそのローソク足と過去の足だけから計算するため、進行中の足でも過去と同じように読めます：買われすぎ（売られすぎ）ゾーンの深い位置で2本の波が近づいている状態です。予兆がドットなしで消えることもあります。同じ値は Set やファネル用の「Sonar ドットの予兆」シグナルです。",
   "Sonar dot build-up": "Sonar ドットの予兆",
@@ -2498,5 +2495,8 @@
   "General News": "一般ニュース",
   "Out of date, so not scored": "データが古いため、スコア対象外",
   "Most active stocks, up and down": "売買上位銘柄の上昇・下落数",
-  "US stocks, up and down": "米国株の上昇・下落数"
+  "US stocks, up and down": "米国株の上昇・下落数",
+  "Morning Outlook": "モーニング・アウトルック",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "全員共通の「モーニング・アウトルック」と、メンバーがまだ書いていないときに音声プラン用にバックグラウンドワーカーが書く Passage Plan を作成します。Grok、ChatGPT、Gemini のキーを持つバックグラウンドワーカーで動きます。",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 ログブック：今日の Passage Plan（読む・聴く）、これまでのプラン、モーニング・アウトルック。"
 }

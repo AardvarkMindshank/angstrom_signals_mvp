@@ -2301,14 +2301,12 @@
   "Listen in a podcast app": "Dengarkan di aplikasi podcast",
   "Make a new private link": "Buat tautan pribadi baru",
   "🎧 Spoken briefing scripts": "🎧 Naskah briefing lisan",
-  "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Menulis Prakiraan pagi bersama, dan Passage Plan yang ditulis worker latar belakang untuk rencana lisan saat anggota belum menulisnya. Berjalan di worker latar belakang, yang punya kunci Grok, ChatGPT, dan Gemini.",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "Sama untuk semua orang, dua kali sehari: edisi Asia & Eropa tepat setelah pasar AS tutup, dan edisi Amerika sebelum pagi New York. Anda selalu mendapat yang terbaru, yaitu yang dibuat untuk pagi Anda. Pasar utama, lima koin teratas, Tide, dan acara pekan ini. Ringkasan bacaan aplikasi, bukan saran.",
   "{day} · {length}": "{day} · {length}",
   "Speak my plan every morning": "Bacakan rencana saya setiap pagi",
   "Also email me when it's ready (the daily summary email links it anyway)": "Kirim juga email saat siap (email ringkasan harian tetap menautkannya)",
   "Logbook": "Logbook",
-  "Morning forecast": "Prakiraan pagi",
   "Read it": "Baca",
   "Your Passage Plan": "Passage Plan Anda",
   "Being made: ready within about 15 minutes.": "Sedang dibuat: siap dalam sekitar 15 menit.",
@@ -2327,7 +2325,6 @@
   "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "Siang dan Malam membuat halaman tetap terang atau gelap. Otomatis mengikuti pengaturan perangkat Anda, jadi berubah bersama ponsel atau komputer Anda. Tersimpan di akun Anda, jadi setiap perangkat tempat Anda masuk ikut mengikutinya. Halaman dimuat ulang sekali untuk beralih.",
   "Open this panel in its own window": "Buka panel ini di jendelanya sendiri",
   "📓 Opening your Logbook…": "📓 Membuka Logbook Anda…",
-  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 Logbook: Passage Plan hari ini untuk dibaca atau didengar, rencana sebelumnya, dan Prakiraan pagi.",
   "Dot build-up": "Penumpukan titik",
   "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "Titik samar di strip 📡 Sonar yang makin tegas saat titik besar merah atau hijau mendekat, lalu memudar selama 3 candle setelahnya. Masing-masing dihitung hanya dari candle-nya sendiri dan yang sebelumnya, jadi terbaca sama di candle berjalan maupun di riwayat: jauh di zona overbought (atau oversold) dengan dua gelombang saling mendekat. Penumpukan bisa memudar tanpa titik. Bacaan yang sama adalah sinyal Penumpukan titik Sonar untuk Set dan funnel.",
   "Sonar dot build-up": "Penumpukan titik Sonar",
@@ -2498,5 +2495,8 @@
   "General News": "Berita umum",
   "Out of date, so not scored": "Sudah usang, jadi tidak dinilai",
   "Most active stocks, up and down": "Saham teraktif, naik dan turun",
-  "US stocks, up and down": "Saham AS, naik dan turun"
+  "US stocks, up and down": "Saham AS, naik dan turun",
+  "Morning Outlook": "Prospek Pagi",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Menulis Prospek Pagi bersama, dan Passage Plan yang ditulis worker latar belakang untuk rencana lisan saat anggota belum menulisnya. Berjalan di worker latar belakang, yang punya kunci Grok, ChatGPT, dan Gemini.",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 Logbook: Passage Plan hari ini untuk dibaca atau didengar, rencana sebelumnya, dan Prospek Pagi."
 }

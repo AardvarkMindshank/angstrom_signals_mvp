@@ -2301,14 +2301,12 @@
   "Listen in a podcast app": "In einer Podcast-App hören",
   "Make a new private link": "Neuen privaten Link erstellen",
   "🎧 Spoken briefing scripts": "🎧 Skripte der gesprochenen Briefings",
-  "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Schreibt die gemeinsame Morgenvorhersage und die Passage Plans, die der Hintergrund-Worker für den gesprochenen Plan schreibt, wenn das Mitglied noch keinen geschrieben hat. Läuft auf dem Hintergrund-Worker, der die Schlüssel für Grok, ChatGPT und Gemini hat.",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "Für alle gleich, zweimal täglich: die Ausgabe Asien & Europa kurz nach US-Börsenschluss und die Ausgabe Amerika vor dem New Yorker Morgen. Du bekommst immer die neueste, also die für deinen Morgen. Die wichtigsten Märkte, die fünf größten Coins, die Tide und die Termine der Woche. Eine Zusammenfassung der Werte der App, keine Beratung.",
   "{day} · {length}": "{day} · {length}",
   "Speak my plan every morning": "Meinen Plan jeden Morgen vorlesen",
   "Also email me when it's ready (the daily summary email links it anyway)": "Mir auch eine E-Mail schicken, wenn er fertig ist (die tägliche Zusammenfassung verlinkt ihn ohnehin)",
   "Logbook": "Logbuch",
-  "Morning forecast": "Morgenvorhersage",
   "Read it": "Lesen",
   "Your Passage Plan": "Dein Passage Plan",
   "Being made: ready within about 15 minutes.": "Wird erstellt: in etwa 15 Minuten fertig.",
@@ -2327,7 +2325,6 @@
   "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "Tag und Nacht halten die Seite hell oder dunkel. Auto folgt der Einstellung deines Geräts und wechselt also mit deinem Handy oder Computer. In deinem Konto gespeichert, sodass jedes Gerät, auf dem du angemeldet bist, folgt. Die Seite lädt zum Wechseln einmal neu.",
   "Open this panel in its own window": "Dieses Panel in einem eigenen Fenster öffnen",
   "📓 Opening your Logbook…": "📓 Dein Logbuch wird geöffnet…",
-  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 Logbuch: der heutige Passage Plan zum Lesen oder Hören, die Pläne davor und die Morgenvorhersage.",
   "Dot build-up": "Punkt-Aufbau",
   "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "Blasse Punkte auf dem 📡 Sonar-Streifen, die kräftiger werden, je näher ein großer roter oder grüner Punkt rückt, und in den 3 Kerzen danach verblassen. Jeder wird nur aus seiner eigenen Kerze und den früheren berechnet, liest sich also auf der laufenden Kerze genauso wie in der Historie: tief in der überkauften (oder überverkauften) Zone, während sich die beiden Wellen annähern. Ein Aufbau kann auch ohne Punkt verblassen. Derselbe Wert ist das Signal „Sonar-Punkt-Aufbau“ für Sets und Funnels.",
   "Sonar dot build-up": "Sonar-Punkt-Aufbau",
@@ -2498,5 +2495,8 @@
   "General News": "Allgemeine Nachrichten",
   "Out of date, so not scored": "Veraltet, daher nicht bewertet",
   "Most active stocks, up and down": "Meistgehandelte Aktien, gestiegen und gefallen",
-  "US stocks, up and down": "US-Aktien, gestiegen und gefallen"
+  "US stocks, up and down": "US-Aktien, gestiegen und gefallen",
+  "Morning Outlook": "Morgenausblick",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Schreibt den gemeinsamen Morgenausblick und die Passage Plans, die der Hintergrund-Worker für den gesprochenen Plan schreibt, wenn das Mitglied noch keinen geschrieben hat. Läuft auf dem Hintergrund-Worker, der die Schlüssel für Grok, ChatGPT und Gemini hat.",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 Logbuch: der heutige Passage Plan zum Lesen oder Hören, die Pläne davor und den Morgenausblick."
 }

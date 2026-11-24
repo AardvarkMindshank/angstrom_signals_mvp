@@ -2301,14 +2301,12 @@
   "Listen in a podcast app": "Bir podcast uygulamasında dinle",
   "Make a new private link": "Yeni özel bağlantı oluştur",
   "🎧 Spoken briefing scripts": "🎧 Sesli brifing metinleri",
-  "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Herkesin ortak Sabah tahminini ve üye henüz yazmadığında arka plan işleyicisinin sesli plan için yazdığı Passage Plan'leri yazar. Grok, ChatGPT ve Gemini anahtarlarına sahip arka plan işleyicisinde çalışır.",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "Herkes için aynı, günde iki kez: ABD kapanışından hemen sonra Asya ve Avrupa baskısı, New York sabahından önce Amerika baskısı. Her zaman en yenisini, yani senin sabahın için hazırlananı alırsın. Ana piyasalar, ilk beş coin, Tide ve haftanın olayları. Uygulamanın okumalarının bir özeti, tavsiye değildir.",
   "{day} · {length}": "{day} · {length}",
   "Speak my plan every morning": "Planımı her sabah sesli oku",
   "Also email me when it's ready (the daily summary email links it anyway)": "Hazır olunca bana e-posta da gönder (günlük özet e-postası zaten bağlantısını verir)",
   "Logbook": "Seyir defteri",
-  "Morning forecast": "Sabah tahmini",
   "Read it": "Oku",
   "Your Passage Plan": "Passage Plan'in",
   "Being made: ready within about 15 minutes.": "Hazırlanıyor: yaklaşık 15 dakika içinde hazır.",
@@ -2327,7 +2325,6 @@
   "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "Gündüz ve Gece sayfayı açık ya da koyu tutar. Otomatik, cihazının ayarını izler; yani telefonun ya da bilgisayarınla birlikte değişir. Hesabına kaydedilir, bu yüzden giriş yaptığın her cihaz bunu izler. Geçiş için sayfa bir kez yeniden yüklenir.",
   "Open this panel in its own window": "Bu paneli kendi penceresinde aç",
   "📓 Opening your Logbook…": "📓 Seyir defterin açılıyor…",
-  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 Seyir defteri: bugünün okunacak ya da dinlenecek Passage Plan'i, önceki planlar ve Sabah tahmini.",
   "Dot build-up": "Nokta oluşumu",
   "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "📡 Sonar şeridinde büyük bir kırmızı ya da yeşil nokta yaklaştıkça koyulaşan, sonraki 3 mumda da solan soluk noktalar. Her biri yalnızca kendi mumundan ve öncekilerden hesaplanır; bu yüzden canlı mumda da geçmişte olduğu gibi okunur: aşırı alım (ya da aşırı satım) bölgesinin derinlerinde iki dalga birbirine yaklaşıyor. Bir oluşum nokta çıkmadan sönebilir. Aynı okuma, Set'ler ve huniler için Sonar nokta oluşumu sinyalidir.",
   "Sonar dot build-up": "Sonar nokta oluşumu",
@@ -2498,5 +2495,8 @@
   "General News": "Genel haberler",
   "Out of date, so not scored": "Güncel değil, bu yüzden puanlanmadı",
   "Most active stocks, up and down": "En çok işlem gören hisseler, yükselen ve düşen",
-  "US stocks, up and down": "ABD hisseleri, yükselen ve düşen"
+  "US stocks, up and down": "ABD hisseleri, yükselen ve düşen",
+  "Morning Outlook": "Sabah Görünümü",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Herkesin ortak Sabah Görünümüni ve üye henüz yazmadığında arka plan işleyicisinin sesli plan için yazdığı Passage Plan'leri yazar. Grok, ChatGPT ve Gemini anahtarlarına sahip arka plan işleyicisinde çalışır.",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 Seyir defteri: bugünün okunacak ya da dinlenecek Passage Plan'i, önceki planlar ve Sabah Görünümü."
 }

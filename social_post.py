@@ -59,15 +59,15 @@ def captions(day: str, entry: dict, words: str) -> dict[str, str]:
     headline = first.split(". ", 1)[1].strip() if ". " in first else first.strip()
     headline = headline.rstrip(".") + "." if headline else ""
     who = entry.get("presenter") or "the crew"
-    long = (f"🧭 MarketNavi daily forecast · {when}\n{headline}\n\n🎙️ Presented by {who}. The tide, stocks and crypto "
+    long = (f"🧭 MarketNavi Morning Outlook · {when}\n{headline}\n\n🎙️ Presented by {who}. The tide, stocks and crypto "
             f"in about 90 seconds.\n\n▶️ {SITE}\n{DISCLAIMER}")
     return {
         "telegram": long,
         "facebook": long + "\n\n" + TAGS["base"],
         "instagram": long.replace(f"▶️ {SITE}", "▶️ Link in bio") + "\n\n" + TAGS["base"],
         "threads": f"🧭 {when}: {headline} Presented by {who}. {SITE}"[:480],
-        "x": f"🧭 MarketNavi daily forecast · {when}\n{headline}\n\n{SITE} #crypto #stocks"[:270],
-        "youtube_title": f"Market forecast {when}: {headline}"[:95],
+        "x": f"🧭 MarketNavi Morning Outlook · {when}\n{headline}\n\n{SITE} #crypto #stocks"[:270],
+        "youtube_title": f"Morning Outlook {when}: {headline}"[:95],
         "youtube": long + "\n\n" + TAGS["base"],
         "tiktok": f"🧭 {when}: {headline} Presented by {who}. {DISCLAIMER}\n{TAGS['tiktok']}",
     }
@@ -143,7 +143,7 @@ def post_youtube(day: str, caps: dict, links: dict) -> str:
     token = _youtube_token()
     if not token:
         return "skipped (not connected)"
-    tags = ["market forecast", "crypto", "stocks", "bitcoin", "trading", "MarketNavi"]
+    tags = ["market outlook", "crypto", "stocks", "bitcoin", "trading", "MarketNavi"]
     wide = _youtube_upload(token, links["wide"], caps["youtube_title"], caps["youtube"], tags)
     tall = _youtube_upload(token, links["tall"], (caps["youtube_title"][:88] + " #Shorts"), caps["youtube"], tags)
     return f"posted: video {wide}, Short {tall}"
