@@ -14,7 +14,7 @@ def test_spread_words():
 
 def test_strip_has_a_dot_per_scored_article_and_a_hover():
     out = ss.spread_html(report(20, 40, 60, 80, 81), 56.2)
-    assert out.count("<circle") == 5 and "5 articles" in out and "split" in out
+    assert out.count("<title>") == 5 and "5 articles" in out and "split" in out
     assert "average (+12)" in out
     assert ss.spread_html(report(50)) == "" and ss.spread_html(None) == ""
 
@@ -27,4 +27,17 @@ def test_market_score_averages_articles_and_readings():
     assert rep["score"] == 60.0
     assert rep["score_parts"] == {"news": 2, "readings": 2, "news_score": 45.0, "readings_score": 75.0}
     out = ss.spread_html(rep, rep["score"])
-    assert out.count("<circle") == 4 and "4 sources" in out and "2 news articles and 2 public readings" in out
+    assert out.count("<title>") == 4 and "4 sources" in out and "2 news articles and 2 public readings" in out
+
+
+def test_hovering_a_dot_names_the_article_first_then_the_explanation():
+    rep = {"headlines": [{"title": "Nasdaq jumps 7% as Nvidia shares soar", "source": "Financial Times",
+                          "published_at": "2026-11-23T22:01:00+00:00", "score": 95},
+                         {"title": "Weekly commentary", "source": "BlackRock", "score": 50}],
+           "gauges": [{"items": [{"name": "CBOE VIX", "value": "26.62", "source": "CBOE",
+                                  "published": "2026-11-23", "score": 80}]}]}
+    out = ss.spread_html(rep, 75)
+    tip = out.split("<title>")[3].split("</title>")[0]          # the highest dot (sorted by score)
+    assert tip.startswith("Nasdaq jumps 7% as Nvidia shares soar\n23 Nov 2026 · Financial Times\nScore: +90")
+    assert "Each dot is one" in tip
+    assert "CBOE VIX, 26.62\n23 Nov 2026 · CBOE" in out
