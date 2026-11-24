@@ -245,3 +245,27 @@ def test_stock_moves_come_from_the_session_they_name(monkeypatch):
     facts = briefing.general_facts(object(), _dt(2026, 11, 23, 21, 41, tzinfo=_tz.utc), load=load)
     spy = facts["key_markets"][0]
     assert spy["session_day"] == "2026-11-23" and spy["change_1d"] == 4.0
+
+
+def test_a_session_missing_from_the_daily_candles_comes_from_the_hourly_ones(monkeypatch):
+    """24 Nov 2026: at 02:00 UTC Yahoo's daily candles still ended on Friday, so Monday's rebound was missed."""
+    import pandas as pd
+
+    def gather(*a, **k):
+        return {"watchlist": [{"name": "S&P 500 (the SPY fund)", "change_1d": -2.0, "latest_price": 600.0,
+                               "change_7d": -5.0}]}
+
+    def load(kind, asset_id, interval, rng):
+        if interval == "1h":
+            idx = pd.date_range("2026-11-23 14:30", periods=7, freq="h", tz="UTC")   # Monday's session
+            return {"candles": pd.DataFrame({"close": [99.0] * 6 + [103.88], "forming": [False] * 7}, index=idx)}
+        idx = pd.date_range("2026-11-10", periods=9, freq="B", tz="UTC")              # ends Friday 20 Nov
+        return {"candles": pd.DataFrame({"close": [100.0] * 8 + [98.0], "forming": [False] * 9}, index=idx)}
+
+    monkeypatch.setattr(briefing, "gather", gather)
+    facts = briefing.general_facts(object(), _dt(2026, 11, 24, 1, 54, tzinfo=_tz.utc), load=load)
+    spy = facts["key_markets"][0]
+    assert spy["session_day"] == "2026-11-23" and spy["change_1d"] == 6.0
+    # Before Monday's close the hourly bars are not a finished session, so Friday stands.
+    facts = briefing.general_facts(object(), _dt(2026, 11, 23, 19, 0, tzinfo=_tz.utc), load=load)
+    assert facts["key_markets"][0]["session_day"] == "2026-11-20"
