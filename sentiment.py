@@ -302,13 +302,15 @@ def lead_story(spec: dict, headlines: list[dict], moves: list[dict] | None = Non
     lines = "\n".join(f"{i}. {row.get('title')} ({row.get('source') or 'unknown'}, carried by "
                       f"{1 + int(row.get('also_reported') or 0)} outlets)" for i, row in enumerate(headlines, 1))
     moved = "; ".join(f"{m['name']} {m['change_1d']:+.2f}% on {m['day']}" for m in moves) or "not available"
-    tr = (', "tr": {"<language code>": "the why sentence in that language"} for each of ' + ", ".join(langs)
+    tr = (', "tr": {' + ", ".join(f'"{code}": "the why sentence in {code}"' for code in langs) + "}"
           if langs else "")
     ask = (f"These are the most widely reported {spec['label'].lower()} headlines, and the market's latest moves "
-           f"({moved}). Name the single story that best explains what is moving this market now. "
-           'Reply with JSON only: {"index": n, "why": "one plain sentence", "explains_moves": true or false' + tr + "}. "
-           "If no headline explains the moves, set explains_moves to false and say in why that no single story "
-           "drove the market. This is research context, not advice.\n" + lines)
+           f"({moved}). Name the single story that best explains what is moving this market now. On a flat day, "
+           "that is the most widely reported story weighing on or lifting the market (for example, money leaving "
+           "funds while prices hold). "
+           'Reply with JSON only: {"index": n, "why": "one plain, complete sentence", "explains_moves": true or false'
+           + tr + "}. Set explains_moves to false only when no headline is about what is driving this market; then "
+           "say so in why, in a complete sentence. This is research context, not advice.\n" + lines)
     try:
         if chat is None:
             import ai_providers
@@ -326,7 +328,7 @@ def lead_story(spec: dict, headlines: list[dict], moves: list[dict] | None = Non
         return None
     lead = {"why": why, "moves": moves, "explains_moves": bool(got.get("explains_moves"))}
     if isinstance(got.get("tr"), dict):
-        lead["tr"] = {str(k): str(v) for k, v in got["tr"].items() if v}
+        lead["tr"] = {str(k): str(v) for k, v in got["tr"].items() if v and str(k) in langs}
     if not lead["explains_moves"] or not 1 <= index <= len(headlines):
         return {**lead, "quiet": True}
     row = headlines[index - 1]
