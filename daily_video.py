@@ -1,6 +1,6 @@
 """
-🎬 The daily forecast video (20 Nov 2026): about 90 seconds for social media, made from the same facts as the
-Morning forecast (briefing.general_facts), in two shapes: 16:9 (YouTube) and 9:16 (Shorts, TikTok, Reels).
+🎬 The daily video (the Morning Outlook) (20 Nov 2026): about 90 seconds for social media, made from the same facts as the
+Morning Outlook (briefing.general_facts), in two shapes: 16:9 (YouTube) and 9:16 (Shorts, TikTok, Reels).
 
 Running order (each captain line is a pre-made clip from the 3D captain's library, picked by the day's weather and
 at random between two versions; everything else is made fresh each day with the free voice):

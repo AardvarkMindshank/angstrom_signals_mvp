@@ -1,7 +1,7 @@
 """
 🎧 The spoken briefings (20 Nov 2026), in two kinds:
 
-* 🌍 The Morning forecast: the same for everyone, made twice a day: the Asia & Europe edition just after the US
+* 🌍 The Morning Outlook: the same for everyone, made twice a day: the Asia & Europe edition just after the US
   close, and the Americas edition before the New York morning. The main markets (S&P 500, Nasdaq, the dollar, gold,
   oil, the VIX), the top five coins, the markets' mood, the Tide and the events on the horizon. Shared files under
   general/ in the bucket, with one shared feed; the app and the daily email always give the newest edition, which is
@@ -268,7 +268,7 @@ def gather(supabase, user_id: str, prefs: dict, b: dict, now: datetime | None = 
     return facts
 
 
-# ---------------------------------------------------------------------------------------------- the Morning forecast
+# ---------------------------------------------------------------------------------------------- the Morning Outlook
 
 GENERAL = "general"                         # the shared folder in the bucket
 EDITIONS = {
@@ -452,7 +452,7 @@ def session_word(last_day: str | None) -> str:
 
 
 def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
-    """The facts for the Morning forecast, the same for everyone: the markets' mood, the main markets, the top five
+    """The facts for the Morning Outlook, the same for everyone: the markets' mood, the main markets, the top five
     coins, the Tide (with a storm warning) and the week's events."""
     now = now or datetime.now(timezone.utc)
     prefs = {"crypto_watchlist": dict(TOP_COINS), "stock_watchlist": dict(KEY_STOCKS), "settings": {}}
@@ -567,7 +567,7 @@ def plain_general(facts: dict, edition: str, day: datetime) -> str:
 
 
 def write_general(supabase, facts: dict, edition: str, day: datetime, chat=None) -> tuple[str, str]:
-    """(script, who wrote it) for one edition of the Morning forecast."""
+    """(script, who wrote it) for one edition of the Morning Outlook."""
     import ai_providers
 
     provider = ai_providers.pick("briefing", ai_providers.app_choice(supabase, "briefing"))
@@ -581,7 +581,7 @@ def write_general(supabase, facts: dict, edition: str, day: datetime, chat=None)
             if len(text.split()) >= 80:
                 return text, provider
         except Exception as exc:
-            print(f"Forecast script by AI failed: {str(exc)[:160]}")
+            print(f"Outlook script by AI failed: {str(exc)[:160]}")
     return clean(plain_general(facts, edition, day)), "template"
 
 
@@ -778,7 +778,7 @@ def stored_json(supabase, path: str) -> dict:
 
 def listen_links(supabase, base: str, settings: dict | None, plan: str, now: datetime | None = None
                  ) -> list[tuple[str, str]]:
-    """[(words, url)] for the daily email: the newest Morning forecast, and, for Pro and Elite, the spoken Passage
+    """[(words, url)] for the daily email: the newest Morning Outlook, and, for Pro and Elite, the spoken Passage
     Plan only when it is today's in the member's own time zone (23 Nov 2026: Monday's email linked Sunday's plan,
     made 18 hours before; one not made yet today is left out rather than an old one linked)."""
     now = now or datetime.now(timezone.utc)
