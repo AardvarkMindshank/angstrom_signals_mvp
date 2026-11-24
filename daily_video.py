@@ -289,7 +289,7 @@ ASK = {
 def system_prompt(sections: dict, weekend: bool) -> str:
     parts = ", ".join(ASK[k] % n for k, n in sections.items())
     return (
-        "You write the narration for a 90-second daily market video, the Morning Outlook, in the style of the "
+        "You write the narration for a two-minute daily market video, the Morning Outlook, in the style of the "
         "shipping forecast: calm, clear, a light nautical flavour that never hides a fact. A crew member introduces "
         "each section; you write only what is said inside each section. Write for the ear: short sentences, plain "
         "words, no lists, no brand or app names. Write numbers as digits and round them for the ear: percentages to "
@@ -302,7 +302,8 @@ def system_prompt(sections: dict, weekend: bool) -> str:
         "the period in its one_day_change_covers: name that period (\"on Monday\", \"over the last 24 hours\") and "
         "never call it today's move unless it says today. "
         + ("It is the weekend: stock markets are shut, so do not talk about today's stock moves. " if weekend else "")
-        + "Reply with JSON only: {\"headline\": a punchy headline of at most 7 words for the day, " + parts + "}."
+        + "Reply with JSON only: {\"headline\": a punchy headline of at most 7 words about the story of the day "
+        "(it opens the video and the story section follows it up), " + parts + "}."
     )
 
 
@@ -616,9 +617,32 @@ def speech_seconds(path: Path) -> float:
     starts = [float(x) for x in re.findall(r"silence_start: ([0-9.]+)", out)]
     ends = [float(x) for x in re.findall(r"silence_end: ([0-9.]+)", out)]
     runs_out = starts and (len(ends) < len(starts) or ends[-1] >= whole - 0.1)   # ffmpeg closes it at the end
+    end = whole
     if runs_out and 0.5 < starts[-1] < whole:                                  # a silence that runs to the end
-        return round(min(whole, starts[-1] + SPEECH_TAIL), 3)
-    return whole
+        end = min(whole, starts[-1] + SPEECH_TAIL)
+    # The tail can also be a faint hum, not silence (24 Nov 2026: the Deckhand's lips moved on after his sign-off).
+    # So the voice's end is also found from loudness: the last moment within 24 dB of the clip's loudest.
+    last = last_voiced(path)
+    if last and 0.5 < last < end:
+        end = min(end, last + SPEECH_TAIL)
+    return round(end, 3)
+
+
+def last_voiced(path: Path, below_peak: float = 24.0) -> float | None:
+    """The time of the last 50 ms of the clip's sound within `below_peak` dB of its loudest, or None."""
+    out = subprocess.run(["ffmpeg", "-v", "error", "-i", str(path), "-vn", "-af",
+                          "aresample=8000,asetnsamples=400,astats=metadata=1:reset=1,"
+                          "ametadata=print:key=lavfi.astats.Overall.RMS_level:file=-", "-f", "null", "-"],
+                         capture_output=True, text=True).stdout
+    times = [float(x) for x in re.findall(r"pts_time:([0-9.]+)", out)]
+    levels = [float(x) if x not in ("-inf", "inf", "nan") else -200.0
+              for x in re.findall(r"RMS_level=(-?inf|nan|-?[0-9.]+)", out)]
+    pairs = list(zip(times, levels))
+    if not pairs:
+        return None
+    peak = max(level for _, level in pairs)
+    loud = [t for t, level in pairs if level > peak - below_peak]
+    return (loud[-1] + 0.05) if loud else None
 
 
 def big_day(day: datetime, facts: dict | None) -> bool:
@@ -674,7 +698,8 @@ def _logo_uri() -> str:
 SPOKEN_NAME = "Market Navi"                 # how the voice says MarketNavi
 # 📣 The call to action at the very end (24 Nov 2026): on the closing card and said once, after the sign-off.
 CTA_WORDS = "Join the beta at marketnavi.ai"
-CTA_SPOKEN = "To listen to or read the full version, and to join the beta, visit Market Navi dot A I."
+# Spelt for the voice: Emma read "A I" as "aye" (24 Nov 2026).
+CTA_SPOKEN = "To listen to or read the full version, and to join the beta, visit Market Navi dot ay eye."
 CLOSE_VOICE, CLOSE_SPEED = "bf_emma", 1.0
 INTRO_HOLD = 1.6                            # the logo stays this long after the opening words
 OUTRO_PAUSE = 1.0                           # music only, between the sign-off and the closing line
@@ -850,7 +875,9 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     who = presenter_for(day, library, presenter, facts)
     crew = PRESENTERS[who]
     spec["presenter"] = {"key": who, "title": crew["title"]}
-    date_line = f"{day.strftime('%A')}, the {_ordinal(day.day)} of {day.strftime('%B')}. {sections['headline']}."
+    # The headline is the story of the day's, told after the Tide: so the date line says so (Angus, 24 Nov 2026).
+    date_line = (f"{day.strftime('%A')}, the {_ordinal(day.day)} of {day.strftime('%B')}. {sections['headline']}. "
+                 "More on that after a look at the tides.")
     edition_name = "Weekend Outlook" if weekend else "Morning Outlook"
     close_line = f"That was your {edition_name} for {day.strftime('%A')} the {_ordinal(day.day)} of {day.strftime('%B')}."
     if brand.SHOW_IN_VIDEO:

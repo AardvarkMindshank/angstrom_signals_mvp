@@ -355,5 +355,17 @@ def test_the_crew_skip_their_first_story_line_now_the_tide_comes_first():
 
 
 def test_the_close_asks_people_to_join_the_beta():
-    assert "marketnavi.ai" in dv.CTA_WORDS and "dot A I" in dv.CTA_SPOKEN and "listen to or read" in dv.CTA_SPOKEN
+    assert "marketnavi.ai" in dv.CTA_WORDS and "dot ay eye" in dv.CTA_SPOKEN and "listen to or read" in dv.CTA_SPOKEN
     assert dv.CLOSE_VOICE == "bf_emma"
+
+
+def test_a_faint_hum_after_the_last_word_is_cut_too(tmp_path):
+    """24 Nov 2026: the Deckhand's lips moved on after his sign-off, over a faint hum rather than silence."""
+    import subprocess
+
+    clip = tmp_path / "hum.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "sine=frequency=220:duration=2", "-f", "lavfi",
+                    "-i", "anoisesrc=amplitude=0.004:duration=2", "-filter_complex",
+                    "[0:a]volume=0.8[a];[a][1:a]concat=n=2:v=0:a=1[o]", "-map", "[o]", "-c:a", "aac", str(clip)],
+                   check=True)
+    assert 1.9 < dv.speech_seconds(clip) < 2.6                      # the 2 s of voice and the short tail
