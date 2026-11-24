@@ -20,6 +20,10 @@ on:
         description: "Publish to the app (the daily run does)"
         type: boolean
         default: false
+      audit:
+        description: "Instead of a video: list every presenter clip's length and where its voice ends (names and seconds only)"
+        type: boolean
+        default: false
 permissions:
   contents: write
 concurrency:
@@ -100,7 +104,11 @@ jobs:
           for f in 1-Sunshine 2-Springtime 3-Cloudy 4-Rainy 5-Stormy; do
             git show "origin/reports:drive/1EKuY0a0mL0hsCwO98ok-K0t_Yh-L_hsm/drive/$f.mp3" > "music/$f.mp3"
           done
+      - name: Clip audit
+        if: inputs.audit
+        run: python video/clip_audit.py lib/avatar_lab
       - name: App screens (fresh from the live app; a stored copy for any that fail)
+        if: ${{ !inputs.audit }}
         timeout-minutes: 9
         env:
           DEMO_EMAIL: ${{ secrets.DEMO_EMAIL }}
@@ -113,6 +121,7 @@ jobs:
           NODE_PATH="$PWD/node_modules" timeout 420 node video/daily_screens.js video/daily/screens || echo "App screens: capture stopped; stored copies kept."
           bash .github/scripts/save_to_reports.sh daily_video/screens video/daily/screens/*.jpg || true
       - name: Make the video
+        if: ${{ !inputs.audit }}
         id: make
         run: NODE_PATH="$PWD/node_modules" python daily_video.py --library lib/avatar_lab --music music --out out/daily_video --edition "${{ inputs.edition }}" --presenter "${{ inputs.presenter }}" ${{ inputs.publish && '--publish' || '' }}
       # The social channels are posted at 08:00 Bangkok by the 5-minute worker (alerts.yml → social-post.yml).
