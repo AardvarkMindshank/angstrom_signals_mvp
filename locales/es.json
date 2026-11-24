@@ -1308,8 +1308,6 @@
   "Of the most actively traded US stocks": "De las acciones de EE. UU. más negociadas",
   "Crypto Fear & Greed": "Crypto Fear & Greed",
   "CNN Fear & Greed": "CNN Fear & Greed",
-  "Most active higher": "Más activas al alza",
-  "Most active lower": "Más activas a la baja",
   "Global liquidity & central bank trackers": "Liquidez global y seguimiento de bancos centrales",
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Un compuesto actual de M2 global de cuatro bancos (Fed, BCE, Banco de Japón y PBOC) no es una serie gratuita, así que este grupo usa las cifras publicadas por la propia Fed.",
   "Currency & yield indicators": "Indicadores de divisas y rendimientos",
@@ -1320,8 +1318,6 @@
   "Institutional & professional data providers": "Proveedores de datos institucionales y profesionales",
   "Bloomberg Terminal and Refinitiv are not connected.": "Bloomberg Terminal y Refinitiv no están conectados.",
   "Market news sentiment": "Sentimiento de las noticias del mercado",
-  "US stocks higher": "Acciones de EE. UU. al alza",
-  "US stocks lower": "Acciones de EE. UU. a la baja",
   "US M2 money supply": "Masa monetaria M2 de EE. UU.",
   "Fed balance sheet": "Balance de la Fed",
   "Federal funds rate": "Tipo de los fondos federales",
@@ -2499,5 +2495,8 @@
   "Story of the day": "La noticia del día",
   "No single story drove the market": "Ninguna noticia por sí sola movió el mercado",
   "The most widely reported story of the last 24 hours that explains the market's latest move, picked by AI from the articles below. Not advice.": "La noticia más difundida de las últimas 24 horas que explica el último movimiento del mercado, elegida por la IA entre los artículos de abajo. No es asesoramiento.",
-  "General News": "Noticias generales"
+  "General News": "Noticias generales",
+  "Out of date, so not scored": "Desactualizado, por eso no se puntúa",
+  "Most active stocks, up and down": "Acciones más negociadas, al alza y a la baja",
+  "US stocks, up and down": "Acciones de EE. UU., al alza y a la baja"
 }

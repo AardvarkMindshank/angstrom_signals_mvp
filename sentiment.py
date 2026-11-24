@@ -1211,6 +1211,8 @@ def score_market_readings(market_key: str, label: str, groups: list[dict]) -> li
     scored = copy.deepcopy(groups)
     flat = [item for group in scored for item in (group.get("items") or [])]
     for item, row in zip(flat, scored_rows):
+        if item.get("stale"):
+            continue                                       # out of date: shown, never scored (market_gauges.is_stale)
         if row.get("score") is not None:
             item["score"] = row["score"]
         note = " ".join(str(row.get("note") or "").split())
@@ -1234,6 +1236,124 @@ def _scores_in(rows) -> list[float]:
         if value == value:
             values.append(value)
     return values
+
+
+# A score of 45..55 is mixed. A note that says the market is helped (up) with a score under 45, or hurt (down) with a
+# score over 55, contradicts itself (24 Nov 2026: "only 5 falling is mildly bullish", scored -30).
+MIXED_LOW, MIXED_HIGH = 45, 55
+
+
+def _review_items(report: dict) -> list[dict]:
+    """Every scored row of a report (news, then readings), as the review sees it."""
+    rows = [row for row in report.get("headlines") or [] if isinstance(row, dict)]
+    rows += [item for group in report.get("gauges") or [] if isinstance(group, dict)
+             for item in group.get("items") or [] if isinstance(item, dict)]
+    return [row for row in rows if row.get("score") is not None and str(row.get("note") or "").strip()]
+
+
+def _translations_of(report: dict, rows: list[dict]) -> list[dict]:
+    """[{"ref", "english", "translated"}] for every translated piece of AI text in a report."""
+    out = []
+    for lang, fields in (report.get("tr") or {}).items() if isinstance(report.get("tr"), dict) else ():
+        for name in ("summary", "positive", "negative"):
+            if isinstance(fields, dict) and fields.get(name) and report.get(name):
+                out.append({"ref": f"{lang}:{name}", "english": report[name], "translated": fields[name]})
+    lead = report.get("lead") if isinstance(report.get("lead"), dict) else {}
+    for lang, words in (lead.get("tr") or {}).items():
+        if words and lead.get("why"):
+            out.append({"ref": f"{lang}:lead", "english": lead["why"], "translated": words})
+    for i, row in enumerate(rows):
+        for lang, words in (row.get("tr") or {}).items() if isinstance(row.get("tr"), dict) else ():
+            if words and row.get("note"):
+                out.append({"ref": f"{lang}:note:{i}", "english": row["note"], "translated": words})
+    return out
+
+
+def _drop_translation(report: dict, rows: list[dict], ref: str) -> bool:
+    parts = ref.split(":")
+    try:
+        if len(parts) == 2 and parts[1] in ("summary", "positive", "negative"):
+            return report["tr"][parts[0]].pop(parts[1], None) is not None
+        if len(parts) == 2 and parts[1] == "lead":
+            return report["lead"]["tr"].pop(parts[0], None) is not None
+        if len(parts) == 3 and parts[1] == "note":
+            return rows[int(parts[2])]["tr"].pop(parts[0], None) is not None
+    except (KeyError, IndexError, ValueError, TypeError, AttributeError):
+        return False
+    return False
+
+
+def _contradicts(direction: str, score) -> bool:
+    try:
+        score = float(score)
+    except (TypeError, ValueError):
+        return False
+    return (direction == "up" and score < MIXED_LOW) or (direction == "down" and score > MIXED_HIGH)
+
+
+def _ask_json(ask: str, chat=None) -> dict:
+    if chat is None:
+        import ai_providers
+
+        text, _done = ai_providers.chat(scoring_provider(), "You check market text. Reply with one JSON object only.",
+                                        [{"role": "user", "content": ask}], max_tokens=3000, json_only=True,
+                                        timeout=90)
+    else:
+        text = chat(ask)
+    start, end = text.find("{"), text.rfind("}")
+    return json.loads(text[start:end + 1])
+
+
+def review_report(report: dict, chat=None) -> dict:
+    """Two checks on every refresh, for any market and any day (24 Nov 2026):
+    - a score that contradicts its own sentence is scored once more, and left unscored if it still does;
+    - a translation that changes the meaning (up told as down, a different number) is dropped, so the English shows.
+    The counts go in report["checks"] and the worker's log. An AI that doesn't answer changes nothing."""
+    rows = _review_items(report)
+    pieces = _translations_of(report, rows)
+    checks = {"rows": len(rows), "rescored": 0, "unscored": 0, "translations": len(pieces), "translations_dropped": 0}
+    if not rows and not pieces:
+        report["checks"] = checks
+        return report
+    listing = "\n".join(f"{i}. {row.get('title') or row.get('name')}: {row.get('value') or ''} | note: {row['note']}"
+                        for i, row in enumerate(rows))
+    trans = "\n".join(f"{p['ref']} | English: {p['english']} | Translation: {p['translated']}" for p in pieces)
+    ask = ("Check market text. 1) For each numbered note, say whether the note itself describes the market as helped "
+           "(up), hurt (down) or neither (neutral). Judge the note's meaning, not single words. "
+           "2) For each translation, say whether it changes the meaning of the English: a different direction (rise "
+           "told as fall), a different number, or a different subject. Wording differences are fine.\n"
+           'Reply with JSON only: {"directions": {"0": "up|down|neutral", ...}, "bad_translations": ["<ref>", ...]}\n'
+           f"Notes:\n{listing or '(none)'}\nTranslations:\n{trans or '(none)'}")
+    try:
+        got = _ask_json(ask, chat)
+    except Exception:
+        report["checks"] = {**checks, "skipped": True}
+        return report
+    directions = {int(k): str(v).lower() for k, v in (got.get("directions") or {}).items() if str(k).isdigit()}
+    wrong = [i for i, row in enumerate(rows) if i < len(rows) and _contradicts(directions.get(i, ""), row["score"])]
+    if wrong:
+        again = "\n".join(f"{i}. {rows[i].get('title') or rows[i].get('name')}: {rows[i].get('value') or ''} | "
+                          f"note: {rows[i]['note']}" for i in wrong)
+        try:
+            fresh = _ask_json("Score each item 0 to 100 for this market as a whole, consistent with its note: 0 is "
+                              "strongly bearish, 50 mixed, 100 strongly bullish. "
+                              'Reply with JSON only: {"scores": {"<number>": score, ...}}\n' + again, chat)
+            scores = {int(k): v for k, v in (fresh.get("scores") or {}).items() if str(k).isdigit()}
+        except Exception:
+            scores = {}
+        for i in wrong:
+            new = _clamp_score(scores.get(i))
+            if new is not None and not _contradicts(directions[i], new):
+                rows[i]["score"] = new
+                checks["rescored"] += 1
+            else:
+                rows[i]["score"] = None
+                checks["unscored"] += 1
+    for ref in got.get("bad_translations") or []:
+        if _drop_translation(report, rows, str(ref)):
+            checks["translations_dropped"] += 1
+    report["checks"] = checks
+    return report
 
 
 def combine_mood_score(report: dict) -> dict:
@@ -1304,11 +1424,13 @@ def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, 
     if summary.get("ok"):
         reuse_scores(summary, previous)
         _with_quality(summary, stats)
-        combine_mood_score(summary)
         if spec:
             lead = lead_story(spec, summary.get("headlines") or [])
             if lead:
                 summary["lead"] = lead
+        review_report(summary)
+        combine_mood_score(summary)
+        print(f"Market sentiment {market_key}: {json.dumps(summary.get('checks') or {})}", flush=True)
     if summary.get("ok"):
         _SCORE_CACHE[cache_key] = (time.time(), summary)
     return summary

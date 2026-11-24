@@ -1308,8 +1308,6 @@
   "Of the most actively traded US stocks": "Der meistgehandelten US-Aktien",
   "Crypto Fear & Greed": "Crypto Fear & Greed",
   "CNN Fear & Greed": "CNN Fear & Greed",
-  "Most active higher": "Meistgehandelte im Plus",
-  "Most active lower": "Meistgehandelte im Minus",
   "Global liquidity & central bank trackers": "Globale Liquidität & Notenbank-Tracker",
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Ein aktueller globaler M2-Index aus vier Notenbanken (Fed, EZB, Bank of Japan und PBOC) ist keine kostenlose Datenreihe, daher nutzt diese Gruppe die eigenen veröffentlichten Zahlen der Fed.",
   "Currency & yield indicators": "Währungs- & Rendite-Indikatoren",
@@ -1320,8 +1318,6 @@
   "Institutional & professional data providers": "Institutionelle & professionelle Datenanbieter",
   "Bloomberg Terminal and Refinitiv are not connected.": "Bloomberg Terminal und Refinitiv sind nicht verbunden.",
   "Market news sentiment": "Stimmung in Marktnachrichten",
-  "US stocks higher": "US-Aktien im Plus",
-  "US stocks lower": "US-Aktien im Minus",
   "US M2 money supply": "US-Geldmenge M2",
   "Fed balance sheet": "Fed-Bilanz",
   "Federal funds rate": "Leitzins der Fed (Federal Funds Rate)",
@@ -2499,5 +2495,8 @@
   "Story of the day": "Thema des Tages",
   "No single story drove the market": "Keine einzelne Nachricht bewegte den Markt",
   "The most widely reported story of the last 24 hours that explains the market's latest move, picked by AI from the articles below. Not advice.": "Die in den letzten 24 Stunden am häufigsten berichtete Nachricht, die die jüngste Marktbewegung erklärt, von der KI aus den Artikeln unten ausgewählt. Keine Beratung.",
-  "General News": "Allgemeine Nachrichten"
+  "General News": "Allgemeine Nachrichten",
+  "Out of date, so not scored": "Veraltet, daher nicht bewertet",
+  "Most active stocks, up and down": "Meistgehandelte Aktien, gestiegen und gefallen",
+  "US stocks, up and down": "US-Aktien, gestiegen und gefallen"
 }

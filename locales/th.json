@@ -1829,8 +1829,6 @@
   "Of the most actively traded US stocks": "จากหุ้นสหรัฐฯ ที่มีการซื้อขายมากที่สุด",
   "Crypto Fear & Greed": "Crypto Fear & Greed",
   "CNN Fear & Greed": "CNN Fear & Greed",
-  "Most active higher": "หุ้นซื้อขายมากที่ขึ้น",
-  "Most active lower": "หุ้นซื้อขายมากที่ลง",
   "Global liquidity & central bank trackers": "สภาพคล่องโลกและตัวติดตามธนาคารกลาง",
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "ตัวเลข M2 รวมของธนาคารกลางสี่แห่ง (Fed, ECB, ธนาคารกลางญี่ปุ่น และ PBOC) ไม่มีให้ใช้ฟรี กลุ่มนี้จึงใช้ตัวเลขที่ Fed เผยแพร่เอง",
   "Currency & yield indicators": "ตัวชี้วัดค่าเงินและอัตราผลตอบแทน",
@@ -1841,8 +1839,6 @@
   "Institutional & professional data providers": "ผู้ให้บริการข้อมูลสถาบันและมืออาชีพ",
   "Bloomberg Terminal and Refinitiv are not connected.": "ยังไม่ได้เชื่อมต่อ Bloomberg Terminal และ Refinitiv",
   "Market news sentiment": "Sentiment ข่าวตลาด",
-  "US stocks higher": "หุ้นสหรัฐฯ ที่ขึ้น",
-  "US stocks lower": "หุ้นสหรัฐฯ ที่ลง",
   "US M2 money supply": "ปริมาณเงิน M2 สหรัฐฯ",
   "Fed balance sheet": "งบดุลของ Fed",
   "Federal funds rate": "อัตราดอกเบี้ยนโยบาย Fed",
@@ -2499,5 +2495,8 @@
   "Story of the day": "ข่าวเด่นประจำวัน",
   "No single story drove the market": "ไม่มีข่าวใดข่าวหนึ่งที่ขับเคลื่อนตลาด",
   "The most widely reported story of the last 24 hours that explains the market's latest move, picked by AI from the articles below. Not advice.": "ข่าวที่ถูกรายงานมากที่สุดในช่วง 24 ชั่วโมงที่ผ่านมาซึ่งอธิบายการเคลื่อนไหวล่าสุดของตลาด เลือกโดย AI จากบทความด้านล่าง ไม่ใช่คำแนะนำ",
-  "General News": "ข่าวทั่วไป"
+  "General News": "ข่าวทั่วไป",
+  "Out of date, so not scored": "ข้อมูลเก่า จึงไม่นำมาให้คะแนน",
+  "Most active stocks, up and down": "หุ้นที่ซื้อขายมากที่สุด ขึ้นและลง",
+  "US stocks, up and down": "หุ้นสหรัฐฯ ขึ้นและลง"
 }

@@ -45,14 +45,14 @@ def market_gauge_groups(market_key: str) -> list[dict]:
     cached = _CACHE.get(market_key)
     now = time.time()
     if cached and now - cached[0] < cached[1]:
-        return cached[2]
+        return mark_stale(cached[2])
     raw = _load_raw(market_key)
     groups = _crypto_groups(raw) if market_key == "crypto" else _stock_groups(raw)
     ttl = _TTL_SECONDS if any(group.get("items") for group in groups) else _RETRY_SECONDS
     if market_key == "crypto" and not raw.get("FLOWS"):
         ttl = min(ttl, 600)                     # the stored readings weren't readable this time: look again soon
     _CACHE[market_key] = (now, ttl, groups)
-    return groups
+    return mark_stale(groups)
 
 
 def gauge_brief(groups: list[dict]) -> str:
@@ -64,6 +64,8 @@ def gauge_brief(groups: list[dict]) -> str:
             continue
         lines.append(str(group.get("title") or "Readings") + ":")
         for item in items:
+            if item.get("stale"):
+                continue                                   # an out-of-date number must not colour today's summary
             detail = str(item.get("detail") or "").strip()
             source = str(item.get("source") or "").strip()
             tail = ". ".join(part for part in (detail, source) if part)
@@ -74,7 +76,7 @@ def gauge_brief(groups: list[dict]) -> str:
 def _load_raw(market_key: str) -> dict:
     jobs = {
         "crypto": ("M2SL", "WALCL", "DFF", "DGS10", "DXY", "FNG", "CG", "FLOWS"),
-        "stock": ("DFF", "T10YIE", "UMCSENT", "MICH", "VIXCLS", "CNN", "AV", "POLY"),
+        "stock": ("DFF", "T10YIE", "UMCSENT", "MICH", "VIX", "CNN", "AV", "POLY"),
     }[market_key]
     raw: dict = {}
     with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
@@ -90,6 +92,8 @@ def _load_raw(market_key: str) -> dict:
 def _fetch_one(name: str):
     if name == "DXY":
         return _yahoo_last("DX-Y.NYB")
+    if name == "VIX":
+        return _yahoo_last("^VIX")
     if name == "FNG":
         return _fear_greed()
     if name == "CG":
@@ -396,25 +400,22 @@ def _alpha_items(payload) -> list[dict]:
         )]
     if payload.get("kind") != "active":
         return []
-    rows = []
-    for name, count in ((mark("Most active higher"), payload.get("higher")), (mark("Most active lower"), payload.get("lower"))):
-        try:
-            count = int(count)
-        except (TypeError, ValueError):
-            continue
-        detail = mark("Of the most actively traded US stocks")
-        if stamp:
-            detail = f"{detail} · {stamp}"
-        rows.append(_reading(
-            name,
-            f"{count}",
-            detail,
-            "Alpha Vantage",
-            "https://www.alphavantage.co/",
-            "",
-            date[:10],
-        ))
-    return rows
+    # One reading for both counts (24 Nov 2026: "Most active lower, 5" on its own was scored bearish, though only 5
+    # falling is a good sign).
+    try:
+        up, down = int(payload.get("higher")), int(payload.get("lower"))
+    except (TypeError, ValueError):
+        return []
+    detail = mark("Of the most actively traded US stocks")
+    if stamp:
+        detail = f"{detail} · {stamp}"
+    return [_reading(mark("Most active stocks, up and down"), _up_down(up, down), detail, "Alpha Vantage",
+                     "https://www.alphavantage.co/", "", date[:10])]
+
+
+def _up_down(up: int, down: int) -> str:
+    """Counts that rose and fell, in signs every language reads: "15 ▲ · 5 ▼"."""
+    return f"{up:,} ▲ · {down:,} ▼"
 
 
 def _polygon_breadth():
@@ -437,10 +438,13 @@ def _polygon_breadth():
         counted = _breadth_from_grouped(body, day.isoformat())
         if counted:
             return counted
-    body = _polygon_json("/v2/aggs/ticker/SPY/prev", key, {"adjusted": "true"})
+    # The last session's move from the session before's close (24 Nov 2026: open-to-close called Monday's +4.7%
+    # rally "down 0.28%", because the day opened far higher and slipped).
+    body = _polygon_json(f"/v2/aggs/ticker/SPY/range/1/day/{(today - timedelta(days=12)).isoformat()}/"
+                         f"{today.isoformat()}", key, {"adjusted": "true", "sort": "asc"})
     if body is _DENIED:
         return None
-    return _spy_from_prev(body)
+    return _spy_from_range(body)
 
 
 def _polygon_json(path: str, key: str, params: dict):
@@ -509,6 +513,21 @@ def _spy_from_prev(body):
     return {"kind": "spy", "open": opened, "close": closed, "date": date}
 
 
+def _spy_from_range(body):
+    """The last finished daily bar's close and the close before it."""
+    if not isinstance(body, dict):
+        return None
+    rows = [r for r in body.get("results") or [] if isinstance(r, dict) and r.get("c") is not None]
+    if len(rows) < 2:
+        return None
+    last, before = rows[-1], rows[-2]
+    try:
+        date = datetime.fromtimestamp(int(last.get("t")) / 1000, timezone.utc).strftime("%Y-%m-%d")
+    except (TypeError, ValueError, OSError):
+        date = ""
+    return {"kind": "spy", "previous_close": float(before["c"]), "close": float(last["c"]), "date": date}
+
+
 def _polygon_items(payload) -> list[dict]:
     if not isinstance(payload, dict):
         return []
@@ -518,32 +537,25 @@ def _polygon_items(payload) -> list[dict]:
         total = int(payload.get("total") or 0)
         if total <= 0:
             return []
-        rows = []
-        for name, count in ((mark("US stocks higher"), payload.get("up")), (mark("US stocks lower"), payload.get("down"))):
-            try:
-                count = int(count)
-            except (TypeError, ValueError):
-                continue
-            share = f"{count / total * 100:.0f}% of the last session"
-            detail = f"{share} · {stamp}" if stamp else share
-            rows.append(_reading(
-                name,
-                f"{count:,}",
-                detail,
-                "Polygon",
-                "https://massive.com/stocks",
-                "",
-                date[:10],
-            ))
-        return rows
+        try:
+            up, down = int(payload.get("up")), int(payload.get("down"))
+        except (TypeError, ValueError):
+            return []
+        share = f"{up / total * 100:.0f}% higher in the last session"
+        detail = f"{share} · {stamp}" if stamp else share
+        return [_reading(mark("US stocks, up and down"), _up_down(up, down), detail, "Polygon",
+                         "https://massive.com/stocks", "", date[:10])]
     if payload.get("kind") != "spy":
         return []
     try:
-        opened = float(payload.get("open"))
         closed = float(payload.get("close"))
+        if payload.get("previous_close") is not None:
+            base, period = float(payload["previous_close"]), "close"
+        else:
+            base, period = float(payload.get("open")), "open"
     except (TypeError, ValueError):
         return []
-    detail = _move_phrase(closed, opened, "open", "percent")
+    detail = _move_phrase(closed, base, period, "percent")
     if stamp:
         detail = f"{detail} · {stamp}" if detail else stamp
     return [_reading(
@@ -659,12 +671,14 @@ def _stock_groups(raw: dict) -> list[dict]:
             "title": mark("Market-wide sentiment & breadth indicators"),
             "items": _present(
                 _cnn_item(raw.get("CNN")),
+                # The latest VIX, from the same source as the Tides (24 Nov 2026: FRED's copy lagged days, so the
+                # card showed 35.89 from 20 Nov while the Tides showed today's 26.6).
                 _points_item(
                     "CBOE VIX",
-                    raw.get("VIXCLS"),
+                    raw.get("VIX"),
                     "day",
                     lambda value: f"{value:.2f}",
-                    "https://fred.stlouisfed.org/series/VIXCLS",
+                    "https://finance.yahoo.com/quote/%5EVIX/",
                     "CBOE",
                 ),
             ),
@@ -712,7 +726,8 @@ def _move_item(name, pair, period, formatter, kind, source, href, tone):
     stamp = _stamp(date)
     if stamp:
         detail = f"{detail} · {stamp}" if detail else stamp
-    return _reading(name, formatter(value), detail, source, href, tone, date[:10] if date else "")
+    return _reading(name, formatter(value), detail, source, href, tone, date[:10] if date else "",
+                    period if period in STALE_DAYS else "day")
 
 
 def _fear_item(rows):
@@ -919,7 +934,7 @@ def _cnn_item(block):
     )
 
 
-def _reading(name, value, detail, source, href, tone, published: str = "") -> dict:
+def _reading(name, value, detail, source, href, tone, published: str = "", cadence: str = "day") -> dict:
     return {
         "name": name,
         "value": value,
@@ -928,7 +943,50 @@ def _reading(name, value, detail, source, href, tone, published: str = "") -> di
         "href": href,
         "tone": tone,
         "published": published,
+        "cadence": cadence,
     }
+
+
+# How old a reading may be before it is out of date, by how often it is published: a daily reading may lag up to 3
+# working days (FRED publishes a day or two late), a weekly one 12 days and a monthly one 62 days (a month's survey is
+# dated the 1st and published weeks later).
+STALE_WORKDAYS = 3
+STALE_DAYS = {"week": 12, "month": 62}
+
+
+def _workdays_between(start, end) -> int:
+    days, day = 0, start
+    while day < end:
+        day += timedelta(days=1)
+        if day.weekday() < 5:
+            days += 1
+    return days
+
+
+def is_stale(item: dict, today=None) -> bool:
+    """True when a reading is older than its usual publishing delay. Undated readings are not judged."""
+    try:
+        published = datetime.fromisoformat(str(item.get("published") or "")[:10]).date()
+    except ValueError:
+        return False
+    today = today or datetime.now(timezone.utc).date()
+    cadence = item.get("cadence") or "day"
+    if cadence in STALE_DAYS:
+        return (today - published).days > STALE_DAYS[cadence]
+    return _workdays_between(published, today) > STALE_WORKDAYS
+
+
+def mark_stale(groups: list[dict], today=None) -> list[dict]:
+    """A copy of the groups with each out-of-date reading marked "stale" (kept on show, left out of every score)."""
+    out = []
+    for group in groups or []:
+        if not isinstance(group, dict):
+            out.append(group)
+            continue
+        items = [{**item, "stale": True} if isinstance(item, dict) and is_stale(item, today) else item
+                 for item in group.get("items") or []]
+        out.append({**group, "items": items})
+    return out
 
 
 def _move_phrase(latest: float, previous: float | None, period: str, kind: str) -> str:

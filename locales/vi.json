@@ -1308,8 +1308,6 @@
   "Of the most actively traded US stocks": "Trong số các cổ phiếu Mỹ giao dịch sôi động nhất",
   "Crypto Fear & Greed": "Crypto Fear & Greed",
   "CNN Fear & Greed": "CNN Fear & Greed",
-  "Most active higher": "Sôi động nhất tăng giá",
-  "Most active lower": "Sôi động nhất giảm giá",
   "Global liquidity & central bank trackers": "Thanh khoản toàn cầu & theo dõi ngân hàng trung ương",
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Chỉ số M2 toàn cầu hiện hành của bốn ngân hàng (Fed, ECB, Ngân hàng Nhật Bản và PBOC) không phải chuỗi dữ liệu miễn phí, nên nhóm này dùng số liệu do chính Fed công bố.",
   "Currency & yield indicators": "Chỉ báo tiền tệ & lợi suất",
@@ -1320,8 +1318,6 @@
   "Institutional & professional data providers": "Nhà cung cấp dữ liệu tổ chức & chuyên nghiệp",
   "Bloomberg Terminal and Refinitiv are not connected.": "Bloomberg Terminal và Refinitiv chưa được kết nối.",
   "Market news sentiment": "Tâm lý tin tức thị trường",
-  "US stocks higher": "Cổ phiếu Mỹ tăng giá",
-  "US stocks lower": "Cổ phiếu Mỹ giảm giá",
   "US M2 money supply": "Cung tiền M2 của Mỹ",
   "Fed balance sheet": "Bảng cân đối kế toán của Fed",
   "Federal funds rate": "Lãi suất quỹ liên bang",
@@ -2499,5 +2495,8 @@
   "Story of the day": "Tin chính trong ngày",
   "No single story drove the market": "Không có tin riêng lẻ nào dẫn dắt thị trường",
   "The most widely reported story of the last 24 hours that explains the market's latest move, picked by AI from the articles below. Not advice.": "Tin được đưa nhiều nhất trong 24 giờ qua giải thích biến động mới nhất của thị trường, do AI chọn từ các bài viết bên dưới. Không phải lời khuyên.",
-  "General News": "Tin tức chung"
+  "General News": "Tin tức chung",
+  "Out of date, so not scored": "Dữ liệu đã cũ nên không chấm điểm",
+  "Most active stocks, up and down": "Cổ phiếu giao dịch nhiều nhất, tăng và giảm",
+  "US stocks, up and down": "Cổ phiếu Mỹ, tăng và giảm"
 }

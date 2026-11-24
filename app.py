@@ -15818,13 +15818,17 @@ def _reading_articles(group: dict) -> list[dict]:
             source = "Michigan"
         elif name.startswith("CBOE"):
             source = "CBOE"
+        note = t(item.get("note") or item.get("detail") or "")       # an AI note already localised stays as is
+        if item.get("stale"):
+            # Older than its usual publishing delay: on show, out of every score (market_gauges.is_stale)
+            note = "⏳ " + t("Out of date, so not scored") + " · " + t(item.get("detail") or "")
         articles.append({
             "title": f"{t(name)}, {value}" if value else t(name),
             "source": source,
             "published": item.get("published") or "",
             "link": link,
-            "note": t(item.get("note") or item.get("detail") or ""),       # an AI note already localised stays as is
-            "score": item.get("score"),
+            "note": note,
+            "score": None if item.get("stale") else item.get("score"),
         })
     return articles
 

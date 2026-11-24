@@ -1308,8 +1308,6 @@
   "Of the most actively traded US stocks": "最も活発に取引されている米国株のうち",
   "Crypto Fear & Greed": "Crypto Fear & Greed",
   "CNN Fear & Greed": "CNN Fear & Greed",
-  "Most active higher": "売買上位の値上がり",
-  "Most active lower": "売買上位の値下がり",
   "Global liquidity & central bank trackers": "世界の流動性と中央銀行の動向",
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "4つの中央銀行（Fed、ECB、日本銀行、中国人民銀行）による現在の世界M2合成値は無料のデータではないため、このグループではFed自身が公表した数値を使います。",
   "Currency & yield indicators": "通貨と利回りの指標",
@@ -1320,8 +1318,6 @@
   "Institutional & professional data providers": "機関投資家向け・専門データ提供元",
   "Bloomberg Terminal and Refinitiv are not connected.": "Bloomberg TerminalとRefinitivは接続されていません。",
   "Market news sentiment": "市場ニュースのセンチメント",
-  "US stocks higher": "値上がりした米国株",
-  "US stocks lower": "値下がりした米国株",
   "US M2 money supply": "米国のマネーサプライM2",
   "Fed balance sheet": "Fedのバランスシート",
   "Federal funds rate": "フェデラルファンド金利",
@@ -2499,5 +2495,8 @@
   "Story of the day": "今日の注目ニュース",
   "No single story drove the market": "相場を動かした単独のニュースはありません",
   "The most widely reported story of the last 24 hours that explains the market's latest move, picked by AI from the articles below. Not advice.": "過去24時間で最も広く報じられ、直近の相場の動きを説明するニュース。下の記事からAIが選びました。助言ではありません。",
-  "General News": "一般ニュース"
+  "General News": "一般ニュース",
+  "Out of date, so not scored": "データが古いため、スコア対象外",
+  "Most active stocks, up and down": "売買上位銘柄の上昇・下落数",
+  "US stocks, up and down": "米国株の上昇・下落数"
 }

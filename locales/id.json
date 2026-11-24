@@ -1308,8 +1308,6 @@
   "Of the most actively traded US stocks": "Dari saham AS yang paling aktif diperdagangkan",
   "Crypto Fear & Greed": "Crypto Fear & Greed",
   "CNN Fear & Greed": "CNN Fear & Greed",
-  "Most active higher": "Paling aktif naik",
-  "Most active lower": "Paling aktif turun",
   "Global liquidity & central bank trackers": "Likuiditas global & pelacak bank sentral",
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Komposit M2 global empat bank terkini (Fed, ECB, Bank of Japan, dan PBOC) bukan seri gratis, jadi grup ini memakai angka yang dipublikasikan Fed sendiri.",
   "Currency & yield indicators": "Indikator mata uang & imbal hasil",
@@ -1320,8 +1318,6 @@
   "Institutional & professional data providers": "Penyedia data institusional & profesional",
   "Bloomberg Terminal and Refinitiv are not connected.": "Bloomberg Terminal dan Refinitiv tidak terhubung.",
   "Market news sentiment": "Sentimen berita pasar",
-  "US stocks higher": "Saham AS naik",
-  "US stocks lower": "Saham AS turun",
   "US M2 money supply": "Jumlah uang beredar M2 AS",
   "Fed balance sheet": "Neraca Fed",
   "Federal funds rate": "Suku bunga federal funds",
@@ -2499,5 +2495,8 @@
   "Story of the day": "Berita utama hari ini",
   "No single story drove the market": "Tidak ada satu berita pun yang menggerakkan pasar",
   "The most widely reported story of the last 24 hours that explains the market's latest move, picked by AI from the articles below. Not advice.": "Berita yang paling banyak diberitakan dalam 24 jam terakhir yang menjelaskan pergerakan pasar terbaru, dipilih oleh AI dari artikel di bawah. Bukan saran.",
-  "General News": "Berita umum"
+  "General News": "Berita umum",
+  "Out of date, so not scored": "Sudah usang, jadi tidak dinilai",
+  "Most active stocks, up and down": "Saham teraktif, naik dan turun",
+  "US stocks, up and down": "Saham AS, naik dan turun"
 }

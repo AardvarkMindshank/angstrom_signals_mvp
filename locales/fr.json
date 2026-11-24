@@ -1308,8 +1308,6 @@
   "Of the most actively traded US stocks": "Parmi les actions américaines les plus échangées",
   "Crypto Fear & Greed": "Crypto Fear & Greed",
   "CNN Fear & Greed": "CNN Fear & Greed",
-  "Most active higher": "Les plus actives en hausse",
-  "Most active lower": "Les plus actives en baisse",
   "Global liquidity & central bank trackers": "Liquidité mondiale et suivi des banques centrales",
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Un composite M2 mondial actuel de quatre banques (Fed, BCE, Banque du Japon et PBOC) n'est pas une série gratuite, ce groupe utilise donc les chiffres publiés par la Fed elle-même.",
   "Currency & yield indicators": "Indicateurs de devises et de rendements",
@@ -1320,8 +1318,6 @@
   "Institutional & professional data providers": "Fournisseurs de données institutionnels et professionnels",
   "Bloomberg Terminal and Refinitiv are not connected.": "Bloomberg Terminal et Refinitiv ne sont pas connectés.",
   "Market news sentiment": "Sentiment des actualités du marché",
-  "US stocks higher": "Actions américaines en hausse",
-  "US stocks lower": "Actions américaines en baisse",
   "US M2 money supply": "Masse monétaire M2 américaine",
   "Fed balance sheet": "Bilan de la Fed",
   "Federal funds rate": "Taux des fonds fédéraux",
@@ -2499,5 +2495,8 @@
   "Story of the day": "L'info du jour",
   "No single story drove the market": "Aucune info n'a, à elle seule, fait bouger le marché",
   "The most widely reported story of the last 24 hours that explains the market's latest move, picked by AI from the articles below. Not advice.": "L'info la plus relayée des dernières 24 heures qui explique le dernier mouvement du marché, choisie par l'IA parmi les articles ci-dessous. Ce n'est pas un conseil.",
-  "General News": "Actualités générales"
+  "General News": "Actualités générales",
+  "Out of date, so not scored": "Pas à jour, donc non noté",
+  "Most active stocks, up and down": "Actions les plus échangées, en hausse et en baisse",
+  "US stocks, up and down": "Actions américaines, en hausse et en baisse"
 }

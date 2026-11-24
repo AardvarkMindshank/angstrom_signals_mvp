@@ -1308,8 +1308,6 @@
   "Of the most actively traded US stocks": "가장 활발히 거래되는 미국 주식 중",
   "Crypto Fear & Greed": "Crypto Fear & Greed",
   "CNN Fear & Greed": "CNN Fear & Greed",
-  "Most active higher": "거래 상위 상승",
-  "Most active lower": "거래 상위 하락",
   "Global liquidity & central bank trackers": "글로벌 유동성과 중앙은행 추적",
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "4개 중앙은행(연준, ECB, 일본은행, 중국인민은행)의 현재 글로벌 M2 합산 지표는 무료 데이터가 아니어서, 이 그룹은 연준이 직접 발표한 수치를 씁니다.",
   "Currency & yield indicators": "통화와 금리 지표",
@@ -1320,8 +1318,6 @@
   "Institutional & professional data providers": "기관·전문 데이터 제공처",
   "Bloomberg Terminal and Refinitiv are not connected.": "Bloomberg Terminal과 Refinitiv는 연결되어 있지 않습니다.",
   "Market news sentiment": "시장 뉴스 심리",
-  "US stocks higher": "상승한 미국 주식",
-  "US stocks lower": "하락한 미국 주식",
   "US M2 money supply": "미국 M2 통화량",
   "Fed balance sheet": "연준 대차대조표",
   "Federal funds rate": "연방기금금리",
@@ -2499,5 +2495,8 @@
   "Story of the day": "오늘의 주요 뉴스",
   "No single story drove the market": "시장을 움직인 단일 뉴스는 없었습니다",
   "The most widely reported story of the last 24 hours that explains the market's latest move, picked by AI from the articles below. Not advice.": "지난 24시간 동안 가장 널리 보도되었고 최근 시장 움직임을 설명하는 뉴스로, 아래 기사 중에서 AI가 골랐습니다. 투자 조언이 아닙니다.",
-  "General News": "일반 뉴스"
+  "General News": "일반 뉴스",
+  "Out of date, so not scored": "오래된 자료라 점수에서 제외",
+  "Most active stocks, up and down": "거래 상위 종목, 상승과 하락",
+  "US stocks, up and down": "미국 주식, 상승과 하락"
 }

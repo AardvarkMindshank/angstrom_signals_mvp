@@ -1308,8 +1308,6 @@
   "Of the most actively traded US stocks": "在交易最活跃的美国股票中",
   "Crypto Fear & Greed": "Crypto Fear & Greed",
   "CNN Fear & Greed": "CNN Fear & Greed",
-  "Most active higher": "最活跃上涨",
-  "Most active lower": "最活跃下跌",
   "Global liquidity & central bank trackers": "全球流动性与央行追踪",
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "当前由四家央行（美联储、欧洲央行、日本央行和中国人民银行）构成的全球 M2 综合指标不是免费数据，因此此组使用美联储自己公布的数据。",
   "Currency & yield indicators": "货币与收益率指标",
@@ -1320,8 +1318,6 @@
   "Institutional & professional data providers": "机构与专业数据提供方",
   "Bloomberg Terminal and Refinitiv are not connected.": "Bloomberg Terminal 和 Refinitiv 尚未连接。",
   "Market news sentiment": "市场新闻情绪",
-  "US stocks higher": "上涨的美国股票",
-  "US stocks lower": "下跌的美国股票",
   "US M2 money supply": "美国 M2 货币供应",
   "Fed balance sheet": "美联储资产负债表",
   "Federal funds rate": "联邦基金利率",
@@ -2499,5 +2495,8 @@
   "Story of the day": "今日要闻",
   "No single story drove the market": "没有单一新闻主导市场",
   "The most widely reported story of the last 24 hours that explains the market's latest move, picked by AI from the articles below. Not advice.": "过去24小时内报道最广、能解释市场最新走势的新闻，由AI从下方文章中选出。不构成建议。",
-  "General News": "综合新闻"
+  "General News": "综合新闻",
+  "Out of date, so not scored": "数据已过时，不计分",
+  "Most active stocks, up and down": "成交最活跃股票的涨跌数",
+  "US stocks, up and down": "美国股票涨跌数"
 }

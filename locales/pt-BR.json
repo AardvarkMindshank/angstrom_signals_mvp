@@ -1308,8 +1308,6 @@
   "Of the most actively traded US stocks": "Das ações dos EUA mais negociadas",
   "Crypto Fear & Greed": "Crypto Fear & Greed",
   "CNN Fear & Greed": "CNN Fear & Greed",
-  "Most active higher": "Mais ativas em alta",
-  "Most active lower": "Mais ativas em baixa",
   "Global liquidity & central bank trackers": "Liquidez global e acompanhamento de bancos centrais",
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Um composto atual de M2 global de quatro bancos (Fed, BCE, Banco do Japão e PBOC) não é uma série gratuita, então este grupo usa os números publicados pelo próprio Fed.",
   "Currency & yield indicators": "Indicadores de câmbio e juros",
@@ -1320,8 +1318,6 @@
   "Institutional & professional data providers": "Provedores de dados institucionais e profissionais",
   "Bloomberg Terminal and Refinitiv are not connected.": "Bloomberg Terminal e Refinitiv não estão conectados.",
   "Market news sentiment": "Sentimento das notícias do mercado",
-  "US stocks higher": "Ações dos EUA em alta",
-  "US stocks lower": "Ações dos EUA em baixa",
   "US M2 money supply": "Oferta monetária M2 dos EUA",
   "Fed balance sheet": "Balanço do Fed",
   "Federal funds rate": "Taxa dos fed funds",
@@ -2499,5 +2495,8 @@
   "Story of the day": "A notícia do dia",
   "No single story drove the market": "Nenhuma notícia isolada moveu o mercado",
   "The most widely reported story of the last 24 hours that explains the market's latest move, picked by AI from the articles below. Not advice.": "A notícia mais divulgada das últimas 24 horas que explica o último movimento do mercado, escolhida pela IA entre os artigos abaixo. Não é recomendação.",
-  "General News": "Notícias gerais"
+  "General News": "Notícias gerais",
+  "Out of date, so not scored": "Desatualizado, por isso sem nota",
+  "Most active stocks, up and down": "Ações mais negociadas, em alta e em baixa",
+  "US stocks, up and down": "Ações dos EUA, em alta e em baixa"
 }

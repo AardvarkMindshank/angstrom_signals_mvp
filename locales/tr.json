@@ -1308,8 +1308,6 @@
   "Of the most actively traded US stocks": "En çok işlem gören ABD hisselerinden",
   "Crypto Fear & Greed": "Crypto Fear & Greed",
   "CNN Fear & Greed": "CNN Fear & Greed",
-  "Most active higher": "En aktif yükselenler",
-  "Most active lower": "En aktif düşenler",
   "Global liquidity & central bank trackers": "Küresel likidite ve merkez bankası takipçileri",
   "A current four-bank global M2 composite (Fed, ECB, Bank of Japan, and PBOC) is not a free series, so this group uses the Fed's own published figures.": "Güncel dört bankalı küresel M2 bileşiği (Fed, ECB, Japonya Merkez Bankası ve PBOC) ücretsiz bir seri değil, bu yüzden bu grup Fed'in kendi yayımladığı rakamları kullanır.",
   "Currency & yield indicators": "Döviz ve getiri göstergeleri",
@@ -1320,8 +1318,6 @@
   "Institutional & professional data providers": "Kurumsal ve profesyonel veri sağlayıcılar",
   "Bloomberg Terminal and Refinitiv are not connected.": "Bloomberg Terminal ve Refinitiv bağlı değil.",
   "Market news sentiment": "Piyasa haber duyarlılığı",
-  "US stocks higher": "Yükselen ABD hisseleri",
-  "US stocks lower": "Düşen ABD hisseleri",
   "US M2 money supply": "ABD M2 para arzı",
   "Fed balance sheet": "Fed bilançosu",
   "Federal funds rate": "Federal fon oranı",
@@ -2499,5 +2495,8 @@
   "Story of the day": "Günün haberi",
   "No single story drove the market": "Piyasayı tek başına hareket ettiren bir haber yok",
   "The most widely reported story of the last 24 hours that explains the market's latest move, picked by AI from the articles below. Not advice.": "Son 24 saatte en çok haber yapılan ve piyasanın son hareketini açıklayan haber; yapay zekâ aşağıdaki makalelerden seçti. Tavsiye değildir.",
-  "General News": "Genel haberler"
+  "General News": "Genel haberler",
+  "Out of date, so not scored": "Güncel değil, bu yüzden puanlanmadı",
+  "Most active stocks, up and down": "En çok işlem gören hisseler, yükselen ve düşen",
+  "US stocks, up and down": "ABD hisseleri, yükselen ve düşen"
 }
