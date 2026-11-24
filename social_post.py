@@ -9,6 +9,7 @@ TikTok approves automatic posting: the "email" platform sends a morning pack wit
 from __future__ import annotations
 
 import json
+import re
 import os
 import time
 import sys
@@ -57,10 +58,12 @@ def captions(day: str, entry: dict, words: str) -> dict[str, str]:
     when = datetime.fromisoformat(day).strftime("%a %d %b")
     first = (words.strip().split("\n\n") or [""])[0]
     headline = first.split(". ", 1)[1].strip() if ". " in first else first.strip()
+    # The video's link to its story section is for the ear, not a caption (24 Nov 2026).
+    headline = re.sub(r"\s*More on that after a look at the tides\.?", "", headline).strip()
     headline = headline.rstrip(".") + "." if headline else ""
     who = entry.get("presenter") or "the crew"
     long = (f"🧭 MarketNavi Morning Outlook · {when}\n{headline}\n\n🎙️ Presented by {who}. The tide, stocks and crypto "
-            f"in about 90 seconds.\n\n▶️ {SITE}\n{DISCLAIMER}")
+            f"in about two minutes.\n\n▶️ {SITE}\n{DISCLAIMER}")
     return {
         "telegram": long,
         "facebook": long + "\n\n" + TAGS["base"],
