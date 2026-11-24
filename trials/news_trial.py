@@ -10,9 +10,15 @@ import briefing
 import news_filter
 import sentiment
 
+import re
+# Pages that only list a price or a routine event are not news (trial 1: "ETH price at 6 PM CST", "Current price of
+# Bitcoin for November 23", "Rings the Nasdaq opening bell").
+NOT_NEWS = re.compile(r"\bprice (at|today|on|for|now)\b|current price of|live price|price chart|to usd\b|"
+                      r"\bprice (index|quote)\b|rings? the .*(opening|closing) bell", re.I)
+
 NEW = {
     "stock": ["stock market today", "Wall Street stocks", "Nasdaq", "S&P 500"],
-    "crypto": ["crypto market today", "Bitcoin price", "Ether price", "crypto ETF"],
+    "crypto": ["crypto market today", "Bitcoin news", "crypto news", "crypto ETF"],
 }
 MOVES = {"stock": [("equity", "SPY", "S&P 500"), ("equity", "QQQ", "Nasdaq 100")],
          "crypto": [("crypto", "bitcoin", "Bitcoin"), ("crypto", "ethereum", "Ether")]}
@@ -32,6 +38,9 @@ def new_pick(key, now):
             raw += sentiment._fetch_raw(q)
         except Exception as exc:
             print(f"  search failed: {q}: {exc}")
+    dropped = [r for r in raw if NOT_NEWS.search(str(r.get("title") or ""))]
+    raw = [r for r in raw if not NOT_NEWS.search(str(r.get("title") or ""))]
+    print(f"  Dropped as not news: {len(dropped)}, e.g. " + "; ".join(str(r.get('title'))[:60] for r in dropped[:3]))
     rows, _ = news_filter.clean_headlines(raw, now, {}, 400)
     day = now - 86400
 
