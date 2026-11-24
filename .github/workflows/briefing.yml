@@ -1,4 +1,4 @@
-# 🎧 Spoken briefings (briefing.py, run_briefings.py): every 15 minutes, make what is due: the Morning forecast's two
+# 🎧 Spoken briefings (briefing.py, run_briefings.py): every 15 minutes, make what is due: the Morning Outlook's two
 # editions (the same for everyone) and the members' spoken Passage Plans. A quick
 # check first; the voice (Kokoro) and ffmpeg are set up only when at least one briefing is due.
 name: Morning briefings
@@ -15,7 +15,7 @@ on:
         description: "Voice for the sample (bf_emma, bm_george, af_heart, am_michael)"
         default: bf_emma
       kind:
-        description: "Which sample: general (the Morning forecast) or passage (a spoken Passage Plan)"
+        description: "Which sample: general (the Morning Outlook), passage (a spoken Passage Plan) or passage_me (the new Passage Plan for each admin, by email)"
         default: general
 concurrency:
   group: briefings
@@ -75,7 +75,10 @@ jobs:
         env:
           VOICE: ${{ inputs.voice }}
           KIND: ${{ inputs.kind }}
-        run: mkdir -p out && python run_briefings.py --sample out/briefing_sample.mp3 "${KIND:-general}"
+        run: |
+          mkdir -p out
+          if [ "$KIND" = "passage_me" ]; then python run_briefings.py --sample-me; exit 0; fi
+          python run_briefings.py --sample out/briefing_sample.mp3 "${KIND:-general}"
       - name: Keep the sample
         if: steps.check.outputs.due == 'sample'
         run: bash .github/scripts/save_to_reports.sh "briefing_samples/$(date -u +%Y-%m-%d_%H%M)" out/briefing_sample.mp3 out/briefing_sample.txt $(ls out/briefing_sample.facts.json out/briefing_sample.plan.md 2>/dev/null)

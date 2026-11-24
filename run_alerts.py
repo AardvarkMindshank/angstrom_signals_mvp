@@ -166,7 +166,7 @@ def send_alert_email(to_email: str, asset_name: str, message: str, logo_url: str
     return False
 
 
-def send_digest_email(to_email: str, subject: str, page: str, plain: str) -> bool:
+def send_digest_email(to_email: str, subject: str, page: str, plain: str, attachments: list | None = None) -> bool:
     api_key = (os.getenv("RESEND_API_KEY") or "").strip()
     if not api_key or not to_email:
         print("Digest skipped: RESEND_API_KEY or the account email is missing.")
@@ -175,7 +175,9 @@ def send_digest_email(to_email: str, subject: str, page: str, plain: str) -> boo
     try:
         response = requests.post(
             "https://api.resend.com/emails",
-            json={"from": sender, "to": [to_email], "subject": subject, "html": page, "text": plain},
+            # attachments: [{"filename", "content" (base64)}], for a sample sent to an admin (24 Nov 2026)
+            json={"from": sender, "to": [to_email], "subject": subject, "html": page, "text": plain,
+                  **({"attachments": attachments} if attachments else {})},
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             timeout=15,
         )

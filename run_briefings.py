@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
@@ -227,6 +228,58 @@ def _plan_for(db, user_id: str, row: dict, now: datetime) -> tuple[dict, str]:
     return {"body": body, "created_at": datetime.now(timezone.utc).isoformat()}, used
 
 
+def sample_for_admins(now: datetime | None = None) -> int:
+    """🧭 The new member-focused Passage Plan (passage.py) for each admin account, sent to that admin by email
+    (written plan, spoken script, and the audio attached), saved nowhere (24 Nov 2026). Prints no member data."""
+    import base64
+    import html as html_
+
+    import briefing_audio
+    import passage
+    import run_alerts
+    from email_brand import render_email
+
+    db, _url = _client()
+    now = now or datetime.now(timezone.utc)
+    ids = [r["user_id"] for r in (db.table("profiles").select("user_id").eq("role", "admin").execute().data or [])]
+    sent = 0
+    for user_id in ids:
+        rows = (db.table("user_preferences").select("user_id, crypto_watchlist, stock_watchlist, settings")
+                .eq("user_id", user_id).execute().data or [])
+        if not rows:
+            continue
+        row = rows[0]
+        b = briefing.settings_of(row.get("settings") if isinstance(row.get("settings"), dict) else {})
+        here = briefing.local_now(b["zone"], now)
+        f = passage.facts(db, user_id, row, now)
+        plan, writer = passage.write(db, f, here)
+        if not plan:
+            print(f"Sample Passage Plan not written: {writer}")
+            continue
+        weather = briefing.weather(briefing.gather(db, user_id, row, {"sections": ["markets", "tides"],
+                                                                     "assets": []}, now))
+        with tempfile.TemporaryDirectory() as tmp:
+            mp3 = Path(tmp) / "passage_plan_sample.mp3"
+            seconds = briefing_audio.make(plan["spoken"], mp3, b["voice"], Path(tmp), weather=weather,
+                                          tag=briefing.tag_line("passage", here))
+            audio = base64.b64encode(mp3.read_bytes()).decode()
+        to = run_alerts.user_email(db, user_id)
+        written = html_.escape(plan["written"]).replace("\n", "<br>")
+        written = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", written)
+        page, plain = render_email(
+            "🧭 A sample of the new Passage Plan",
+            ["A sample of the new Passage Plan, about your own watchlist, funnels and alerts, written from today's "
+             "readings. It is saved nowhere: your real plan and Logbook are unchanged. The spoken version is "
+             f"attached ({round(seconds)} s).", written, "<b>The spoken script</b><br>" + html_.escape(plan["spoken"])],
+            preheader="A sample of the new Passage Plan.")
+        ok = run_alerts.send_digest_email(to, f"🧭 Sample: the new Passage Plan, {here.strftime('%a %d %b')}", page,
+                                          plain, attachments=[{"filename": "passage_plan_sample.mp3",
+                                                               "content": audio}])
+        sent += int(bool(ok))
+        print(f"Sample Passage Plan: {'sent' if ok else 'not sent'} ({round(seconds)} s, written by {writer})")
+    return sent
+
+
 def make_one(db, url: str, row: dict, now: datetime) -> bool:
     import briefing_audio
 
@@ -346,6 +399,9 @@ def sample(out: str, kind: str = "general") -> int:
 
 
 def main() -> int:
+    if "--sample-me" in sys.argv:                     # the new Passage Plan, emailed to each admin
+        sample_for_admins()
+        return 0
     if "--sample" in sys.argv:
         i = sys.argv.index("--sample")
         return sample(sys.argv[i + 1], sys.argv[i + 2] if len(sys.argv) > i + 2 else "general")
