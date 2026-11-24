@@ -1059,6 +1059,17 @@ def main() -> int:
     if "--check" in a:                              # alerts.yml: start the video job when today's is due
         print(video_due(db) or "0")
         return 0
+    if "--publish-from" in a:                       # publish a reviewed test exactly as it is (24 Nov 2026)
+        src = Path(get("--publish-from"))
+        script = json.loads((src / "script.json").read_text())
+        files = {layout: str(next(src.glob(f"forecast_*_{layout}.mp4"))) for layout in LAYOUTS}
+        day = Path(files["land"]).name.split("_")[1]
+        spec = script.get("spec") or {}
+        made = {"files": files, "day": day, "seconds": round(script["segments"][-1]["end"], 1),
+                "presenter": ((spec.get("guest") or {}).get("title") or (spec.get("presenter") or {}).get("title")
+                              or "The Captain"), "weather": spec.get("weather")}
+        publish(db, made, src)
+        return 0
     out = Path(get("--out", "out/daily_video"))
     made = build(db, Path(get("--library")), Path(get("--music")), out,
                  Path(get("--models", "out/video/voice_model")), edition=get("--edition", "east"),
