@@ -6800,6 +6800,23 @@ def _set_chat_block(person: str, name: str, on: bool) -> None:
 
 
 prefs = st.session_state.cloud_prefs
+
+
+def _briefing_settings() -> dict:
+    """The Passage Plan's settings with the account's one time and time zone (the daily summary's, in 🔔 Notifications;
+    24 Nov 2026), so the app and the worker agree."""
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    return briefing.settings_of(briefing.with_account_time(stored, (prefs or {}).get("alerts") or {}))
+
+
+def _briefing_save(b: dict, **state) -> None:
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    updates = {"briefing": b}
+    if state:
+        updates["briefing_state"] = {**(stored.get("briefing_state") or {}), **state}
+    save_account_settings(updates)
+
+
 alert_prefs = prefs.get("alerts", {})
 profile = st.session_state.profile
 
@@ -9536,21 +9553,6 @@ def _briefing_text(url: str) -> str:
         return r.text if r.status_code == 200 else ""
     except Exception:
         return ""
-
-
-def _briefing_settings() -> dict:
-    """The Passage Plan's settings with the account's one time and time zone (the daily summary's, in 🔔 Notifications;
-    24 Nov 2026), so the app and the worker agree."""
-    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-    return briefing.settings_of(briefing.with_account_time(stored, (prefs or {}).get("alerts") or {}))
-
-
-def _briefing_save(b: dict, **state) -> None:
-    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-    updates = {"briefing": b}
-    if state:
-        updates["briefing_state"] = {**(stored.get("briefing_state") or {}), **state}
-    save_account_settings(updates)
 
 
 def _clock(seconds) -> str:
