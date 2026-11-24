@@ -171,7 +171,7 @@ SYSTEM = (
     "the readings behind it in brackets), **🔻 Your funnels** (only if there are any), **🔔 Overnight alerts** (only "
     "if there are any), **📅 Events that touch your assets** (only if any do), **🔭 What to watch** (two or three "
     "expectations about this member's assets); under 450 words. \"spoken\": the same plan for the ear, about "
-    "{words} words: plain spoken sentences that flow, no headings, no brackets, no symbols or emoji, numbers as "
+    "{words} words and never more: plain spoken sentences that flow, no headings, no brackets, no symbols or emoji, numbers as "
     "digits; open with \"Good morning{name}.\" and do not close (a fixed closing line is added)}."
 )
 
@@ -190,14 +190,22 @@ def write(supabase, f: dict, day: datetime, name: str = "", chat=None) -> tuple[
     if not ai_providers.available(provider):
         return None, "no AI key"
     system, messages = prompt(f, day, name)
-    try:
-        reply = (chat or ai_providers.chat)(provider, system, messages, max_tokens=3000)
-        if isinstance(reply, (tuple, list)):
-            reply = reply[0]
-        text = reply.get("text") if isinstance(reply, dict) else str(reply)
-        got = json.loads(re.search(r"\{.*\}", text, re.S).group(0))
-    except Exception as exc:
-        return None, f"AI failed: {str(exc)[:120]}"
+    got = {}
+    for _attempt in range(2):
+        try:
+            reply = (chat or ai_providers.chat)(provider, system, messages, max_tokens=3000)
+            if isinstance(reply, (tuple, list)):
+                reply = reply[0]
+            text = reply.get("text") if isinstance(reply, dict) else str(reply)
+            got = json.loads(re.search(r"\{.*\}", text, re.S).group(0))
+        except Exception as exc:
+            return None, f"AI failed: {str(exc)[:120]}"
+        # The first sample ran 4 minutes 20 for a 2.5-minute plan (24 Nov 2026): a long one is sent back once.
+        if len(str(got.get("spoken") or "").split()) <= SPOKEN_WORDS * 1.2:
+            break
+        messages = messages + [{"role": "assistant", "content": text},
+                               {"role": "user", "content": f"The spoken version is too long. Keep everything else, "
+                                f"but write it again in at most {SPOKEN_WORDS} words. JSON only."}]
     written, spoken = str(got.get("written") or "").strip(), str(got.get("spoken") or "").strip()
     if not written or len(spoken.split()) < 60:
         return None, "AI reply incomplete"

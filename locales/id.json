@@ -310,7 +310,6 @@
   "From {n} {coins} ({venue}) · {flicker}. Hover a stage chip for what it means.": "Dari {n} {coins} ({venue}) · {flicker}. Arahkan kursor ke chip tahap untuk melihat artinya.",
   "⏳ Not checked yet: the funnel runs {when}.": "⏳ Belum diperiksa: corong berjalan {when}.",
   "flagged": "ditandai",
-  "Click an asset to open it on the chart, a funnel to open its table, or the Tides line for the macro picture.": "Klik aset untuk membukanya di grafik, corong untuk membuka tabelnya, atau baris Tides untuk gambaran makro.",
   "Reports soon. Scores can swing around earnings.": "Laporan laba segera. Skor bisa berayun di sekitar laporan laba.",
   "Next earnings report.": "Laporan laba berikutnya.",
   "Interactive Chart - {name}": "Grafik Interaktif - {name}",
@@ -2328,7 +2327,6 @@
   "Date": "Tanggal",
   "written only": "hanya tertulis",
   "Not made yet today. It is made ready each morning.": "Belum dibuat hari ini. Disiapkan setiap pagi.",
-  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Pasar hari ini dalam sekitar 90 detik, dibawakan oleh kru. Diputar saat Anda pertama kali membuka aplikasi setiap hari; matikan di ⚙️ Pengaturan. Ringkasan bacaan aplikasi, bukan saran.",
   "{day} · {who} · {length}": "{day} · {who} · {length}",
   "**Daily video**": "**Video harian**",
   "🎬 Play the daily video when I open the app": "🎬 Putar video harian saat saya membuka aplikasi",
@@ -2496,5 +2494,12 @@
   "Your daily summary email is sent at this time, and your Passage Plan is ready an hour before it.": "Email ringkasan harianmu dikirim pada waktu ini, dan Passage Plan-mu siap satu jam sebelumnya.",
   "Email me when my Passage Plan is ready": "Kirimi saya email saat Passage Plan saya siap",
   "Passage Plan voice": "Suara Passage Plan",
-  "The daily summary email links it anyway.": "Email ringkasan harian tetap menautkannya."
+  "The daily summary email links it anyway.": "Email ringkasan harian tetap menautkannya.",
+  "Today's markets in about two minutes, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Pasar hari ini dalam sekitar dua menit, dibawakan oleh kru. Diputar saat Anda pertama kali membuka aplikasi setiap hari; matikan di ⚙️ Pengaturan. Ringkasan bacaan aplikasi, bukan saran.",
+  "Click an asset to open it on the chart, a funnel to open its table, or the Tides card for the macro picture.": "Klik aset untuk membukanya di grafik, corong untuk membuka tabelnya, atau kartu Tides untuk gambaran makro.",
+  "🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation), what it means for crypto and equity longs, and the next scheduled event. Click to open the Tides panel. A description, not a forecast.": "🌊 Tides: gambaran makro (uang dan suku bunga, aset aman, pertumbuhan dan kredit, rotasi), artinya bagi posisi long kripto dan saham, serta acara terjadwal berikutnya. Klik untuk membuka panel Tides. Sebuah gambaran, bukan ramalan.",
+  "held {n} trading days": "bertahan {n} hari perdagangan",
+  "Sea": "Laut",
+  "{change} pts this week": "{change} poin minggu ini",
+  "Open Tides ›": "Buka Tides ›"
 }

@@ -243,7 +243,6 @@
   "🔻 A funnel narrows {words_pool} down in stages, to the 1-hour, and keeps the list up to date by itself. Make your own copy of a provided one (you can change it later in Lattice → Funnels):": "🔻 ฟันเนลคัดกรอง {words_pool} ทีละขั้นลงไปถึงกรอบ 1 ชั่วโมง และอัปเดตรายการให้เองโดยอัตโนมัติ ทำสำเนาของฟันเนลที่เตรียมไว้ให้เป็นของคุณ (แก้ไขภายหลังได้ใน Lattice → Funnels):",
   "<span style='opacity:.8'>Showing:</span> **{fv_fn_direction_icons_f_} {html_escape_f_name}** · {chip_icon_chip_label_if_} ({dyn_get_count_len_dyn_wa})": "<span style='opacity:.8'>กำลังแสดง:</span> **{fv_fn_direction_icons_f_} {html_escape_f_name}** · {chip_icon_chip_label_if_} ({dyn_get_count_len_dyn_wa})",
   "⏳ Not checked yet: the funnel runs {when}.": "⏳ ยังไม่ได้ตรวจ: ฟันเนลจะทำงาน{when}",
-  "Click an asset to open it on the chart, a funnel to open its table, or the Tides line for the macro picture.": "คลิกสินทรัพย์เพื่อเปิดบนกราฟ คลิกฟันเนลเพื่อเปิดตาราง หรือคลิกแถบ Tides เพื่อดูภาพรวมมหภาค",
   "Thumbs and comments open once this sentiment is saved.": "ปุ่มถูกใจและความเห็นจะเปิดเมื่อบันทึกอารมณ์ตลาดนี้แล้ว",
   "**Your take**": "**ความเห็นของคุณ**",
   "👍 Agree": "👍 เห็นด้วย",
@@ -2328,7 +2327,6 @@
   "Date": "วันที่",
   "written only": "ฉบับเขียนเท่านั้น",
   "Not made yet today. It is made ready each morning.": "วันนี้ยังไม่ได้ทำ จัดเตรียมไว้ให้ทุกเช้า",
-  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "ตลาดวันนี้ในราว 90 วินาที นำเสนอโดยลูกเรือ เล่นเมื่อคุณเปิดแอปครั้งแรกของแต่ละวัน ปิดได้ใน ⚙️ การตั้งค่า เป็นสรุปค่าที่อ่านได้จากแอป ไม่ใช่คำแนะนำ",
   "{day} · {who} · {length}": "{day} · {who} · {length}",
   "**Daily video**": "**วิดีโอประจำวัน**",
   "🎬 Play the daily video when I open the app": "🎬 เล่นวิดีโอประจำวันเมื่อฉันเปิดแอป",
@@ -2496,5 +2494,12 @@
   "Your daily summary email is sent at this time, and your Passage Plan is ready an hour before it.": "อีเมลสรุปประจำวันจะส่งในเวลานี้ และ Passage Plan ของคุณจะพร้อมก่อนหน้านั้นหนึ่งชั่วโมง",
   "Email me when my Passage Plan is ready": "ส่งอีเมลถึงฉันเมื่อ Passage Plan พร้อม",
   "Passage Plan voice": "เสียงของ Passage Plan",
-  "The daily summary email links it anyway.": "อีเมลสรุปประจำวันมีลิงก์ให้อยู่แล้ว"
+  "The daily summary email links it anyway.": "อีเมลสรุปประจำวันมีลิงก์ให้อยู่แล้ว",
+  "Today's markets in about two minutes, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "ตลาดวันนี้ในราวสองนาที นำเสนอโดยลูกเรือ เล่นเมื่อคุณเปิดแอปครั้งแรกของแต่ละวัน ปิดได้ใน ⚙️ การตั้งค่า เป็นสรุปค่าที่อ่านได้จากแอป ไม่ใช่คำแนะนำ",
+  "Click an asset to open it on the chart, a funnel to open its table, or the Tides card for the macro picture.": "คลิกสินทรัพย์เพื่อเปิดบนกราฟ คลิกฟันเนลเพื่อเปิดตาราง หรือคลิกการ์ด Tides เพื่อดูภาพรวมมหภาค",
+  "🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation), what it means for crypto and equity longs, and the next scheduled event. Click to open the Tides panel. A description, not a forecast.": "🌊 Tides: ภาพรวมมหภาค (เงินและดอกเบี้ย สินทรัพย์ปลอดภัย การเติบโตและสินเชื่อ การหมุนเวียน) ความหมายต่อสถานะซื้อในคริปโตและหุ้น และเหตุการณ์ที่กำหนดไว้ถัดไป คลิกเพื่อเปิดแผง Tides เป็นการอธิบาย ไม่ใช่การพยากรณ์",
+  "held {n} trading days": "คงอยู่ {n} วันทำการ",
+  "Sea": "ทะเล",
+  "{change} pts this week": "{change} จุดในสัปดาห์นี้",
+  "Open Tides ›": "เปิด Tides ›"
 }

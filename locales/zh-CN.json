@@ -310,7 +310,6 @@
   "From {n} {coins} ({venue}) · {flicker}. Hover a stage chip for what it means.": "来自 {n} 个{coins}（{venue}）· {flicker}。悬停在阶段标签上可查看其含义。",
   "⏳ Not checked yet: the funnel runs {when}.": "⏳ 尚未检查：漏斗将在{when}运行。",
   "flagged": "已标记",
-  "Click an asset to open it on the chart, a funnel to open its table, or the Tides line for the macro picture.": "点击资产可在图表中打开，点击漏斗可打开其表格，点击 Tides 行可查看宏观全景。",
   "Reports soon. Scores can swing around earnings.": "即将发布财报。财报前后得分可能大幅波动。",
   "Next earnings report.": "下一次财报发布。",
   "Interactive Chart - {name}": "交互式图表 - {name}",
@@ -2328,7 +2327,6 @@
   "Date": "日期",
   "written only": "仅文字",
   "Not made yet today. It is made ready each morning.": "今天尚未制作。每天早上会准备好。",
-  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "约 90 秒看懂今日市场，由船员为您播报。每天首次打开应用时播放；可在 ⚙️ 设置中关闭。这是应用读数的摘要，不是投资建议。",
   "{day} · {who} · {length}": "{day} · {who} · {length}",
   "**Daily video**": "**每日视频**",
   "🎬 Play the daily video when I open the app": "🎬 打开应用时播放每日视频",
@@ -2496,5 +2494,12 @@
   "Your daily summary email is sent at this time, and your Passage Plan is ready an hour before it.": "每日摘要邮件在此时间发送，你的 Passage Plan 会提前一小时准备好。",
   "Email me when my Passage Plan is ready": "Passage Plan 准备好时给我发邮件",
   "Passage Plan voice": "Passage Plan 的声音",
-  "The daily summary email links it anyway.": "每日摘要邮件本来就会附上链接。"
+  "The daily summary email links it anyway.": "每日摘要邮件本来就会附上链接。",
+  "Today's markets in about two minutes, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "约两分钟看懂今日市场，由船员为您播报。每天首次打开应用时播放；可在 ⚙️ 设置中关闭。这是应用读数的摘要，不是投资建议。",
+  "Click an asset to open it on the chart, a funnel to open its table, or the Tides card for the macro picture.": "点击资产可在图表中打开，点击漏斗可打开其表格，点击 Tides 卡片可查看宏观全景。",
+  "🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation), what it means for crypto and equity longs, and the next scheduled event. Click to open the Tides panel. A description, not a forecast.": "🌊 Tides：宏观全景（货币与利率、避险资产、增长与信贷、轮动），它对加密货币和股票多头意味着什么，以及下一个已排定的事件。点击打开 Tides 面板。这是描述，不是预测。",
+  "held {n} trading days": "已持续 {n} 个交易日",
+  "Sea": "海况",
+  "{change} pts this week": "本周 {change} 点",
+  "Open Tides ›": "打开 Tides ›"
 }

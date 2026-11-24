@@ -310,7 +310,6 @@
   "From {n} {coins} ({venue}) · {flicker}. Hover a stage chip for what it means.": "{n}개 {coins} 중에서({venue}) · {flicker}. 단계 칩에 마우스를 올리면 뜻을 볼 수 있습니다.",
   "⏳ Not checked yet: the funnel runs {when}.": "⏳ 아직 확인 안 됨: 퍼널은 {when} 실행됩니다.",
   "flagged": "표시됨",
-  "Click an asset to open it on the chart, a funnel to open its table, or the Tides line for the macro picture.": "자산을 누르면 차트에서, 퍼널을 누르면 그 표가, Tides 줄을 누르면 거시 전망이 열립니다.",
   "Reports soon. Scores can swing around earnings.": "곧 실적 발표. 실적 전후로 점수가 크게 흔들릴 수 있습니다.",
   "Next earnings report.": "다음 실적 발표.",
   "Interactive Chart - {name}": "인터랙티브 차트 - {name}",
@@ -2328,7 +2327,6 @@
   "Date": "날짜",
   "written only": "글로만",
   "Not made yet today. It is made ready each morning.": "오늘은 아직 만들어지지 않았습니다. 매일 아침 준비됩니다.",
-  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "오늘의 시장을 약 90초로, 크루가 전해 드립니다. 매일 앱을 처음 열 때 재생됩니다. ⚙️ 설정에서 끌 수 있습니다. 앱 지표의 요약이며 조언이 아닙니다.",
   "{day} · {who} · {length}": "{day} · {who} · {length}",
   "**Daily video**": "**오늘의 영상**",
   "🎬 Play the daily video when I open the app": "🎬 앱을 열 때 오늘의 영상 재생",
@@ -2496,5 +2494,12 @@
   "Your daily summary email is sent at this time, and your Passage Plan is ready an hour before it.": "일일 요약 이메일이 이 시간에 발송되고, Passage Plan은 그 한 시간 전에 준비됩니다.",
   "Email me when my Passage Plan is ready": "Passage Plan이 준비되면 이메일로 알림",
   "Passage Plan voice": "Passage Plan 목소리",
-  "The daily summary email links it anyway.": "일일 요약 이메일에도 어차피 링크가 들어갑니다."
+  "The daily summary email links it anyway.": "일일 요약 이메일에도 어차피 링크가 들어갑니다.",
+  "Today's markets in about two minutes, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "오늘의 시장을 약 2분로, 크루가 전해 드립니다. 매일 앱을 처음 열 때 재생됩니다. ⚙️ 설정에서 끌 수 있습니다. 앱 지표의 요약이며 조언이 아닙니다.",
+  "Click an asset to open it on the chart, a funnel to open its table, or the Tides card for the macro picture.": "자산을 누르면 차트에서, 퍼널을 누르면 그 표가, Tides 카드을 누르면 거시 전망이 열립니다.",
+  "🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation), what it means for crypto and equity longs, and the next scheduled event. Click to open the Tides panel. A description, not a forecast.": "🌊 Tides: 거시 전망(통화와 금리, 안전자산, 성장과 신용, 순환)과 그것이 암호화폐·주식 롱에 주는 의미, 다음 예정 이벤트. 누르면 Tides 패널이 열립니다. 예측이 아니라 설명입니다.",
+  "held {n} trading days": "{n}거래일째 유지",
+  "Sea": "해상",
+  "{change} pts this week": "이번 주 {change}포인트",
+  "Open Tides ›": "Tides 열기 ›"
 }

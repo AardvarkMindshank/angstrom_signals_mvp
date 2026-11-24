@@ -310,7 +310,6 @@
   "From {n} {coins} ({venue}) · {flicker}. Hover a stage chip for what it means.": "{n} {coins} içinden ({venue}) · {flicker}. Ne anlama geldiğini görmek için bir aşama çipinin üzerine gelin.",
   "⏳ Not checked yet: the funnel runs {when}.": "⏳ Henüz kontrol edilmedi: huni {when} çalışır.",
   "flagged": "işaretlendi",
-  "Click an asset to open it on the chart, a funnel to open its table, or the Tides line for the macro picture.": "Grafikte açmak için bir varlığa, tablosunu açmak için bir huniye ya da makro tablo için Tides satırına tıklayın.",
   "Reports soon. Scores can swing around earnings.": "Yakında bilanço. Puanlar bilanço döneminde dalgalanabilir.",
   "Next earnings report.": "Sonraki bilanço açıklaması.",
   "Interactive Chart - {name}": "Etkileşimli Grafik - {name}",
@@ -2328,7 +2327,6 @@
   "Date": "Tarih",
   "written only": "yalnızca yazılı",
   "Not made yet today. It is made ready each morning.": "Bugün henüz hazırlanmadı. Her sabah hazır olur.",
-  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Bugünün piyasaları yaklaşık 90 saniyede, mürettebat sunuyor. Her gün uygulamayı ilk açtığınızda oynar; ⚙️ Ayarlar'dan kapatabilirsiniz. Uygulama okumalarının özeti, tavsiye değildir.",
   "{day} · {who} · {length}": "{day} · {who} · {length}",
   "**Daily video**": "**Günlük video**",
   "🎬 Play the daily video when I open the app": "🎬 Uygulamayı açtığımda günlük videoyu oynat",
@@ -2496,5 +2494,12 @@
   "Your daily summary email is sent at this time, and your Passage Plan is ready an hour before it.": "Günlük özet e-postan bu saatte gönderilir ve Passage Plan'in bir saat önce hazır olur.",
   "Email me when my Passage Plan is ready": "Passage Plan'im hazır olunca bana e-posta gönder",
   "Passage Plan voice": "Passage Plan sesi",
-  "The daily summary email links it anyway.": "Günlük özet e-postası onu zaten bağlantılar."
+  "The daily summary email links it anyway.": "Günlük özet e-postası onu zaten bağlantılar.",
+  "Today's markets in about two minutes, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Bugünün piyasaları yaklaşık iki dakikada, mürettebat sunuyor. Her gün uygulamayı ilk açtığınızda oynar; ⚙️ Ayarlar'dan kapatabilirsiniz. Uygulama okumalarının özeti, tavsiye değildir.",
+  "Click an asset to open it on the chart, a funnel to open its table, or the Tides card for the macro picture.": "Grafikte açmak için bir varlığa, tablosunu açmak için bir huniye ya da makro tablo için Tides kartına tıklayın.",
+  "🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation), what it means for crypto and equity longs, and the next scheduled event. Click to open the Tides panel. A description, not a forecast.": "🌊 Tides: makro tablo (para ve faizler, güvenli limanlar, büyüme ve kredi, rotasyon), kripto ve hisse alış pozisyonları için ne anlama geldiği ve sıradaki planlı olay. Tides panelini açmak için tıkla. Bir tahmin değil, bir betimleme.",
+  "held {n} trading days": "{n} işlem günüdür sürüyor",
+  "Sea": "Deniz",
+  "{change} pts this week": "bu hafta {change} puan",
+  "Open Tides ›": "Tides'ı aç ›"
 }

@@ -42,6 +42,73 @@ def next_event(now: datetime | None = None, days: int = 14) -> dict | None:
     return (majors or ahead or [None])[0]
 
 
+def tides_card(snap: dict | None, now: datetime | None = None, min_height: int = 300) -> str:
+    """🌊 The Tides card for the top row of Quick Snapshot (24 Nov 2026): the tide and how long it has held, the sea
+    and the fear index as two tiles, the wind for crypto and for equity longs with what drives it, and the next storm
+    warning; the whole card opens the Tides panel. Tall enough to sit level with the video and the briefings beside
+    it. Empty when Tides has no reading."""
+    import macro_calendar as mc
+    import tides as td
+
+    now = now or datetime.now(timezone.utc)
+    t_ = (snap or {}).get("tide") or {}
+    if t_.get("status") != "ok" or t_.get("label") not in td.TIDE_WORDS:
+        return ""
+    name, plain, _icon = td.TIDE_WORDS[t_["label"]]
+    colour = {"in": "#22c55e", "out": "#ef4444"}.get(t_["label"], GREY)          # bright enough on both themes
+    arrow = {"in": "↗", "out": "↘"}.get(t_["label"], "↔")
+    tint = {"in": "rgba(21,128,61,.14)", "out": "rgba(185,28,28,.14)"}.get(t_["label"], "rgba(107,114,128,.12)")
+    held = t("held {n} trading days", n=t_.get("held_days")) if t_.get("held_days") else ""
+    tiles = []
+    sea = (snap or {}).get("sea") or {}
+    if sea.get("status") == "ok":
+        tiles.append(("⛵ " + t("Sea"), t(str(sea["state"]).capitalize()), t(str(sea.get("plain") or "").capitalize())))
+    fear = ((snap or {}).get("currents") or {}).get("fear") or {}
+    if fear.get("status") == "ok" and fear.get("value") is not None:
+        week = fear.get("change_7")
+        tiles.append(("😨 " + t("Fear (VIX)"), f"{float(fear['value']):.1f}",
+                      t("{change} pts this week", change=f"{float(week):+.1f}") if week is not None else ""))
+    tile_html = "".join(
+        "<div style='border:1px solid var(--ang-border);border-radius:9px;padding:7px 10px;min-width:0;'>"
+        f"<div class='ang-kicker' style='margin:0;'>{_e(k)}</div><div style='font-weight:700;'>{_e(v)}</div>"
+        f"<div class='ang-kicker' style='margin:0;font-weight:500;'>{_e(sub)}</div></div>" for k, v, sub in tiles)
+    winds = []
+    for key, icon in (("crypto", "🪙"), ("equity", "🏛️")):
+        w = ((snap or {}).get("winds") or {}).get(key)
+        if not w:
+            continue
+        word = str(w.get("wind") or "")
+        wc = {"tailwind": "#22c55e", "headwind": "#ef4444"}.get(word, GREY)
+        drivers = ", ".join(t(td.SPEC[k]["name"]).lower() for k in w.get("drivers") or [] if k in td.SPEC)
+        winds.append(f"<div style='font-size:.9rem;'>{icon} {_e(t(w.get('name') or key))}: "
+                     f"<b style='color:{wc};'>{_e(t(word))}</b>"
+                     + (f"<span class='ang-kicker' style='margin:0;'> · {_e(drivers)}</span>" if drivers else "")
+                     + "</div>")
+    e = next_event(now)
+    storm = ""
+    if e:
+        storm = ("<div style='display:flex;gap:8px;align-items:center;border-radius:9px;padding:7px 10px;"
+                 "background:rgba(245,165,36,.14);font-size:.9rem;'>"
+                 f"<span>{_e(mc.pennants(e['tier']) or '📅')}</span><span><b>{_e(e.get('short') or e['name'])}</b>"
+                 f"<span class='ang-kicker' style='margin:0;'> · {_e(mc.when_words(e['at'], now))}</span></span></div>")
+    tip = t("🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation), what it means for "
+            "crypto and equity longs, and the next scheduled event. Click to open the Tides panel. A description, "
+            "not a forecast.")
+    return (f"<button type='button' data-pick='tides' title='{_e(tip)}' style='{_BUTTON}'>"
+            f"<div class='ang-card' style='display:flex;flex-direction:column;gap:9px;min-height:{min_height}px;"
+            f"background:linear-gradient(165deg,{tint},transparent 62%),var(--ang-surface);'>"
+            f"<div class='ang-kicker' style='margin:0;'>🌊 {_e(t('Tides'))}</div>"
+            "<div style='display:flex;align-items:center;gap:12px;'>"
+            f"<div style='font-size:2.1rem;line-height:1;color:{colour};'>{arrow}</div>"
+            f"<div><div style='font-size:1.25rem;font-weight:800;line-height:1.1;'>{_e(t(name))}</div>"
+            f"<div class='ang-kicker' style='margin:0;font-weight:500;'>{_e(t(plain).capitalize())}"
+            + (f" · {_e(held)}" if held else "") + "</div></div></div>"
+            + (f"<div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;'>{tile_html}</div>" if tiles else "")
+            + "".join(winds) + storm
+            + f"<div style='margin-top:auto;text-align:right;font-weight:700;opacity:.75;'>{_e(t('Open Tides ›'))}</div>"
+            "</div></button>")
+
+
 def tides_line(snap: dict | None, now: datetime | None = None) -> str:
     """One clickable line: 🌊 tide (plain words) · sea state · next big event ›. Empty when Tides has no reading."""
     import macro_calendar as mc

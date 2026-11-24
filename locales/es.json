@@ -310,7 +310,6 @@
   "From {n} {coins} ({venue}) · {flicker}. Hover a stage chip for what it means.": "De {n} {coins} ({venue}) · {flicker}. Pasa el cursor sobre una ficha de etapa para ver qué significa.",
   "⏳ Not checked yet: the funnel runs {when}.": "⏳ Aún no comprobado: el embudo se ejecuta {when}.",
   "flagged": "señalados",
-  "Click an asset to open it on the chart, a funnel to open its table, or the Tides line for the macro picture.": "Haz clic en un activo para abrirlo en el gráfico, en un embudo para abrir su tabla, o en la línea de Tides para el panorama macro.",
   "Reports soon. Scores can swing around earnings.": "Publica resultados pronto. Las puntuaciones pueden oscilar en torno a los resultados.",
   "Next earnings report.": "Próxima publicación de resultados.",
   "Interactive Chart - {name}": "Gráfico interactivo - {name}",
@@ -2328,7 +2327,6 @@
   "Date": "Fecha",
   "written only": "solo escrito",
   "Not made yet today. It is made ready each morning.": "Aún no se ha hecho hoy. Está listo cada mañana.",
-  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Los mercados de hoy en unos 90 segundos, presentados por la tripulación. Se reproduce la primera vez que abres la app cada día; desactívalo en ⚙️ Ajustes. Un resumen de las lecturas de la app, no un consejo.",
   "{day} · {who} · {length}": "{day} · {who} · {length}",
   "**Daily video**": "**Vídeo del día**",
   "🎬 Play the daily video when I open the app": "🎬 Reproducir el vídeo del día al abrir la app",
@@ -2496,5 +2494,12 @@
   "Your daily summary email is sent at this time, and your Passage Plan is ready an hour before it.": "Tu correo de resumen diario se envía a esta hora, y tu Passage Plan está listo una hora antes.",
   "Email me when my Passage Plan is ready": "Envíame un correo cuando mi Passage Plan esté listo",
   "Passage Plan voice": "Voz del Passage Plan",
-  "The daily summary email links it anyway.": "El correo de resumen diario lo enlaza de todos modos."
+  "The daily summary email links it anyway.": "El correo de resumen diario lo enlaza de todos modos.",
+  "Today's markets in about two minutes, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Los mercados de hoy en unos dos minutos, presentados por la tripulación. Se reproduce la primera vez que abres la app cada día; desactívalo en ⚙️ Ajustes. Un resumen de las lecturas de la app, no un consejo.",
+  "Click an asset to open it on the chart, a funnel to open its table, or the Tides card for the macro picture.": "Haz clic en un activo para abrirlo en el gráfico, en un embudo para abrir su tabla, o en la tarjeta de Tides para el panorama macro.",
+  "🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation), what it means for crypto and equity longs, and the next scheduled event. Click to open the Tides panel. A description, not a forecast.": "🌊 Tides: el panorama macro (dinero y tipos, refugios, crecimiento y crédito, rotación), qué significa para los largos en cripto y acciones, y el próximo evento programado. Haz clic para abrir el panel de Tides. Una descripción, no un pronóstico.",
+  "held {n} trading days": "desde hace {n} sesiones",
+  "Sea": "Mar",
+  "{change} pts this week": "{change} pts esta semana",
+  "Open Tides ›": "Abrir Tides ›"
 }

@@ -310,7 +310,6 @@
   "From {n} {coins} ({venue}) · {flicker}. Hover a stage chip for what it means.": "Từ {n} {coins} ({venue}) · {flicker}. Di chuột qua thẻ giai đoạn để xem ý nghĩa.",
   "⏳ Not checked yet: the funnel runs {when}.": "⏳ Chưa kiểm tra: phễu chạy {when}.",
   "flagged": "được gắn cờ",
-  "Click an asset to open it on the chart, a funnel to open its table, or the Tides line for the macro picture.": "Nhấp vào tài sản để mở trên biểu đồ, vào phễu để mở bảng của nó, hoặc vào dòng Tides để xem bức tranh vĩ mô.",
   "Reports soon. Scores can swing around earnings.": "Sắp công bố kết quả. Điểm có thể dao động quanh kỳ công bố.",
   "Next earnings report.": "Kỳ công bố kết quả tiếp theo.",
   "Interactive Chart - {name}": "Biểu đồ tương tác - {name}",
@@ -2328,7 +2327,6 @@
   "Date": "Ngày",
   "written only": "chỉ bản viết",
   "Not made yet today. It is made ready each morning.": "Hôm nay chưa được tạo. Kế hoạch được chuẩn bị sẵn mỗi sáng.",
-  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Thị trường hôm nay trong khoảng 90 giây, do thủy thủ đoàn dẫn. Video phát khi bạn mở ứng dụng lần đầu mỗi ngày; tắt trong ⚙️ Cài đặt. Đây là bản tóm tắt các chỉ số của ứng dụng, không phải lời khuyên.",
   "{day} · {who} · {length}": "{day} · {who} · {length}",
   "**Daily video**": "**Video hằng ngày**",
   "🎬 Play the daily video when I open the app": "🎬 Phát video hằng ngày khi tôi mở ứng dụng",
@@ -2496,5 +2494,12 @@
   "Your daily summary email is sent at this time, and your Passage Plan is ready an hour before it.": "Email tóm tắt hằng ngày được gửi vào giờ này, và Passage Plan của bạn sẵn sàng trước đó một giờ.",
   "Email me when my Passage Plan is ready": "Gửi email cho tôi khi Passage Plan đã sẵn sàng",
   "Passage Plan voice": "Giọng đọc Passage Plan",
-  "The daily summary email links it anyway.": "Email tóm tắt hằng ngày vẫn luôn có đường dẫn tới nó."
+  "The daily summary email links it anyway.": "Email tóm tắt hằng ngày vẫn luôn có đường dẫn tới nó.",
+  "Today's markets in about two minutes, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "Thị trường hôm nay trong khoảng hai phút, do thủy thủ đoàn dẫn. Video phát khi bạn mở ứng dụng lần đầu mỗi ngày; tắt trong ⚙️ Cài đặt. Đây là bản tóm tắt các chỉ số của ứng dụng, không phải lời khuyên.",
+  "Click an asset to open it on the chart, a funnel to open its table, or the Tides card for the macro picture.": "Nhấp vào tài sản để mở trên biểu đồ, vào phễu để mở bảng của nó, hoặc vào thẻ Tides để xem bức tranh vĩ mô.",
+  "🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation), what it means for crypto and equity longs, and the next scheduled event. Click to open the Tides panel. A description, not a forecast.": "🌊 Tides: bức tranh vĩ mô (tiền và lãi suất, tài sản trú ẩn, tăng trưởng và tín dụng, luân chuyển), ý nghĩa đối với vị thế mua crypto và cổ phiếu, và sự kiện đã lên lịch tiếp theo. Nhấn để mở bảng Tides. Đây là mô tả, không phải dự báo.",
+  "held {n} trading days": "đã giữ {n} phiên giao dịch",
+  "Sea": "Biển",
+  "{change} pts this week": "{change} điểm tuần này",
+  "Open Tides ›": "Mở Tides ›"
 }

@@ -9591,7 +9591,7 @@ def _video_player(key: str, pick: bool = False, day: str | None = None) -> None:
     base = _secret("url")
     meta = _videos_meta(base) if base else {}
     days = sorted((d for d, v in meta.items() if isinstance(v, dict)), reverse=True)
-    tip = t("Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each "
+    tip = t("Today's markets in about two minutes, presented by the crew. It plays when you first open the app each "
             "day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.")
 
     def label(d: str) -> str:
@@ -13737,37 +13737,32 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             # a wide screen, one above the other on a phone.
             # Three boxes the same width side by side (21 Nov 2026), one above the other on a phone.
             # The video first, as at the top of the Logbook.
+            # Row 1 (Angus, 24 Nov 2026): the video, both spoken briefings in one box (the Morning Outlook above
+            # your Passage Plan), and the Tides card, sized to sit level with them.
             left, middle, right = st.columns(3)
             with left, st.container(key="snapshot_video"):
                 _video_player("snapshot")
             with middle, st.container(key="snapshot_forecast"):
                 _forecast_player("snapshot")
-            with right, st.container(key="snapshot_passage"):
+                st.markdown("<div style='border-top:1px solid var(--ang-border);margin:2px 0;'></div>",
+                            unsafe_allow_html=True)
                 _passage_player("snapshot", show_button=False)    # it is made each morning
+            with right:
+                try:
+                    import snapshot_view as _sv_top
+                    card = _sv_top.tides_card(_tides_snap())
+                except Exception as exc:
+                    print(f"Quick Snapshot Tides card failed: {exc}")
+                    card = ""
+                if card and _score_table(key="snapshot_tides_card", data=card,
+                                         on_picked_change=lambda: None).picked == "tides":
+                    _reveal_section("tides", "tides")
+                    st.rerun()                      # the Tides panel is outside this fragment
 
         try:
             _snapshot_listen()
         except Exception as exc:
             print(f"Quick Snapshot players failed: {exc}")
-        with _timed("market overview"):
-            try:
-                import market_overview
-                overview = load_market_overview()
-                strip = market_overview.overview_html(overview, trade_crypto, trade_equities)
-            except Exception as exc:
-                print(f"market overview failed: {exc}")
-                overview, strip = None, ""
-            if strip:
-                _section_timer(
-                    float((overview or {}).get("fetched_at") or 0) or None,
-                    market_overview.REFRESH_SECONDS, "timer_markets",
-                    t("Hover a card for what it measures. Shared for everyone and refreshed about every "
-                    "15 minutes. Stock prices can be delayed about 15 minutes; gold and oil are futures prices."),
-                    prefix=t("🌍 Markets"),
-                )
-                st.markdown(strip, unsafe_allow_html=True)
-            elif trade_crypto or trade_equities:
-                st.caption(t("🌍 Market overview is loading. It appears on the next update."))
         # Market cap still uses a short cache. Prices and sentiment come from the shared rows.
         nonce = st.session_state.data_nonce
 
@@ -14083,23 +14078,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             elif raw:
                 _select_chart_asset(raw)
 
-        try:
-            line = _sv.tides_line(_tides_snap())
-        except Exception as exc:
-            print(f"Quick Snapshot Tides line failed: {exc}")
-            line = ""
-        if line:
-            _snapshot_click(_score_table(key="snapshot_tides", data=line, on_picked_change=lambda: None).picked)
-
-        try:
-            tiles_html = _sv.funnel_tiles(_snapshot_funnels()) or _sv.no_funnels_tile(
-                "crypto" if trade_crypto else "equity")
-        except Exception as exc:
-            print(f"Quick Snapshot funnels failed: {exc}")
-            tiles_html = ""
-        if tiles_html:
-            _snapshot_click(_score_table(key="snapshot_funnels", data=tiles_html, on_picked_change=lambda: None).picked)
-
         def _trend_row(icon, word, row, kind):
             if not row or not row.get("key"):
                 return (f"<div style='display:flex;align-items:center;gap:8px;padding:6px 0;'>{icon} "
@@ -14122,23 +14100,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 f"A description, not a forecast.' style='flex:none;background:{bg};color:{color};padding:2px 8px;"
                 f"border-radius:4px;font-size:0.85rem;font-weight:600;'>{arrow} Trend {score:+.0f}</span>"
                 "</div></button>")
-
-        trend_cards = []
-        if trade_crypto:
-            trend_cards.append((t("🪙 Crypto · highest and lowest Trend in your watchlist"), crypto_top, crypto_bot, "Crypto",
-                                "snapshot_trend_crypto"))
-        if trade_equities:
-            trend_cards.append((t("🏛️ Equities · highest and lowest Trend in your watchlist"), stock_top, stock_bot, "Stock",
-                                "snapshot_trend_stock"))
-        if trend_cards:
-            for column, (title, top, bot, kind, key) in zip(st.columns(len(trend_cards)), trend_cards):
-                body = ("<div class='ang-card'>"
-                        f"<div class='ang-kicker' style='margin-bottom:4px;'>{html.escape(title)}</div>"
-                        + _trend_row("📈", "Highest", top, kind)
-                        + (_trend_row("📉", "Lowest", bot, kind) if bot is not top else "")
-                        + "</div>")
-                with column:
-                    _snapshot_click(_score_table(key=key, data=body, on_picked_change=lambda: None).picked)
 
         changed = _score_table(
             key="snapshot_changes",
@@ -14179,7 +14140,53 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         ),
                     )
 
-        st.caption(t("Click an asset to open it on the chart, a funnel to open its table, or the Tides line for "
+        # Rows 4 to 6 (Angus, 24 Nov 2026): the Trend extremes, your funnels, then the markets strip.
+        trend_cards = []
+        if trade_crypto:
+            trend_cards.append((t("🪙 Crypto · highest and lowest Trend in your watchlist"), crypto_top, crypto_bot, "Crypto",
+                                "snapshot_trend_crypto"))
+        if trade_equities:
+            trend_cards.append((t("🏛️ Equities · highest and lowest Trend in your watchlist"), stock_top, stock_bot, "Stock",
+                                "snapshot_trend_stock"))
+        if trend_cards:
+            for column, (title, top, bot, kind, key) in zip(st.columns(len(trend_cards)), trend_cards):
+                body = ("<div class='ang-card'>"
+                        f"<div class='ang-kicker' style='margin-bottom:4px;'>{html.escape(title)}</div>"
+                        + _trend_row("📈", "Highest", top, kind)
+                        + (_trend_row("📉", "Lowest", bot, kind) if bot is not top else "")
+                        + "</div>")
+                with column:
+                    _snapshot_click(_score_table(key=key, data=body, on_picked_change=lambda: None).picked)
+
+        try:
+            tiles_html = _sv.funnel_tiles(_snapshot_funnels()) or _sv.no_funnels_tile(
+                "crypto" if trade_crypto else "equity")
+        except Exception as exc:
+            print(f"Quick Snapshot funnels failed: {exc}")
+            tiles_html = ""
+        if tiles_html:
+            _snapshot_click(_score_table(key="snapshot_funnels", data=tiles_html, on_picked_change=lambda: None).picked)
+
+        with _timed("market overview"):
+            try:
+                import market_overview
+                overview = load_market_overview()
+                strip = market_overview.overview_html(overview, trade_crypto, trade_equities)
+            except Exception as exc:
+                print(f"market overview failed: {exc}")
+                overview, strip = None, ""
+            if strip:
+                _section_timer(
+                    float((overview or {}).get("fetched_at") or 0) or None,
+                    market_overview.REFRESH_SECONDS, "timer_markets",
+                    t("Hover a card for what it measures. Shared for everyone and refreshed about every "
+                    "15 minutes. Stock prices can be delayed about 15 minutes; gold and oil are futures prices."),
+                    prefix=t("🌍 Markets"),
+                )
+                st.markdown(strip, unsafe_allow_html=True)
+            elif trade_crypto or trade_equities:
+                st.caption(t("🌍 Market overview is loading. It appears on the next update."))
+        st.caption(t("Click an asset to open it on the chart, a funnel to open its table, or the Tides card for "
                    "the macro picture."))
 
     show_tides()                        # overview content: directly under Quick Snapshot, in both layouts

@@ -310,7 +310,6 @@
   "From {n} {coins} ({venue}) · {flicker}. Hover a stage chip for what it means.": "{n}の{coins}から（{venue}）· {flicker}。ステージチップにカーソルを合わせると意味が表示されます。",
   "⏳ Not checked yet: the funnel runs {when}.": "⏳ 未確認：ファネルは{when}に実行されます。",
   "flagged": "フラグ付き",
-  "Click an asset to open it on the chart, a funnel to open its table, or the Tides line for the macro picture.": "資産をクリックするとチャートで開き、ファネルをクリックすると表が開き、Tidesの行をクリックするとマクロの全体像が見られます。",
   "Reports soon. Scores can swing around earnings.": "まもなく決算。決算前後はスコアが大きく動くことがあります。",
   "Next earnings report.": "次回の決算発表。",
   "Interactive Chart - {name}": "インタラクティブチャート - {name}",
@@ -2328,7 +2327,6 @@
   "Date": "日付",
   "written only": "文章のみ",
   "Not made yet today. It is made ready each morning.": "今日はまだ作成されていません。毎朝用意されます。",
-  "Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "今日のマーケットを約90秒で、クルーがお届けします。毎日最初にアプリを開いたときに再生されます。⚙️ 設定でオフにできます。アプリの数値の要約であり、助言ではありません。",
   "{day} · {who} · {length}": "{day} · {who} · {length}",
   "**Daily video**": "**デイリー動画**",
   "🎬 Play the daily video when I open the app": "🎬 アプリを開いたときにデイリー動画を再生する",
@@ -2496,5 +2494,12 @@
   "Your daily summary email is sent at this time, and your Passage Plan is ready an hour before it.": "日次サマリーのメールはこの時刻に送信され、Passage Planはその1時間前に用意されます。",
   "Email me when my Passage Plan is ready": "Passage Planの準備ができたらメールで知らせる",
   "Passage Plan voice": "Passage Planの声",
-  "The daily summary email links it anyway.": "日次サマリーのメールにも必ずリンクされます。"
+  "The daily summary email links it anyway.": "日次サマリーのメールにも必ずリンクされます。",
+  "Today's markets in about two minutes, presented by the crew. It plays when you first open the app each day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.": "今日のマーケットを約2分で、クルーがお届けします。毎日最初にアプリを開いたときに再生されます。⚙️ 設定でオフにできます。アプリの数値の要約であり、助言ではありません。",
+  "Click an asset to open it on the chart, a funnel to open its table, or the Tides card for the macro picture.": "資産をクリックするとチャートで開き、ファネルをクリックすると表が開き、Tidesのカードをクリックするとマクロの全体像が見られます。",
+  "🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation), what it means for crypto and equity longs, and the next scheduled event. Click to open the Tides panel. A description, not a forecast.": "🌊 Tides：マクロの全体像（金融と金利、安全資産、成長と信用、ローテーション）、それが暗号資産と株式のロングにとって何を意味するか、そして次の予定イベント。クリックでTidesパネルが開きます。予測ではなく、状況の説明です。",
+  "held {n} trading days": "{n}営業日続いています",
+  "Sea": "海況",
+  "{change} pts this week": "今週 {change} pt",
+  "Open Tides ›": "Tidesを開く ›"
 }
