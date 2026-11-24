@@ -35,6 +35,12 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       LAB_KEY: ${{ secrets.AVATAR_LAB_KEY }}
+      # The same data keys as the app's background job, so the sentiment refresh before the video scores every reading
+      # (24 Nov 2026: without them it scored only the readings it could fetch).
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+      POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
+      COINALYZE_API_KEY: ${{ secrets.COINALYZE_API_KEY }}
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
@@ -94,6 +100,18 @@ jobs:
           for f in 1-Sunshine 2-Springtime 3-Cloudy 4-Rainy 5-Stormy; do
             git show "origin/reports:drive/1EKuY0a0mL0hsCwO98ok-K0t_Yh-L_hsm/drive/$f.mp3" > "music/$f.mp3"
           done
+      - name: App screens (fresh from the live app; a stored copy for any that fail)
+        timeout-minutes: 9
+        env:
+          DEMO_EMAIL: ${{ secrets.DEMO_EMAIL }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+        run: |
+          git fetch -q origin reports || true
+          for f in $(git ls-tree --name-only origin/reports daily_video/screens/ 2>/dev/null); do
+            git show "origin/reports:$f" > "video/daily/screens/$(basename "$f")"
+          done
+          NODE_PATH="$PWD/node_modules" timeout 420 node video/daily_screens.js video/daily/screens || echo "App screens: capture stopped; stored copies kept."
+          bash .github/scripts/save_to_reports.sh daily_video/screens video/daily/screens/*.jpg || true
       - name: Make the video
         id: make
         run: NODE_PATH="$PWD/node_modules" python daily_video.py --library lib/avatar_lab --music music --out out/daily_video --edition "${{ inputs.edition }}" --presenter "${{ inputs.presenter }}" ${{ inputs.publish && '--publish' || '' }}
