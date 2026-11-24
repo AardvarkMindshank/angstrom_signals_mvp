@@ -61,3 +61,15 @@ def test_tides_card_for_the_top_row():
     assert "data-pick='tides'" in card and "Tide going out" in card and "held 25 trading days" in card
     assert "26.6" in card and "+1.2 pts this week" in card and "headwind" in card and "Open Tides" in card
     assert sv.tides_card({"tide": {"status": "error"}}) == ""
+
+
+def test_funnel_tiles_crypto_left_equities_right_shorts_first():
+    import snapshot_view as sv
+
+    tiles = [{"id": i, "name": n, "market": m, "direction": d, "line": ""} for i, (n, m, d) in enumerate([
+        ("EqL", "equity", "long"), ("CrL", "crypto", "long"), ("EqS", "equity", "short"), ("CrS", "crypto", "short")])]
+    out = sv.funnel_tiles(tiles)
+    assert [out.index(n) for n in ("CrS", "CrL", "EqS", "EqL")] == sorted(out.index(n) for n in ("CrS", "CrL", "EqS", "EqL"))
+    assert out.count("flex:1 1 460px") == 2
+    one = sv.funnel_tiles([x for x in tiles if x["market"] == "crypto"])
+    assert "flex:1 1 100%" in one and "460px" not in one
