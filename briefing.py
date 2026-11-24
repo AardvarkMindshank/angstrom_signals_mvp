@@ -1,7 +1,7 @@
 """
 🎧 The spoken briefings (20 Nov 2026), in two kinds:
 
-* 🌍 The Morning forecast: the same for everyone, made twice a day: the Asia & Europe edition just after the US
+* 🌍 The Morning Outlook: the same for everyone, made twice a day: the Asia & Europe edition just after the US
   close, and the Americas edition before the New York morning. The main markets (S&P 500, Nasdaq, the dollar, gold,
   oil, the VIX), the top five coins, the markets' mood, the Tide and the events on the horizon. Shared files under
   general/ in the bucket, with one shared feed; the app and the daily email always give the newest edition, which is
@@ -268,7 +268,7 @@ def gather(supabase, user_id: str, prefs: dict, b: dict, now: datetime | None = 
     return facts
 
 
-# ---------------------------------------------------------------------------------------------- the Morning forecast
+# ---------------------------------------------------------------------------------------------- the Morning Outlook
 
 GENERAL = "general"                         # the shared folder in the bucket
 EDITIONS = {
@@ -403,6 +403,7 @@ def _candle_moves(kind: str, asset_id: str, load=None, now: datetime | None = No
         c = c[~c["forming"]] if "forming" in c else c
         c = c.dropna(subset=["close"])
         closes = [float(x) for x in c["close"].tolist()]
+        days = [i.date().isoformat() if hasattr(i, "date") else "" for i in c.index]
         last_day = c.index[-1].date().isoformat() if len(c) and hasattr(c.index[-1], "date") else None
     except Exception:
         return {}
@@ -410,11 +411,15 @@ def _candle_moves(kind: str, asset_id: str, load=None, now: datetime | None = No
         late = _late_session(kind, asset_id, load, last_day, now)
         if late:
             closes.append(late[1])
+            days.append(late[0])
             last_day = late[0]
     if len(closes) < 8:
         return {}
+    week = -8 if kind == "crypto" else -6
     return {"latest_price": round(closes[-1], 4), "change_1d": _pct(closes[-1], closes[-2]),
-            "change_7d": _pct(closes[-1], closes[-8 if kind == "crypto" else -6]), "last_day": last_day}
+            "change_7d": _pct(closes[-1], closes[week]), "last_day": last_day,
+            "week_closes": [round(x, 6) for x in closes[week:]],         # the closes the week's change spans
+            "week_days": days[week:]}
 
 
 def one_day_covers(kind: str, last_day: str | None, now: datetime) -> str:
@@ -447,7 +452,7 @@ def session_word(last_day: str | None) -> str:
 
 
 def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
-    """The facts for the Morning forecast, the same for everyone: the markets' mood, the main markets, the top five
+    """The facts for the Morning Outlook, the same for everyone: the markets' mood, the main markets, the top five
     coins, the Tide (with a storm warning) and the week's events."""
     now = now or datetime.now(timezone.utc)
     prefs = {"crypto_watchlist": dict(TOP_COINS), "stock_watchlist": dict(KEY_STOCKS), "settings": {}}
@@ -509,7 +514,7 @@ def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
 
 
 GENERAL_SYSTEM = (
-    "You write the script for the MarketNavi Morning forecast, a short spoken market briefing that every member "
+    "You write the script for the MarketNavi Morning Outlook, a short spoken market briefing that every member "
     "of the app hears, the same for everyone. MarketNavi is a market-signals app whose market-conditions feature "
     "is called Tides. Style it like the shipping forecast sailors listen to at dawn: calm, measured, a steady rhythm, "
     "each area of the market given in turn (the tide, the sea state, the winds, storm warnings on the horizon), with a "
@@ -525,7 +530,7 @@ GENERAL_SYSTEM = (
     "stretch and flow readings run from minus 100 to plus 100 (above zero leans up). A market's news mood is given as "
     "news_mood, from minus 100 to plus 100 (0 is mixed), with its words; say it that way. Asset news sentiment runs "
     "from 0 to 100, with 50 neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
-    "opening line. Open with \"This is the MarketNavi morning forecast, {edition}, for\" the day and date, follow "
+    "opening line. Open with \"This is the MarketNavi Morning Outlook, {edition}, for\" the day and date, follow "
     "the sections in the order given with a short spoken link between them, and close with one line saying this is a "
     "summary of the app's readings, not advice, then end with exactly \"Fair winds and following seas.\" Write about {words} "
     "words. Reply with the script text only."
@@ -545,7 +550,7 @@ def general_prompt(facts: dict, edition: str, day: datetime) -> tuple[str, list[
 
 def plain_general(facts: dict, edition: str, day: datetime) -> str:
     """The forecast without AI, from the facts alone."""
-    out = [f"This is the MarketNavi morning forecast, {EDITIONS[edition]['name']}, for {day.strftime('%A %d %B')}."]
+    out = [f"This is the MarketNavi Morning Outlook, {EDITIONS[edition]['name']}, for {day.strftime('%A %d %B')}."]
     for m in facts.get("markets") or []:
         if mood_line(m):
             out.append(mood_line(m))
@@ -557,12 +562,12 @@ def plain_general(facts: dict, edition: str, day: datetime) -> str:
     out += [str(x) for x in (facts.get("tide") or [])[:3]]
     for e in (facts.get("events") or [])[:4]:
         out.append(f"{e['what']}, {e['when_utc']} UTC.")
-    out.append("That's the forecast. It summarises the app's readings and is not advice. Fair winds and following seas.")
+    out.append("That's the outlook. It summarises the app's readings and is not advice. Fair winds and following seas.")
     return " ".join(out)
 
 
 def write_general(supabase, facts: dict, edition: str, day: datetime, chat=None) -> tuple[str, str]:
-    """(script, who wrote it) for one edition of the Morning forecast."""
+    """(script, who wrote it) for one edition of the Morning Outlook."""
     import ai_providers
 
     provider = ai_providers.pick("briefing", ai_providers.app_choice(supabase, "briefing"))
@@ -576,7 +581,7 @@ def write_general(supabase, facts: dict, edition: str, day: datetime, chat=None)
             if len(text.split()) >= 80:
                 return text, provider
         except Exception as exc:
-            print(f"Forecast script by AI failed: {str(exc)[:160]}")
+            print(f"Outlook script by AI failed: {str(exc)[:160]}")
     return clean(plain_general(facts, edition, day)), "template"
 
 
@@ -669,7 +674,7 @@ SYSTEM = (
     "never call it today's move unless it says today. A market's news mood is given as news_mood, "
     "from minus 100 to plus 100 (0 is mixed), with its words; say it that way. Asset news sentiment runs from 0 to "
     "100, with 50 neutral. The overall weather given (sunny, fair, changeable, rough or stormy) sets the tone of the "
-    "opening line. Open with \"This is the MarketNavi morning forecast for\" the day and date, follow the sections "
+    "opening line. Open with \"This is the MarketNavi Morning Outlook for\" the day and date, follow the sections "
     "in the order given with a short spoken link between them, and close with one line saying this is a summary of "
     "the app's readings, not advice, then end with exactly \"Fair winds and following seas.\" Write about {words} words. Reply "
     "with the script text only."
@@ -687,7 +692,7 @@ def prompt(facts: dict, b: dict, day: datetime, name: str = "") -> tuple[str, li
 
 def plain_script(facts: dict, b: dict, day: datetime) -> str:
     """A script without AI, from the facts alone (used when the AI is unavailable)."""
-    out = [f"This is the MarketNavi morning forecast for {day.strftime('%A %d %B')}."]
+    out = [f"This is the MarketNavi Morning Outlook for {day.strftime('%A %d %B')}."]
     for m in facts.get("markets") or []:
         out.append(mood_line(m))
         if m.get("summary"):
@@ -707,7 +712,7 @@ def plain_script(facts: dict, b: dict, day: datetime) -> str:
         out.append(f"Your funnel {f['funnel']} has {n} candidate{'s' if n != 1 else ''}.")
     for e in facts.get("events") or []:
         out.append(f"{e['what']}, {e['when_utc']} UTC.")
-    out.append("That's the forecast. It summarises the app's readings and is not advice. Fair winds and following seas.")
+    out.append("That's the outlook. It summarises the app's readings and is not advice. Fair winds and following seas.")
     return " ".join(x for x in out if x)
 
 
@@ -773,7 +778,7 @@ def stored_json(supabase, path: str) -> dict:
 
 def listen_links(supabase, base: str, settings: dict | None, plan: str, now: datetime | None = None
                  ) -> list[tuple[str, str]]:
-    """[(words, url)] for the daily email: the newest Morning forecast, and, for Pro and Elite, the spoken Passage
+    """[(words, url)] for the daily email: the newest Morning Outlook, and, for Pro and Elite, the spoken Passage
     Plan only when it is today's in the member's own time zone (23 Nov 2026: Monday's email linked Sunday's plan,
     made 18 hours before; one not made yet today is left out rather than an old one linked)."""
     now = now or datetime.now(timezone.utc)
@@ -782,7 +787,7 @@ def listen_links(supabase, base: str, settings: dict | None, plan: str, now: dat
     eid = newest(general)
     if eid and base:
         name = EDITIONS.get(eid[11:], {}).get("name", "")
-        out.append((f"🌍 The Morning forecast ({name})" if name else "🌍 The Morning forecast",
+        out.append((f"🌍 The Morning Outlook ({name})" if name else "🌍 The Morning Outlook",
                     public_url(base, f"{GENERAL}/{eid}.mp3")))
     b = settings_of(settings)
     if b.get("token") and base and personal_allowed(plan):

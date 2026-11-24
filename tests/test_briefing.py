@@ -40,7 +40,7 @@ def test_plain_script_and_cleaning():
              "watchlist": [{"name": "Bitcoin", "change_1d": -2.34, "news_sentiment_0_to_100": 38}],
              "events": [{"what": "Fed rate decision", "when_utc": "Wednesday 10 December, 19:00"}]}
     text = briefing.plain_script(facts, briefing.settings_of({}), datetime(2026, 11, 20))
-    assert text.startswith("This is the MarketNavi morning forecast for Friday 20 November")
+    assert text.startswith("This is the MarketNavi Morning Outlook for Friday 20 November")
     assert "-2.3 percent" in text and "not advice" in text
     assert briefing.clean("**Hi** 🚀 see https://x.y #now") == "Hi see now"
 
@@ -180,8 +180,8 @@ def test_digest_lists_the_listen_links():
     import digest
 
     _, page, plain = digest.render_digest([], [], {"digest_tz": "UTC"}, "https://app",
-                                          listen=[("🌍 The Morning forecast", "https://x/general/a.mp3")])
-    assert "https://x/general/a.mp3" in page and "🌍 The Morning forecast: https://x/general/a.mp3" in plain
+                                          listen=[("🌍 The Morning Outlook", "https://x/general/a.mp3")])
+    assert "https://x/general/a.mp3" in page and "🌍 The Morning Outlook: https://x/general/a.mp3" in plain
 
 
 def test_tag_line_after_the_sign_off():

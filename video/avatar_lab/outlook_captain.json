@@ -1,0 +1,50 @@
+{
+ "about": "24 Nov 2026: the welcome and sign-off lines that said 'forecast' now say 'outlook' (the app's name for the daily briefing). Same voices, portraits and prompts as the clips they replace; packed after the old packs so these win. The Captain's (private portrait: run with in_captain).",
+ "jobs": [
+  {
+   "id": "say_welcome_1",
+   "speak": "Good morning, and welcome to the morning outlook.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "cap_welcome_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_welcome_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, warm, welcoming expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "say_welcome_2",
+   "speak": "Good morning, all hands. Here's your morning outlook.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "cap_welcome_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_welcome_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, cheerful, welcoming expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "say_signoff_1",
+   "speak": "That's the outlook. Fair winds and following seas.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "cap_signoff_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_signoff_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, warm, smiling expression, natural head movement and blinking."
+   }
+  }
+ ]
+}

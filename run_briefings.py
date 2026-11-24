@@ -5,7 +5,7 @@
     python run_briefings.py                         # makes them
     python run_briefings.py --sample out.mp3 general|passage   # a sample from today's readings, saved nowhere
 
-🌍 The Morning forecast (the same for everyone): each edition once a day (briefing.EDITIONS), under general/ in the
+🌍 The Morning Outlook (the same for everyone): each edition once a day (briefing.EDITIONS), under general/ in the
 "briefings" bucket, with episodes.json and one shared feed.xml (the last 28 episodes).
 
 🧭 The spoken Passage Plan (Pro and Elite, when switched on or asked for): the member's newest written Passage Plan
@@ -171,7 +171,7 @@ def _episodes(db, url: str, token: str) -> list[dict]:
         except (TypeError, ValueError):
             made = datetime.fromisoformat(day).replace(hour=6, tzinfo=timezone.utc)
         label = datetime.fromisoformat(day).strftime("%A %d %B %Y")
-        title = (f"Morning forecast, {briefing.EDITIONS[edition]['name']}, {label}"
+        title = (f"Morning Outlook, {briefing.EDITIONS[edition]['name']}, {label}"
                  if edition in briefing.EDITIONS else None)
         out.append({"day": eid, "label": label, "title": title, "made": made,
                     "pub": made.strftime("%a, %d %b %Y %H:%M:%S +0000"),
@@ -274,7 +274,7 @@ def make_one(db, url: str, row: dict, now: datetime) -> bool:
 
 
 def make_general(db, url: str, edition: str, eid: str, now: datetime) -> bool:
-    """One edition of the Morning forecast, shared by everyone."""
+    """One edition of the Morning Outlook, shared by everyone."""
     import briefing_audio
 
     folder = briefing.GENERAL
@@ -305,16 +305,16 @@ def make_general(db, url: str, edition: str, eid: str, now: datetime) -> bool:
     _upload(db, f"{folder}/episodes.json", json.dumps(meta).encode(), "application/json")
     episodes = [e for e in _episodes(db, url, folder) if e["day"] not in old]
     _upload(db, f"{folder}/feed.xml", briefing.feed_xml(
-        url, "general", episodes, title="MarketNavi Morning forecast",
-        about="The MarketNavi Morning forecast: the main markets, the top coins, the Tide and the week's events, "
-              "twice a day. A summary of the app's readings, not advice.", item="Morning forecast").encode(),
+        url, "general", episodes, title="MarketNavi Morning Outlook",
+        about="The MarketNavi Morning Outlook: the main markets, the top coins, the Tide and the week's events, "
+              "twice a day. A summary of the app's readings, not advice.", item="Morning Outlook").encode(),
         "application/rss+xml")
-    print(f"Morning forecast made: {edition}, {round(seconds)} s, script by {writer}, weather {weather}")
+    print(f"Morning Outlook made: {edition}, {round(seconds)} s, script by {writer}, weather {weather}")
     return True
 
 
 def sample(out: str, kind: str = "general") -> int:
-    """A sample from today's real readings, saved to no account: "general" (the Morning forecast, the edition due
+    """A sample from today's real readings, saved to no account: "general" (the Morning Outlook, the edition due
     next) or "passage" (a Passage Plan for a made-up member watching three coins, not saved)."""
     import ai_providers
     import briefing_audio
@@ -364,7 +364,7 @@ def main() -> int:
         try:
             make_general(db, url, edition, eid, now)
         except Exception as exc:
-            print(f"The Morning forecast failed ({edition}): {type(exc).__name__}: {str(exc)[:200]}")
+            print(f"The Morning Outlook failed ({edition}): {type(exc).__name__}: {str(exc)[:200]}")
     made = 0
     for row in rows:
         try:

@@ -9693,7 +9693,7 @@ if not _POPOUT_VIEW:
 
 
 def _forecast_player(key: str, pick: bool = False, day: str | None = None) -> None:
-    """🌍 The Morning forecast (the same for everyone). Quick Snapshot: the newest edition, the day beside the name.
+    """🌍 The Morning Outlook (the same for everyone). Quick Snapshot: the newest edition, the day beside the name.
     Logbook (pick): the name, a date selector over the week kept, then the player and Read it, like the Passage Plan."""
     base = _secret("url")
     meta = _briefing_meta(base, briefing.GENERAL) if base else {}
@@ -9709,14 +9709,14 @@ def _forecast_player(key: str, pick: bool = False, day: str | None = None) -> No
                  edition=t(briefing.EDITIONS.get(e[11:], {}).get("name", "")), length=_clock(m.get("seconds")))
 
     if not eid:
-        _briefing_title("🌍 " + t("Morning forecast"), "", tip)
+        _briefing_title("🌍 " + t("Morning Outlook"), "", tip)
         st.caption(t("The first edition is on its way."))
         return
     if day is not None:                                  # Logbook: that day's editions, newest first
         ids = sorted((k for k, v in meta.items() if isinstance(v, dict) and k[:10] == day),
                      key=lambda k: str((meta.get(k) or {}).get("made_at") or ""), reverse=True)
         if not ids:
-            _briefing_title("🌍 " + t("Morning forecast"), "", tip)
+            _briefing_title("🌍 " + t("Morning Outlook"), "", tip)
             st.caption(t("None for this day."))
             return
         eid = ids[0]
@@ -9724,14 +9724,14 @@ def _forecast_player(key: str, pick: bool = False, day: str | None = None) -> No
             eid = st.segmented_control(
                 t("Edition"), ids, default=ids[0], key=f"forecast_edition_{key}_{day}", label_visibility="collapsed",
                 format_func=lambda k: t(briefing.EDITIONS.get(k[11:], {}).get("name", k[11:]))) or ids[0]
-        _briefing_title("🌍 " + t("Morning forecast"), label(eid), tip)
+        _briefing_title("🌍 " + t("Morning Outlook"), label(eid), tip)
     elif pick:
-        _briefing_title("🌍 " + t("Morning forecast"), "", tip)
+        _briefing_title("🌍 " + t("Morning Outlook"), "", tip)
         ids = sorted((k for k, v in meta.items() if isinstance(v, dict)),
                      key=lambda k: str((meta.get(k) or {}).get("made_at") or ""), reverse=True)
         eid = _briefing_pick(key, ids, {k: label(k) for k in ids})
     else:
-        _briefing_title("🌍 " + t("Morning forecast"), label(eid), tip)
+        _briefing_title("🌍 " + t("Morning Outlook"), label(eid), tip)
     st.audio(_version(briefing.public_url(base, f"{briefing.GENERAL}/{eid}.mp3"), (meta.get(eid) or {}).get("made_at")),
              format="audio/mpeg")
     with st.expander("📜 " + t("Read it"), expanded=False):
@@ -9741,7 +9741,7 @@ def _forecast_player(key: str, pick: bool = False, day: str | None = None) -> No
 def _passage_player(key: str, show_button: bool = True, pick: bool = False, day: str | None = None) -> None:
     """🧭 The spoken Passage Plan (Pro and Elite), or a line saying it comes with Pro. Quick Snapshot: today's, the day
     beside the name. Logbook (pick): the name, a date selector over the week kept (spoken or written), then the player
-    and Read it, like the Morning forecast."""
+    and Read it, like the Morning Outlook."""
     import navigator
 
     tip = t("Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the "
@@ -9809,7 +9809,7 @@ def _passage_player(key: str, show_button: bool = True, pick: bool = False, day:
 
 
 def _logbook_days() -> list[str]:
-    """Every day the Logbook has something for (video, Morning forecast or Passage Plan), newest first."""
+    """Every day the Logbook has something for (video, Morning Outlook or Passage Plan), newest first."""
     base = _secret("url")
     if not base:
         return []
@@ -9824,7 +9824,7 @@ def _logbook_days() -> list[str]:
 
 def _logbook_date() -> str:
     """📓 The Logbook's one date, at the top: Today, Yesterday, or a date picked back to the oldest one kept. The video,
-    the Morning forecast and the Passage Plan below all follow it."""
+    the Morning Outlook and the Passage Plan below all follow it."""
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
     today = briefing.local_now(briefing.settings_of(stored)["zone"]).date()
     days = _logbook_days()
@@ -9864,7 +9864,7 @@ def _logbook_date() -> str:
 
 @st.fragment
 def _logbook_panel() -> None:
-    """📓 The Logbook's Passage Plan box (title, date selector, player, Read it: the same as the Morning forecast box
+    """📓 The Logbook's Passage Plan box (title, date selector, player, Read it: the same as the Morning Outlook box
     above it), then its settings and podcast feeds."""
     with st.container(key="logbook_passage"):
         _passage_player("logbook", show_button=False, day=st.session_state.get("logbook_day"))   # made each morning
@@ -9898,7 +9898,7 @@ def _logbook_panel() -> None:
                          "can listen, so keep it to yourself. Spotify can't take private feeds."))
             st.caption("🧭 " + t("Your Passage Plan"))
             st.code(briefing.public_url(base, f"{b['token']}/feed.xml"), language=None)
-            st.caption("🌍 " + t("Morning forecast"))
+            st.caption("🌍 " + t("Morning Outlook"))
             st.code(briefing.public_url(base, f"{briefing.GENERAL}/feed.xml"), language=None)
             if st.button("🔄 " + t("Make a new private link"), key="briefing_new_link",
                          help=t("The old link stops getting new plans.")):
@@ -13725,7 +13725,7 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
         @st.fragment
         def _snapshot_listen():
             # 🎧 The two spoken briefings first (21 Nov 2026: where a member starts the day), each in its own box with
-            # the same layout: the Morning forecast (everyone) and your Passage Plan (Pro and Elite). Side by side on
+            # the same layout: the Morning Outlook (everyone) and your Passage Plan (Pro and Elite). Side by side on
             # a wide screen, one above the other on a phone.
             # Three boxes the same width side by side (21 Nov 2026), one above the other on a phone.
             # The video first, as at the top of the Logbook.
@@ -17336,7 +17336,7 @@ if _POPOUT_VIEW == "advisor":
     st.stop()
 
 if _POPOUT_VIEW == "logbook":
-    # 📓 The Logbook, in the left pull-out (inpanel=1) or its own window: the Passage Plan, the Morning forecast.
+    # 📓 The Logbook, in the left pull-out (inpanel=1) or its own window: the Passage Plan, the Morning Outlook.
     if str(st.query_params.get("inpanel") or "") != "1":
         st.markdown("### 📓 " + t("Logbook"))
     _day = _logbook_date()

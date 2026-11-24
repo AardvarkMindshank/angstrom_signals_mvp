@@ -445,7 +445,7 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
             subject = t('Angstrom daily summary: {n} funnel Candidate{if_n_1_else_s}', n=n, if_n_1_else_s='' if n == 1 else 's')
 
     if listen:
-        # 🎧 The spoken briefings (briefing.listen_links): the newest Morning forecast, and your Passage Plan.
+        # 🎧 The spoken briefings (briefing.listen_links): the newest Morning Outlook, and your Passage Plan.
         links = "".join(
             f'<a href="{html.escape(url, quote=True)}" style="display:inline-block;margin:4px 8px 4px 0;'
             f'padding:8px 14px;border-radius:999px;background:#eef2ff;color:#3730a3;font-weight:600;'

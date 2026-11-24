@@ -1,7 +1,7 @@
 """
 📓 The Logbook as a pull-out on the left edge (20 Nov 2026), the mirror of the ✨ AI pull-out on the right: a 📓 handle
 just under the sidebar's handle slides out a panel with the Logbook in it (today's Passage Plan, written and spoken,
-the plans before it, the Morning forecast, and the spoken plan's settings). Your trades will join it.
+the plans before it, the Morning Outlook, and the spoken plan's settings). Your trades will join it.
 
 Like the AI panel, the panel holds the Logbook page itself (?view=logbook&inpanel=1) in a frame, made the first time
 it is opened and kept afterwards, so a playing briefing carries on when the panel is closed. The ⧉ button opens the
@@ -17,7 +17,7 @@ from i18n import t
 
 _COMPONENT: list = []
 
-TIP = i18n.mark("📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.")
+TIP = i18n.mark("📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.")
 
 POP_SVG = ("<svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' fill='none' stroke='currentColor' "
            "stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4 10 14'/>"

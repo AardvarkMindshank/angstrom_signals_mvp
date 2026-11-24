@@ -16,11 +16,15 @@ def _narr(kinds):
     return {k: {"file": f"{k}.wav", "seconds": 5.0} for k in kinds}
 
 
-def test_weekday_order_has_the_story_and_equities():
-    segs = dv.timeline(_caps(CAPS), _narr(("date", "story", "tides", "equities", "crypto", "horizon", "close")))
+def test_weekday_order_is_the_tide_the_story_then_each_market_news_first():
+    """The Morning Outlook (24 Nov 2026): the Tide, the story of the day, then each market's sentiment card and its
+    numbers."""
+    segs = dv.timeline(_caps(CAPS), _narr(("date", "tides", "story", "stock_mood", "equities", "crypto_mood", "crypto",
+                                           "horizon", "close")))
     kinds = [s["kind"] for s in segs]
-    assert kinds[:5] == ["welcome", "date", "weather", "sign_story", "story"]
-    assert "equities" in kinds and kinds[-2:] == ["signoff", "close"]
+    assert kinds[:7] == ["welcome", "date", "weather", "sign_tides", "tides", "sign_story", "story"]
+    assert kinds[7:13] == ["sign_equities", "stock_mood", "equities", "sign_crypto", "crypto_mood", "crypto"]
+    assert kinds[-2:] == ["signoff", "close"]
     assert all(b["start"] > a["end"] for a, b in zip(segs, segs[1:]))
 
 
@@ -44,7 +48,8 @@ def test_template_story_picks_the_biggest_mover():
 
 def test_ai_sections_need_a_story():
     reply = json.dumps({"headline": "h", "story": {"title": "t", "text": "x y", "asset": "Bitcoin"},
-                        "tides": "a", "equities": "b", "crypto": "c", "horizon": "d"})
+                        "tides": "a", "equities": "b", "crypto": "c", "horizon": "d",
+                        "stock_mood": "s", "crypto_mood": "m"})
 
     class DB:
         pass
@@ -55,6 +60,7 @@ def test_ai_sections_need_a_story():
     try:
         got, who = dv.write_sections(DB(), {}, chat=lambda *a, **k: (reply, True))
         assert who == "grok" and got["story"]["asset"] == "Bitcoin"
+        assert got["stock_mood"] == "s" and got["crypto_mood"] == "m"
         bad = json.dumps({"headline": "h", "tides": "a", "equities": "b", "crypto": "c", "horizon": "d"})
         got, who = dv.write_sections(DB(), {"cryptos": [{"name": "Ether", "change_1d": 3.0}]},
                                      chat=lambda *a, **k: (bad, True))
@@ -161,7 +167,11 @@ def test_figures_cover_the_same_week_and_the_mood_matches_the_app():
     def load(kind, aid, interval, rng):
         asked.append((interval, rng))
         return {"candles": pd.DataFrame({"close": [float(i) for i in 1 + pd.RangeIndex(20)], "forming": False})}
-    assert len(dv._spark(load, "crypto", "bitcoin")) == 20 and asked == [("1h", "7D")]
+    # The line is the week's daily closes, the same ones its changes come from: 8 days for a coin, 6 sessions for a
+    # share (24 Nov 2026).
+    assert dv._spark(load, "crypto", "bitcoin") == [13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0]
+    assert asked == [("1D", "3M")]
+    assert len(dv._spark(load, "equity", "SPY")) == 6
     closes = list(range(100, 110))                     # 10 daily closes
     daily = lambda *a: {"candles": pd.DataFrame({"close": [float(c) for c in closes], "forming": False})}  # noqa: E731
     assert briefing._candle_moves("equity", "SPY", daily)["change_7d"] == round((109 / 104 - 1) * 100, 2)
@@ -191,7 +201,8 @@ def test_moves_name_their_session_and_today_is_sent_back():
     assert briefing.session_word("2026-11-20") == "Fri"
 
     good = {"headline": "Up on Friday", "story": {"title": "t", "text": "Ether rose over the last 24 hours.", "asset": ""},
-            "tides": "x", "equities": "On Friday the S&P 500 rose.", "crypto": "y", "horizon": "z"}
+            "tides": "x", "equities": "On Friday the S&P 500 rose.", "crypto": "y", "horizon": "z",
+            "stock_mood": "n", "crypto_mood": "m"}
     bad = {**good, "equities": "The S&P 500 is up today."}
     replies = [json.dumps(bad), json.dumps(good)]
     old = ai_providers.available, ai_providers.app_choice
@@ -279,3 +290,93 @@ def test_wave_bloopers_only_in_rough_weather():
     assert not any(p and "wave" in p["file"] for p in calm)
     rough = [dv.blooper_for(datetime(2027, 1, 1) + timedelta(days=i), "cap", None, sections, "stormy") for i in range(400)]
     assert any(p and "wave" in p["file"] for p in rough)
+
+
+def _report(score, lead=None, summary="Headlines are about Nvidia. Readings show fear."):
+    return {"ok": True, "score": score, "summary": summary, "lead": lead,
+            "headlines": [{"title": "Nasdaq jumps 7%", "source": "FT", "score": 95}],
+            "gauges": [{"items": [{"name": "CBOE VIX", "value": "26.62", "detail": "Down 9.27 points", "score": 55},
+                                  {"name": "Old", "value": "1", "score": 50, "stale": True}]}]}
+
+
+def test_the_cards_are_read_as_the_app_shows_them_and_the_bigger_story_leads():
+    stock_lead = {"title": "Nasdaq jumps 7% as Nvidia shares soar", "source": "FT", "why": "Huang is back.",
+                  "moves": [{"name": "S&P 500", "change_1d": 4.71}, {"name": "Nasdaq 100", "change_1d": 7.0}]}
+    crypto_lead = {"title": "Bitcoin ETF exodus", "source": "Bloomberg", "why": "Money left the funds.",
+                   "moves": [{"name": "Bitcoin", "change_1d": 0.0}, {"name": "Ether", "change_1d": -0.79}]}
+    views = {"stock": dv.mood_view(_report(61, stock_lead)), "crypto": dv.mood_view(_report(41, crypto_lead))}
+    v = views["stock"]
+    assert v["score"] == 22 and v["words"] == "bullish" and v["summary"] == "Headlines are about Nvidia."
+    assert [r["name"] for r in v["readings"]] == ["CBOE VIX"]                 # out-of-date readings left out
+    assert dv.top_story(views)["market"] == "stock"
+    assert dv.top_story(views, weekend=True)["market"] == "crypto"           # stocks are shut at weekends
+    quiet = {"stock": dv.mood_view(_report(50, {"quiet": True, "why": "Nothing."})), "crypto": None}
+    assert dv.top_story(quiet) is None
+    assert dv.mood_view(None) is None
+
+
+def test_every_number_in_the_script_must_be_the_apps():
+    known = dv.known_numbers({"change_1d": 4.71, "price": 60354.2, "readings": [{"value": "26.62",
+                                                                                 "detail": "Down 9.27 points"}],
+                              "score": 22, "event": "Friday 04 December, 13:30", "change_7d": -2.39})
+    ok = ("The S&P 500 rose 4.7 percent on Monday, about 5 percent, and Bitcoin sits near 60,354 dollars, or 60.4 "
+          "thousand. The VIX fell 9.3 points to 26.6. Plus 22, bullish. Down 2.4 percent this week. Jobs on the 4th "
+          "of December at 13:30, in 2026.")
+    assert dv.unknown_numbers(ok, known) == []
+    assert dv.unknown_numbers("The Nasdaq rose 8.3 percent and Bitcoin hit 70,000 dollars.", known) == ["8.3", "70,000"]
+
+
+def test_a_number_not_in_the_apps_data_is_sent_back_then_the_template():
+    import ai_providers
+
+    base = {"headline": "Up", "story": {"title": "t", "text": "Stocks rose 4.7 percent on Monday.", "asset": ""},
+            "tides": "x", "stock_mood": "Plus 22.", "equities": "e", "crypto_mood": "m", "crypto": "c", "horizon": "z"}
+    wrong = {**base, "equities": "The Nasdaq rose 9.9 percent on Monday."}
+    facts = {"key_markets": [{"name": "S&P 500 (the SPY fund)", "value": None, "change_1d": 4.71,
+                              "session_day": "2026-11-23"}], "cryptos": []}
+    views = {"stock": dv.mood_view(_report(61)), "crypto": None}
+    old = ai_providers.available, ai_providers.app_choice
+    ai_providers.available, ai_providers.app_choice = (lambda p: True), (lambda db, k: "grok")
+    try:
+        replies = [json.dumps(wrong), json.dumps(base)]
+        got, who = dv.write_sections(None, facts, chat=lambda *a, **k: replies.pop(0), views=views)
+        assert who == "grok" and got["equities"] == "e" and not replies
+        got, who = dv.write_sections(None, facts, chat=lambda *a, **k: json.dumps(wrong), views=views)
+        assert who == "template"
+    finally:
+        ai_providers.available, ai_providers.app_choice = old
+
+
+def test_the_crew_skip_their_first_story_line_now_the_tide_comes_first():
+    clips = dict(dv.captain_clips("rough", random.Random(3), who="mate"))
+    assert clips["sign_story"] == "mate_sign_story_2_1.mp4"
+    order = [k for k, _ in dv.captain_clips("rough", random.Random(3), who="mate")]
+    assert order.index("sign_tides") < order.index("sign_story")
+
+
+def test_the_close_asks_people_to_join_the_beta():
+    assert "marketnavi.ai" in dv.CTA_WORDS and "dot A-I." in dv.CTA_SPOKEN and "listen to or read" in dv.CTA_SPOKEN
+    assert dv.CLOSE_VOICE == "bf_emma"
+
+
+def test_a_faint_hum_after_the_last_word_is_cut_too(tmp_path):
+    """24 Nov 2026: the Deckhand's lips moved on after his sign-off, over a faint hum rather than silence."""
+    import subprocess
+
+    clip = tmp_path / "hum.mp4"
+    subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "sine=frequency=220:duration=2", "-f", "lavfi",
+                    "-i", "anoisesrc=amplitude=0.004:duration=2", "-filter_complex",
+                    "[0:a]volume=0.8[a];[a][1:a]concat=n=2:v=0:a=1[o]", "-map", "[o]", "-c:a", "aac", str(clip)],
+                   check=True)
+    assert 1.9 < dv.speech_seconds(clip) < 2.6                      # the 2 s of voice and the short tail
+
+
+def test_numbers_said_in_words_are_checked_too():
+    """24 Nov 2026: the script said "four point seven percent" in words, which a digits-only check never saw."""
+    text = ("Nasdaq jumped nearly seven percent and the S&P rose four point seven percent; minus twenty five; "
+            "sixty thousand four hundred dollars; one regulatory note; the twenty-fourth of November.")
+    assert dv.digits_for_words(text) == ("Nasdaq jumped nearly 7 percent and the S&P rose 4.7 percent; minus 25; "
+                                         "60400 dollars; one regulatory note; the twenty-fourth of November.")
+    known = dv.known_numbers({"a": 7.0, "b": 4.71, "c": -25, "d": 60354})
+    assert dv.script_numbers_problems({"x": text}, known) == {}
+    assert dv.script_numbers_problems({"x": "It rose nine point nine percent."}, known) == {"x": ["9.9"]}

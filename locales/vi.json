@@ -2301,14 +2301,12 @@
   "Listen in a podcast app": "Nghe trong ứng dụng podcast",
   "Make a new private link": "Tạo đường link riêng mới",
   "🎧 Spoken briefing scripts": "🎧 Kịch bản bản tin nói",
-  "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Viết Dự báo buổi sáng dùng chung, và các Passage Plan mà tiến trình nền viết cho bản kế hoạch nói khi thành viên chưa tự viết. Chạy trên tiến trình nền, nơi có khóa Grok, ChatGPT và Gemini.",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "Giống nhau cho mọi người, hai lần mỗi ngày: số châu Á & châu Âu ngay sau khi thị trường Mỹ đóng cửa, và số châu Mỹ trước buổi sáng New York. Bạn luôn nhận số mới nhất, tức số làm cho buổi sáng của bạn. Các thị trường chính, năm đồng coin hàng đầu, Tide và các sự kiện trong tuần. Bản tóm tắt các chỉ số của ứng dụng, không phải lời khuyên.",
   "{day} · {length}": "{day} · {length}",
   "Speak my plan every morning": "Đọc kế hoạch của tôi mỗi sáng",
   "Also email me when it's ready (the daily summary email links it anyway)": "Gửi cả email cho tôi khi xong (email tóm tắt hằng ngày vẫn có liên kết)",
   "Logbook": "Nhật ký hải trình",
-  "Morning forecast": "Dự báo buổi sáng",
   "Read it": "Đọc",
   "Your Passage Plan": "Passage Plan của bạn",
   "Being made: ready within about 15 minutes.": "Đang làm: xong trong khoảng 15 phút.",
@@ -2327,7 +2325,6 @@
   "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "Ngày và Đêm giữ trang luôn sáng hoặc tối. Tự động theo cài đặt của thiết bị, nên thay đổi theo điện thoại hoặc máy tính của bạn. Được lưu vào tài khoản, nên mọi thiết bị bạn đăng nhập đều làm theo. Trang tải lại một lần để chuyển.",
   "Open this panel in its own window": "Mở bảng này trong cửa sổ riêng",
   "📓 Opening your Logbook…": "📓 Đang mở Nhật ký hải trình…",
-  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 Nhật ký hải trình: Passage Plan hôm nay để đọc hoặc nghe, các kế hoạch trước đó và Dự báo buổi sáng.",
   "Dot build-up": "Điểm đang hình thành",
   "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "Các chấm mờ trên dải 📡 Sonar đậm dần khi một chấm lớn màu đỏ hoặc xanh đến gần, rồi mờ đi trong 3 nến sau đó. Mỗi chấm chỉ được tính từ nến của nó và các nến trước, nên đọc như nhau trên nến đang chạy và trong lịch sử: nằm sâu trong vùng quá mua (hoặc quá bán) khi hai sóng tiến lại gần nhau. Một lần hình thành có thể mờ đi mà không có chấm. Cùng giá trị này là tín hiệu Điểm Sonar đang hình thành cho Set và phễu.",
   "Sonar dot build-up": "Điểm Sonar đang hình thành",
@@ -2498,5 +2495,8 @@
   "General News": "Tin tức chung",
   "Out of date, so not scored": "Dữ liệu đã cũ nên không chấm điểm",
   "Most active stocks, up and down": "Cổ phiếu giao dịch nhiều nhất, tăng và giảm",
-  "US stocks, up and down": "Cổ phiếu Mỹ, tăng và giảm"
+  "US stocks, up and down": "Cổ phiếu Mỹ, tăng và giảm",
+  "Morning Outlook": "Triển vọng buổi sáng",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Viết Triển vọng buổi sáng dùng chung, và các Passage Plan mà tiến trình nền viết cho bản kế hoạch nói khi thành viên chưa tự viết. Chạy trên tiến trình nền, nơi có khóa Grok, ChatGPT và Gemini.",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 Nhật ký hải trình: Passage Plan hôm nay để đọc hoặc nghe, các kế hoạch trước đó và Triển vọng buổi sáng."
 }

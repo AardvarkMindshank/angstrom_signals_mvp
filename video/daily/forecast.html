@@ -61,9 +61,11 @@ const MOODS = { sunny: ["#0b3a7a", "#1d6fb8", "rgba(250,204,21,.25)"], fair: ["#
   changeable: ["#08214f", "#0f3f80", "rgba(148,163,184,.22)"], rough: ["#061a40", "#0b2d5c", "rgba(100,116,139,.25)"],
   stormy: ["#040d24", "#0a1c3d", "rgba(239,68,68,.18)"] };
 
-function pct(v, d = 1) { return v == null ? "–" : (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d) + "%"; }
+// A change that rounds to nothing is "0.0%", neither green nor red (24 Nov 2026: Bitcoin's flat day showed "+0.0%").
+const flat = (v, d = 1) => v == null || Math.abs(v) < 0.5 * Math.pow(10, -d);
+function pct(v, d = 1) { return v == null ? "–" : flat(v, d) ? (0).toFixed(d) + "%" : (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d) + "%"; }
 // Green for good news, red for bad: for a metric where up is bad (the fear index), a rise is red.
-function cls(v, inverse) { return v == null ? "" : (v >= 0) !== !!inverse ? "up" : "down"; }
+function cls(v, inverse) { return v == null || flat(v) ? "" : (v >= 0) !== !!inverse ? "up" : "down"; }
 function money(v) {
   if (v == null) return "";
   if (v >= 1000) return "$" + Math.round(v).toLocaleString("en-US");
@@ -98,10 +100,10 @@ function gauge(mood, size) {
 function capCaption(seg) {
   const d = S.data;
   const tideWord = d.tide.state === "out" ? "Tide going out" : d.tide.state === "in" ? "Tide coming in" : "Tide turning";
-  const titles = { welcome: [d.weekend ? "Weekend<br>forecast" : "Morning<br>forecast", d.date], weather: [esc(d.weather_word), `${tideWord} · Sea ${esc(d.tide.sea)}`],
+  const titles = { welcome: [d.weekend ? "Weekend<br>outlook" : "Morning<br>outlook", d.date], weather: [esc(d.weather_word), `${tideWord} · Sea ${esc(d.tide.sea)}`],
     sign_story: ["The story<br>of the day", esc(d.story?.title || "")],
-    sign_tides: ["The tide &amp;<br>currents", "The big picture"], sign_equities: ["Equity<br>markets", "S&amp;P 500 · Nasdaq"],
-    sign_crypto: ["The crypto<br>seas", "Bitcoin and the top coins"], sign_horizon: ["On the<br>horizon", "What's coming up"],
+    sign_tides: ["The tide &amp;<br>currents", "The big picture"], sign_equities: ["Equity<br>markets", "The news · S&amp;P 500 · Nasdaq"],
+    sign_crypto: ["The crypto<br>seas", "The news · the top coins"], sign_horizon: ["On the<br>horizon", "What's coming up"],
     signoff: ["Fair winds", "and following seas"], tag: ["Shh…", "Don't tell the cat"],
     reveal: ["Oops…", "Nobody saw that"] };
   const [k, s] = seg.caption || titles[seg.kind] || ["", ""];
@@ -120,6 +122,49 @@ function chgText(c) { return c.pts ? (c.change >= 0 ? "+" : "−") + Math.abs(c.
 function val(c) { return (c.dollars ? "$" : "") + num(c.value); }
 function num(v) { return v == null ? "" : v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(2); }
 
+const COIN_GRID = "display:grid;grid-template-columns:1.25fr 1.35fr 1fr 1fr 2.6fr;align-items:center;column-gap:34px";
+// A line that fills its column (the coins' week).
+function lineFill(vals, colour) {
+  if (!vals || vals.length < 2) return "";
+  const w = 600, h = 80, lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const pts = vals.map((v, i) => `${(6 + i * (w - 12) / (vals.length - 1)).toFixed(1)},${(h - 8 - (v - lo) / span * (h - 16)).toFixed(1)}`);
+  const last = pts[pts.length - 1].split(",");
+  return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block">
+    <polyline points="${pts.join(" ")}" fill="none" stroke="${colour}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    <circle cx="${last[0]}" cy="${last[1]}" r="7" fill="${colour}"/></svg>`;
+}
+// "Mon" -> "on Monday" for the day's move.
+function dayName(label) {
+  const full = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday" }[label];
+  return full ? "on " + full : String(label || "");
+}
+// The week's daily closes as a chart: a soft area, a white line, a dot per close with its weekday below, and the last
+// step (the latest session's move) in green or red.
+function weekChart(vals, days, w, h, last) {
+  if (!vals || vals.length < 2) return "";
+  const pad = 34, top = 16, bottom = h - 52, lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const X = (i) => pad + i * (w - 2 * pad) / (vals.length - 1), Y = (v) => bottom - (v - lo) / span * (bottom - top);
+  const pts = vals.map((v, i) => [X(i), Y(v)]);
+  const line = pts.slice(0, -1).map((p) => p.join(",")).join(" ");
+  const colour = flat(last) ? "#cbd5e1" : last >= 0 ? "#34d399" : "#f87171";
+  const [a, b] = [pts[pts.length - 2], pts[pts.length - 1]];
+  const area = `${pts[0][0]},${bottom} ` + pts.map((p) => p.join(",")).join(" ") + ` ${b[0]},${bottom}`;
+  const dots = pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${i === pts.length - 1 ? 11 : 7}" fill="${i === pts.length - 1 ? colour : "#e2e8f0"}"/>`).join("");
+  const labels = (days || []).map((dd, i) => `<text x="${X(i)}" y="${h - 12}" text-anchor="middle" font-size="26" font-weight="${i === vals.length - 1 ? 800 : 600}" fill="${i === vals.length - 1 ? colour : "#a5b4cc"}">${esc(dd)}</text>`).join("");
+  return `<svg width="100%" viewBox="0 0 ${w} ${h}" style="display:block">
+    <line x1="${pad}" y1="${bottom}" x2="${w - pad}" y2="${bottom}" stroke="rgba(255,255,255,.15)" stroke-width="2"/>
+    <polygon points="${area}" fill="rgba(148,163,184,.12)"/>
+    <polyline points="${line}" fill="none" stroke="#e2e8f0" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+    <line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${colour}" stroke-width="8" stroke-linecap="round"/>
+    ${dots}${labels}</svg>`;
+}
+
+// A section title with its icon beside it (an emoji inside the gradient text would turn into a white block).
+function heading(icon, words, below = 0) {
+  return `<div class="it" style="display:flex;align-items:center;gap:${z(26, 24)}px;margin-bottom:${below}px">
+    <span style="font-size:${z(78, 88)}px;line-height:1">${icon}</span><span class="kicker" style="font-size:${z(84, 92)}px">${words}</span></div>`;
+}
+
 function narrContent(seg) {
   const d = S.data;
   if (seg.kind === "intro") {
@@ -130,6 +175,17 @@ function narrContent(seg) {
     return `<div class="it" style="font-size:${z(120, 150)}px">${d.weather_icon}</div>
       <div class="it kicker" style="font-size:${z(104, 112)}px;margin-top:10px">${esc(d.date)}</div>
       <div class="it sub" style="font-size:${z(58, 70)}px;margin-top:34px;font-weight:700;color:#fff">${esc(d.headline)}</div>`;
+  }
+  if (seg.kind === "story" && d.lead) {
+    // ⭐ The bigger of the two Market sentiment cards' stories of the day, as the app shows it (24 Nov 2026).
+    const L = d.lead;
+    const moves = (L.moves || []).map((m) => `${esc(m.name)} <span class="chg ${cls(m.change_1d)}">${pct(m.change_1d)}</span>`).join("  ·  ");
+    return `<div class="it" style="font-size:${z(40, 50)}px;color:var(--amber);font-weight:800;letter-spacing:2px">⭐ THE STORY OF THE DAY</div>
+      <div class="it card" style="padding:${z("40px 48px", "44px 46px")};margin-top:28px;border-left:14px solid var(--teal)">
+        <div style="font-size:${z(70, 74)}px;font-weight:900;line-height:1.08">“${esc(L.title)}”</div>
+        ${L.source ? `<div style="font-size:${z(32, 40)}px;color:var(--soft);margin-top:16px">${esc(L.source)}</div>` : ""}
+        <div class="sub" style="font-size:${z(40, 46)}px;margin-top:22px">${esc(L.why || "")}</div>
+        ${moves ? `<div style="font-size:${z(42, 48)}px;font-weight:700;margin-top:24px">${moves}</div>` : ""}</div>`;
   }
   if (seg.kind === "story") {
     const a = d.story?.asset;
@@ -142,7 +198,7 @@ function narrContent(seg) {
           <div style="text-align:right;line-height:1.15"><div>${per(a.change_1d, a.day_label || "1 day", z(64, 80))}</div>
           <div style="margin-top:6px">${per(a.change_7d, "1 week", z(40, 50))}</div></div></div>
         <div style="margin-top:20px">${spark(a.spark, z(1500, 900), z(280, 400), up(a.change_7d))}</div>
-        <div style="font-size:${z(26, 34)}px;color:var(--soft);margin-top:6px">Last 7 days</div></div>`;
+        <div style="font-size:${z(26, 34)}px;color:var(--soft);margin-top:6px">The week</div></div>`;
     } else if (a) {
       card = `<div class="it card" style="padding:40px;margin-top:34px;text-align:center">
         <div style="font-size:${z(52, 64)}px;font-weight:800">${esc(a.name)}</div>
@@ -151,6 +207,28 @@ function narrContent(seg) {
     }
     return `<div class="it" style="font-size:${z(40, 50)}px;color:var(--amber);font-weight:800;letter-spacing:2px">⭐ THE STORY OF THE DAY</div>
       <div class="it kicker" style="font-size:${z(96, 104)}px;margin-top:14px">${esc(d.story?.title || "")}</div>${card}`;
+  }
+  if (seg.kind === "stock_mood" || seg.kind === "crypto_mood") {
+    // 📈 A Market sentiment card as the app shows it: the score and words in the app's colours, the strip of every
+    // scored article and reading, and the first sentence of its summary (24 Nov 2026). Crypto opens with its own
+    // story when it is not the story of the day.
+    const key = seg.kind === "stock_mood" ? "stock" : "crypto";
+    const c = d.cards?.[key];
+    const head = heading(key === "stock" ? "📈" : "🪙", key === "stock" ? "Stock-market sentiment" : "Crypto sentiment");
+    if (!c) return head + `<div class="it sub" style="font-size:40px;margin-top:30px">No reading today.</div>`;
+    const own = c.lead && !c.lead.quiet && c.lead.title && !(d.lead && d.lead.market === key)
+      ? `<div class="it card" style="padding:${z("22px 32px", "28px 34px")};margin-top:24px;border-left:10px solid var(--teal)">
+          <div style="font-size:${z(28, 34)}px;color:var(--amber);font-weight:800">⭐ ITS STORY OF THE DAY</div>
+          <div style="font-size:${z(46, 52)}px;font-weight:800;line-height:1.12;margin-top:8px">“${esc(c.lead.title)}”</div>
+          ${c.lead.source ? `<div style="font-size:${z(28, 34)}px;color:var(--soft);margin-top:8px">${esc(c.lead.source)}</div>` : ""}</div>` : "";
+    const sign = c.score > 0 ? "+" : c.score < 0 ? "−" : "";
+    const words = String(c.words || ""); const Words = words.charAt(0).toUpperCase() + words.slice(1);
+    return head + own + `
+      <div class="it" style="display:flex;align-items:center;gap:30px;margin-top:${z(30, 36)}px">
+        <div style="background:${c.bg};color:${c.colour};font-weight:900;font-size:${z(84, 96)}px;padding:6px 30px;border-radius:20px;white-space:nowrap">${c.arrow} ${sign}${Math.abs(c.score)}</div>
+        <div style="font-size:${z(54, 60)}px;font-weight:800">${esc(Words)} coverage</div></div>
+      <div class="it card" style="padding:${z("18px 30px", "20px 26px")};margin-top:26px"><div style="zoom:${z(3.4, 3.3)}">${P ? c.strip_port : c.strip}</div></div>
+      ${c.summary ? `<div class="it sub" style="font-size:${z(36, 44)}px;margin-top:26px">${esc(c.summary)}</div>` : ""}`;
   }
   if (seg.kind === "tides") {
     const arrow = d.tide.state === "out" ? "↘" : d.tide.state === "in" ? "↗" : "↔";
@@ -172,15 +250,19 @@ function narrContent(seg) {
     return head + `<div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:28px">${tiles}</div>`;
   }
   if (seg.kind === "equities") {
-    const tiles = d.stocks.map((s) => `<div class="it card tile" style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:${z("26px 30px", "32px 40px")}">
-      <div><div style="font-size:${z(38, 54)}px;font-weight:800">${esc(s.name)}</div>
-      <div style="margin-top:6px;line-height:1.05">${per(s.change_1d, s.day_label || "1 day", z(60, 84))}</div>
-      <div style="margin-top:8px">${per(s.change_7d, "1 week", z(38, 48))}</div></div>
-      <div style="text-align:center">${spark(s.spark, z(420, 380), z(150, 190), up(s.change_7d))}
-      <div style="font-size:${z(24, 32)}px;color:var(--soft)">Last 7 days</div></div></div>`).join("");
-    return `<div style="display:flex;flex-direction:${z("row", "column")};gap:${z(30, 34)}px;align-items:${z("center", "stretch")}">
-      <div class="it card" style="padding:${z("26px 34px", "30px 34px 20px")};text-align:center"><div style="font-size:${z(34, 46)}px;color:var(--soft);font-weight:700">Stock-market news mood</div>${gauge(d.stock_mood, z(460, 760))}</div>
-      <div class="grid" style="flex:1;gap:${z(24, 30)}px">${tiles}</div></div>`;
+    // 📊 Two side-by-side cards (stacked on the phone), each led by the day's move, with a full-width chart of the
+    // week's daily closes: one dot per session, its weekday underneath, and the last session's move drawn in its own
+    // colour (Angus, 24 Nov 2026: lay the page out better).
+    const W_ = z(760, 860), H_ = z(330, 300);
+    const cards = d.stocks.map((s) => `<div class="it card" style="padding:${z("34px 40px 26px", "34px 40px 24px")};display:flex;flex-direction:column">
+      <div style="font-size:${z(46, 52)}px;font-weight:800">${esc(s.name)}</div>
+      <div style="display:flex;align-items:baseline;gap:22px;margin-top:6px;flex-wrap:wrap">
+        <span class="chg ${cls(s.change_1d)}" style="font-size:${z(112, 112)}px;line-height:1">${pct(s.change_1d)}</span>
+        <span style="font-size:${z(44, 46)}px;color:#dbe4f3;font-weight:700">${esc(dayName(s.day_label))}</span></div>
+      <div style="margin-top:12px">${per(s.change_7d, "over the week", z(40, 44))}</div>
+      <div style="margin-top:${z(26, 22)}px">${weekChart(s.spark, s.days, W_, H_, s.change_1d)}</div></div>`).join("");
+    return heading("📊", "The main markets", z(34, 30)) + `
+      <div class="grid" style="grid-template-columns:${z("1fr 1fr", "1fr")};gap:${z(34, 30)}px">${cards}</div>`;
   }
   if (seg.kind === "crypto") {
     const rows = d.coins.map((c) => P
@@ -189,18 +271,19 @@ function narrContent(seg) {
           <div style="font-size:40px;color:#e2e8f0;margin-top:2px">${money(c.price)}</div></div>
           <div style="text-align:right;line-height:1.2"><div>${per(c.change_1d, "24h", 44)}</div><div>${per(c.change_7d, "1 week", 44)}</div></div>
           ${spark(c.spark, 190, 80, up(c.change_7d))}</div>`
-      : `<div class="it card row"><div class="name" style="font-size:38px;width:190px">${esc(c.name)}</div>
-          <div class="price" style="font-size:36px;width:200px;text-align:left">${money(c.price)}</div>
-          <div class="chg ${cls(c.change_1d)}" style="font-size:36px;width:140px">${pct(c.change_1d)}</div>
-          <div class="chg ${cls(c.change_7d)}" style="font-size:36px;width:140px">${pct(c.change_7d)}</div>
-          ${spark(c.spark, 320, 60, up(c.change_7d))}</div>`).join("");
-    // Column titles (wide layout), so each figure says which period it covers.
-    const head = P ? "" : `<div class="it row" style="padding:0 28px;font-size:26px;color:var(--soft);font-weight:700">
-          <div style="width:190px"></div><div style="width:200px">Price</div><div style="width:140px;text-align:right">24h</div>
-          <div style="width:140px;text-align:right">1 week</div><div style="width:320px;text-align:center">Last 7 days</div></div>`;
-    return `<div style="display:flex;flex-direction:${z("row", "column")};gap:${z(30, 28)}px;align-items:${z("center", "stretch")}">
-      <div class="it card" style="padding:${z("26px 34px", "26px 34px 14px")};text-align:center"><div style="font-size:${z(34, 46)}px;color:var(--soft);font-weight:700">Crypto news mood</div>${gauge(d.crypto_mood, z(440, 640))}</div>
-      <div class="grid" style="gap:${z(14, 18)}px;flex:1">${head}${rows}</div></div>`;
+      : `<div class="it card" style="${COIN_GRID};padding:16px 36px">
+          <div style="font-size:44px;font-weight:800">${esc(c.name)}</div>
+          <div style="font-size:42px;color:#e2e8f0;font-variant-numeric:tabular-nums">${money(c.price)}</div>
+          <div class="chg ${cls(c.change_1d)}" style="font-size:44px;text-align:right">${pct(c.change_1d)}</div>
+          <div class="chg ${cls(c.change_7d)}" style="font-size:44px;text-align:right">${pct(c.change_7d)}</div>
+          <div>${lineFill(c.spark, up(c.change_7d))}</div></div>`).join("");
+    // Column titles (wide layout), so each figure says which period it covers. The columns share the whole width
+    // (Angus, 24 Nov 2026: the table sat squashed to the left).
+    const head = P ? "" : `<div class="it" style="${COIN_GRID};padding:0 36px;font-size:28px;color:var(--soft);font-weight:700">
+          <div></div><div>Price</div><div style="text-align:right">24h</div><div style="text-align:right">1 week</div>
+          <div style="text-align:center">Daily closes, 1 week</div></div>`;
+    return heading("🪙", "The top coins", 26) + `
+      <div class="grid" style="gap:${z(14, 18)}px">${head}${rows}</div>`;
   }
   if (seg.kind === "horizon") {
     const cards = (d.events.length ? d.events : [{ what: "A quiet week", when: "", why: "No big scheduled releases." }]).map((e) =>
@@ -212,27 +295,34 @@ function narrContent(seg) {
   if (seg.kind === "close") {
     if (d.brand.show && d.brand.logo) {
       return `<div style="text-align:center"><img class="it zoom" src="${d.brand.logo}" style="height:${z(500, 640)}px;max-width:100%;object-fit:contain">
-        <div class="it sub" style="font-size:${z(44, 56)}px;margin-top:${z(30, 50)}px;color:#fff;font-weight:700">Your ${d.weekend ? "weekend" : "daily"} market briefing · ${esc(d.date)}</div>
+        <div class="it sub" style="font-size:${z(44, 56)}px;margin-top:${z(30, 50)}px;color:#fff;font-weight:700">Your ${d.weekend ? "Weekend" : "Morning"} Outlook · ${esc(d.date)}</div>
+        <div class="it sub" style="font-size:${z(36, 46)}px;margin-top:${z(14, 20)}px">Listen to or read the full ${d.weekend ? "Weekend" : "Morning"} Outlook</div>
+        ${d.brand.cta ? `<div class="it" style="display:inline-block;margin-top:${z(30, 44)}px;padding:${z("16px 40px", "20px 44px")};border-radius:999px;background:var(--teal);color:#04102a;font-weight:800;font-size:${z(44, 54)}px">${esc(d.brand.cta)}</div>` : ""}
         <div class="it sub" style="font-size:${z(30, 40)}px;margin-top:${z(26, 40)}px;color:#cbd5e1">${esc(d.brand.domain)} · © ${d.brand.year} ${esc(d.brand.company)}<br>Readings describe markets. Not financial advice.</div></div>`;
     }
     return `<div style="text-align:center"><div class="it" style="font-size:${z(110, 150)}px">⚓</div>
-      <div class="it kicker" style="font-size:${z(96, 116)}px;margin-top:16px">Your daily<br>market briefing</div>
+      <div class="it kicker" style="font-size:${z(96, 116)}px;margin-top:16px">Your ${d.weekend ? "Weekend" : "Morning"}<br>Outlook</div>
       <div class="it sub" style="font-size:${z(48, 60)}px;margin-top:26px">${esc(d.date)}</div>
       <div class="it sub" style="font-size:${z(32, 42)}px;margin-top:50px;color:#cbd5e1">Readings describe markets.<br>Not financial advice.</div></div>`;
   }
   return "";
 }
 
-// 🖥️ The matching app screen behind each section: dim, angled and drifting slowly (fixed pictures from the app).
-const SCREEN_OF = { welcome: "snapshot", date: "snapshot", weather: "tides", sign_story: "chart", story: "chart",
-  sign_tides: "tides", tides: "tides", sign_equities: "table", equities: "table", sign_crypto: "chart", crypto: "chart",
-  sign_horizon: "tides", horizon: "tides", signoff: "funnel", tag: "funnel", reveal: "funnel", blooper: "tides" };          // no app screen behind the closing logo card
-const SCREEN_DIM = 0.13;
+// 🖥️ The matching app screen behind each section: angled and drifting slowly. Taken from the live app just before
+// the video (video/daily_screens.js), so the numbers behind match the ones in front; a stored copy when a capture
+// fails. 20% (24 Nov 2026: 13% was too faint to recognise the app).
+const SCREEN_OF = { welcome: "dashboard", date: "dashboard", weather: "dashboard", sign_tides: "tides", tides: "tides",
+  sign_story: "stock_card", story: "stock_card", sign_equities: "stock_card", stock_mood: "stock_card",
+  equities: "snapshot", sign_crypto: "crypto_card", crypto_mood: "crypto_card", crypto: "btc_chart",
+  sign_horizon: "calendar", horizon: "calendar", signoff: "dashboard", tag: "dashboard", reveal: "dashboard",
+  blooper: "tides" };          // no app screen behind the closing logo card
+const SCREEN_DIM = 0.20;
 let SPANS = [];
 function buildScreens(segments) {
   SPANS = [];
   for (const seg of segments) {
-    const key = SCREEN_OF[seg.kind];
+    let key = SCREEN_OF[seg.kind];
+    if ((seg.kind === "story" || seg.kind === "sign_story") && S.data.lead?.market === "crypto") key = "crypto_card";
     const last = SPANS[SPANS.length - 1];
     if (last && last.key === key) last.end = seg.end; else SPANS.push({ key, start: seg.start, end: seg.end });
   }

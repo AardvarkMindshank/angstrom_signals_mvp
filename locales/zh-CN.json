@@ -2301,14 +2301,12 @@
   "Listen in a podcast app": "在播客应用中收听",
   "Make a new private link": "生成新的私密链接",
   "🎧 Spoken briefing scripts": "🎧 语音简报稿",
-  "Writes the shared Morning forecast, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "撰写大家共享的晨间预报，以及会员尚未撰写时由后台程序为语音计划撰写的 Passage Plan。在拥有 Grok、ChatGPT 和 Gemini 密钥的后台程序上运行。",
   "{day} · {edition} · {length}": "{day} · {edition} · {length}",
   "The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.": "人人相同，每天两次：美股收盘后不久的亚洲与欧洲版，以及纽约早晨之前的美洲版。你总会收到最新一期，也就是为你的早晨准备的那期。主要市场、前五大币种、Tide 和本周事件。这是应用读数的摘要，不是建议。",
   "{day} · {length}": "{day} · {length}",
   "Speak my plan every morning": "每天早上朗读我的计划",
   "Also email me when it's ready (the daily summary email links it anyway)": "准备好时也给我发邮件（每日摘要邮件中本来就有链接）",
   "Logbook": "航海日志",
-  "Morning forecast": "晨间预报",
   "Read it": "阅读",
   "Your Passage Plan": "你的 Passage Plan",
   "Being made: ready within about 15 minutes.": "正在制作：约 15 分钟内完成。",
@@ -2327,7 +2325,6 @@
   "Day and Night keep the page light or dark. Auto follows your device's setting, so it changes with your phone or computer. Saved on your account, so every device you log in on follows it. The page reloads once to switch.": "白天和夜晚会让页面保持浅色或深色。自动跟随设备设置，会随你的手机或电脑切换。保存在你的账户中，你登录的每台设备都会跟随。切换时页面会重新加载一次。",
   "Open this panel in its own window": "在单独的窗口中打开此面板",
   "📓 Opening your Logbook…": "📓 正在打开你的航海日志…",
-  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning forecast.": "📓 航海日志：今日 Passage Plan（可读可听）、之前的计划以及晨间预报。",
   "Dot build-up": "圆点酝酿",
   "Faint dots on the 📡 Sonar strip that grow stronger as a big red or green dot nears, and fade out over the 3 candles after one. Each is worked out from its own candle and the ones before, so it reads the same on the live candle as on history: deep in the overbought (or oversold) zone with the two waves closing in. A build-up can fade without a dot. The same reading is the Sonar dot build-up signal for Sets and funnels.": "📡 Sonar 条带上的浅色圆点：大红点或大绿点越接近，颜色越深，出现后的 3 根 K 线内逐渐淡去。每个点只用它自己的 K 线和之前的 K 线计算，因此在当前 K 线上和历史上读起来一样：深入超买（或超卖）区，两条波线正在靠拢。酝酿也可能没有出点就消退。同一读数就是供 Set 和漏斗使用的“Sonar 圆点酝酿”信号。",
   "Sonar dot build-up": "Sonar 圆点酝酿",
@@ -2498,5 +2495,8 @@
   "General News": "综合新闻",
   "Out of date, so not scored": "数据已过时，不计分",
   "Most active stocks, up and down": "成交最活跃股票的涨跌数",
-  "US stocks, up and down": "美国股票涨跌数"
+  "US stocks, up and down": "美国股票涨跌数",
+  "Morning Outlook": "晨间展望",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "撰写大家共享的晨间展望，以及会员尚未撰写时由后台程序为语音计划撰写的 Passage Plan。在拥有 Grok、ChatGPT 和 Gemini 密钥的后台程序上运行。",
+  "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 航海日志：今日 Passage Plan（可读可听）、之前的计划以及晨间展望。"
 }
