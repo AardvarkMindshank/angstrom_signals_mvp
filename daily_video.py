@@ -146,8 +146,9 @@ SPARK = {"SPY": ("equity", "SPY"), "QQQ": ("equity", "QQQ"), "Bitcoin": ("crypto
 # cards' stories), then each market in the same order: its sentiment card (score, words, strip, summary), then its
 # numbers. Nothing is worked out for the video alone: the cards are read as stored, the numbers are the daily
 # briefing's facts, and every number the script says is checked against them before anything is made.
-SECTIONS = {"tides": 26, "story": 30, "stock_mood": 26, "equities": 22, "crypto_mood": 28, "crypto": 24, "horizon": 16}
-WEEKEND_SECTIONS = {"tides": 26, "story": 30, "crypto_mood": 30, "crypto": 30, "horizon": 16}
+# Word counts for about two minutes in all (the first test ran 154 s at the counts before).
+SECTIONS = {"tides": 20, "story": 26, "stock_mood": 22, "equities": 16, "crypto_mood": 22, "crypto": 18, "horizon": 12}
+WEEKEND_SECTIONS = {"tides": 22, "story": 28, "crypto_mood": 26, "crypto": 24, "horizon": 12}
 MOOD_KINDS = {"stock_mood": "stock", "crypto_mood": "crypto"}      # section -> the app's Market sentiment card
 
 
@@ -290,9 +291,10 @@ def system_prompt(sections: dict, weekend: bool) -> str:
         "You write the narration for a 90-second daily market video, the Morning Outlook, in the style of the "
         "shipping forecast: calm, clear, a light nautical flavour that never hides a fact. A crew member introduces "
         "each section; you write only what is said inside each section. Write for the ear: short sentences, plain "
-        "words, no lists, no brand or app names. Write numbers as digits, rounded as given or to one decimal place "
-        "(\"4.7 percent\", \"60,400 dollars\", \"plus 22\"); a check compares every number you write with the facts, "
-        "so use only numbers in the facts and never work new ones out. Use only the facts given; never invent "
+        "words, no lists, no brand or app names. Write numbers as digits and round them for the ear: percentages to "
+        "one decimal place (\"4.7 percent\", never \"4.71\"), prices to about three figures (\"60,100 dollars\"), "
+        "scores as whole numbers (\"plus 19\"); a check compares every number you write with the facts, so use only "
+        "numbers in the facts and never work new ones out. Keep each section to its word count: the video is short. Use only the facts given; never invent "
         "prices, news or events. Describe; never tell anyone to buy, sell or hold. Each 1-day change covers exactly "
         "the period in its one_day_change_covers: name that period (\"on Monday\", \"over the last 24 hours\") and "
         "never call it today's move unless it says today. "
@@ -478,21 +480,13 @@ def write_sections(supabase, facts: dict, chat=None, sections: dict = SECTIONS, 
 # ------------------------------------------------------------------------------------------------ the graphics' data
 
 def _spark(load, kind: str, asset_id: str) -> list[float]:
-    """The last 7 days as hourly closes (feedback 23 Nov 2026: the line, its colour and the week's change all cover
-    the same 7 days, and the latest move shows at the end instead of being squeezed into a 30-day line). Falls back
-    to daily closes when hourly candles aren't available."""
-    for interval, range_key in (("1h", "7D"), ("1D", "1M")):
-        try:
-            c = load(kind, asset_id, interval, range_key)["candles"]
-            c = c[~c["forming"]] if "forming" in c else c
-            if interval == "1D":
-                c = c.iloc[-8:]
-            vals = [round(float(x), 6) for x in c["close"].dropna().tolist()]
-            if len(vals) >= 2:
-                return vals
-        except Exception:
-            continue
-    return []
+    """The week's daily closes, the very closes its 1-day and 1-week changes are worked out from (briefing's
+    _candle_moves), so the line always agrees with the numbers beside it (24 Nov 2026: an hourly line ended in
+    Friday's fall beside Monday's +4.7%). Shares: the last 6 sessions; coins: the last 8 days."""
+    try:
+        return briefing._candle_moves(kind, asset_id, load).get("week_closes") or []
+    except Exception:
+        return []
 
 
 def graphics_data(facts: dict, sections: dict, day: datetime, load=None, views: dict | None = None,

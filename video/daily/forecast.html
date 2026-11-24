@@ -61,9 +61,11 @@ const MOODS = { sunny: ["#0b3a7a", "#1d6fb8", "rgba(250,204,21,.25)"], fair: ["#
   changeable: ["#08214f", "#0f3f80", "rgba(148,163,184,.22)"], rough: ["#061a40", "#0b2d5c", "rgba(100,116,139,.25)"],
   stormy: ["#040d24", "#0a1c3d", "rgba(239,68,68,.18)"] };
 
-function pct(v, d = 1) { return v == null ? "–" : (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d) + "%"; }
+// A change that rounds to nothing is "0.0%", neither green nor red (24 Nov 2026: Bitcoin's flat day showed "+0.0%").
+const flat = (v, d = 1) => v == null || Math.abs(v) < 0.5 * Math.pow(10, -d);
+function pct(v, d = 1) { return v == null ? "–" : flat(v, d) ? (0).toFixed(d) + "%" : (v >= 0 ? "+" : "−") + Math.abs(v).toFixed(d) + "%"; }
 // Green for good news, red for bad: for a metric where up is bad (the fear index), a rise is red.
-function cls(v, inverse) { return v == null ? "" : (v >= 0) !== !!inverse ? "up" : "down"; }
+function cls(v, inverse) { return v == null || flat(v) ? "" : (v >= 0) !== !!inverse ? "up" : "down"; }
 function money(v) {
   if (v == null) return "";
   if (v >= 1000) return "$" + Math.round(v).toLocaleString("en-US");
@@ -159,7 +161,7 @@ function narrContent(seg) {
           <div style="text-align:right;line-height:1.15"><div>${per(a.change_1d, a.day_label || "1 day", z(64, 80))}</div>
           <div style="margin-top:6px">${per(a.change_7d, "1 week", z(40, 50))}</div></div></div>
         <div style="margin-top:20px">${spark(a.spark, z(1500, 900), z(280, 400), up(a.change_7d))}</div>
-        <div style="font-size:${z(26, 34)}px;color:var(--soft);margin-top:6px">Last 7 days</div></div>`;
+        <div style="font-size:${z(26, 34)}px;color:var(--soft);margin-top:6px">The week</div></div>`;
     } else if (a) {
       card = `<div class="it card" style="padding:40px;margin-top:34px;text-align:center">
         <div style="font-size:${z(52, 64)}px;font-weight:800">${esc(a.name)}</div>
@@ -216,7 +218,7 @@ function narrContent(seg) {
       <div style="margin-top:6px;line-height:1.05">${per(s.change_1d, s.day_label || "1 day", z(60, 84))}</div>
       <div style="margin-top:8px">${per(s.change_7d, "1 week", z(38, 48))}</div></div>
       <div style="text-align:center">${spark(s.spark, z(420, 380), z(150, 190), up(s.change_7d))}
-      <div style="font-size:${z(24, 32)}px;color:var(--soft)">Last 7 days</div></div></div>`).join("");
+      <div style="font-size:${z(24, 32)}px;color:var(--soft)">Daily closes, 1 week</div></div></div>`).join("");
     return heading("📊", "The main markets", 30) + `
       <div class="grid" style="gap:${z(24, 30)}px">${tiles}</div>`;
   }
@@ -235,7 +237,7 @@ function narrContent(seg) {
     // Column titles (wide layout), so each figure says which period it covers.
     const head = P ? "" : `<div class="it row" style="padding:0 28px;font-size:26px;color:var(--soft);font-weight:700">
           <div style="width:190px"></div><div style="width:200px">Price</div><div style="width:140px;text-align:right">24h</div>
-          <div style="width:140px;text-align:right">1 week</div><div style="width:320px;text-align:center">Last 7 days</div></div>`;
+          <div style="width:140px;text-align:right">1 week</div><div style="width:320px;text-align:center">Daily closes</div></div>`;
     return heading("🪙", "The top coins", 26) + `
       <div class="grid" style="gap:${z(14, 18)}px">${head}${rows}</div>`;
   }

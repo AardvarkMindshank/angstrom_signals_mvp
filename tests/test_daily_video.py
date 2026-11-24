@@ -167,7 +167,11 @@ def test_figures_cover_the_same_week_and_the_mood_matches_the_app():
     def load(kind, aid, interval, rng):
         asked.append((interval, rng))
         return {"candles": pd.DataFrame({"close": [float(i) for i in 1 + pd.RangeIndex(20)], "forming": False})}
-    assert len(dv._spark(load, "crypto", "bitcoin")) == 20 and asked == [("1h", "7D")]
+    # The line is the week's daily closes, the same ones its changes come from: 8 days for a coin, 6 sessions for a
+    # share (24 Nov 2026).
+    assert dv._spark(load, "crypto", "bitcoin") == [13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0]
+    assert asked == [("1D", "3M")]
+    assert len(dv._spark(load, "equity", "SPY")) == 6
     closes = list(range(100, 110))                     # 10 daily closes
     daily = lambda *a: {"candles": pd.DataFrame({"close": [float(c) for c in closes], "forming": False})}  # noqa: E731
     assert briefing._candle_moves("equity", "SPY", daily)["change_7d"] == round((109 / 104 - 1) * 100, 2)

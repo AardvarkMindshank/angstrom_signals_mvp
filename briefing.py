@@ -413,8 +413,10 @@ def _candle_moves(kind: str, asset_id: str, load=None, now: datetime | None = No
             last_day = late[0]
     if len(closes) < 8:
         return {}
+    week = -8 if kind == "crypto" else -6
     return {"latest_price": round(closes[-1], 4), "change_1d": _pct(closes[-1], closes[-2]),
-            "change_7d": _pct(closes[-1], closes[-8 if kind == "crypto" else -6]), "last_day": last_day}
+            "change_7d": _pct(closes[-1], closes[week]), "last_day": last_day,
+            "week_closes": [round(x, 6) for x in closes[week:]]}          # the closes the week's change spans
 
 
 def one_day_covers(kind: str, last_day: str | None, now: datetime) -> str:
