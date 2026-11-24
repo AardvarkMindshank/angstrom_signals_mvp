@@ -122,6 +122,43 @@ function chgText(c) { return c.pts ? (c.change >= 0 ? "+" : "−") + Math.abs(c.
 function val(c) { return (c.dollars ? "$" : "") + num(c.value); }
 function num(v) { return v == null ? "" : v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(2); }
 
+const COIN_GRID = "display:grid;grid-template-columns:1.25fr 1.35fr 1fr 1fr 2.6fr;align-items:center;column-gap:34px";
+// A line that fills its column (the coins' week).
+function lineFill(vals, colour) {
+  if (!vals || vals.length < 2) return "";
+  const w = 600, h = 80, lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const pts = vals.map((v, i) => `${(6 + i * (w - 12) / (vals.length - 1)).toFixed(1)},${(h - 8 - (v - lo) / span * (h - 16)).toFixed(1)}`);
+  const last = pts[pts.length - 1].split(",");
+  return `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" style="display:block">
+    <polyline points="${pts.join(" ")}" fill="none" stroke="${colour}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>
+    <circle cx="${last[0]}" cy="${last[1]}" r="7" fill="${colour}"/></svg>`;
+}
+// "Mon" -> "on Monday" for the day's move.
+function dayName(label) {
+  const full = { Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday", Fri: "Friday", Sat: "Saturday", Sun: "Sunday" }[label];
+  return full ? "on " + full : String(label || "");
+}
+// The week's daily closes as a chart: a soft area, a white line, a dot per close with its weekday below, and the last
+// step (the latest session's move) in green or red.
+function weekChart(vals, days, w, h, last) {
+  if (!vals || vals.length < 2) return "";
+  const pad = 34, top = 16, bottom = h - 52, lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+  const X = (i) => pad + i * (w - 2 * pad) / (vals.length - 1), Y = (v) => bottom - (v - lo) / span * (bottom - top);
+  const pts = vals.map((v, i) => [X(i), Y(v)]);
+  const line = pts.slice(0, -1).map((p) => p.join(",")).join(" ");
+  const colour = flat(last) ? "#cbd5e1" : last >= 0 ? "#34d399" : "#f87171";
+  const [a, b] = [pts[pts.length - 2], pts[pts.length - 1]];
+  const area = `${pts[0][0]},${bottom} ` + pts.map((p) => p.join(",")).join(" ") + ` ${b[0]},${bottom}`;
+  const dots = pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${i === pts.length - 1 ? 11 : 7}" fill="${i === pts.length - 1 ? colour : "#e2e8f0"}"/>`).join("");
+  const labels = (days || []).map((dd, i) => `<text x="${X(i)}" y="${h - 12}" text-anchor="middle" font-size="26" font-weight="${i === vals.length - 1 ? 800 : 600}" fill="${i === vals.length - 1 ? colour : "#a5b4cc"}">${esc(dd)}</text>`).join("");
+  return `<svg width="100%" viewBox="0 0 ${w} ${h}" style="display:block">
+    <line x1="${pad}" y1="${bottom}" x2="${w - pad}" y2="${bottom}" stroke="rgba(255,255,255,.15)" stroke-width="2"/>
+    <polygon points="${area}" fill="rgba(148,163,184,.12)"/>
+    <polyline points="${line}" fill="none" stroke="#e2e8f0" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+    <line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${colour}" stroke-width="8" stroke-linecap="round"/>
+    ${dots}${labels}</svg>`;
+}
+
 // A section title with its icon beside it (an emoji inside the gradient text would turn into a white block).
 function heading(icon, words, below = 0) {
   return `<div class="it" style="display:flex;align-items:center;gap:${z(26, 24)}px;margin-bottom:${below}px">
@@ -213,14 +250,19 @@ function narrContent(seg) {
     return head + `<div class="grid" style="grid-template-columns:repeat(4,1fr);margin-top:28px">${tiles}</div>`;
   }
   if (seg.kind === "equities") {
-    const tiles = d.stocks.map((s) => `<div class="it card tile" style="display:flex;justify-content:space-between;align-items:center;gap:20px;padding:${z("26px 30px", "32px 40px")}">
-      <div><div style="font-size:${z(38, 54)}px;font-weight:800">${esc(s.name)}</div>
-      <div style="margin-top:6px;line-height:1.05">${per(s.change_1d, s.day_label || "1 day", z(60, 84))}</div>
-      <div style="margin-top:8px">${per(s.change_7d, "1 week", z(38, 48))}</div></div>
-      <div style="text-align:center">${spark(s.spark, z(420, 380), z(150, 190), up(s.change_7d))}
-      <div style="font-size:${z(24, 32)}px;color:var(--soft)">Daily closes, 1 week</div></div></div>`).join("");
-    return heading("📊", "The main markets", 30) + `
-      <div class="grid" style="gap:${z(24, 30)}px">${tiles}</div>`;
+    // 📊 Two side-by-side cards (stacked on the phone), each led by the day's move, with a full-width chart of the
+    // week's daily closes: one dot per session, its weekday underneath, and the last session's move drawn in its own
+    // colour (Angus, 24 Nov 2026: lay the page out better).
+    const W_ = z(760, 860), H_ = z(330, 300);
+    const cards = d.stocks.map((s) => `<div class="it card" style="padding:${z("34px 40px 26px", "34px 40px 24px")};display:flex;flex-direction:column">
+      <div style="font-size:${z(46, 52)}px;font-weight:800">${esc(s.name)}</div>
+      <div style="display:flex;align-items:baseline;gap:22px;margin-top:6px;flex-wrap:wrap">
+        <span class="chg ${cls(s.change_1d)}" style="font-size:${z(112, 112)}px;line-height:1">${pct(s.change_1d)}</span>
+        <span style="font-size:${z(44, 46)}px;color:#dbe4f3;font-weight:700">${esc(dayName(s.day_label))}</span></div>
+      <div style="margin-top:12px">${per(s.change_7d, "over the week", z(40, 44))}</div>
+      <div style="margin-top:${z(26, 22)}px">${weekChart(s.spark, s.days, W_, H_, s.change_1d)}</div></div>`).join("");
+    return heading("📊", "The main markets", z(34, 30)) + `
+      <div class="grid" style="grid-template-columns:${z("1fr 1fr", "1fr")};gap:${z(34, 30)}px">${cards}</div>`;
   }
   if (seg.kind === "crypto") {
     const rows = d.coins.map((c) => P
@@ -229,15 +271,17 @@ function narrContent(seg) {
           <div style="font-size:40px;color:#e2e8f0;margin-top:2px">${money(c.price)}</div></div>
           <div style="text-align:right;line-height:1.2"><div>${per(c.change_1d, "24h", 44)}</div><div>${per(c.change_7d, "1 week", 44)}</div></div>
           ${spark(c.spark, 190, 80, up(c.change_7d))}</div>`
-      : `<div class="it card row"><div class="name" style="font-size:38px;width:190px">${esc(c.name)}</div>
-          <div class="price" style="font-size:36px;width:200px;text-align:left">${money(c.price)}</div>
-          <div class="chg ${cls(c.change_1d)}" style="font-size:36px;width:140px">${pct(c.change_1d)}</div>
-          <div class="chg ${cls(c.change_7d)}" style="font-size:36px;width:140px">${pct(c.change_7d)}</div>
-          ${spark(c.spark, 320, 60, up(c.change_7d))}</div>`).join("");
-    // Column titles (wide layout), so each figure says which period it covers.
-    const head = P ? "" : `<div class="it row" style="padding:0 28px;font-size:26px;color:var(--soft);font-weight:700">
-          <div style="width:190px"></div><div style="width:200px">Price</div><div style="width:140px;text-align:right">24h</div>
-          <div style="width:140px;text-align:right">1 week</div><div style="width:320px;text-align:center">Daily closes</div></div>`;
+      : `<div class="it card" style="${COIN_GRID};padding:16px 36px">
+          <div style="font-size:44px;font-weight:800">${esc(c.name)}</div>
+          <div style="font-size:42px;color:#e2e8f0;font-variant-numeric:tabular-nums">${money(c.price)}</div>
+          <div class="chg ${cls(c.change_1d)}" style="font-size:44px;text-align:right">${pct(c.change_1d)}</div>
+          <div class="chg ${cls(c.change_7d)}" style="font-size:44px;text-align:right">${pct(c.change_7d)}</div>
+          <div>${lineFill(c.spark, up(c.change_7d))}</div></div>`).join("");
+    // Column titles (wide layout), so each figure says which period it covers. The columns share the whole width
+    // (Angus, 24 Nov 2026: the table sat squashed to the left).
+    const head = P ? "" : `<div class="it" style="${COIN_GRID};padding:0 36px;font-size:28px;color:var(--soft);font-weight:700">
+          <div></div><div>Price</div><div style="text-align:right">24h</div><div style="text-align:right">1 week</div>
+          <div style="text-align:center">Daily closes, 1 week</div></div>`;
     return heading("🪙", "The top coins", 26) + `
       <div class="grid" style="gap:${z(14, 18)}px">${head}${rows}</div>`;
   }

@@ -492,6 +492,15 @@ def _spark(load, kind: str, asset_id: str) -> list[float]:
         return []
 
 
+def _spark_days(load, kind: str, asset_id: str) -> list[str]:
+    """The weekday of each of those closes ("Mon"), for the main markets' chart."""
+    try:
+        days = briefing._candle_moves(kind, asset_id, load).get("week_days") or []
+        return [datetime.fromisoformat(d).strftime("%a") if d else "" for d in days]
+    except Exception:
+        return []
+
+
 def graphics_data(facts: dict, sections: dict, day: datetime, load=None, views: dict | None = None,
                   story_lead: dict | None = None, reports: dict | None = None) -> dict:
     """Everything the page draws, as plain numbers and words."""
@@ -513,7 +522,8 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None, views: 
                 for a in km if a.get("value") is not None]
     stocks = [{"name": "S&P 500" if "S&P" in a["name"] else "Nasdaq 100", "change_1d": a.get("change_1d"),
                "day_label": briefing.session_word(a.get("session_day")),
-               "change_7d": a.get("change_7d"), "spark": _spark(load, *SPARK["SPY" if "S&P" in a["name"] else "QQQ"])}
+               "change_7d": a.get("change_7d"), "spark": _spark(load, *SPARK["SPY" if "S&P" in a["name"] else "QQQ"]),
+               "days": _spark_days(load, *SPARK["SPY" if "S&P" in a["name"] else "QQQ"])}
               for a in km if a.get("value") is None]
     coins = [{"name": c["name"], "price": c.get("latest_price"), "change_1d": c.get("change_1d"), "day_label": "24h",
               "change_7d": c.get("change_7d"), "spark": _spark(load, *SPARK[c["name"]]) if c["name"] in SPARK else []}

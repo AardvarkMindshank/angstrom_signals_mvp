@@ -403,6 +403,7 @@ def _candle_moves(kind: str, asset_id: str, load=None, now: datetime | None = No
         c = c[~c["forming"]] if "forming" in c else c
         c = c.dropna(subset=["close"])
         closes = [float(x) for x in c["close"].tolist()]
+        days = [i.date().isoformat() if hasattr(i, "date") else "" for i in c.index]
         last_day = c.index[-1].date().isoformat() if len(c) and hasattr(c.index[-1], "date") else None
     except Exception:
         return {}
@@ -410,13 +411,15 @@ def _candle_moves(kind: str, asset_id: str, load=None, now: datetime | None = No
         late = _late_session(kind, asset_id, load, last_day, now)
         if late:
             closes.append(late[1])
+            days.append(late[0])
             last_day = late[0]
     if len(closes) < 8:
         return {}
     week = -8 if kind == "crypto" else -6
     return {"latest_price": round(closes[-1], 4), "change_1d": _pct(closes[-1], closes[-2]),
             "change_7d": _pct(closes[-1], closes[week]), "last_day": last_day,
-            "week_closes": [round(x, 6) for x in closes[week:]]}          # the closes the week's change spans
+            "week_closes": [round(x, 6) for x in closes[week:]],         # the closes the week's change spans
+            "week_days": days[week:]}
 
 
 def one_day_covers(kind: str, last_day: str | None, now: datetime) -> str:
