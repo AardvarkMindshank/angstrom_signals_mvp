@@ -146,9 +146,10 @@ SPARK = {"SPY": ("equity", "SPY"), "QQQ": ("equity", "QQQ"), "Bitcoin": ("crypto
 # cards' stories), then each market in the same order: its sentiment card (score, words, strip, summary), then its
 # numbers. Nothing is worked out for the video alone: the cards are read as stored, the numbers are the daily
 # briefing's facts, and every number the script says is checked against them before anything is made.
-# Word counts for about two minutes in all (the first test ran 154 s at the counts before).
-SECTIONS = {"tides": 20, "story": 26, "stock_mood": 22, "equities": 16, "crypto_mood": 22, "crypto": 18, "horizon": 12}
-WEEKEND_SECTIONS = {"tides": 22, "story": 28, "crypto_mood": 26, "crypto": 24, "horizon": 12}
+# Word counts for a little over two minutes (the first test ran 154 s; at fewer words it ran 127 s but read clipped,
+# so Angus asked for it to flow: 24 Nov 2026).
+SECTIONS = {"tides": 24, "story": 28, "stock_mood": 25, "equities": 20, "crypto_mood": 25, "crypto": 22, "horizon": 14}
+WEEKEND_SECTIONS = {"tides": 26, "story": 30, "crypto_mood": 28, "crypto": 26, "horizon": 14}
 MOOD_KINDS = {"stock_mood": "stock", "crypto_mood": "crypto"}      # section -> the app's Market sentiment card
 
 
@@ -294,7 +295,9 @@ def system_prompt(sections: dict, weekend: bool) -> str:
         "words, no lists, no brand or app names. Write numbers as digits and round them for the ear: percentages to "
         "one decimal place (\"4.7 percent\", never \"4.71\"), prices to about three figures (\"60,100 dollars\"), "
         "scores as whole numbers (\"plus 19\"); a check compares every number you write with the facts, so use only "
-        "numbers in the facts and never work new ones out. Keep each section to its word count: the video is short. Use only the facts given; never invent "
+        "numbers in the facts and never work new ones out. Keep each section to its word count, but write it as flowing "
+        "spoken sentences that join naturally, like a presenter talking, never clipped notes (\"The Tide has been going "
+        "out for 25 trading days\", not \"Tide out, 25 days\"). Use only the facts given; never invent "
         "prices, news or events. Describe; never tell anyone to buy, sell or hold. Each 1-day change covers exactly "
         "the period in its one_day_change_covers: name that period (\"on Monday\", \"over the last 24 hours\") and "
         "never call it today's move unless it says today. "
