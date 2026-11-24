@@ -9,7 +9,8 @@ const fs = require("fs");
   const spec = JSON.parse(fs.readFileSync(specPath, "utf8"));
   const ff = spawn("ffmpeg", ["-y", "-v", "error", "-f", "image2pipe", "-framerate", String(F), "-c:v", "mjpeg", "-i", "-",
     "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", out], { stdio: ["pipe", "inherit", "inherit"] });
-  const b = await chromium.launch();
+  // The runner's own Google Chrome when Playwright's browser didn't download (24 Nov 2026: three timed-out installs).
+  const b = await chromium.launch().catch(() => chromium.launch({ channel: "chrome" }));
   const p = await b.newPage({ viewport: { width: W, height: H } });
   await p.goto("file://" + require("path").resolve(page));
   await p.evaluate((s) => window.setup(s), spec);
