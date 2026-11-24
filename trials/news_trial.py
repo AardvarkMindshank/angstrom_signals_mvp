@@ -13,7 +13,7 @@ import sentiment
 import re
 # Pages that only list a price or a routine event are not news (trial 1: "ETH price at 6 PM CST", "Current price of
 # Bitcoin for November 23", "Rings the Nasdaq opening bell").
-NOT_NEWS = re.compile(r"\bprice (at|today|on|for|now)\b|current price of|live price|price chart|to usd\b|"
+NOT_NEWS = re.compile(r"\bprice (at|today|for|now)\b|current price of|live price|price chart|to usd\b|"
                       r"\bprice (index|quote)\b|rings? the .*(opening|closing) bell", re.I)
 
 NEW = {
