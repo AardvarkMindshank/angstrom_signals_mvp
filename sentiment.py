@@ -1315,14 +1315,20 @@ def review_report(report: dict, chat=None) -> dict:
     if not rows and not pieces:
         report["checks"] = checks
         return report
-    listing = "\n".join(f"{i}. {row.get('title') or row.get('name')}: {row.get('value') or ''} | note: {row['note']}"
-                        for i, row in enumerate(rows))
+    def facts(row):
+        detail = str(row.get("detail") or "").strip()
+        return f"{row.get('title') or row.get('name')}: {row.get('value') or ''}" + (f" ({detail})" if detail else "")
+
+    listing = "\n".join(f"{i}. {facts(row)} | note: {row['note']}" for i, row in enumerate(rows))
     trans = "\n".join(f"{p['ref']} | English: {p['english']} | Translation: {p['translated']}" for p in pieces)
     ask = ("Check market text. 1) For each numbered note, say whether the note itself describes the market as helped "
            "(up), hurt (down) or neither (neutral). Judge the note's meaning, not single words. "
-           "2) For each translation, say whether it changes the meaning of the English: a different direction (rise "
+           "2) List the numbers of notes that contradict the facts before them (for example a note saying a reading "
+           "spiked when the facts say it fell). "
+           "3) For each translation, say whether it changes the meaning of the English: a different direction (rise "
            "told as fall), a different number, or a different subject. Wording differences are fine.\n"
-           'Reply with JSON only: {"directions": {"0": "up|down|neutral", ...}, "bad_translations": ["<ref>", ...]}\n'
+           'Reply with JSON only: {"directions": {"0": "up|down|neutral", ...}, "wrong_facts": [n, ...], '
+           '"bad_translations": ["<ref>", ...]}\n'
            f"Notes:\n{listing or '(none)'}\nTranslations:\n{trans or '(none)'}")
     try:
         got = _ask_json(ask, chat)
@@ -1330,21 +1336,29 @@ def review_report(report: dict, chat=None) -> dict:
         report["checks"] = {**checks, "skipped": True}
         return report
     directions = {int(k): str(v).lower() for k, v in (got.get("directions") or {}).items() if str(k).isdigit()}
-    wrong = [i for i, row in enumerate(rows) if i < len(rows) and _contradicts(directions.get(i, ""), row["score"])]
-    if wrong:
-        again = "\n".join(f"{i}. {rows[i].get('title') or rows[i].get('name')}: {rows[i].get('value') or ''} | "
-                          f"note: {rows[i]['note']}" for i in wrong)
+    wrong_facts = {int(i) for i in got.get("wrong_facts") or [] if str(i).isdigit() and int(i) < len(rows)}
+    wrong = [i for i, row in enumerate(rows) if _contradicts(directions.get(i, ""), row["score"])]
+    redo = sorted(set(wrong) | wrong_facts)
+    if redo:
+        again = "\n".join(f"{i}. {facts(rows[i])}" for i in redo)
         try:
-            fresh = _ask_json("Score each item 0 to 100 for this market as a whole, consistent with its note: 0 is "
-                              "strongly bearish, 50 mixed, 100 strongly bullish. "
-                              'Reply with JSON only: {"scores": {"<number>": score, ...}}\n' + again, chat)
-            scores = {int(k): v for k, v in (fresh.get("scores") or {}).items() if str(k).isdigit()}
+            fresh = _ask_json("For each item, write one sentence on what it means for this market as a whole, true "
+                              "to the facts given, and a score 0 to 100 consistent with that sentence: 0 is strongly "
+                              "bearish, 50 mixed, 100 strongly bullish. "
+                              'Reply with JSON only: {"items": {"<number>": {"note": "...", "score": n}, ...}}\n'
+                              + again, chat)
+            redone = {int(k): v for k, v in (fresh.get("items") or {}).items() if str(k).isdigit() and isinstance(v, dict)}
         except Exception:
-            scores = {}
-        for i in wrong:
-            new = _clamp_score(scores.get(i))
-            if new is not None and not _contradicts(directions[i], new):
-                rows[i]["score"] = new
+            redone = {}
+        checks["wrong_facts"] = len(wrong_facts)
+        for i in redo:
+            got_i = redone.get(i) or {}
+            new = _clamp_score(got_i.get("score"))
+            note = " ".join(str(got_i.get("note") or "").split())
+            keep_dir = directions.get(i, "") if i not in wrong_facts else ""
+            if new is not None and note and not _contradicts(keep_dir, new):
+                rows[i]["score"], rows[i]["note"] = new, note
+                rows[i].pop("tr", None)                    # the old note's translations no longer match
                 checks["rescored"] += 1
             else:
                 rows[i]["score"] = None

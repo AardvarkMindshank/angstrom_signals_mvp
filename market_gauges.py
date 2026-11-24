@@ -948,10 +948,11 @@ def _reading(name, value, detail, source, href, tone, published: str = "", caden
 
 
 # How old a reading may be before it is out of date, by how often it is published: a daily reading may lag up to 3
-# working days (FRED publishes a day or two late), a weekly one 12 days and a monthly one 62 days (a month's survey is
-# dated the 1st and published weeks later).
+# working days (FRED publishes a day or two late), a weekly one 12 days and a monthly one 92 days (a month's figure is
+# dated the 1st and published up to two months after the month ends: September's money supply is still the latest in
+# late November).
 STALE_WORKDAYS = 3
-STALE_DAYS = {"week": 12, "month": 62}
+STALE_DAYS = {"week": 12, "month": 92}
 
 
 def _workdays_between(start, end) -> int:

@@ -12,7 +12,8 @@ def test_readings_older_than_their_publishing_delay_are_out_of_date():
     assert not mg.is_stale({"published": "2026-11-20", "cadence": "day"}, today)      # Friday: 2 working days
     assert mg.is_stale({"published": "2026-11-17", "cadence": "day"}, today)
     assert not mg.is_stale({"published": "2026-10-01", "cadence": "month"}, today)   # a month's survey, 54 days
-    assert mg.is_stale({"published": "2026-09-01", "cadence": "month"}, today)
+    assert not mg.is_stale({"published": "2026-09-01", "cadence": "month"}, today)   # money supply lags 2 months
+    assert mg.is_stale({"published": "2026-08-01", "cadence": "month"}, today)
     assert not mg.is_stale({"published": ""}, today)
     groups = mg.mark_stale([{"title": "g", "items": [{"name": "old", "published": "2026-11-10"},
                                                      {"name": "new", "published": "2026-11-23"}]}], today)
@@ -39,8 +40,10 @@ def _report():
 
 def test_a_score_that_contradicts_its_sentence_is_rescored_or_left_out():
     answers = iter([
-        json.dumps({"directions": {"0": "up", "1": "up", "2": "down"}, "bad_translations": ["th:summary"]}),
-        json.dumps({"scores": {"1": 60, "2": 65}}),
+        json.dumps({"directions": {"0": "up", "1": "up", "2": "down"}, "wrong_facts": [],
+                    "bad_translations": ["th:summary"]}),
+        json.dumps({"items": {"1": {"note": "Few falling is mildly bullish.", "score": 60},
+                              "2": {"note": "x", "score": 65}}}),
     ])
     report = sentiment.review_report(_report(), chat=lambda ask: next(answers))
     rows = report["headlines"] + report["gauges"][0]["items"]
@@ -49,7 +52,19 @@ def test_a_score_that_contradicts_its_sentence_is_rescored_or_left_out():
     assert rows[2]["score"] is None                     # still contradicts: left out of the average
     assert "summary" not in report["tr"]["th"]          # the wrong translation goes; the English shows
     assert report["checks"] == {"rows": 3, "rescored": 1, "unscored": 1, "translations": 2,
-                                "translations_dropped": 1}
+                                "translations_dropped": 1, "wrong_facts": 0}
+
+
+def test_a_note_that_contradicts_its_own_facts_is_rewritten():
+    report = {"ok": True, "headlines": [], "gauges": [{"title": "g", "items": [
+        {"name": "CBOE VIX", "value": "26.62", "detail": "Down 9.27 points from the prior day",
+         "note": "Sharp VIX spike reflects heightened risk.", "score": 20.0, "tr": {"th": "x"}}]}]}
+    answers = iter([json.dumps({"directions": {"0": "down"}, "wrong_facts": [0], "bad_translations": []}),
+                    json.dumps({"items": {"0": {"note": "Fear eased as the VIX fell sharply, though it is still high.",
+                                                "score": 55}}})])
+    sentiment.review_report(report, chat=lambda ask: next(answers))
+    item = report["gauges"][0]["items"][0]
+    assert item["score"] == 55.0 and item["note"].startswith("Fear eased") and "tr" not in item
 
 
 def test_no_answer_changes_nothing():
