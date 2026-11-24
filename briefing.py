@@ -464,10 +464,12 @@ def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
             if item.get("change_1d") is None or item.get("latest_price") is None:
                 moves = _candle_moves(kind, asset_id, load, now)
                 item.update({k: v for k, v in moves.items() if v is not None and k != "last_day"})
-            elif kind == "equity":
-                # Shares take both moves from the same candles as the session they name. The stored reading can lag
-                # a session (24 Nov 2026: Friday's fall was told as Monday's, the day the Nasdaq rose about 7%), and
-                # its 7-day change counts 7 trading days where the forecast's week is 5.
+            else:
+                # Both moves come from the chart's daily candles, the same figures as the chart and the period the
+                # script names. Shares: the stored reading can lag a session (24 Nov 2026: Friday's fall was told as
+                # Monday's, the day the Nasdaq rose about 7%), and its 7-day change counts 7 trading days where the
+                # forecast's week is 5. Coins: the stored reading is a rolling 24 hours, while the script says "the
+                # day to midnight UTC" (24 Nov 2026: Bitcoin -1.0% told for a UTC Monday the chart shows at 0.0%).
                 moves = _candle_moves(kind, asset_id, load, now)
                 for k in ("change_1d", "change_7d"):
                     if moves.get(k) is not None:

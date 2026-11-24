@@ -37,6 +37,49 @@ def article_scores(report: dict | None) -> list[float]:
     return values
 
 
+def _when(row: dict) -> str:
+    """A row's date as "23 Nov 2026", or ""."""
+    from datetime import datetime
+    from email.utils import parsedate_to_datetime
+
+    raw = str(row.get("published_at") or row.get("published") or "").strip()
+    if not raw:
+        return ""
+    try:
+        when = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        try:
+            when = parsedate_to_datetime(raw)
+        except (TypeError, ValueError):
+            return ""
+    return f"{when.day} {when.strftime('%b %Y')}"
+
+
+def scored_rows(report: dict | None) -> list[tuple[float, str]]:
+    """(score, what it is) for each dot: an article's title, or a reading's name and value; then its date and source
+    (24 Nov 2026: hovering a dot names the article behind it)."""
+    out = []
+    rows = list((report or {}).get("headlines") or [])
+    for group in (report or {}).get("gauges") or []:
+        rows += list((group or {}).get("items") or []) if isinstance(group, dict) else []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        try:
+            value = float(row.get("score"))
+        except (TypeError, ValueError):
+            continue
+        if not math.isfinite(value):
+            continue
+        if row.get("title"):
+            name = str(row["title"])
+        else:
+            name = t(str(row.get("name") or "")) + (f", {row['value']}" if row.get("value") else "")
+        meta = " · ".join(part for part in (_when(row), str(row.get("source") or "").strip()) if part)
+        out.append((max(0.0, min(100.0, value)), name + (f"\n{meta}" if meta else "")))
+    return out
+
+
 def spread_word(values: list[float]) -> tuple[str, float]:
     """("agree" | "mixed" | "split", standard deviation). Needs two or more articles."""
     if len(values) < 2:
@@ -82,28 +125,43 @@ def spread_html(report: dict | None, average: float | None = None, width: int = 
         return thin
     mean = average if average is not None else sum(values) / len(values)
     height, pad = 28, 5
+    readings = sum(
+        1 for group in (report or {}).get("gauges") or [] if isinstance(group, dict)
+        for item in group.get("items") or [] if isinstance(item, dict) and item.get("score") is not None
+    )
+    what = (t("{n} news articles and {m} public readings", n=len(values) - readings, m=readings) if readings
+            else t("{n} articles", n=len(values)))
+    count = t("{n} sources", n=len(values)) if readings else t("{n} articles", n=len(values))
+    title = t("{what}, each scored from -100 (very negative) to +100 (very positive). Each dot is one; the marker is "
+              "the average ({avg}). Spread ±{sd:.0f} points: {word}, {meaning}.", what=what, avg=sentiment_text(mean),
+              sd=sd * 2, word=t(_WORD[word]), meaning=t(_MEANING[word]))
 
     def x(value: float) -> float:
         return pad + (width - 2 * pad) * value / 100.0
 
-    # Dots close together are stacked on three rows so each one stays visible.
+    # Dots close together are stacked on three rows so each one stays visible. Hovering a dot shows the article or
+    # reading behind it, its date and source and its score, then the strip's explanation.
     rows_y = (14, 7, 21)
     placed: list[tuple[float, int]] = []
     dots = []
-    for value in sorted(values):
+    for value, label in sorted(scored_rows(report), key=lambda pair: pair[0]):
         cx = x(value)
         level = 0
         while any(abs(cx - px) < 6 and pl == level for px, pl in placed) and level < 2:
             level += 1
         placed.append((cx, level))
         colour = sentiment_tone(value)[3]
+        tip = html.escape(f"{label}\n{t('Score')}: {sentiment_text(value)}\n\n{title}")
         dots.append(
+            f"<g style='cursor:help;'><title>{tip}</title>"
             f"<circle cx='{cx:.1f}' cy='{rows_y[level]}' r='3.6' fill='{colour}' fill-opacity='0.85' "
             "stroke='#ffffff' stroke-width='0.6'/>"
+            f"<circle cx='{cx:.1f}' cy='{rows_y[level]}' r='5' fill='{colour}' fill-opacity='0' "
+            "pointer-events='all'/></g>"
         )
     mark = x(mean)
     svg = (
-        f"<svg width='{width}' height='{height}' viewBox='0 0 {width} {height}' aria-hidden='true' "
+        f"<svg width='{width}' height='{height}' viewBox='0 0 {width} {height}' "
         "style='display:block;'>"
         f"<line x1='{pad}' y1='14' x2='{width - pad}' y2='14' stroke='var(--ang-track,#e5e7eb)' stroke-width='2' "
         "stroke-linecap='round'/>"
@@ -115,16 +173,6 @@ def spread_html(report: dict | None, average: float | None = None, width: int = 
         "stroke-width='1.2' opacity='0.7'/>"
         "</svg>"
     )
-    readings = sum(
-        1 for group in (report or {}).get("gauges") or [] if isinstance(group, dict)
-        for item in group.get("items") or [] if isinstance(item, dict) and item.get("score") is not None
-    )
-    what = (t("{n} news articles and {m} public readings", n=len(values) - readings, m=readings) if readings
-            else t("{n} articles", n=len(values)))
-    count = t("{n} sources", n=len(values)) if readings else t("{n} articles", n=len(values))
-    title = t("{what}, each scored from -100 (very negative) to +100 (very positive). Each dot is one; the marker is "
-              "the average ({avg}). Spread ±{sd:.0f} points: {word}, {meaning}.", what=what, avg=sentiment_text(mean),
-              sd=sd * 2, word=t(_WORD[word]), meaning=t(_MEANING[word]))
     colours = {"agree": ("#15803d", "#dcfce7"), "mixed": ("#b45309", "#fef3c7"), "split": ("#b91c1c", "#fee2e2")}
     fg, bg = colours[word]
     label = (

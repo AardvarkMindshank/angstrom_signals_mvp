@@ -12,7 +12,9 @@ import html
 import json
 import os
 import time
+import re
 import xml.etree.ElementTree as ET
+from datetime import datetime
 from email.utils import parsedate_to_datetime
 
 import requests
@@ -146,6 +148,9 @@ def localised(report, code: str | None):
             if tr.get(name):
                 out[name] = tr[name]
     out["headlines"] = [note_of(row) for row in report.get("headlines") or []]
+    lead = report.get("lead")
+    if isinstance(lead, dict) and isinstance(lead.get("tr"), dict) and lead["tr"].get(code):
+        out["lead"] = {**lead, "why": lead["tr"][code]}
     if report.get("gauges"):
         out["gauges"] = [{**g, "items": [note_of(i) for i in (g.get("items") or [])]} if isinstance(g, dict) else g
                          for g in report.get("gauges") or []]
@@ -208,18 +213,127 @@ def newest_first(headlines: list[dict]) -> list[dict]:
 
 
 # Whole-market searches. The wording can change later without a new table.
+# 24 Nov 2026: one "outlook" search kept the 8 newest articles of a week and missed the day's story (Jensen Huang back
+# at Nvidia, the Nasdaq up 7%). Each market now runs several news searches and keeps the stories most widely reported
+# in the last 24 hours; "query" stays the stored name of the search. "moves" are the markets whose latest move the
+# story of the day is checked against.
 MACRO_MOODS = (
     {
         "key": "crypto",
         "label": "Crypto market",
         "query": "crypto market outlook regulation ETF liquidity",
+        "searches": ("crypto market today", "Bitcoin news", "crypto news", "crypto ETF"),
+        "moves": (("crypto", "bitcoin", "Bitcoin"), ("crypto", "ethereum", "Ether")),
     },
     {
         "key": "stock",
         "label": "Stock market",
         "query": "stock market outlook inflation interest rates earnings",
+        "searches": ("stock market today", "Wall Street stocks", "Nasdaq", "S&P 500"),
+        "moves": (("equity", "SPY", "S&P 500"), ("equity", "QQQ", "Nasdaq 100")),
     },
 )
+MOOD_SPECS = {spec["key"]: spec for spec in MACRO_MOODS}
+
+# Pages that only list a price or a routine event are not news ("ETH price at 6 PM CST", "Current price of Bitcoin
+# for November 23", "Rings the Nasdaq opening bell"). "A $1 trillion price on Jensen Huang" is news, so "price on" stays.
+NOT_NEWS = re.compile(r"\bprice (at|today|for|now)\b|current price of|live price|price chart|to usd\b|"
+                      r"\bprice (index|quote)\b|rings? the .*(opening|closing) bell", re.I)
+LEAD_HOURS = 24
+
+
+def rank_market_headlines(rows: list[dict], now: float) -> list[dict]:
+    """Most important first: the last 24 hours before older, then the most widely reported, then the newest."""
+    recent = now - LEAD_HOURS * 3600
+
+    def key(row):
+        try:
+            stamp = datetime.fromisoformat(str(row.get("published_at"))).timestamp()
+        except ValueError:
+            stamp = 0.0
+        return (stamp >= recent, int(row.get("also_reported") or 0), stamp)
+
+    return sorted(rows, key=key, reverse=True)
+
+
+def gather_market_news(searches, limit: int = 8, now: float | None = None) -> tuple[list[dict], dict]:
+    """(the most important whole-market headlines, what was filtered) from several news searches."""
+    now = time.time() if now is None else now
+    raw, failures = [], 0
+    for search in searches:
+        try:
+            raw += _fetch_raw(search)
+        except Exception:
+            failures += 1
+    if failures == len(searches):
+        raise RuntimeError("no headline search succeeded")
+    kept_raw = [item for item in raw if not NOT_NEWS.search(str(item.get("title") or ""))]
+    rows, stats = news_filter.clean_headlines(kept_raw, now, {}, 400)
+    rows = rank_market_headlines(rows, now)[:limit]
+    stats.update(news_filter.coverage(rows))
+    stats["not_news"] = len(raw) - len(kept_raw)
+    return rows, stats
+
+
+def latest_moves(spec: dict) -> list[dict]:
+    """The latest finished 1-day move of each market the story of the day is checked against (the chart's candles,
+    as the daily briefing tells them)."""
+    import briefing
+
+    out = []
+    for kind, asset_id, name in spec.get("moves") or ():
+        try:
+            moves = briefing._candle_moves(kind, asset_id)
+        except Exception:
+            moves = {}
+        if moves.get("change_1d") is not None:
+            out.append({"name": name, "change_1d": moves["change_1d"], "day": moves.get("last_day")})
+    return out
+
+
+def lead_story(spec: dict, headlines: list[dict], moves: list[dict] | None = None, chat=None) -> dict | None:
+    """The story of the day: the headline that best explains the market's latest moves, with one sentence on why.
+    {"quiet": True, ...} when no headline explains them (a quiet day is said plainly, not dressed up). None when the
+    AI didn't answer."""
+    if not headlines:
+        return None
+    moves = latest_moves(spec) if moves is None else moves
+    langs = languages()
+    lines = "\n".join(f"{i}. {row.get('title')} ({row.get('source') or 'unknown'}, carried by "
+                      f"{1 + int(row.get('also_reported') or 0)} outlets)" for i, row in enumerate(headlines, 1))
+    moved = "; ".join(f"{m['name']} {m['change_1d']:+.2f}% on {m['day']}" for m in moves) or "not available"
+    tr = (', "tr": {' + ", ".join(f'"{code}": "the why sentence in {code}"' for code in langs) + "}"
+          if langs else "")
+    ask = (f"These are the most widely reported {spec['label'].lower()} headlines, and the market's latest moves "
+           f"({moved}). Name the single story that best explains what is moving this market now. On a flat day, "
+           "that is the most widely reported story weighing on or lifting the market (for example, money leaving "
+           "funds while prices hold). "
+           'Reply with JSON only: {"index": n, "why": "one plain, complete sentence", "explains_moves": true or false'
+           + tr + "}. Set explains_moves to false only when no headline is about what is driving this market; then "
+           "say so in why, in a complete sentence. This is research context, not advice.\n" + lines)
+    try:
+        if chat is None:
+            import ai_providers
+
+            text, _done = ai_providers.chat(scoring_provider(), "You pick the lead market story from headlines. "
+                                            "Facts only.", [{"role": "user", "content": ask}], max_tokens=900,
+                                            json_only=True, timeout=60)
+        else:
+            text = chat(ask)
+        start, end = text.find("{"), text.rfind("}")
+        got = json.loads(text[start:end + 1])
+        index = int(got.get("index") or 0)
+        why = " ".join(str(got.get("why") or "").split())
+    except Exception:
+        return None
+    lead = {"why": why, "moves": moves, "explains_moves": bool(got.get("explains_moves"))}
+    if isinstance(got.get("tr"), dict):
+        lead["tr"] = {str(k): str(v) for k, v in got["tr"].items() if v and str(k) in langs}
+    if not lead["explains_moves"] or not 1 <= index <= len(headlines):
+        return {**lead, "quiet": True}
+    row = headlines[index - 1]
+    return {**lead, "id": row.get("id"), "title": row.get("title"), "source": row.get("source"),
+            "link": row.get("link")}
 _MOOD_SKIP = news_filter.SKIP_WORDS
 
 
@@ -1097,6 +1211,8 @@ def score_market_readings(market_key: str, label: str, groups: list[dict]) -> li
     scored = copy.deepcopy(groups)
     flat = [item for group in scored for item in (group.get("items") or [])]
     for item, row in zip(flat, scored_rows):
+        if item.get("stale"):
+            continue                                       # out of date: shown, never scored (market_gauges.is_stale)
         if row.get("score") is not None:
             item["score"] = row["score"]
         note = " ".join(str(row.get("note") or "").split())
@@ -1120,6 +1236,138 @@ def _scores_in(rows) -> list[float]:
         if value == value:
             values.append(value)
     return values
+
+
+# A score of 45..55 is mixed. A note that says the market is helped (up) with a score under 45, or hurt (down) with a
+# score over 55, contradicts itself (24 Nov 2026: "only 5 falling is mildly bullish", scored -30).
+MIXED_LOW, MIXED_HIGH = 45, 55
+
+
+def _review_items(report: dict) -> list[dict]:
+    """Every scored row of a report (news, then readings), as the review sees it."""
+    rows = [row for row in report.get("headlines") or [] if isinstance(row, dict)]
+    rows += [item for group in report.get("gauges") or [] if isinstance(group, dict)
+             for item in group.get("items") or [] if isinstance(item, dict)]
+    return [row for row in rows if row.get("score") is not None and str(row.get("note") or "").strip()]
+
+
+def _translations_of(report: dict, rows: list[dict]) -> list[dict]:
+    """[{"ref", "english", "translated"}] for every translated piece of AI text in a report."""
+    out = []
+    for lang, fields in (report.get("tr") or {}).items() if isinstance(report.get("tr"), dict) else ():
+        for name in ("summary", "positive", "negative"):
+            if isinstance(fields, dict) and fields.get(name) and report.get(name):
+                out.append({"ref": f"{lang}:{name}", "english": report[name], "translated": fields[name]})
+    lead = report.get("lead") if isinstance(report.get("lead"), dict) else {}
+    for lang, words in (lead.get("tr") or {}).items():
+        if words and lead.get("why"):
+            out.append({"ref": f"{lang}:lead", "english": lead["why"], "translated": words})
+    for i, row in enumerate(rows):
+        for lang, words in (row.get("tr") or {}).items() if isinstance(row.get("tr"), dict) else ():
+            if words and row.get("note"):
+                out.append({"ref": f"{lang}:note:{i}", "english": row["note"], "translated": words})
+    return out
+
+
+def _drop_translation(report: dict, rows: list[dict], ref: str) -> bool:
+    parts = ref.split(":")
+    try:
+        if len(parts) == 2 and parts[1] in ("summary", "positive", "negative"):
+            return report["tr"][parts[0]].pop(parts[1], None) is not None
+        if len(parts) == 2 and parts[1] == "lead":
+            return report["lead"]["tr"].pop(parts[0], None) is not None
+        if len(parts) == 3 and parts[1] == "note":
+            return rows[int(parts[2])]["tr"].pop(parts[0], None) is not None
+    except (KeyError, IndexError, ValueError, TypeError, AttributeError):
+        return False
+    return False
+
+
+def _contradicts(direction: str, score) -> bool:
+    try:
+        score = float(score)
+    except (TypeError, ValueError):
+        return False
+    return (direction == "up" and score < MIXED_LOW) or (direction == "down" and score > MIXED_HIGH)
+
+
+def _ask_json(ask: str, chat=None) -> dict:
+    if chat is None:
+        import ai_providers
+
+        text, _done = ai_providers.chat(scoring_provider(), "You check market text. Reply with one JSON object only.",
+                                        [{"role": "user", "content": ask}], max_tokens=3000, json_only=True,
+                                        timeout=90)
+    else:
+        text = chat(ask)
+    start, end = text.find("{"), text.rfind("}")
+    return json.loads(text[start:end + 1])
+
+
+def review_report(report: dict, chat=None) -> dict:
+    """Two checks on every refresh, for any market and any day (24 Nov 2026):
+    - a score that contradicts its own sentence is scored once more, and left unscored if it still does;
+    - a translation that changes the meaning (up told as down, a different number) is dropped, so the English shows.
+    The counts go in report["checks"] and the worker's log. An AI that doesn't answer changes nothing."""
+    rows = _review_items(report)
+    pieces = _translations_of(report, rows)
+    checks = {"rows": len(rows), "rescored": 0, "unscored": 0, "translations": len(pieces), "translations_dropped": 0}
+    if not rows and not pieces:
+        report["checks"] = checks
+        return report
+    def facts(row):
+        detail = str(row.get("detail") or "").strip()
+        return f"{row.get('title') or row.get('name')}: {row.get('value') or ''}" + (f" ({detail})" if detail else "")
+
+    listing = "\n".join(f"{i}. {facts(row)} | note: {row['note']}" for i, row in enumerate(rows))
+    trans = "\n".join(f"{p['ref']} | English: {p['english']} | Translation: {p['translated']}" for p in pieces)
+    ask = ("Check market text. 1) For each numbered note, say whether the note itself describes the market as helped "
+           "(up), hurt (down) or neither (neutral). Judge the note's meaning, not single words. "
+           "2) List the numbers of notes that contradict the facts before them (for example a note saying a reading "
+           "spiked when the facts say it fell). "
+           "3) For each translation, say whether it changes the meaning of the English: a different direction (rise "
+           "told as fall), a different number, or a different subject. Wording differences are fine.\n"
+           'Reply with JSON only: {"directions": {"0": "up|down|neutral", ...}, "wrong_facts": [n, ...], '
+           '"bad_translations": ["<ref>", ...]}\n'
+           f"Notes:\n{listing or '(none)'}\nTranslations:\n{trans or '(none)'}")
+    try:
+        got = _ask_json(ask, chat)
+    except Exception:
+        report["checks"] = {**checks, "skipped": True}
+        return report
+    directions = {int(k): str(v).lower() for k, v in (got.get("directions") or {}).items() if str(k).isdigit()}
+    wrong_facts = {int(i) for i in got.get("wrong_facts") or [] if str(i).isdigit() and int(i) < len(rows)}
+    wrong = [i for i, row in enumerate(rows) if _contradicts(directions.get(i, ""), row["score"])]
+    redo = sorted(set(wrong) | wrong_facts)
+    if redo:
+        again = "\n".join(f"{i}. {facts(rows[i])}" for i in redo)
+        try:
+            fresh = _ask_json("For each item, write one sentence on what it means for this market as a whole, true "
+                              "to the facts given, and a score 0 to 100 consistent with that sentence: 0 is strongly "
+                              "bearish, 50 mixed, 100 strongly bullish. "
+                              'Reply with JSON only: {"items": {"<number>": {"note": "...", "score": n}, ...}}\n'
+                              + again, chat)
+            redone = {int(k): v for k, v in (fresh.get("items") or {}).items() if str(k).isdigit() and isinstance(v, dict)}
+        except Exception:
+            redone = {}
+        checks["wrong_facts"] = len(wrong_facts)
+        for i in redo:
+            got_i = redone.get(i) or {}
+            new = _clamp_score(got_i.get("score"))
+            note = " ".join(str(got_i.get("note") or "").split())
+            keep_dir = directions.get(i, "") if i not in wrong_facts else ""
+            if new is not None and note and not _contradicts(keep_dir, new):
+                rows[i]["score"], rows[i]["note"] = new, note
+                rows[i].pop("tr", None)                    # the old note's translations no longer match
+                checks["rescored"] += 1
+            else:
+                rows[i]["score"] = None
+                checks["unscored"] += 1
+    for ref in got.get("bad_translations") or []:
+        if _drop_translation(report, rows, str(ref)):
+            checks["translations_dropped"] += 1
+    report["checks"] = checks
+    return report
 
 
 def combine_mood_score(report: dict) -> dict:
@@ -1153,8 +1401,12 @@ def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, 
         stored = cached[1]
         if stored.get("ok") and stored.get("score") is not None and stored.get("headlines"):
             return stored
+    spec = MOOD_SPECS.get(market_key) or {}
     try:
-        headlines, stats = gather_headlines(query, market=True)
+        if spec.get("searches"):
+            headlines, stats = gather_market_news(spec["searches"])
+        else:
+            headlines, stats = gather_headlines(query, market=True)
     except Exception:
         return {"ok": False, "reason": "headlines_error", "headlines": []}
     if not headlines:
@@ -1186,7 +1438,13 @@ def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, 
     if summary.get("ok"):
         reuse_scores(summary, previous)
         _with_quality(summary, stats)
+        if spec:
+            lead = lead_story(spec, summary.get("headlines") or [])
+            if lead:
+                summary["lead"] = lead
+        review_report(summary)
         combine_mood_score(summary)
+        print(f"Market sentiment {market_key}: {json.dumps(summary.get('checks') or {})}", flush=True)
     if summary.get("ok"):
         _SCORE_CACHE[cache_key] = (time.time(), summary)
     return summary
