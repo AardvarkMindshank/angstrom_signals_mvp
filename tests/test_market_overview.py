@@ -50,10 +50,10 @@ def test_html_values_and_vix_colours():
 
 def test_cards_come_in_groups_in_order():
     keys = [c["key"] for c in mo.card_list(overview(), crypto=True, stocks=True)]
-    assert keys[:7] == ["spx", "ndx", "dji", "ftse", "dax", "n225", "hsi"]
-    assert keys[7:] == ["us10y", "dxy", "gold", "oil", "btc", "eth", "crypto_cap", "vix", "fng"]
+    assert keys[:5] == ["btc", "eth", "crypto_cap", "vix", "fng"]
+    assert keys[5:] == ["spx", "ndx", "dji", "ftse", "dax", "n225", "hsi", "us10y", "dxy", "gold", "oil"]
     page = mo.overview_html(overview(), crypto=True, stocks=True)
-    assert page.index("Stock markets") < page.index("Rates") < page.index("Commodities") < page.index("Crypto<") < page.index("Sentiment &amp; risk")
+    assert page.index("Crypto<") < page.index("Sentiment &amp; risk") < page.index("Stock markets") < page.index("Rates") < page.index("Commodities")
 
 
 def test_daily_history_for_bitcoin_share_and_crypto_cap():

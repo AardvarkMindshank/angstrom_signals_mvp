@@ -341,12 +341,13 @@ def _fng_word(value: float) -> str:
 
 
 # Display groups, in order: (name, heading).
+# Crypto and Sentiment & risk first, then Stock markets, then Rates & dollar beside Commodities (24 Nov 2026, Angus).
 GROUPS = (
+    ("crypto", mark("🪙 Crypto")),
+    ("risk", mark("🧭 Sentiment & risk")),
     ("stocks", mark("📈 Stock markets")),
     ("rates", mark("🏦 Rates & dollar")),
     ("commodities", mark("🛢️ Commodities")),
-    ("crypto", mark("🪙 Crypto")),
-    ("risk", mark("🧭 Sentiment & risk")),
 )
 _GROUP_OF = {
     "spx": "stocks", "ndx": "stocks", "dji": "stocks", "ftse": "stocks", "dax": "stocks", "n225": "stocks",
