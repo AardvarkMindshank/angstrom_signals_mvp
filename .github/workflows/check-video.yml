@@ -1,0 +1,30 @@
+name: check-video
+on:
+  push:
+    branches: [check-video]
+jobs:
+  read:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - run: pip install -q supabase
+      - name: Stored market sentiment, counts only
+        run: |
+          python - <<'PY'
+          import os, json
+          from supabase import create_client
+          db = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
+          for row in db.table("market_mood").select("market_key, sentiment_updated_at, sentiment_report").execute().data:
+              r = row["sentiment_report"] or {}
+              if isinstance(r, str): r = json.loads(r)
+              hs = r.get("headlines") or []
+              items = [i for g in r.get("gauges") or [] for i in g.get("items") or []]
+              print(row["market_key"], row["sentiment_updated_at"], "model", r.get("model"), "ok", r.get("ok"),
+                    "news scored", sum(h.get("score") is not None for h in hs), "of", len(hs),
+                    "| readings scored", sum(i.get("score") is not None for i in items), "of", len(items),
+                    "| langs", sorted((r.get("tr") or {}).keys()), "| parts", r.get("score_parts"), "| reused", r.get("reused_articles"))
+              for i in items: print("   reading", i.get("name"), "score", i.get("score"))
+              for h in hs: print("   news", (h.get("published_at") or h.get("published") or "")[:16], "score", h.get("score"), h.get("title","")[:70])
+          PY
