@@ -698,8 +698,9 @@ def _logo_uri() -> str:
 SPOKEN_NAME = "Market Navi"                 # how the voice says MarketNavi
 # 📣 The call to action at the very end (24 Nov 2026): on the closing card and said once, after the sign-off.
 CTA_WORDS = "Join the beta at marketnavi.ai"
-# Spelt for the voice: Emma read "A I" as "aye" (24 Nov 2026).
-CTA_SPOKEN = "To listen to or read the full version, and to join the beta, visit Market Navi dot ay eye."
+# Spelt for the voice (24 Nov 2026): "A I" and "ay eye" both came out "aye aye" (ɐ aɪ / aɪ aɪ); the voice's own
+# phonemes for "A-I" are eɪ aɪ, the two letters.
+CTA_SPOKEN = "To listen to or read the full version, and to join the beta, visit Market Navi dot A-I."
 CLOSE_VOICE, CLOSE_SPEED = "bf_emma", 1.0
 INTRO_HOLD = 1.6                            # the logo stays this long after the opening words
 OUTRO_PAUSE = 1.0                           # music only, between the sign-off and the closing line
@@ -862,7 +863,9 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     out_dir.mkdir(parents=True, exist_ok=True)
     work = out_dir / "work"
     work.mkdir(exist_ok=True)
-    day = briefing.local_now(briefing.EDITIONS[edition]["zone"], now + timedelta(hours=6))
+    # The video carries the date it is made on, in its edition's zone (Angus, 24 Nov 2026: a test made on Tuesday
+    # afternoon was branded Wednesday). The daily run comes after the Asia & Europe edition, early morning there.
+    day = briefing.local_now(briefing.EDITIONS[edition]["zone"], now)
     refresh_moods(supabase)
     facts = briefing.general_facts(supabase, now)
     reports = app_moods(supabase)

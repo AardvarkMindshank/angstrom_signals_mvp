@@ -355,7 +355,7 @@ def test_the_crew_skip_their_first_story_line_now_the_tide_comes_first():
 
 
 def test_the_close_asks_people_to_join_the_beta():
-    assert "marketnavi.ai" in dv.CTA_WORDS and "dot ay eye" in dv.CTA_SPOKEN and "listen to or read" in dv.CTA_SPOKEN
+    assert "marketnavi.ai" in dv.CTA_WORDS and "dot A-I." in dv.CTA_SPOKEN and "listen to or read" in dv.CTA_SPOKEN
     assert dv.CLOSE_VOICE == "bf_emma"
 
 
