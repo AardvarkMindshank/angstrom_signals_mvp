@@ -15977,8 +15977,9 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         st.info(t("The market score could not be built this time."))
     _article_box(f"mood_{key}_readings", _mood_reading_board(key, label, shown if isinstance(shown, dict) else None))
     if headlines:
-        _article_box(f"mood_{key}_news", headline_table(headlines, "AI Score",
-                                                         (lead or {}).get("id") if isinstance(lead, dict) else None))
+        # A heading like the reading groups above it (24 Nov 2026)
+        _article_box(f"mood_{key}_news", f"<div class='headline-group'>{html.escape(t('General News'))}</div>"
+                     + headline_table(headlines, "AI Score", (lead or {}).get("id") if isinstance(lead, dict) else None))
     st.caption(
         t("The rows above the Google headlines are public readings, each scored on its own. "
         "The score at the top is the average of every scored row, readings and news articles alike "
