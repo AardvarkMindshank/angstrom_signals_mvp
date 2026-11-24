@@ -33,7 +33,9 @@ const DEADLINE = Date.now() + 6 * 60 * 1000;
     const toTop = async (loc) => { await loc.evaluate((n) => n.scrollIntoView({ block: "start" })).catch(() => {}); await page.waitForTimeout(900); };
     const shot = async (name) => {
       // Members' votes and comments ("Your take") are never photographed: blanked for every picture.
-      await page.addStyleTag({ content: "[class*='_take_box']{visibility:hidden !important}" }).catch(() => {});
+      // The sidebar is hidden too, so the section fills the picture.
+      await page.addStyleTag({ content: "[class*='_take_box']{visibility:hidden !important}"
+        + "[data-testid='stSidebar']{display:none !important}" }).catch(() => {});
       await page.mouse.move(1390, 1020);
       await page.screenshot({ path: path.join(OUT, name + ".jpg"), type: "jpeg", quality: 82 });
       done.push(name);
@@ -60,8 +62,10 @@ const DEADLINE = Date.now() + 6 * 60 * 1000;
     await step("snapshot", async () => { const s = await expand("Quick Snapshot"); await settle(1500); await toTop(s); await shot("snapshot"); await fold("Quick Snapshot"); });
     await step("tides", async () => {
       const s = await expand("Tides"); await settle(2500); await toTop(s); await shot("tides");
-      const cal = page.getByText("Storm warnings", { exact: false }).first();            // the macro calendar, under the Tides
-      await toTop(cal); await page.evaluate(() => window.scrollBy(0, -120)); await page.waitForTimeout(600); await shot("calendar");
+      // The macro calendar, under the Tides: scrolled to the top of the picture.
+      const cal = page.getByText("Storm warnings: the macro calendar", { exact: false }).last();
+      await cal.evaluate((n) => { n.scrollIntoView({ block: "start" }); window.scrollBy(0, -60); });
+      await page.waitForTimeout(900); await shot("calendar");
       await fold("Tides");
     });
     for (const [name, label] of [["stock_card", "Market sentiment - Stock market"], ["crypto_card", "Market sentiment - Crypto market"]]) {
