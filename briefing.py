@@ -426,10 +426,13 @@ def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
                 moves = _candle_moves(kind, asset_id, load)
                 item.update({k: v for k, v in moves.items() if v is not None and k != "last_day"})
             elif kind == "equity":
-                # The stored 7-day change counts 7 trading days (about 9 calendar days); the forecast's week is 5.
+                # Shares take both moves from the same candles as the session they name. The stored reading can lag
+                # a session (24 Nov 2026: Friday's fall was told as Monday's, the day the Nasdaq rose about 7%), and
+                # its 7-day change counts 7 trading days where the forecast's week is 5.
                 moves = _candle_moves(kind, asset_id, load)
-                if moves.get("change_7d") is not None:
-                    item["change_7d"] = moves["change_7d"]
+                for k in ("change_1d", "change_7d"):
+                    if moves.get(k) is not None:
+                        item[k] = moves[k]
             if kind == "equity":
                 item["session_day"] = moves.get("last_day")
             item["one_day_change_covers"] = one_day_covers(kind, moves.get("last_day"), now)

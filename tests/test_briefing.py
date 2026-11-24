@@ -226,3 +226,22 @@ def test_the_email_links_only_today_s_passage_plan(monkeypatch):
     assert briefing.listen_links(None, "https://b", settings, "pro", monday_morning) == []
     sunday_evening = datetime(2026, 11, 22, 12, 0, tzinfo=timezone.utc)
     assert [w for w, _ in briefing.listen_links(None, "https://b", settings, "pro", sunday_evening)] == ["🧭 Your Passage Plan"]
+
+
+def test_stock_moves_come_from_the_session_they_name(monkeypatch):
+    """24 Nov 2026: a lagging stored reading told Friday's fall as Monday's rise day."""
+    import pandas as pd
+
+    def gather(*a, **k):
+        return {"watchlist": [{"name": "S&P 500 (the SPY fund)", "change_1d": -2.0, "latest_price": 600.0,
+                               "change_7d": -5.0}]}
+
+    def load(kind, asset_id, interval, rng):
+        idx = pd.date_range("2026-11-11", periods=9, freq="B", tz="America/New_York")
+        closes = [100.0] * 7 + [98.0, 101.92]                  # Friday down 2%, Monday up 4%
+        return {"candles": pd.DataFrame({"close": closes, "forming": [False] * 9}, index=idx)}
+
+    monkeypatch.setattr(briefing, "gather", gather)
+    facts = briefing.general_facts(object(), _dt(2026, 11, 23, 21, 41, tzinfo=_tz.utc), load=load)
+    spy = facts["key_markets"][0]
+    assert spy["session_day"] == "2026-11-23" and spy["change_1d"] == 4.0
