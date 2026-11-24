@@ -408,13 +408,56 @@ def unknown_numbers(text: str, known: list[float]) -> list[str]:
     return bad
 
 
+_UNITS = {w: i for i, w in enumerate("zero one two three four five six seven eight nine ten eleven twelve thirteen "
+                                    "fourteen fifteen sixteen seventeen eighteen nineteen".split())}
+_TENS = {w: 10 * (i + 2) for i, w in enumerate("twenty thirty forty fifty sixty seventy eighty ninety".split())}
+_SCALES = {"hundred": 100, "thousand": 1000, "million": 10 ** 6, "billion": 10 ** 9}
+_WORD = r"(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|" \
+        r"seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|" \
+        r"million|billion)"
+_WORDS_RUN = re.compile(r"\b" + _WORD + r"(?:[\s-]+(?:and[\s-]+)?" + _WORD + r")*(?:\s+point(?:\s+" + _WORD + r")+)?\b",
+                        re.I)
+
+
+def _words_value(words: str) -> str:
+    """"four point seven" -> "4.7", "sixty thousand four hundred" -> "60400", "twenty-five" -> "25"."""
+    whole, _, frac = words.lower().replace("-", " ").partition(" point ")
+    total = current = 0
+    for w in whole.split():
+        if w == "and":
+            continue
+        if w in _UNITS:
+            current += _UNITS[w]
+        elif w in _TENS:
+            current += _TENS[w]
+        elif w == "hundred":
+            current = max(current, 1) * 100
+        elif w in _SCALES:
+            total += max(current, 1) * _SCALES[w]
+            current = 0
+    value = str(total + current)
+    digits = "".join(str(_UNITS[w]) for w in frac.split() if w in _UNITS and _UNITS[w] < 10)
+    return value + ("." + digits if digits else "")
+
+
+def digits_for_words(text: str) -> str:
+    """The text with spelled-out numbers as digits, so the check sees them too (24 Nov 2026: the script said "four
+    point seven percent" in words, which a digits-only check would never look at). "One" alone is left as a word."""
+    def swap(m):
+        words = m.group(0)
+        if re.match(r"[\s-]+(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth)\b", m.string[m.end():], re.I):
+            return words                                   # a date: "the twenty-fourth"
+        return words if words.lower() in ("one", "zero") else _words_value(words)
+    return _WORDS_RUN.sub(swap, text)
+
+
 def script_numbers_problems(out: dict, known: list[float]) -> dict:
-    """{section: [numbers not in the app's data]} for a written script."""
+    """{section: [numbers not in the app's data]} for a written script, in digits or in words."""
     problems = {}
     for k, v in out.items():
         text = v.get("text") if isinstance(v, dict) else v
         if isinstance(text, str):
-            bad = unknown_numbers(text, known)
+            bad = unknown_numbers(digits_for_words(text), known)
             if bad:
                 problems[k] = bad
     return problems

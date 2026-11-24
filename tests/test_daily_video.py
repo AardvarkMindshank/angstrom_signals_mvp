@@ -369,3 +369,14 @@ def test_a_faint_hum_after_the_last_word_is_cut_too(tmp_path):
                     "[0:a]volume=0.8[a];[a][1:a]concat=n=2:v=0:a=1[o]", "-map", "[o]", "-c:a", "aac", str(clip)],
                    check=True)
     assert 1.9 < dv.speech_seconds(clip) < 2.6                      # the 2 s of voice and the short tail
+
+
+def test_numbers_said_in_words_are_checked_too():
+    """24 Nov 2026: the script said "four point seven percent" in words, which a digits-only check never saw."""
+    text = ("Nasdaq jumped nearly seven percent and the S&P rose four point seven percent; minus twenty five; "
+            "sixty thousand four hundred dollars; one regulatory note; the twenty-fourth of November.")
+    assert dv.digits_for_words(text) == ("Nasdaq jumped nearly 7 percent and the S&P rose 4.7 percent; minus 25; "
+                                         "60400 dollars; one regulatory note; the twenty-fourth of November.")
+    known = dv.known_numbers({"a": 7.0, "b": 4.71, "c": -25, "d": 60354})
+    assert dv.script_numbers_problems({"x": text}, known) == {}
+    assert dv.script_numbers_problems({"x": "It rose nine point nine percent."}, known) == {"x": ["9.9"]}
