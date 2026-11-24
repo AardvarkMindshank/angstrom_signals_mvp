@@ -209,7 +209,8 @@ def test_morning_plans_made_ahead_only_for_active_pro_and_elite(monkeypatch):
     monkeypatch.setattr(rb, "_save_state", lambda db, uid, s, **ch: saved.append((uid, ch)))
     monkeypatch.setattr(briefing, "plan_of", lambda db, uid: plans[uid])
     got = [p["user_id"] for p in rb.due_rows(None, now)]
-    assert got == ["pro_active"]
+    # No on/off switch any more (24 Nov 2026): a Pro member who once switched it off gets it too.
+    assert got == ["pro_active", "pro_off"]
     assert any(uid == "pro_active" and ch.get("briefing", {}).get("token") for uid, ch in saved)   # its feed folder
     assert any(uid == "free_asked" and "Pro and Elite" in ch["briefing_state"]["error"] for uid, ch in saved)
 
@@ -269,3 +270,13 @@ def test_a_session_missing_from_the_daily_candles_comes_from_the_hourly_ones(mon
     # Before Monday's close the hourly bars are not a finished session, so Friday stands.
     facts = briefing.general_facts(object(), _dt(2026, 11, 23, 19, 0, tzinfo=_tz.utc), load=load)
     assert facts["key_markets"][0]["session_day"] == "2026-11-20"
+
+
+
+def test_one_account_time_and_zone_from_notifications():
+    """24 Nov 2026: the Passage Plan follows the daily summary's time and zone (Settings), ready the hour before."""
+    s = briefing.with_account_time({"briefing": {"hour": 6, "zone": "UTC", "on": False}},
+                                   {"digest_tz": "Asia/Bangkok", "digest_hour": 8})
+    b = briefing.settings_of(s)
+    assert b["zone"] == "Asia/Bangkok" and b["hour"] == 7 and b["on"] is True
+    assert briefing.settings_of({})["zone"] == "UTC"

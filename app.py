@@ -8285,24 +8285,42 @@ def notifications_panel() -> None:
                 # saved just because the panel was opened.
                 digest_hour_choice = alert_prefs.get("digest_hour")
                 digest_zone_choice = alert_prefs.get("digest_tz")
-                if digest_on:
-                    hour_col, zone_col = st.columns(2)
-                    digest_hour_choice = hour_col.selectbox(
-                        t("Send at"),
-                        list(range(24)),
-                        index=saved_hour if 0 <= saved_hour <= 23 else 8,
-                        format_func=lambda hour: f"{hour:02d}:00",
-                        key="alert_digest_hour", placeholder=t("Choose an option")
-                    )
-                    start_zone = saved_zone or "UTC"
-                    digest_zone_choice = zone_col.selectbox(
-                        t("Time zone"),
-                        zone_choices,
-                        index=zone_choices.index(start_zone) if start_zone in zone_choices else 0,
-                        key="alert_digest_zone",placeholder=t("Choose an option")
-                    )
-                    if browser_zone and digest_zone_choice != browser_zone:
-                        st.caption(t("Your browser's time zone is {browser_zone}.", browser_zone=browser_zone))
+                # 🕗 The account's one morning time and time zone (24 Nov 2026): the daily summary is sent then, and
+                # the Passage Plan (Pro and Elite) is ready the hour before. Shown whether the summary is on or not.
+                hour_col, zone_col = st.columns(2)
+                digest_hour_choice = hour_col.selectbox(
+                    t("Your morning time"),
+                    list(range(24)),
+                    index=saved_hour if 0 <= saved_hour <= 23 else 8,
+                    format_func=lambda hour: f"{hour:02d}:00",
+                    key="alert_digest_hour", placeholder=t("Choose an option"),
+                    help=t("Your daily summary email is sent at this time, and your Passage Plan is ready an hour "
+                           "before it.")
+                )
+                start_zone = saved_zone or "UTC"
+                digest_zone_choice = zone_col.selectbox(
+                    t("Time zone"),
+                    zone_choices,
+                    index=zone_choices.index(start_zone) if start_zone in zone_choices else 0,
+                    key="alert_digest_zone",placeholder=t("Choose an option")
+                )
+                if browser_zone and digest_zone_choice != browser_zone:
+                    st.caption(t("Your browser's time zone is {browser_zone}.", browser_zone=browser_zone))
+                if plans.includes(current_plan(), "pro"):
+                    # The Passage Plan's own choices, beside its time (they were in the Logbook).
+                    pb = _briefing_settings()
+                    voice_col, mail_col = st.columns(2)
+                    voice = voice_col.selectbox(
+                        "🧭 " + t("Passage Plan voice"), list(briefing.VOICES),
+                        index=list(briefing.VOICES).index(pb["voice"]), key="briefing_voice",
+                        format_func=lambda v: briefing.VOICES[v])
+                    mail = mail_col.checkbox(t("Email me when my Passage Plan is ready"), value=bool(pb["email"]),
+                                             key="briefing_email",
+                                             help=t("The daily summary email links it anyway."))
+                    if voice != pb["voice"] or bool(mail) != bool(pb["email"]):
+                        stored_b = ((st.session_state.get("cloud_prefs") or {}).get("settings") or {}).get("briefing")
+                        _briefing_save({**(stored_b if isinstance(stored_b, dict) else {}), "voice": voice,
+                                        "email": bool(mail), "token": pb.get("token") or briefing.new_token()})
                 if digest_on and not stored_zone and not browser_zone and digest_zone_choice == "UTC":
                     # The browser has not reported its zone yet. Leave the zone unset
                     # rather than storing a guess; a later run fills it in.
@@ -9520,6 +9538,13 @@ def _briefing_text(url: str) -> str:
         return ""
 
 
+def _briefing_settings() -> dict:
+    """The Passage Plan's settings with the account's one time and time zone (the daily summary's, in 🔔 Notifications;
+    24 Nov 2026), so the app and the worker agree."""
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    return briefing.settings_of(briefing.with_account_time(stored, (prefs or {}).get("alerts") or {}))
+
+
 def _briefing_save(b: dict, **state) -> None:
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
     updates = {"briefing": b}
@@ -9566,7 +9591,7 @@ def _video_player(key: str, pick: bool = False, day: str | None = None) -> None:
     base = _secret("url")
     meta = _videos_meta(base) if base else {}
     days = sorted((d for d, v in meta.items() if isinstance(v, dict)), reverse=True)
-    tip = t("Today's markets in about 90 seconds, presented by the crew. It plays when you first open the app each "
+    tip = t("Today's markets in about two minutes, presented by the crew. It plays when you first open the app each "
             "day; switch that off in ⚙️ Settings. A summary of the app's readings, not advice.")
 
     def label(d: str) -> str:
@@ -9745,13 +9770,14 @@ def _passage_player(key: str, show_button: bool = True, pick: bool = False, day:
     import navigator
 
     tip = t("Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the "
-            "📓 Logbook. It is made ready each morning; set the time and voice there.")
+            "📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and "
+            "voice in 🔔 Notifications.")
     if not plans.includes(current_plan(), "pro"):
         _briefing_title("🧭 " + t("Your Passage Plan"), "", tip)
         st.caption(t("Written and spoken for your own watchlist and funnels each morning. Comes with Pro."))
         return
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-    b = briefing.settings_of(stored)
+    b = _briefing_settings()
     state = stored.get("briefing_state") if isinstance(stored.get("briefing_state"), dict) else {}
     base = _secret("url")
     meta = _briefing_meta(base, b["token"]) if b.get("token") and base else {}
@@ -9815,8 +9841,7 @@ def _logbook_days() -> list[str]:
         return []
     days = {d for d, v in _videos_meta(base).items() if isinstance(v, dict)}
     days |= {k[:10] for k, v in _briefing_meta(base, briefing.GENERAL).items() if isinstance(v, dict)}
-    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-    token = briefing.settings_of(stored).get("token")
+    token = _briefing_settings().get("token")
     if token and plans.includes(current_plan(), "pro"):
         days |= {k[:10] for k, v in _briefing_meta(base, token).items() if isinstance(v, dict)}
     return sorted(days, reverse=True)
@@ -9825,8 +9850,7 @@ def _logbook_days() -> list[str]:
 def _logbook_date() -> str:
     """📓 The Logbook's one date, at the top: Today, Yesterday, or a date picked back to the oldest one kept. The video,
     the Morning Outlook and the Passage Plan below all follow it."""
-    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-    today = briefing.local_now(briefing.settings_of(stored)["zone"]).date()
+    today = briefing.local_now(_briefing_settings()["zone"]).date()
     days = _logbook_days()
     oldest = min([pd.Timestamp(days[-1]).date()] if days else [today - timedelta(days=1)])
     oldest = min(oldest, today - timedelta(days=1))
@@ -9870,25 +9894,9 @@ def _logbook_panel() -> None:
         _passage_player("logbook", show_button=False, day=st.session_state.get("logbook_day"))   # made each morning
     if not plans.includes(current_plan(), "pro"):
         return
-    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-    b = briefing.settings_of(stored)
-
-    with st.expander("⚙️ " + t("Spoken plan settings"), expanded=False):
-        on = st.toggle(t("Speak my plan every morning"), value=bool(b["on"]), key="briefing_on")
-        c1, c2 = st.columns(2)
-        hour = c1.selectbox(t("Ready by"), list(range(24)), index=b["hour"], key="briefing_hour",
-                            format_func=lambda h: f"{h:02d}:00")
-        zones = list(dict.fromkeys([b["zone"]] + list(COMMON_ZONES)))
-        zone = c2.selectbox(t("Time zone"), zones, index=0, key="briefing_zone")
-        voice = st.selectbox(t("Voice"), list(briefing.VOICES), index=list(briefing.VOICES).index(b["voice"]),
-                             key="briefing_voice", format_func=lambda v: briefing.VOICES[v])
-        email = st.checkbox(t("Also email me when it's ready (the daily summary email links it anyway)"),
-                            value=bool(b["email"]), key="briefing_email")
-        if st.button(t("Save"), key="briefing_save", type="primary"):
-            _briefing_save({**b, "on": on, "hour": hour, "zone": zone, "voice": voice, "email": email,
-                            "token": b.get("token") or briefing.new_token()})
-            st.toast(t("Saved."))
-            st.rerun(scope="fragment")
+    # Its time, time zone and voice are in 🔔 Notifications, with the daily summary's (24 Nov 2026); it is made
+    # every day for Pro and Elite, so there is no on/off switch.
+    b = _briefing_settings()
 
     base = _secret("url")
     if b.get("token") and base:
@@ -13729,37 +13737,32 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             # a wide screen, one above the other on a phone.
             # Three boxes the same width side by side (21 Nov 2026), one above the other on a phone.
             # The video first, as at the top of the Logbook.
+            # Row 1 (Angus, 24 Nov 2026): the video, both spoken briefings in one box (the Morning Outlook above
+            # your Passage Plan), and the Tides card, sized to sit level with them.
             left, middle, right = st.columns(3)
             with left, st.container(key="snapshot_video"):
                 _video_player("snapshot")
             with middle, st.container(key="snapshot_forecast"):
                 _forecast_player("snapshot")
-            with right, st.container(key="snapshot_passage"):
+                st.markdown("<div style='border-top:1px solid var(--ang-border);margin:2px 0;'></div>",
+                            unsafe_allow_html=True)
                 _passage_player("snapshot", show_button=False)    # it is made each morning
+            with right:
+                try:
+                    import snapshot_view as _sv_top
+                    card = _sv_top.tides_card(_tides_snap())
+                except Exception as exc:
+                    print(f"Quick Snapshot Tides card failed: {exc}")
+                    card = ""
+                if card and _score_table(key="snapshot_tides_card", data=card,
+                                         on_picked_change=lambda: None).picked == "tides":
+                    _reveal_section("tides", "tides")
+                    st.rerun()                      # the Tides panel is outside this fragment
 
         try:
             _snapshot_listen()
         except Exception as exc:
             print(f"Quick Snapshot players failed: {exc}")
-        with _timed("market overview"):
-            try:
-                import market_overview
-                overview = load_market_overview()
-                strip = market_overview.overview_html(overview, trade_crypto, trade_equities)
-            except Exception as exc:
-                print(f"market overview failed: {exc}")
-                overview, strip = None, ""
-            if strip:
-                _section_timer(
-                    float((overview or {}).get("fetched_at") or 0) or None,
-                    market_overview.REFRESH_SECONDS, "timer_markets",
-                    t("Hover a card for what it measures. Shared for everyone and refreshed about every "
-                    "15 minutes. Stock prices can be delayed about 15 minutes; gold and oil are futures prices."),
-                    prefix=t("🌍 Markets"),
-                )
-                st.markdown(strip, unsafe_allow_html=True)
-            elif trade_crypto or trade_equities:
-                st.caption(t("🌍 Market overview is loading. It appears on the next update."))
         # Market cap still uses a short cache. Prices and sentiment come from the shared rows.
         nonce = st.session_state.data_nonce
 
@@ -14075,23 +14078,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
             elif raw:
                 _select_chart_asset(raw)
 
-        try:
-            line = _sv.tides_line(_tides_snap())
-        except Exception as exc:
-            print(f"Quick Snapshot Tides line failed: {exc}")
-            line = ""
-        if line:
-            _snapshot_click(_score_table(key="snapshot_tides", data=line, on_picked_change=lambda: None).picked)
-
-        try:
-            tiles_html = _sv.funnel_tiles(_snapshot_funnels()) or _sv.no_funnels_tile(
-                "crypto" if trade_crypto else "equity")
-        except Exception as exc:
-            print(f"Quick Snapshot funnels failed: {exc}")
-            tiles_html = ""
-        if tiles_html:
-            _snapshot_click(_score_table(key="snapshot_funnels", data=tiles_html, on_picked_change=lambda: None).picked)
-
         def _trend_row(icon, word, row, kind):
             if not row or not row.get("key"):
                 return (f"<div style='display:flex;align-items:center;gap:8px;padding:6px 0;'>{icon} "
@@ -14114,23 +14100,6 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                 f"A description, not a forecast.' style='flex:none;background:{bg};color:{color};padding:2px 8px;"
                 f"border-radius:4px;font-size:0.85rem;font-weight:600;'>{arrow} Trend {score:+.0f}</span>"
                 "</div></button>")
-
-        trend_cards = []
-        if trade_crypto:
-            trend_cards.append((t("🪙 Crypto · highest and lowest Trend in your watchlist"), crypto_top, crypto_bot, "Crypto",
-                                "snapshot_trend_crypto"))
-        if trade_equities:
-            trend_cards.append((t("🏛️ Equities · highest and lowest Trend in your watchlist"), stock_top, stock_bot, "Stock",
-                                "snapshot_trend_stock"))
-        if trend_cards:
-            for column, (title, top, bot, kind, key) in zip(st.columns(len(trend_cards)), trend_cards):
-                body = ("<div class='ang-card'>"
-                        f"<div class='ang-kicker' style='margin-bottom:4px;'>{html.escape(title)}</div>"
-                        + _trend_row("📈", "Highest", top, kind)
-                        + (_trend_row("📉", "Lowest", bot, kind) if bot is not top else "")
-                        + "</div>")
-                with column:
-                    _snapshot_click(_score_table(key=key, data=body, on_picked_change=lambda: None).picked)
 
         changed = _score_table(
             key="snapshot_changes",
@@ -14171,7 +14140,53 @@ def _render_dashboard_body(crypto_watchlist, stock_watchlist, history_days, show
                         ),
                     )
 
-        st.caption(t("Click an asset to open it on the chart, a funnel to open its table, or the Tides line for "
+        # Rows 4 to 6 (Angus, 24 Nov 2026): the Trend extremes, your funnels, then the markets strip.
+        trend_cards = []
+        if trade_crypto:
+            trend_cards.append((t("🪙 Crypto · highest and lowest Trend in your watchlist"), crypto_top, crypto_bot, "Crypto",
+                                "snapshot_trend_crypto"))
+        if trade_equities:
+            trend_cards.append((t("🏛️ Equities · highest and lowest Trend in your watchlist"), stock_top, stock_bot, "Stock",
+                                "snapshot_trend_stock"))
+        if trend_cards:
+            for column, (title, top, bot, kind, key) in zip(st.columns(len(trend_cards)), trend_cards):
+                body = ("<div class='ang-card'>"
+                        f"<div class='ang-kicker' style='margin-bottom:4px;'>{html.escape(title)}</div>"
+                        + _trend_row("📈", "Highest", top, kind)
+                        + (_trend_row("📉", "Lowest", bot, kind) if bot is not top else "")
+                        + "</div>")
+                with column:
+                    _snapshot_click(_score_table(key=key, data=body, on_picked_change=lambda: None).picked)
+
+        try:
+            tiles_html = _sv.funnel_tiles(_snapshot_funnels()) or _sv.no_funnels_tile(
+                "crypto" if trade_crypto else "equity")
+        except Exception as exc:
+            print(f"Quick Snapshot funnels failed: {exc}")
+            tiles_html = ""
+        if tiles_html:
+            _snapshot_click(_score_table(key="snapshot_funnels", data=tiles_html, on_picked_change=lambda: None).picked)
+
+        with _timed("market overview"):
+            try:
+                import market_overview
+                overview = load_market_overview()
+                strip = market_overview.overview_html(overview, trade_crypto, trade_equities)
+            except Exception as exc:
+                print(f"market overview failed: {exc}")
+                overview, strip = None, ""
+            if strip:
+                _section_timer(
+                    float((overview or {}).get("fetched_at") or 0) or None,
+                    market_overview.REFRESH_SECONDS, "timer_markets",
+                    t("Hover a card for what it measures. Shared for everyone and refreshed about every "
+                    "15 minutes. Stock prices can be delayed about 15 minutes; gold and oil are futures prices."),
+                    prefix=t("🌍 Markets"),
+                )
+                st.markdown(strip, unsafe_allow_html=True)
+            elif trade_crypto or trade_equities:
+                st.caption(t("🌍 Market overview is loading. It appears on the next update."))
+        st.caption(t("Click an asset to open it on the chart, a funnel to open its table, or the Tides card for "
                    "the macro picture."))
 
     show_tides()                        # overview content: directly under Quick Snapshot, in both layouts

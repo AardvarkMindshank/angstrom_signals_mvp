@@ -49,3 +49,15 @@ def test_funnel_tiles_open_their_funnel_and_show_changes():
 def test_no_funnels_tile_opens_the_table_in_dynamic_funnel():
     out = sv.no_funnels_tile("equity")
     assert "data-pick='funnel_new|equity'" in out and "Make one" in out
+
+
+def test_tides_card_for_the_top_row():
+    """24 Nov 2026: the Tides card beside the video and the briefings, opening the Tides panel."""
+    snap = {"tide": {"status": "ok", "label": "out", "held_days": 25},
+            "sea": {"status": "ok", "state": "rough", "plain": "high volatility"},
+            "currents": {"fear": {"status": "ok", "value": 26.62, "change_7": 1.16}},
+            "winds": {"crypto": {"name": "Crypto longs", "wind": "headwind", "drivers": ["fear", "credit"]}}}
+    card = sv.tides_card(snap)
+    assert "data-pick='tides'" in card and "Tide going out" in card and "held 25 trading days" in card
+    assert "26.6" in card and "+1.2 pts this week" in card and "headwind" in card and "Open Tides" in card
+    assert sv.tides_card({"tide": {"status": "error"}}) == ""

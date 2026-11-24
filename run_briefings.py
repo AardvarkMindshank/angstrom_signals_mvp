@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
@@ -57,8 +58,16 @@ def ensure_bucket(db) -> None:
 
 
 def _prefs(db) -> list[dict]:
-    return (db.table("user_preferences").select("user_id, crypto_watchlist, stock_watchlist, settings")
+    """Every member's preferences, with the account's time and time zone (Settings: the daily summary's) added to
+    their settings for reading (briefing.with_account_time); nothing extra is ever saved back."""
+    rows = (db.table("user_preferences").select("user_id, crypto_watchlist, stock_watchlist, settings")
             .execute().data or [])
+    try:
+        alerts = {a["user_id"]: a for a in (db.table("alert_preferences").select("user_id, digest_tz, digest_hour")
+                                            .execute().data or [])}
+    except Exception:
+        alerts = {}
+    return [{**r, "settings": briefing.with_account_time(r.get("settings"), alerts.get(r["user_id"]))} for r in rows]
 
 
 def _meta(db, token: str) -> dict:
@@ -145,7 +154,8 @@ def due_rows(db, now=None) -> list[dict]:
 def _save_state(db, user_id: str, settings: dict, **changes) -> None:
     """Merge into settings["briefing_state"] / ["briefing"] on the member's row (the worker's service key)."""
     fresh = (db.table("user_preferences").select("settings").eq("user_id", user_id).execute().data or [{}])[0]
-    s = fresh.get("settings") if isinstance(fresh.get("settings"), dict) else dict(settings)
+    s = (fresh.get("settings") if isinstance(fresh.get("settings"), dict)
+         else {k: v for k, v in (settings or {}).items() if k not in (briefing.ACCOUNT_TZ, briefing.ACCOUNT_HOUR)})
     for key, value in changes.items():
         part = dict(s.get(key) or {})
         part.update(value)
@@ -225,6 +235,56 @@ def _plan_for(db, user_id: str, row: dict, now: datetime) -> tuple[dict, str]:
     if not navigator.complete(body):
         raise RuntimeError("the Passage Plan came back cut short")
     return {"body": body, "created_at": datetime.now(timezone.utc).isoformat()}, used
+
+
+def sample_for_admins(now: datetime | None = None) -> int:
+    """🧭 The new member-focused Passage Plan (passage.py) for each admin account, sent to that admin by email
+    (written plan, spoken script, and the audio attached), saved nowhere (24 Nov 2026). Prints no member data."""
+    import base64
+    import html as html_
+
+    import briefing_audio
+    import passage
+    import run_alerts
+    from email_brand import render_email
+
+    db, _url = _client()
+    now = now or datetime.now(timezone.utc)
+    ids = [r["user_id"] for r in (db.table("profiles").select("user_id").eq("role", "admin").execute().data or [])]
+    sent = 0
+    for user_id in ids:
+        row = next((p for p in _prefs(db) if p["user_id"] == user_id), None)
+        if not row:
+            continue
+        b = briefing.settings_of(row.get("settings") if isinstance(row.get("settings"), dict) else {})
+        here = briefing.local_now(b["zone"], now)
+        f = passage.facts(db, user_id, row, now)
+        plan, writer = passage.write(db, f, here)
+        if not plan:
+            print(f"Sample Passage Plan not written: {writer}")
+            continue
+        weather = briefing.weather(briefing.gather(db, user_id, row, {"sections": ["markets", "tides"],
+                                                                     "assets": []}, now))
+        with tempfile.TemporaryDirectory() as tmp:
+            mp3 = Path(tmp) / "passage_plan_sample.mp3"
+            seconds = briefing_audio.make(plan["spoken"], mp3, b["voice"], Path(tmp), weather=weather,
+                                          tag=briefing.tag_line("passage", here))
+            audio = base64.b64encode(mp3.read_bytes()).decode()
+        to = run_alerts.user_email(db, user_id)
+        written = html_.escape(plan["written"]).replace("\n", "<br>")
+        written = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", written)
+        page, plain = render_email(
+            "🧭 A sample of the new Passage Plan",
+            ["A sample of the new Passage Plan, about your own watchlist, funnels and alerts, written from today's "
+             "readings. It is saved nowhere: your real plan and Logbook are unchanged. The spoken version is "
+             f"attached ({round(seconds)} s).", written, "<b>The spoken script</b><br>" + html_.escape(plan["spoken"])],
+            preheader="A sample of the new Passage Plan.")
+        ok = run_alerts.send_digest_email(to, f"🧭 Sample: the new Passage Plan, {here.strftime('%a %d %b')}", page,
+                                          plain, attachments=[{"filename": "passage_plan_sample.mp3",
+                                                               "content": audio}])
+        sent += int(bool(ok))
+        print(f"Sample Passage Plan: {'sent' if ok else 'not sent'} ({round(seconds)} s, written by {writer})")
+    return sent
 
 
 def make_one(db, url: str, row: dict, now: datetime) -> bool:
@@ -345,7 +405,37 @@ def sample(out: str, kind: str = "general") -> int:
     return 0
 
 
+def diagnose_admins(now: datetime | None = None) -> None:
+    """Why an admin's Passage Plan is or isn't being made: dates, counts and yes/no only (no member content)."""
+    import navigator
+
+    db, _url = _client()
+    now = now or datetime.now(timezone.utc)
+    active = recently_active(db, now)
+    ids = [r["user_id"] for r in (db.table("profiles").select("user_id").eq("role", "admin").execute().data or [])]
+    for n, user_id in enumerate(ids, 1):
+        settings = (next((p for p in _prefs(db) if p["user_id"] == user_id), {}) or {}).get("settings") or {}
+        b = briefing.settings_of(settings)
+        state = settings.get("briefing_state") if isinstance(settings.get("briefing_state"), dict) else {}
+        meta = _meta(db, b["token"]) if b.get("token") else {}
+        plans = navigator.recent_plans(db, user_id, limit=6)
+        print(f"Admin {n}: on={b['on']} hour={b['hour']} zone={b['zone']} "
+              f"due_now={briefing.due(settings, now)} plan={briefing.plan_of(db, user_id)} "
+              f"allowed={briefing.personal_allowed(briefing.plan_of(db, user_id))} "
+              f"active={None if active is None else user_id in active} token={bool(b.get('token'))} "
+              f"state_made={state.get('made')} state_error={bool(state.get('error'))} "
+              f"audio_days={sorted(meta)[-4:]} logbook_days={[str(p.get('day') or p.get('created_at'))[:10] for p in plans]}")
+        if state.get("error"):
+            print(f"Admin {n} last error: {str(state['error'])[:160]}")
+
+
 def main() -> int:
+    if "--diagnose-me" in sys.argv:
+        diagnose_admins()
+        return 0
+    if "--sample-me" in sys.argv:                     # the new Passage Plan, emailed to each admin
+        sample_for_admins()
+        return 0
     if "--sample" in sys.argv:
         i = sys.argv.index("--sample")
         return sample(sys.argv[i + 1], sys.argv[i + 2] if len(sys.argv) > i + 2 else "general")
