@@ -6,11 +6,19 @@ jobs:
   trial:
     runs-on: ubuntu-latest
     env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+      FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+      ALPHAVANTAGE_API_KEY: ${{ secrets.ALPHAVANTAGE_API_KEY }}
+      POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
+      COINALYZE_API_KEY: ${{ secrets.COINALYZE_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12", cache: pip }
       - run: pip install -q -r requirements.txt
-      - name: Trial (saves nothing)
-        run: PYTHONPATH=. python trials/news_trial.py 2>&1 | grep -v -i "warning"
+      - name: Mock-up data (saves nothing to the app)
+        run: PYTHONPATH=.:trials python trials/mockup_data.py 2>&1 | grep -v -i "warning"
+      - uses: actions/upload-artifact@v4
+        with: { name: mockup, path: out/mockup.json }
