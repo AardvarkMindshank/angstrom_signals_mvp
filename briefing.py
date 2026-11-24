@@ -644,7 +644,20 @@ def spoken_plan(body: str, day: datetime) -> str:
             out.append(line if line[-1] in ".!?:" else line + ".")
     out.append("That's your Passage Plan. It describes the app's readings and is not advice. Fair winds and following "
                "seas.")
-    return " ".join(out)
+    return plan_paragraphs(" ".join(out))
+
+
+def plan_paragraphs(text: str) -> str:
+    """The spoken Passage Plan laid out to read (24 Nov 2026, Angus): a paragraph per heading, each Expectation on a
+    line of its own, and the close in its own paragraph with "Fair winds" on its own line. Only line breaks change,
+    so the voice reads it the same; works on plans saved before as one block, too."""
+    text = " ".join(str(text or "").split())
+    if not text:
+        return ""
+    for head in list(PLAN_HEADINGS.values()) + ["That's your Passage Plan."]:
+        text = text.replace(" " + head, "\n\n" + head)
+    text = re.sub(r" (?=Expectation:)", "  \n", text)
+    return text.replace(" Fair winds and following seas.", "  \nFair winds and following seas.")
 
 
 def tag_line(kind: str, day: datetime) -> str:

@@ -136,7 +136,7 @@ def test_spoken_plan_keeps_the_words_and_says_the_headings():
     assert out.startswith("This is your MarketNavi Passage Plan for Saturday 21 November.")
     assert "First, the conditions. Tide going out (risk-defensive), held 6 trading days." in out
     assert "The weather on the route. CPI on Wed: dollar plus 2.1 percent, score 62 out of 100." in out
-    assert "Things to watch. Expectation: the tide holds 5 closes." in out
+    assert "Things to watch.  \nExpectation: the tide holds 5 closes." in out
     assert "*" not in out and "⚓" not in out and out.endswith("Fair winds and following seas.")
 
 
@@ -280,3 +280,16 @@ def test_one_account_time_and_zone_from_notifications():
     b = briefing.settings_of(s)
     assert b["zone"] == "Asia/Bangkok" and b["hour"] == 7 and b["on"] is True
     assert briefing.settings_of({})["zone"] == "UTC"
+
+
+def test_spoken_plan_reads_in_paragraphs_and_sounds_the_same():
+    import briefing
+    from datetime import datetime
+
+    body = ("**🌊 Conditions** - Tide going out.\n**🌦️ Weather on the route** - No events.\n**⛵ Your vessels** - None.\n"
+            "**⚠️ Hazards** - Fear high.\n**🔭 Things to watch** - Expectation: A. Expectation: B.")
+    out = briefing.spoken_plan(body, datetime(2026, 11, 24))
+    assert "\n\nFirst, the conditions." in out and "\n\nHazards." in out and "\n\nThat's your Passage Plan." in out
+    assert out.count("  \nExpectation:") == 2 and out.endswith("  \nFair winds and following seas.")
+    assert briefing.plan_paragraphs(out) == out
+    assert briefing.plan_paragraphs(" ".join(out.split())) == out

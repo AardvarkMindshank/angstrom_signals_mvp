@@ -9826,7 +9826,7 @@ def _passage_player(key: str, show_button: bool = True, pick: bool = False, day:
         with st.expander("📜 " + t("Read it"), expanded=False):
             text = written.get(day) or (_briefing_text(briefing.public_url(base, f"{b['token']}/{spoken[day]}.txt"))
                                         if spoken.get(day) else "")
-            st.markdown(text or t("Not available."))
+            st.markdown(briefing.plan_paragraphs(text) if text and not written.get(day) else text or t("Not available."))
     if show_button and st.button("🎙️ " + t("Speak today's plan now"), key=f"briefing_make_{key}",
                                  use_container_width=True,
                                  help=t("Reads today's Passage Plan aloud (writing it first if it isn't written "
