@@ -497,7 +497,7 @@ export default function(component) {
       "html.angstrom-night [data-testid='stCode'],html.angstrom-night pre{background:#262730 !important;color:var(--ang-text);border:1px solid var(--ang-border);border-radius:8px;}",
       ".brand-mark img{display:none;}",
       ".brand-mark.is-light .logo-light,.brand-mark.is-dark .logo-dark{display:inline;}",
-      ".sentiment-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:14px 16px;}",
+      ".sentiment-card{background:var(--ang-surface);color:var(--ang-text);border:1px solid var(--ang-border);border-radius:10px;padding:14px 16px;margin-bottom:14px;}",
       ".sentiment-kicker{font-size:.8rem;color:var(--ang-muted);margin-bottom:4px;}",
       ".sentiment-score{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:4px;font-weight:600;}",
       ".sentiment-coverage{margin-top:8px;font-weight:600;}",
