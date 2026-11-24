@@ -78,6 +78,7 @@ jobs:
         run: |
           mkdir -p out
           if [ "$KIND" = "passage_me" ]; then python run_briefings.py --sample-me; exit 0; fi
+          if [ "$KIND" = "diagnose_me" ]; then python run_briefings.py --diagnose-me; exit 0; fi
           python run_briefings.py --sample out/briefing_sample.mp3 "${KIND:-general}"
       - name: Keep the sample
         if: steps.check.outputs.due == 'sample'

@@ -398,7 +398,35 @@ def sample(out: str, kind: str = "general") -> int:
     return 0
 
 
+def diagnose_admins(now: datetime | None = None) -> None:
+    """Why an admin's Passage Plan is or isn't being made: dates, counts and yes/no only (no member content)."""
+    import navigator
+
+    db, _url = _client()
+    now = now or datetime.now(timezone.utc)
+    active = recently_active(db, now)
+    ids = [r["user_id"] for r in (db.table("profiles").select("user_id").eq("role", "admin").execute().data or [])]
+    for n, user_id in enumerate(ids, 1):
+        rows = (db.table("user_preferences").select("settings").eq("user_id", user_id).execute().data or [{}])
+        settings = rows[0].get("settings") if isinstance(rows[0].get("settings"), dict) else {}
+        b = briefing.settings_of(settings)
+        state = settings.get("briefing_state") if isinstance(settings.get("briefing_state"), dict) else {}
+        meta = _meta(db, b["token"]) if b.get("token") else {}
+        plans = navigator.recent_plans(db, user_id, limit=6)
+        print(f"Admin {n}: on={b['on']} hour={b['hour']} zone_set={bool(settings.get('digest_tz'))} "
+              f"due_now={briefing.due(settings, now)} plan={briefing.plan_of(db, user_id)} "
+              f"allowed={briefing.personal_allowed(briefing.plan_of(db, user_id))} "
+              f"active={None if active is None else user_id in active} token={bool(b.get('token'))} "
+              f"state_made={state.get('made')} state_error={bool(state.get('error'))} "
+              f"audio_days={sorted(meta)[-4:]} logbook_days={[str(p.get('day') or p.get('created_at'))[:10] for p in plans]}")
+        if state.get("error"):
+            print(f"Admin {n} last error: {str(state['error'])[:160]}")
+
+
 def main() -> int:
+    if "--diagnose-me" in sys.argv:
+        diagnose_admins()
+        return 0
     if "--sample-me" in sys.argv:                     # the new Passage Plan, emailed to each admin
         sample_for_admins()
         return 0
