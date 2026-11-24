@@ -187,8 +187,8 @@
    "base_rate_confirm": 0.2241116570533362,
    "days_search": 355512,
    "days_confirm": 70215,
-   "looked_at": 7564,
-   "tested": 177,
+   "looked_at": 9758,
+   "tested": 203,
    "search_survivors": 0,
    "themes": 0,
    "results": [],
@@ -416,6 +416,23 @@
     },
     {
      "condition": [
+      "Open gap below (ATRs away) 1.5 or more",
+      "RSI (14) under 30"
+     ],
+     "kind": "pair",
+     "days": 264,
+     "coins": 97,
+     "rate": 0.2916666666666667,
+     "usual": 0.20874135901389784,
+     "lift": 1.3972634270683641,
+     "p": 0.03302181930305111,
+     "coins_up": 1,
+     "coins_read": 5,
+     "fdr_pass": false,
+     "search_pass": false
+    },
+    {
+     "condition": [
       "Bollinger position under 0",
       "Long rates: falling"
      ],
@@ -501,6 +518,23 @@
     },
     {
      "condition": [
+      "ATR vs its average under 0.8",
+      "Close vs the 30-candle value area: below value"
+     ],
+     "kind": "pair",
+     "days": 265,
+     "coins": 47,
+     "rate": 0.3471698113207547,
+     "usual": 0.2548171415630775,
+     "lift": 1.3624272260146055,
+     "p": 0.0534341807212811,
+     "coins_up": 1,
+     "coins_read": 2,
+     "fdr_pass": false,
+     "search_pass": false
+    },
+    {
+     "condition": [
       "Double bottom: confirmed",
       "WaveTrend: oversold"
      ],
@@ -581,6 +615,23 @@
      "p": 0.0542414239985938,
      "coins_up": 9,
      "coins_read": 11,
+     "fdr_pass": false,
+     "search_pass": false
+    },
+    {
+     "condition": [
+      "Bollinger position under 0",
+      "Open gap above (ATRs away) 1.5 or more"
+     ],
+     "kind": "pair",
+     "days": 5106,
+     "coins": 155,
+     "rate": 0.28809244026635333,
+     "usual": 0.21332075979719103,
+     "lift": 1.3505129108871048,
+     "p": 0.002504421289857139,
+     "coins_up": 122,
+     "coins_read": 154,
      "fdr_pass": false,
      "search_pass": false
     },
@@ -705,6 +756,23 @@
     },
     {
      "condition": [
+      "Long rates: rising",
+      "Sonar dot build-up: green"
+     ],
+     "kind": "pair",
+     "days": 3796,
+     "coins": 155,
+     "rate": 0.2705479452054795,
+     "usual": 0.20384536283828247,
+     "lift": 1.327221485141727,
+     "p": 0.002081472184948217,
+     "coins_up": 112,
+     "coins_read": 152,
+     "fdr_pass": false,
+     "search_pass": false
+    },
+    {
+     "condition": [
       "Sea state: storm",
       "Tide: in"
      ],
@@ -790,86 +858,18 @@
     },
     {
      "condition": [
-      "Band width percentile under 20",
-      "Credit: falling"
+      "Major release within 2 days",
+      "Sonar dot build-up: green"
      ],
      "kind": "pair",
-     "days": 10695,
+     "days": 1152,
      "coins": 155,
-     "rate": 0.2677886863020103,
-     "usual": 0.2033943900758165,
-     "lift": 1.3165981923207932,
-     "p": 0.0006052346477997009,
-     "coins_up": 124,
-     "coins_read": 155,
-     "fdr_pass": false,
-     "search_pass": false
-    },
-    {
-     "condition": [
-      "Bollinger position under 0",
-      "Ichimoku cloud: above"
-     ],
-     "kind": "pair",
-     "days": 2695,
-     "coins": 155,
-     "rate": 0.26975881261595547,
-     "usual": 0.20511622750769137,
-     "lift": 1.315151004353569,
-     "p": 0.0016803223493985328,
-     "coins_up": 95,
-     "coins_read": 142,
-     "fdr_pass": false,
-     "search_pass": false
-    },
-    {
-     "condition": [
-      "Bollinger position under 0",
-      "US dollar: rising"
-     ],
-     "kind": "pair",
-     "days": 7266,
-     "coins": 155,
-     "rate": 0.28488852188274155,
-     "usual": 0.21676284075409652,
-     "lift": 1.3142867148799238,
-     "p": 0.006400057277110744,
-     "coins_up": 127,
-     "coins_read": 155,
-     "fdr_pass": false,
-     "search_pass": false
-    },
-    {
-     "condition": [
-      "EMA 20 vs 50: fast above",
-      "RSI (14) under 30"
-     ],
-     "kind": "pair",
-     "days": 923,
-     "coins": 153,
-     "rate": 0.3001083423618635,
-     "usual": 0.22836278748725153,
-     "lift": 1.3141735817120257,
-     "p": 0.0073942530370544116,
-     "coins_up": 7,
-     "coins_read": 14,
-     "fdr_pass": false,
-     "search_pass": false
-    },
-    {
-     "condition": [
-      "On-balance volume 0.3 or more",
-      "Sonar big green dot in the last 3 candles"
-     ],
-     "kind": "pair",
-     "days": 990,
-     "coins": 149,
-     "rate": 0.26262626262626265,
-     "usual": 0.19999013653452707,
-     "lift": 1.3131960764521096,
-     "p": 0.002789426962864196,
-     "coins_up": 18,
-     "coins_read": 35,
+     "rate": 0.2786458333333333,
+     "usual": 0.21159703838212407,
+     "lift": 1.3168701956504965,
+     "p": 0.04087430564106552,
+     "coins_up": 23,
+     "coins_read": 42,
      "fdr_pass": false,
      "search_pass": false
     }
@@ -894,9 +894,9 @@
    "base_rate_confirm": 0.1815851313821833,
    "days_search": 355512,
    "days_confirm": 70215,
-   "looked_at": 7564,
-   "tested": 233,
-   "search_survivors": 22,
+   "looked_at": 9758,
+   "tested": 264,
+   "search_survivors": 26,
    "themes": 5,
    "results": [
     {
@@ -938,18 +938,19 @@
      "verdict": "survivor",
      "theme": [
       "Band width percentile under 20 + Volume vs usual 1.5 to 2.5",
+      "Heavy candle 0.5 or more + Pullback to that VWAP held",
+      "Heavy candle 0.5 or more + Open gap below (ATRs away) 1.5 or more",
       "Heavy candle 0.5 or more + MACD histogram -0.3 to 0.3",
+      "Band width percentile under 20 + Close vs the 30-candle value area: above value",
       "Band width percentile under 20 + On-balance volume 0.3 or more",
       "Double bottom: confirmed + Heavy candle 0.5 or more",
       "Heavy candle 0.5 or more + Momentum: mixed",
       "Band width percentile under 20 + Bollinger position 0.8 to 1",
       "Band width percentile under 20 + WaveTrend: overbought",
       "Band width percentile under 20 + Bollinger position 1 or more",
-      "Band width percentile under 20 + RSI (14) 70 or more",
-      "Heavy candle 0.5 or more + Tide: slack",
-      "Band width percentile under 20 + Stoch RSI: both high"
+      "Band width percentile under 20 + RSI (14) 70 or more"
      ],
-     "theme_size": 11,
+     "theme_size": 14,
      "tide_split": {
       "in": {
        "days": 1802,
@@ -976,70 +977,72 @@
     },
     {
      "condition": [
-      "Momentum: mixed",
+      "Open gap below (ATRs away) 1.5 or more",
       "Volume vs usual 1.5 to 2.5"
      ],
      "kind": "pair",
-     "days": 6055,
+     "days": 7820,
      "coins": 155,
-     "rate": 0.24822460776218003,
-     "usual": 0.18649918482920197,
-     "lift": 1.3309688618183875,
-     "p": 1.619519064792723e-05,
-     "coins_up": 117,
-     "coins_read": 155,
+     "rate": 0.24398976982097187,
+     "usual": 0.185444781211011,
+     "lift": 1.3157003838428034,
+     "p": 1.3127491382987947e-05,
+     "coins_up": 128,
+     "coins_read": 154,
      "fdr_pass": true,
      "search_pass": true,
      "confirm": {
-      "days": 1074,
-      "coins": 154,
-      "rate": 0.2085661080074488,
-      "usual": 0.17644852685504592,
-      "lift": 1.1820223819651823,
-      "p": 0.11925620910440059,
-      "diff": 0.0321175811524029,
+      "days": 1509,
+      "coins": 155,
+      "rate": 0.220675944333996,
+      "usual": 0.18212822544607915,
+      "lift": 1.2116515372260588,
+      "p": 0.03613625412227332,
+      "diff": 0.03854771888791686,
       "ci95": [
-       -0.022348515651481035,
-       0.08658367795628684
+       -0.0036939304037842888,
+       0.08078936817961802
       ],
-      "coins_up": 20,
-      "coins_read": 32
+      "coins_up": 41,
+      "coins_read": 77
      },
      "opposite": {
-      "lift": 1.2099848174637249,
-      "days": 1074
+      "lift": 1.1680667267318308,
+      "days": 1509
      },
-     "confirmed": false,
-     "verdict": "not_confirmed",
+     "confirmed": true,
+     "verdict": "fragile",
      "theme": [
+      "Momentum: mixed + Volume vs usual 1.5 to 2.5",
+      "Pullback to that VWAP held + Volume vs usual 1.5 to 2.5",
       "MACD histogram -0.3 to 0.3 + Volume vs usual 1.5 to 2.5",
       "Trend: up + Volume vs usual 1.5 to 2.5",
       "Double bottom: confirmed + Volume vs usual 1.5 to 2.5",
       "Stoch RSI: apart + Volume vs usual 1.5 to 2.5",
       "Tide: slack + Volume vs usual 1.5 to 2.5"
      ],
-     "theme_size": 5,
+     "theme_size": 7,
      "tide_split": {
       "in": {
-       "days": 1696,
-       "lift": 1.1246909271055612,
-       "rate": 0.2016509433962264,
+       "days": 2182,
+       "lift": 1.1293761044096813,
+       "rate": 0.20531622364802934,
        "coins": 155,
-       "spells": 41
+       "spells": 36
       },
       "slack": {
-       "days": 3691,
-       "lift": 1.4683348429328857,
-       "rate": 0.26821999458141427,
+       "days": 5198,
+       "lift": 1.4044638419509057,
+       "rate": 0.25702193151212005,
        "coins": 155,
-       "spells": 72
+       "spells": 64
       },
       "out": {
-       "days": 1742,
-       "lift": 1.1602577063528956,
-       "rate": 0.2267508610792193,
+       "days": 1949,
+       "lift": 1.2119514690904523,
+       "rate": 0.2344792201128784,
        "coins": 155,
-       "spells": 38
+       "spells": 46
       }
      }
     },
@@ -1080,10 +1083,8 @@
      },
      "confirmed": false,
      "verdict": "not_confirmed",
-     "theme": [
-      "Bollinger position 0.8 to 1 + MACD histogram under -0.3"
-     ],
-     "theme_size": 1,
+     "theme": [],
+     "theme_size": 0,
      "tide_split": {
       "in": {
        "days": 235,
@@ -1459,6 +1460,23 @@
     },
     {
      "condition": [
+      "ATR vs its average 1.2 or more",
+      "Sonar dot build-up: green"
+     ],
+     "kind": "pair",
+     "days": 1503,
+     "coins": 154,
+     "rate": 0.2927478376580173,
+     "usual": 0.1882148848709226,
+     "lift": 1.5553915295210747,
+     "p": 0.19126856927008945,
+     "coins_up": 60,
+     "coins_read": 78,
+     "fdr_pass": false,
+     "search_pass": false
+    },
+    {
+     "condition": [
       "Momentum: down",
       "WaveTrend: overbought"
      ],
@@ -1799,6 +1817,23 @@
     },
     {
      "condition": [
+      "Pullback to that VWAP held",
+      "Volume vs usual 2.5 or more"
+     ],
+     "kind": "pair",
+     "days": 581,
+     "coins": 139,
+     "rate": 0.270223752151463,
+     "usual": 0.19004726114669324,
+     "lift": 1.4218765928064774,
+     "p": 0.00046678582602689635,
+     "coins_up": 7,
+     "coins_read": 7,
+     "fdr_pass": false,
+     "search_pass": false
+    },
+    {
+     "condition": [
       "Sea state: rough",
       "Tide: slack"
      ],
@@ -1867,52 +1902,18 @@
     },
     {
      "condition": [
-      "Fear (VIX): rising",
-      "WaveTrend: overbought"
-     ],
-     "kind": "pair",
-     "days": 6644,
-     "coins": 155,
-     "rate": 0.25692354003612283,
-     "usual": 0.18335528723824498,
-     "lift": 1.4012333317788979,
-     "p": 0.008695331426191477,
-     "coins_up": 115,
-     "coins_read": 153,
-     "fdr_pass": false,
-     "search_pass": false
-    },
-    {
-     "condition": [
-      "Band width percentile under 20",
+      "Close vs the 30-candle value area: below value",
       "Sonar big red dot in the last 3 candles"
      ],
      "kind": "pair",
-     "days": 3403,
-     "coins": 154,
-     "rate": 0.2430208639435792,
-     "usual": 0.17373971449481307,
-     "lift": 1.3987640341773122,
-     "p": 0.0005135018127383897,
-     "coins_up": 98,
-     "coins_read": 137,
-     "fdr_pass": false,
-     "search_pass": false
-    },
-    {
-     "condition": [
-      "Double bottom: confirmed",
-      "Volume vs usual 2.5 or more"
-     ],
-     "kind": "pair",
-     "days": 603,
-     "coins": 151,
-     "rate": 0.2570480928689884,
-     "usual": 0.18413543566373494,
-     "lift": 1.3959729801188583,
-     "p": 0.0008880843542203301,
-     "coins_up": 3,
-     "coins_read": 5,
+     "days": 196,
+     "coins": 92,
+     "rate": 0.25,
+     "usual": 0.17774674746441738,
+     "lift": 1.4064954974776502,
+     "p": 0.05519958024798239,
+     "coins_up": 0,
+     "coins_read": 0,
      "fdr_pass": false,
      "search_pass": false
     }
