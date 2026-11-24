@@ -59,10 +59,8 @@ jobs:
           fi
           npm install --no-save --silent playwright@1.63.0
           # The browser download has hung for 25 minutes twice (24 Nov 2026): give each try 4 minutes, up to 3 tries.
-          for try in 1 2 3; do
-            timeout 240 npx playwright install --with-deps chromium > /dev/null && break
-            echo "Browser install try $try timed out or failed; trying again."
-          done
+          # The runner already has Google Chrome and its libraries; the renderer falls back to it when this download fails.
+          timeout 180 npx playwright install chromium > /dev/null || echo "Playwright's browser didn't download; using the runner's Chrome."
       - name: Voice model (cached)
         id: voice
         uses: actions/cache@v4
