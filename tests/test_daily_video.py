@@ -44,7 +44,8 @@ def test_template_story_picks_the_biggest_mover():
 
 def test_ai_sections_need_a_story():
     reply = json.dumps({"headline": "h", "story": {"title": "t", "text": "x y", "asset": "Bitcoin"},
-                        "tides": "a", "equities": "b", "crypto": "c", "horizon": "d"})
+                        "tides": "a", "equities": "b", "crypto": "c", "horizon": "d",
+                        "news_stocks": {"text": "n", "pick": 0}, "news_crypto": {"text": "m", "pick": 9}})
 
     class DB:
         pass
@@ -55,6 +56,7 @@ def test_ai_sections_need_a_story():
     try:
         got, who = dv.write_sections(DB(), {}, chat=lambda *a, **k: (reply, True))
         assert who == "grok" and got["story"]["asset"] == "Bitcoin"
+        assert got["news_stocks"] == {"text": "n", "pick": None}      # no headlines: no pick to point at
         bad = json.dumps({"headline": "h", "tides": "a", "equities": "b", "crypto": "c", "horizon": "d"})
         got, who = dv.write_sections(DB(), {"cryptos": [{"name": "Ether", "change_1d": 3.0}]},
                                      chat=lambda *a, **k: (bad, True))
@@ -191,7 +193,8 @@ def test_moves_name_their_session_and_today_is_sent_back():
     assert briefing.session_word("2026-11-20") == "Fri"
 
     good = {"headline": "Up on Friday", "story": {"title": "t", "text": "Ether rose over the last 24 hours.", "asset": ""},
-            "tides": "x", "equities": "On Friday the S&P 500 rose.", "crypto": "y", "horizon": "z"}
+            "tides": "x", "equities": "On Friday the S&P 500 rose.", "crypto": "y", "horizon": "z",
+            "news_stocks": {"text": "n", "pick": 0}, "news_crypto": {"text": "m", "pick": 0}}
     bad = {**good, "equities": "The S&P 500 is up today."}
     replies = [json.dumps(bad), json.dumps(good)]
     old = ai_providers.available, ai_providers.app_choice
@@ -279,3 +282,32 @@ def test_wave_bloopers_only_in_rough_weather():
     assert not any(p and "wave" in p["file"] for p in calm)
     rough = [dv.blooper_for(datetime(2027, 1, 1) + timedelta(days=i), "cap", None, sections, "stormy") for i in range(400)]
     assert any(p and "wave" in p["file"] for p in rough)
+
+
+def test_headline_rows_and_the_news_sections():
+    report = {"headlines": [{"title": "Huang returns to Nvidia", "source": "Reuters", "score": 85, "note": "Big"},
+                            {"title": "Fed minutes due", "source": "AP", "score": 50},
+                            {"title": "Oil slides", "source": "FT", "score": 30}, {"title": "no score"}]}
+    rows = dv.headline_rows(report)
+    assert [r["title"] for r in rows] == ["Huang returns to Nvidia", "Fed minutes due", "Oil slides"]
+    assert rows[0]["mood"] == 70 and rows[0]["words"] == "bullish" and rows[0]["colour"].startswith("#")
+    assert dv.top_headline(rows)["title"] == "Huang returns to Nvidia"
+    facts = {"headlines": {"stock": rows, "crypto": []}, "key_markets": [], "cryptos": []}
+    out = dv._template(facts, dv.SECTIONS)
+    assert out["news_stocks"] == {"text": "In the headlines: Huang returns to Nvidia.", "pick": 0}
+    assert out["news_crypto"]["pick"] is None
+
+
+def test_news_follows_its_market_and_a_blooper_waits_for_it():
+    caps = {k: {"file": f"cap_{k}.mp4", "seconds": 2.0} for k in ("welcome", "sign_equities", "sign_crypto", "signoff")}
+    caps["blooper"] = {"file": "blooper_cat_chase_1.mp4", "seconds": 5.0, "after": "equities"}
+    narr = {k: {"file": f"{k}.wav", "seconds": 3.0} for k in ("date", "equities", "news_stocks", "crypto",
+                                                                "news_crypto", "close")}
+    kinds = [s["kind"] for s in dv.timeline(caps, narr)]
+    assert kinds.index("news_stocks") == kinds.index("equities") + 1
+    assert kinds.index("blooper") == kinds.index("news_stocks") + 1
+    assert kinds.index("news_crypto") == kinds.index("crypto") + 1
+
+
+def test_the_close_asks_people_to_join_the_beta():
+    assert "marketnavi.ai" in dv.CTA_WORDS and "dot A I" in dv.CTA_SPOKEN

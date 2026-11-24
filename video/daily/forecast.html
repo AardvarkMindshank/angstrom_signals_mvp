@@ -202,6 +202,25 @@ function narrContent(seg) {
       <div class="it card" style="padding:${z("26px 34px", "26px 34px 14px")};text-align:center"><div style="font-size:${z(34, 46)}px;color:var(--soft);font-weight:700">Crypto news mood</div>${gauge(d.crypto_mood, z(440, 640))}</div>
       <div class="grid" style="gap:${z(14, 18)}px;flex:1">${head}${rows}</div></div>`;
   }
+  if (seg.kind === "news_stocks" || seg.kind === "news_crypto") {
+    // 📰 Each article as a chip coloured by how it reads (the app's sentiment colours), then the day's main story.
+    const n = d.news?.[seg.kind] || { rows: [] };
+    const rows = [...n.rows].sort((a, b) => b.mood - a.mood);
+    const count = (f) => n.rows.filter(f).length;
+    const up = count((r) => r.mood >= 6), mid = count((r) => r.mood > -6 && r.mood < 6), down = count((r) => r.mood <= -6);
+    const chips = rows.map((r) => `<div style="flex:1;height:${z(70, 90)}px;border-radius:14px;background:${r.colour}"></div>`).join("");
+    const top = n.pick != null ? n.rows[n.pick] : null;
+    const head = seg.kind === "news_stocks" ? "📰 Stock-market headlines" : "📰 Crypto headlines";
+    return `<div class="it kicker" style="font-size:${z(84, 96)}px">${head}</div>
+      <div class="it card" style="padding:${z("26px 34px", "30px 36px")};margin-top:30px">
+        <div style="display:flex;gap:10px">${chips || '<div style="color:var(--soft);font-size:32px">No headlines</div>'}</div>
+        <div style="display:flex;justify-content:space-between;margin-top:16px;font-size:${z(30, 38)}px;font-weight:700">
+          <span style="color:#4ade80">${up} bullish</span><span style="color:#cbd5e1">${mid} neutral</span><span style="color:#f87171">${down} bearish</span></div></div>
+      ${top ? `<div class="it card" style="padding:${z("30px 38px", "36px 40px")};margin-top:26px;border-left:12px solid ${top.colour}">
+        <div style="font-size:${z(28, 34)}px;color:var(--amber);font-weight:800;letter-spacing:1px">THE MAIN STORY · ${esc(top.words.toUpperCase())}</div>
+        <div style="font-size:${z(50, 58)}px;font-weight:800;margin-top:12px;line-height:1.12">${esc(top.title)}</div>
+        ${top.source ? `<div style="font-size:${z(28, 34)}px;color:var(--soft);margin-top:12px">${esc(top.source)}</div>` : ""}</div>` : ""}`;
+  }
   if (seg.kind === "horizon") {
     const cards = (d.events.length ? d.events : [{ what: "A quiet week", when: "", why: "No big scheduled releases." }]).map((e) =>
       `<div class="it card" style="padding:${z("30px 36px", "40px 44px")}"><div style="font-size:${z(36, 46)}px;color:var(--amber);font-weight:800">📅 ${esc(e.when)}${e.when ? " UTC" : ""}</div>
@@ -213,6 +232,7 @@ function narrContent(seg) {
     if (d.brand.show && d.brand.logo) {
       return `<div style="text-align:center"><img class="it zoom" src="${d.brand.logo}" style="height:${z(500, 640)}px;max-width:100%;object-fit:contain">
         <div class="it sub" style="font-size:${z(44, 56)}px;margin-top:${z(30, 50)}px;color:#fff;font-weight:700">Your ${d.weekend ? "weekend" : "daily"} market briefing · ${esc(d.date)}</div>
+        ${d.brand.cta ? `<div class="it" style="display:inline-block;margin-top:${z(30, 44)}px;padding:${z("16px 40px", "20px 44px")};border-radius:999px;background:var(--teal);color:#04102a;font-weight:800;font-size:${z(44, 54)}px">${esc(d.brand.cta)}</div>` : ""}
         <div class="it sub" style="font-size:${z(30, 40)}px;margin-top:${z(26, 40)}px;color:#cbd5e1">${esc(d.brand.domain)} · © ${d.brand.year} ${esc(d.brand.company)}<br>Readings describe markets. Not financial advice.</div></div>`;
     }
     return `<div style="text-align:center"><div class="it" style="font-size:${z(110, 150)}px">⚓</div>
@@ -225,7 +245,7 @@ function narrContent(seg) {
 
 // 🖥️ The matching app screen behind each section: dim, angled and drifting slowly (fixed pictures from the app).
 const SCREEN_OF = { welcome: "snapshot", date: "snapshot", weather: "tides", sign_story: "chart", story: "chart",
-  sign_tides: "tides", tides: "tides", sign_equities: "table", equities: "table", sign_crypto: "chart", crypto: "chart",
+  sign_tides: "tides", tides: "tides", sign_equities: "table", equities: "table", news_stocks: "table", sign_crypto: "chart", crypto: "chart", news_crypto: "chart",
   sign_horizon: "tides", horizon: "tides", signoff: "funnel", tag: "funnel", reveal: "funnel", blooper: "tides" };          // no app screen behind the closing logo card
 const SCREEN_DIM = 0.13;
 let SPANS = [];

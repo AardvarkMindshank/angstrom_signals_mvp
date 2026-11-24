@@ -31,6 +31,7 @@ import numpy as np
 
 import brand
 import briefing
+import score_colours
 
 HERE = Path(__file__).resolve().parent
 PAGE = HERE / "video" / "daily" / "forecast.html"
@@ -142,8 +143,11 @@ SPARK = {"SPY": ("equity", "SPY"), "QQQ": ("equity", "QQQ"), "Bitcoin": ("crypto
          "BNB": ("crypto", "binancecoin")}
 # Words for each section, for about 90 seconds in all. Weekends (stock markets shut) drop equities and give crypto
 # the time instead.
-SECTIONS = {"story": 30, "tides": 30, "equities": 26, "crypto": 32, "horizon": 18}
-WEEKEND_SECTIONS = {"story": 30, "tides": 30, "crypto": 46, "horizon": 18}
+# 📰 news_stocks / news_crypto (24 Nov 2026): each market's dominant headline, after its numbers. A few words come
+# off the Tide and the markets so the video stays about the same length.
+SECTIONS = {"story": 30, "tides": 26, "equities": 22, "news_stocks": 24, "crypto": 26, "news_crypto": 24, "horizon": 18}
+WEEKEND_SECTIONS = {"story": 30, "tides": 26, "crypto": 36, "news_crypto": 26, "horizon": 18}
+NEWS_KINDS = {"news_stocks": "stock", "news_crypto": "crypto"}      # section -> market_mood key
 
 
 def sections_for(day: datetime) -> dict:
@@ -160,6 +164,66 @@ def _ordinal(n: int) -> str:
     return words[n]
 
 
+# ------------------------------------------------------------------------------------------------ the headlines
+
+NEWS_MAX = 8
+
+
+def refresh_news(supabase) -> None:
+    """Rewrite the crypto and stock market sentiment just before the video is made, so its headlines are the latest
+    (24 Nov 2026). Articles already scored keep their scores, and the 12-hour clock restarts from here, so the
+    twice-daily refresh falls in step with the video."""
+    try:
+        import ai_providers
+        import market_store
+        import sentiment
+        import shared_refresh
+
+        sentiment.set_provider(ai_providers.app_choice(supabase, "sentiment"))
+        if not sentiment.sentiment_ready():
+            print("News refresh skipped: no sentiment AI key.")
+            return
+        moods = market_store.load_market_moods(supabase) or {}
+        for spec in sentiment.MACRO_MOODS:
+            shared_refresh._save_mood(supabase, spec, previous=shared_refresh._previous_report(moods.get(spec["key"])))
+    except Exception as exc:
+        print(f"News refresh skipped: {str(exc)[:160]}")
+
+
+def headline_rows(report: dict | None) -> list[dict]:
+    """A market's scored headlines as the video uses them: {i, title, source, mood (-100..100), words}."""
+    rows = []
+    for row in ((report or {}).get("headlines") or []):
+        if not isinstance(row, dict) or not row.get("title") or row.get("score") is None:
+            continue
+        mood = briefing.news_mood(row["score"])
+        if not mood:
+            continue
+        rows.append({"i": len(rows), "title": briefing.clean(str(row["title"]))[:160],
+                     "source": str(row.get("source") or "")[:40], "note": briefing.clean(str(row.get("note") or ""))[:200],
+                     "mood": mood["news_mood"], "words": mood["news_mood_words"],
+                     "colour": score_colours.sentiment_tone(row["score"])[0]})       # the app's colour for it
+        if len(rows) >= NEWS_MAX:
+            break
+    return rows
+
+
+def news_facts(supabase) -> dict:
+    """{"stock": [...], "crypto": [...]}: each market's latest scored headlines."""
+    try:
+        import market_store
+
+        moods = market_store.load_market_moods(supabase) or {}
+    except Exception:
+        moods = {}
+    return {key: headline_rows((moods.get(key) or {}).get("sentiment_report")) for key in ("stock", "crypto")}
+
+
+def top_headline(rows: list[dict]) -> dict | None:
+    """Without the AI: the headline that reads strongest either way."""
+    return max(rows, key=lambda r: abs(r["mood"]), default=None)
+
+
 # ------------------------------------------------------------------------------------------------ the script
 
 ASK = {
@@ -171,6 +235,11 @@ ASK = {
     "equities": "\"equities\": about %d words on the S&P 500 and Nasdaq moves and the stock-market mood",
     "crypto": "\"crypto\": about %d words on Bitcoin, Ether and the other top coins and the crypto mood",
     "horizon": "\"horizon\": about %d words on the next scheduled events",
+    "news_stocks": "\"news_stocks\": {\"text\": about %d words on the single most important story in "
+                   "stock_headlines (the one most articles are about, or the one that moves markets most): what "
+                   "happened, then how the stock headlines read overall, \"pick\": that headline's i}",
+    "news_crypto": "\"news_crypto\": {\"text\": about %d words on the single most important story in "
+                   "crypto_headlines, the same way, \"pick\": that headline's i}",
 }
 
 
@@ -209,6 +278,11 @@ def _template(facts: dict, sections: dict = SECTIONS) -> dict:
              {"title": "A steady day", "asset": "", "text": "No single market stood out."})
     out = {"headline": "Your morning market forecast", "story": story, "tides": tide, "equities": eq, "crypto": cr,
            "horizon": hz}
+    for kind, key in NEWS_KINDS.items():
+        rows = (facts.get("headlines") or {}).get(key) or []
+        top = top_headline(rows)
+        out[kind] = ({"text": f"In the headlines: {top['title']}.", "pick": top["i"]} if top
+                     else {"text": "A quiet day in the headlines.", "pick": None})
     return {k: out[k] for k in ("headline", *sections)}
 
 
@@ -228,6 +302,11 @@ def write_sections(supabase, facts: dict, chat=None, sections: dict = SECTIONS, 
         data = {k: briefing.for_ai(facts).get(k) for k in ("conditions", "markets", "tide", "key_markets", "cryptos",
                                                             "events")}
         data["overall_weather"] = briefing.weather(facts)
+        for kind, key in NEWS_KINDS.items():
+            if kind in sections:
+                data[f"{'stock' if key == 'stock' else 'crypto'}_headlines"] = [
+                    {k: r[k] for k in ("i", "title", "source", "note", "words")}
+                    for r in (facts.get("headlines") or {}).get(key) or []]
         messages = [{"role": "user", "content": json.dumps(data, ensure_ascii=False, default=str)}]
         for _attempt in range(2):
             try:
@@ -240,13 +319,20 @@ def write_sections(supabase, facts: dict, chat=None, sections: dict = SECTIONS, 
                 print(f"Video script by AI failed: {str(exc)[:160]}")
                 break
             story = got.get("story") if isinstance(got.get("story"), dict) else None
-            plain = [k for k in ("headline", *sections) if k != "story"]
+            news = [k for k in sections if k in NEWS_KINDS]
+            plain = [k for k in ("headline", *sections) if k != "story" and k not in NEWS_KINDS]
             if not (story and str(story.get("text") or "").strip() and all(
-                    isinstance(got.get(k), str) and got[k].strip() for k in plain)):
+                    isinstance(got.get(k), str) and got[k].strip() for k in plain) and all(
+                    isinstance(got.get(k), dict) and str(got[k].get("text") or "").strip() for k in news)):
                 break
             out = {k: briefing.clean(got[k]) for k in plain}
             out["story"] = {"title": briefing.clean(str(story.get("title") or "")) or "The story of the day",
                             "text": briefing.clean(str(story["text"])), "asset": str(story.get("asset") or "")}
+            for k in news:
+                rows = (facts.get("headlines") or {}).get(NEWS_KINDS[k]) or []
+                pick = got[k].get("pick")
+                pick = pick if isinstance(pick, int) and 0 <= pick < len(rows) else (top_headline(rows) or {}).get("i")
+                out[k] = {"text": briefing.clean(str(got[k]["text"])), "pick": pick}
             wrong = today_words(out)
             if not wrong:
                 return out, provider
@@ -323,9 +409,14 @@ def graphics_data(facts: dict, sections: dict, day: datetime, load=None) -> dict
         "currents": currents, "stocks": stocks, "stock_mood": moods.get("stock market"),
         "coins": coins, "crypto_mood": moods.get("crypto"), "events": events,
         "story": {"title": story.get("title", ""), "asset": hit},
+        "news": {kind: {"rows": [{k: r[k] for k in ("title", "source", "mood", "words", "colour")}
+                                 for r in (facts.get("headlines") or {}).get(key) or []],
+                        "pick": (sections.get(kind) or {}).get("pick")}
+                 for kind, key in NEWS_KINDS.items() if kind in sections},
         "weekend": day.weekday() >= 5,
         "brand": {"show": bool(brand.SHOW_IN_VIDEO), "name": brand.NAME, "domain": brand.DOMAIN,
-                  "company": brand.COMPANY, "year": datetime.now(timezone.utc).year, "logo": _logo_uri()},
+                  "company": brand.COMPANY, "year": datetime.now(timezone.utc).year, "logo": _logo_uri(),
+                  "cta": CTA_WORDS},
     }
 
 
@@ -431,6 +522,9 @@ def _logo_uri() -> str:
 # Opening and closing (21 Nov 2026): the whole logo, large, with the name spoken over the music at the start; at the
 # end, after the presenter's "Fair winds and following seas", a pause, then the logo again with the closing line.
 SPOKEN_NAME = "Market Navi"                 # how the voice says MarketNavi
+# 📣 The call to action at the very end (24 Nov 2026): on the closing card and said once, after the sign-off.
+CTA_WORDS = "Join the beta at marketnavi.ai"
+CTA_SPOKEN = "Join the beta at Market Navi dot A I."
 INTRO_HOLD = 1.6                            # the logo stays this long after the opening words
 OUTRO_PAUSE = 1.0                           # music only, between the sign-off and the closing line
 
@@ -448,11 +542,15 @@ def timeline(caps: dict, narr: dict) -> list[dict]:
     """Segments [{kind, start, end, clip?, audio?}] from the clip and voice lengths (seconds)."""
     order = [("cap", "welcome"), ("narr", "date"), ("cap", "weather"), ("cap", "sign_story"), ("narr", "story"),
              ("cap", "sign_tides"), ("narr", "tides"), ("cap", "sign_equities"), ("narr", "equities"),
-             ("cap", "sign_crypto"), ("narr", "crypto"), ("cap", "sign_horizon"), ("narr", "horizon"),
+             ("narr", "news_stocks"), ("cap", "sign_crypto"), ("narr", "crypto"), ("narr", "news_crypto"),
+             ("cap", "sign_horizon"), ("narr", "horizon"),
              ("cap", "signoff"), ("cap", "tag"), ("cap", "reveal"), ("narr", "close")]
     order = [(who, kind) for who, kind in order if kind in (caps if who == "cap" else narr)]   # weekends: no equities
     if "blooper" in caps and ("narr", caps["blooper"]["after"]) in order:
-        order.insert(order.index(("narr", caps["blooper"]["after"])) + 1, ("cap", "blooper"))
+        at = order.index(("narr", caps["blooper"]["after"])) + 1
+        if at < len(order) and order[at][1] in NEWS_KINDS:       # a market's headlines stay with its numbers
+            at += 1
+        order.insert(at, ("cap", "blooper"))
     if "intro" in narr:
         order = [("narr", "intro")] + order
     t, out = (0.3 if "intro" in narr else 0.6), []     # a breath of music first
@@ -572,7 +670,9 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     work = out_dir / "work"
     work.mkdir(exist_ok=True)
     day = briefing.local_now(briefing.EDITIONS[edition]["zone"], now + timedelta(hours=6))
+    refresh_news(supabase)
     facts = briefing.general_facts(supabase, now)
+    facts["headlines"] = news_facts(supabase)
     weekend = day.weekday() >= 5
     plan = sections_for(day)
     sections, writer = write_sections(supabase, facts, sections=plan, weekend=weekend)
@@ -583,8 +683,8 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     date_line = f"{day.strftime('%A')}, the {_ordinal(day.day)} of {day.strftime('%B')}. {sections['headline']}."
     close_line = f"That was your {'weekend' if weekend else 'daily'} market briefing for {day.strftime('%A')} the {_ordinal(day.day)} of {day.strftime('%B')}."
     if brand.SHOW_IN_VIDEO:
-        close_line = close_line[:-1] + f", brought to you by {SPOKEN_NAME}."
-    texts = {"date": date_line, **{k: (sections[k]["text"] if k == "story" else sections[k]) for k in plan},
+        close_line = close_line[:-1] + f", brought to you by {SPOKEN_NAME}. {CTA_SPOKEN}"
+    texts = {"date": date_line, **{k: (sections[k]["text"] if isinstance(sections[k], dict) else sections[k]) for k in plan},
              "close": close_line,
              **({"intro": f"{SPOKEN_NAME}. AI-powered market navigation."} if brand.SHOW_IN_VIDEO else {})}
     narr = {}
