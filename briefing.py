@@ -356,7 +356,41 @@ def _pct(a, b):
         return None
 
 
-def _candle_moves(kind: str, asset_id: str, load=None) -> dict:
+US_CLOSE_HOUR = 16  # New York
+
+
+def _late_session(kind: str, asset_id: str, load, last_day: str, now: datetime | None = None):
+    """(date, close) of a finished US session that the daily candles don't hold yet, from the hourly candles, or None.
+    Yahoo's daily bar for a session can arrive hours after it closes (24 Nov 2026: at 02:00 UTC the daily candles still
+    ended on Friday, so the video led with Friday's fall, while the hourly line in the same video showed Monday's
+    rebound)."""
+    from zoneinfo import ZoneInfo
+
+    try:
+        if load is None:
+            import chart_data
+
+            load = chart_data.load_candles
+        h = load(kind, asset_id, "1h", "7D")["candles"]
+        h = h[~h["forming"]] if "forming" in h else h
+        h = h.dropna(subset=["close"])
+        if not len(h):
+            return None
+        ny = ZoneInfo("America/New_York")
+        stamp = h.index[-1].to_pydatetime()
+        stamp = stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
+        day = stamp.astimezone(ny).date()
+        if day.isoformat() <= last_day:
+            return None
+        closed = datetime(day.year, day.month, day.day, US_CLOSE_HOUR, tzinfo=ny)
+        if (now or datetime.now(timezone.utc)) < closed:
+            return None
+        return day.isoformat(), float(h["close"].iloc[-1])
+    except Exception:
+        return None
+
+
+def _candle_moves(kind: str, asset_id: str, load=None, now: datetime | None = None) -> dict:
     """Last daily close and its 1-day and 1-week moves, from the chart's candles (Yahoo or Binance). A week is 7
     daily candles for crypto (it trades every day) and 5 for shares (trading days only), so both mean the same week."""
     try:
@@ -372,6 +406,11 @@ def _candle_moves(kind: str, asset_id: str, load=None) -> dict:
         last_day = c.index[-1].date().isoformat() if len(c) and hasattr(c.index[-1], "date") else None
     except Exception:
         return {}
+    if kind == "equity" and last_day:
+        late = _late_session(kind, asset_id, load, last_day, now)
+        if late:
+            closes.append(late[1])
+            last_day = late[0]
     if len(closes) < 8:
         return {}
     return {"latest_price": round(closes[-1], 4), "change_1d": _pct(closes[-1], closes[-2]),
@@ -423,13 +462,13 @@ def general_facts(supabase, now: datetime | None = None, load=None) -> dict:
             item.pop("kind", None)
             moves = {}
             if item.get("change_1d") is None or item.get("latest_price") is None:
-                moves = _candle_moves(kind, asset_id, load)
+                moves = _candle_moves(kind, asset_id, load, now)
                 item.update({k: v for k, v in moves.items() if v is not None and k != "last_day"})
             elif kind == "equity":
                 # Shares take both moves from the same candles as the session they name. The stored reading can lag
                 # a session (24 Nov 2026: Friday's fall was told as Monday's, the day the Nasdaq rose about 7%), and
                 # its 7-day change counts 7 trading days where the forecast's week is 5.
-                moves = _candle_moves(kind, asset_id, load)
+                moves = _candle_moves(kind, asset_id, load, now)
                 for k in ("change_1d", "change_7d"):
                     if moves.get(k) is not None:
                         item[k] = moves[k]

@@ -57,7 +57,12 @@ jobs:
             sudo apt-get -o Acquire::Retries=3 update -q
             sudo apt-get -o Acquire::Retries=3 install -y -q --no-install-recommends $need
           fi
-          npm install --no-save --silent playwright@1.63.0 && npx playwright install --with-deps chromium > /dev/null
+          npm install --no-save --silent playwright@1.63.0
+          # The browser download has hung for 25 minutes twice (24 Nov 2026): give each try 4 minutes, up to 3 tries.
+          for try in 1 2 3; do
+            timeout 240 npx playwright install --with-deps chromium > /dev/null && break
+            echo "Browser install try $try timed out or failed; trying again."
+          done
       - name: Voice model (cached)
         id: voice
         uses: actions/cache@v4

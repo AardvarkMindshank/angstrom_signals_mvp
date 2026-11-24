@@ -217,7 +217,9 @@ MACRO_MOODS = (
     {
         "key": "stock",
         "label": "Stock market",
-        "query": "stock market outlook inflation interest rates earnings",
+        # 24 Nov 2026: "outlook inflation interest rates" found commentary and missed the day's big story (Nvidia's
+        # chief reinstated, the Nasdaq's rebound), so the search names the market itself.
+        "query": "Wall Street stocks Nasdaq S&P 500 earnings",
     },
 )
 _MOOD_SKIP = news_filter.SKIP_WORDS
