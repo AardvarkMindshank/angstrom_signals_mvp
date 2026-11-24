@@ -32,10 +32,6 @@ const DEADLINE = Date.now() + 6 * 60 * 1000;
     const fold = async (text) => { const s = sum(text); if (await s.count() && await isOpen(s)) { await s.click(); await settle(); } };
     const toTop = async (loc) => { await loc.evaluate((n) => n.scrollIntoView({ block: "start" })).catch(() => {}); await page.waitForTimeout(900); };
     const shot = async (name) => {
-      // Members' votes and comments ("Your take") are never photographed: blanked for every picture.
-      // The sidebar is hidden too, so the section fills the picture.
-      await page.addStyleTag({ content: "[class*='_take_box']{visibility:hidden !important}"
-        + "[data-testid='stSidebar']{display:none !important}" }).catch(() => {});
       await page.mouse.move(1390, 1020);
       await page.screenshot({ path: path.join(OUT, name + ".jpg"), type: "jpeg", quality: 82 });
       done.push(name);
@@ -55,6 +51,10 @@ const DEADLINE = Date.now() + 6 * 60 * 1000;
     await settle(6000);
     for (const name of ["Lattice", "Crypto Signals", "Equity Signals", "Interactive Chart", "Why these readings", "Quick Snapshot", "Tides",
                         "Market sentiment - Stock market", "Market sentiment - Crypto market"]) await fold(name).catch(() => {});
+    // Members' votes and comments ("Your take") are never photographed: blanked for every picture. The sidebar is
+    // hidden too, so each section fills the picture. Added once, before any scrolling.
+    await page.addStyleTag({ content: "[class*='_take_box']{visibility:hidden !important}"
+      + "[data-testid='stSidebar']{display:none !important}" });
     await page.evaluate(() => window.scrollTo(0, 0));
     await settle();
 
