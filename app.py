@@ -8285,24 +8285,42 @@ def notifications_panel() -> None:
                 # saved just because the panel was opened.
                 digest_hour_choice = alert_prefs.get("digest_hour")
                 digest_zone_choice = alert_prefs.get("digest_tz")
-                if digest_on:
-                    hour_col, zone_col = st.columns(2)
-                    digest_hour_choice = hour_col.selectbox(
-                        t("Send at"),
-                        list(range(24)),
-                        index=saved_hour if 0 <= saved_hour <= 23 else 8,
-                        format_func=lambda hour: f"{hour:02d}:00",
-                        key="alert_digest_hour", placeholder=t("Choose an option")
-                    )
-                    start_zone = saved_zone or "UTC"
-                    digest_zone_choice = zone_col.selectbox(
-                        t("Time zone"),
-                        zone_choices,
-                        index=zone_choices.index(start_zone) if start_zone in zone_choices else 0,
-                        key="alert_digest_zone",placeholder=t("Choose an option")
-                    )
-                    if browser_zone and digest_zone_choice != browser_zone:
-                        st.caption(t("Your browser's time zone is {browser_zone}.", browser_zone=browser_zone))
+                # 🕗 The account's one morning time and time zone (24 Nov 2026): the daily summary is sent then, and
+                # the Passage Plan (Pro and Elite) is ready the hour before. Shown whether the summary is on or not.
+                hour_col, zone_col = st.columns(2)
+                digest_hour_choice = hour_col.selectbox(
+                    t("Your morning time"),
+                    list(range(24)),
+                    index=saved_hour if 0 <= saved_hour <= 23 else 8,
+                    format_func=lambda hour: f"{hour:02d}:00",
+                    key="alert_digest_hour", placeholder=t("Choose an option"),
+                    help=t("Your daily summary email is sent at this time, and your Passage Plan is ready an hour "
+                           "before it.")
+                )
+                start_zone = saved_zone or "UTC"
+                digest_zone_choice = zone_col.selectbox(
+                    t("Time zone"),
+                    zone_choices,
+                    index=zone_choices.index(start_zone) if start_zone in zone_choices else 0,
+                    key="alert_digest_zone",placeholder=t("Choose an option")
+                )
+                if browser_zone and digest_zone_choice != browser_zone:
+                    st.caption(t("Your browser's time zone is {browser_zone}.", browser_zone=browser_zone))
+                if plans.includes(current_plan(), "pro"):
+                    # The Passage Plan's own choices, beside its time (they were in the Logbook).
+                    pb = _briefing_settings()
+                    voice_col, mail_col = st.columns(2)
+                    voice = voice_col.selectbox(
+                        "🧭 " + t("Passage Plan voice"), list(briefing.VOICES),
+                        index=list(briefing.VOICES).index(pb["voice"]), key="briefing_voice",
+                        format_func=lambda v: briefing.VOICES[v])
+                    mail = mail_col.checkbox(t("Email me when my Passage Plan is ready"), value=bool(pb["email"]),
+                                             key="briefing_email",
+                                             help=t("The daily summary email links it anyway."))
+                    if voice != pb["voice"] or bool(mail) != bool(pb["email"]):
+                        stored_b = ((st.session_state.get("cloud_prefs") or {}).get("settings") or {}).get("briefing")
+                        _briefing_save({**(stored_b if isinstance(stored_b, dict) else {}), "voice": voice,
+                                        "email": bool(mail), "token": pb.get("token") or briefing.new_token()})
                 if digest_on and not stored_zone and not browser_zone and digest_zone_choice == "UTC":
                     # The browser has not reported its zone yet. Leave the zone unset
                     # rather than storing a guess; a later run fills it in.
@@ -9520,6 +9538,13 @@ def _briefing_text(url: str) -> str:
         return ""
 
 
+def _briefing_settings() -> dict:
+    """The Passage Plan's settings with the account's one time and time zone (the daily summary's, in 🔔 Notifications;
+    24 Nov 2026), so the app and the worker agree."""
+    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
+    return briefing.settings_of(briefing.with_account_time(stored, (prefs or {}).get("alerts") or {}))
+
+
 def _briefing_save(b: dict, **state) -> None:
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
     updates = {"briefing": b}
@@ -9745,13 +9770,14 @@ def _passage_player(key: str, show_button: bool = True, pick: bool = False, day:
     import navigator
 
     tip = t("Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the "
-            "📓 Logbook. It is made ready each morning; set the time and voice there.")
+            "📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and "
+            "voice in 🔔 Notifications.")
     if not plans.includes(current_plan(), "pro"):
         _briefing_title("🧭 " + t("Your Passage Plan"), "", tip)
         st.caption(t("Written and spoken for your own watchlist and funnels each morning. Comes with Pro."))
         return
     stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-    b = briefing.settings_of(stored)
+    b = _briefing_settings()
     state = stored.get("briefing_state") if isinstance(stored.get("briefing_state"), dict) else {}
     base = _secret("url")
     meta = _briefing_meta(base, b["token"]) if b.get("token") and base else {}
@@ -9815,8 +9841,7 @@ def _logbook_days() -> list[str]:
         return []
     days = {d for d, v in _videos_meta(base).items() if isinstance(v, dict)}
     days |= {k[:10] for k, v in _briefing_meta(base, briefing.GENERAL).items() if isinstance(v, dict)}
-    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-    token = briefing.settings_of(stored).get("token")
+    token = _briefing_settings().get("token")
     if token and plans.includes(current_plan(), "pro"):
         days |= {k[:10] for k, v in _briefing_meta(base, token).items() if isinstance(v, dict)}
     return sorted(days, reverse=True)
@@ -9825,8 +9850,7 @@ def _logbook_days() -> list[str]:
 def _logbook_date() -> str:
     """📓 The Logbook's one date, at the top: Today, Yesterday, or a date picked back to the oldest one kept. The video,
     the Morning Outlook and the Passage Plan below all follow it."""
-    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-    today = briefing.local_now(briefing.settings_of(stored)["zone"]).date()
+    today = briefing.local_now(_briefing_settings()["zone"]).date()
     days = _logbook_days()
     oldest = min([pd.Timestamp(days[-1]).date()] if days else [today - timedelta(days=1)])
     oldest = min(oldest, today - timedelta(days=1))
@@ -9870,25 +9894,9 @@ def _logbook_panel() -> None:
         _passage_player("logbook", show_button=False, day=st.session_state.get("logbook_day"))   # made each morning
     if not plans.includes(current_plan(), "pro"):
         return
-    stored = (st.session_state.get("cloud_prefs") or {}).get("settings") or {}
-    b = briefing.settings_of(stored)
-
-    with st.expander("⚙️ " + t("Spoken plan settings"), expanded=False):
-        on = st.toggle(t("Speak my plan every morning"), value=bool(b["on"]), key="briefing_on")
-        c1, c2 = st.columns(2)
-        hour = c1.selectbox(t("Ready by"), list(range(24)), index=b["hour"], key="briefing_hour",
-                            format_func=lambda h: f"{h:02d}:00")
-        zones = list(dict.fromkeys([b["zone"]] + list(COMMON_ZONES)))
-        zone = c2.selectbox(t("Time zone"), zones, index=0, key="briefing_zone")
-        voice = st.selectbox(t("Voice"), list(briefing.VOICES), index=list(briefing.VOICES).index(b["voice"]),
-                             key="briefing_voice", format_func=lambda v: briefing.VOICES[v])
-        email = st.checkbox(t("Also email me when it's ready (the daily summary email links it anyway)"),
-                            value=bool(b["email"]), key="briefing_email")
-        if st.button(t("Save"), key="briefing_save", type="primary"):
-            _briefing_save({**b, "on": on, "hour": hour, "zone": zone, "voice": voice, "email": email,
-                            "token": b.get("token") or briefing.new_token()})
-            st.toast(t("Saved."))
-            st.rerun(scope="fragment")
+    # Its time, time zone and voice are in 🔔 Notifications, with the daily summary's (24 Nov 2026); it is made
+    # every day for Pro and Elite, so there is no on/off switch.
+    b = _briefing_settings()
 
     base = _secret("url")
     if b.get("token") and base:

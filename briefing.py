@@ -48,12 +48,35 @@ def defaults(zone: str = "UTC") -> dict:
             "assets": [], "voice": "bf_emma", "email": False, "token": ""}
 
 
+# One time and one time zone for the account (Angus, 24 Nov 2026): the daily summary's "Send at" and "Time zone" in
+# Settings (alert_preferences.digest_hour / digest_tz), passed in as these two keys. The Passage Plan is made the hour
+# before, so the summary can link it. It is made every day for Pro and Elite (no on/off switch any more).
+ACCOUNT_TZ, ACCOUNT_HOUR = "_account_tz", "_account_hour"
+
+
+def with_account_time(settings: dict | None, alerts: dict | None) -> dict:
+    """The settings with the account's time and time zone (from the alert preferences) added, for reading only."""
+    out = dict(settings or {}) if isinstance(settings, dict) else {}
+    alerts = alerts if isinstance(alerts, dict) else {}
+    if alerts.get("digest_tz"):
+        out[ACCOUNT_TZ] = alerts["digest_tz"]
+    if alerts.get("digest_hour") is not None:
+        out[ACCOUNT_HOUR] = alerts["digest_hour"]
+    return out
+
+
 def settings_of(settings: dict | None) -> dict:
-    """The member's briefing choices (user_preferences.settings["briefing"]) over the defaults."""
+    """The member's briefing choices (user_preferences.settings["briefing"]) over the defaults, with the account's
+    time and time zone when given (with_account_time)."""
     settings = settings if isinstance(settings, dict) else {}
-    zone = settings.get("digest_tz") or "UTC"
+    zone = settings.get(ACCOUNT_TZ) or settings.get("digest_tz") or "UTC"
     saved = settings.get("briefing") if isinstance(settings.get("briefing"), dict) else {}
     out = {**defaults(zone), **saved}
+    if settings.get(ACCOUNT_TZ):
+        out["zone"] = settings[ACCOUNT_TZ]
+    if settings.get(ACCOUNT_HOUR) is not None:
+        out["hour"] = int(settings[ACCOUNT_HOUR]) - 1          # ready the hour before the summary is sent
+    out["on"] = True
     out["sections"] = [s for s in out.get("sections") or [] if s in SECTIONS] or list(SECTIONS)
     out["minutes"] = min(LENGTHS, key=lambda m: abs(m - int(out.get("minutes") or 3)))
     out["hour"] = max(0, min(23, int(out.get("hour") if out.get("hour") is not None else DEFAULT_HOUR)))

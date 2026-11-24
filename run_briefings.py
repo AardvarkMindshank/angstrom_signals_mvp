@@ -58,8 +58,16 @@ def ensure_bucket(db) -> None:
 
 
 def _prefs(db) -> list[dict]:
-    return (db.table("user_preferences").select("user_id, crypto_watchlist, stock_watchlist, settings")
+    """Every member's preferences, with the account's time and time zone (Settings: the daily summary's) added to
+    their settings for reading (briefing.with_account_time); nothing extra is ever saved back."""
+    rows = (db.table("user_preferences").select("user_id, crypto_watchlist, stock_watchlist, settings")
             .execute().data or [])
+    try:
+        alerts = {a["user_id"]: a for a in (db.table("alert_preferences").select("user_id, digest_tz, digest_hour")
+                                            .execute().data or [])}
+    except Exception:
+        alerts = {}
+    return [{**r, "settings": briefing.with_account_time(r.get("settings"), alerts.get(r["user_id"]))} for r in rows]
 
 
 def _meta(db, token: str) -> dict:
@@ -146,7 +154,8 @@ def due_rows(db, now=None) -> list[dict]:
 def _save_state(db, user_id: str, settings: dict, **changes) -> None:
     """Merge into settings["briefing_state"] / ["briefing"] on the member's row (the worker's service key)."""
     fresh = (db.table("user_preferences").select("settings").eq("user_id", user_id).execute().data or [{}])[0]
-    s = fresh.get("settings") if isinstance(fresh.get("settings"), dict) else dict(settings)
+    s = (fresh.get("settings") if isinstance(fresh.get("settings"), dict)
+         else {k: v for k, v in (settings or {}).items() if k not in (briefing.ACCOUNT_TZ, briefing.ACCOUNT_HOUR)})
     for key, value in changes.items():
         part = dict(s.get(key) or {})
         part.update(value)
@@ -244,11 +253,9 @@ def sample_for_admins(now: datetime | None = None) -> int:
     ids = [r["user_id"] for r in (db.table("profiles").select("user_id").eq("role", "admin").execute().data or [])]
     sent = 0
     for user_id in ids:
-        rows = (db.table("user_preferences").select("user_id, crypto_watchlist, stock_watchlist, settings")
-                .eq("user_id", user_id).execute().data or [])
-        if not rows:
+        row = next((p for p in _prefs(db) if p["user_id"] == user_id), None)
+        if not row:
             continue
-        row = rows[0]
         b = briefing.settings_of(row.get("settings") if isinstance(row.get("settings"), dict) else {})
         here = briefing.local_now(b["zone"], now)
         f = passage.facts(db, user_id, row, now)
@@ -407,13 +414,12 @@ def diagnose_admins(now: datetime | None = None) -> None:
     active = recently_active(db, now)
     ids = [r["user_id"] for r in (db.table("profiles").select("user_id").eq("role", "admin").execute().data or [])]
     for n, user_id in enumerate(ids, 1):
-        rows = (db.table("user_preferences").select("settings").eq("user_id", user_id).execute().data or [{}])
-        settings = rows[0].get("settings") if isinstance(rows[0].get("settings"), dict) else {}
+        settings = (next((p for p in _prefs(db) if p["user_id"] == user_id), {}) or {}).get("settings") or {}
         b = briefing.settings_of(settings)
         state = settings.get("briefing_state") if isinstance(settings.get("briefing_state"), dict) else {}
         meta = _meta(db, b["token"]) if b.get("token") else {}
         plans = navigator.recent_plans(db, user_id, limit=6)
-        print(f"Admin {n}: on={b['on']} hour={b['hour']} zone_set={bool(settings.get('digest_tz'))} "
+        print(f"Admin {n}: on={b['on']} hour={b['hour']} zone={b['zone']} "
               f"due_now={briefing.due(settings, now)} plan={briefing.plan_of(db, user_id)} "
               f"allowed={briefing.personal_allowed(briefing.plan_of(db, user_id))} "
               f"active={None if active is None else user_id in active} token={bool(b.get('token'))} "
