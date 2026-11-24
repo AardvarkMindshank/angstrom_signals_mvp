@@ -15683,7 +15683,35 @@ def _published_label(value) -> str:
     return f"{when.strftime('%b')} {when.day}, {when.year}"
 
 
-def headline_table(headlines: list, score_label: str = "Score") -> str:
+def _lead_story_html(lead: dict | None) -> str:
+    """The story of the day at the top of a market sentiment card: the headline that best explains the market's
+    latest moves (24 Nov 2026), or a plain line when no single story drove it."""
+    if not isinstance(lead, dict) or not lead.get("why"):
+        return ""
+    def move(value) -> str:
+        value = round(float(value), 1)
+        return "0.0%" if value == 0 else f"{value:+.1f}%"
+
+    moves = " · ".join(f"{html.escape(t(str(m.get('name'))))} {move(m['change_1d'])}"
+                       for m in lead.get("moves") or [] if m.get("change_1d") is not None)
+    moves_html = f"<div class='lead-moves'>{moves}</div>" if moves else ""
+    if lead.get("quiet") or not lead.get("title"):
+        head = f"<div class='lead-kicker'>🌫️ {html.escape(t('No single story drove the market'))}</div>"
+        body = f"<div class='lead-why'>{html.escape(lead['why'])}</div>"
+    else:
+        link = str(lead.get("link") or "")
+        title = html.escape(str(lead["title"]))
+        if link.startswith("https://"):
+            title = f"<a href='{html.escape(link, quote=True)}' target='_blank' rel='noopener noreferrer'>{title}</a>"
+        source = f"<span class='headline-source'> — {html.escape(str(lead['source']))}</span>" if lead.get("source") else ""
+        head = f"<div class='lead-kicker'>⭐ {html.escape(t('Story of the day'))}</div>"
+        body = f"<div class='lead-title'>{title}{source}</div><div class='lead-why'>{html.escape(lead['why'])}</div>"
+    return ("<div class='lead-story' title='" + html.escape(t("The most widely reported story of the last 24 hours "
+            "that explains the market's latest move, picked by AI from the articles below. Not advice."), quote=True)
+            + f"'>{head}{body}{moves_html}</div>")
+
+
+def headline_table(headlines: list, score_label: str = "Score", lead_id=None) -> str:
     """Article, the date, a one-sentence AI summary, then the score. A dash until a summary exists."""
     sheet = " class='headline-ai'" if score_label != "Score" else ""
     rows = [
@@ -15707,6 +15735,7 @@ def headline_table(headlines: list, score_label: str = "Score") -> str:
             "<div class='headline-row'>"
             "<div class='headline-title'>"
             f"<a href='{html.escape(item['link'], quote=True)}' target='_blank' rel='noopener noreferrer'>"
+            f"{'⭐ ' if lead_id and str(item.get('id')) == str(lead_id) else ''}"
             f"{html.escape(item['title'])}</a>{source}</div>"
             f"<div class='headline-date'>{published_html}</div>"
             f"<div class='headline-note'>{note_html}</div>"
@@ -15749,6 +15778,16 @@ def _sentiment_story(report, coverage: str, score, color, background, arrow, not
         f"<div class='sentiment-body'>{summary}</div>"
         f"{drivers_html}{sides}</div>"
     )
+
+
+_LEAD_CSS = (
+    "<style>.lead-story{border:1px solid var(--ang-border,#d1d5db);border-left:4px solid #0d9488;border-radius:10px;"
+    "padding:10px 14px;margin:4px 0 10px;background:var(--ang-surface,transparent);color:var(--ang-text,inherit);}"
+    ".lead-kicker{font-size:.78rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#0d9488;}"
+    ".lead-title{font-weight:600;margin-top:3px;}.lead-title a{color:inherit;}"
+    ".lead-why{margin-top:3px;opacity:.9;}.lead-moves{margin-top:4px;font-size:.82rem;opacity:.75;"
+    "font-variant-numeric:tabular-nums;}</style>"
+)
 
 
 def _mood_coverage(score: float) -> str:
@@ -15887,6 +15926,9 @@ def _mood_card(spec: dict, row: dict | None) -> None:
     headlines = newest_first((shown or {}).get("headlines") or [])
     score = (report or {}).get("score")
     _paint_section_score(f"mood_{key}", score, bool(report and report.get("ok") and score is not None))
+    lead = (shown or {}).get("lead") if isinstance(shown, dict) else None
+    if lead:
+        st.html(_LEAD_CSS + _lead_story_html(lead))
     if report and report.get("ok") and score is not None:
         color, background, arrow, _bar = tone(score)
         parts = report.get("score_parts") or {}
@@ -15935,7 +15977,8 @@ def _mood_card(spec: dict, row: dict | None) -> None:
         st.info(t("The market score could not be built this time."))
     _article_box(f"mood_{key}_readings", _mood_reading_board(key, label, shown if isinstance(shown, dict) else None))
     if headlines:
-        _article_box(f"mood_{key}_news", headline_table(headlines, "AI Score"))
+        _article_box(f"mood_{key}_news", headline_table(headlines, "AI Score",
+                                                         (lead or {}).get("id") if isinstance(lead, dict) else None))
     st.caption(
         t("The rows above the Google headlines are public readings, each scored on its own. "
         "The score at the top is the average of every scored row, readings and news articles alike "

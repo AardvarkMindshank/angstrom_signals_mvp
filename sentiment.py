@@ -12,7 +12,9 @@ import html
 import json
 import os
 import time
+import re
 import xml.etree.ElementTree as ET
+from datetime import datetime
 from email.utils import parsedate_to_datetime
 
 import requests
@@ -146,6 +148,9 @@ def localised(report, code: str | None):
             if tr.get(name):
                 out[name] = tr[name]
     out["headlines"] = [note_of(row) for row in report.get("headlines") or []]
+    lead = report.get("lead")
+    if isinstance(lead, dict) and isinstance(lead.get("tr"), dict) and lead["tr"].get(code):
+        out["lead"] = {**lead, "why": lead["tr"][code]}
     if report.get("gauges"):
         out["gauges"] = [{**g, "items": [note_of(i) for i in (g.get("items") or [])]} if isinstance(g, dict) else g
                          for g in report.get("gauges") or []]
@@ -208,18 +213,125 @@ def newest_first(headlines: list[dict]) -> list[dict]:
 
 
 # Whole-market searches. The wording can change later without a new table.
+# 24 Nov 2026: one "outlook" search kept the 8 newest articles of a week and missed the day's story (Jensen Huang back
+# at Nvidia, the Nasdaq up 7%). Each market now runs several news searches and keeps the stories most widely reported
+# in the last 24 hours; "query" stays the stored name of the search. "moves" are the markets whose latest move the
+# story of the day is checked against.
 MACRO_MOODS = (
     {
         "key": "crypto",
         "label": "Crypto market",
         "query": "crypto market outlook regulation ETF liquidity",
+        "searches": ("crypto market today", "Bitcoin news", "crypto news", "crypto ETF"),
+        "moves": (("crypto", "bitcoin", "Bitcoin"), ("crypto", "ethereum", "Ether")),
     },
     {
         "key": "stock",
         "label": "Stock market",
         "query": "stock market outlook inflation interest rates earnings",
+        "searches": ("stock market today", "Wall Street stocks", "Nasdaq", "S&P 500"),
+        "moves": (("equity", "SPY", "S&P 500"), ("equity", "QQQ", "Nasdaq 100")),
     },
 )
+MOOD_SPECS = {spec["key"]: spec for spec in MACRO_MOODS}
+
+# Pages that only list a price or a routine event are not news ("ETH price at 6 PM CST", "Current price of Bitcoin
+# for November 23", "Rings the Nasdaq opening bell"). "A $1 trillion price on Jensen Huang" is news, so "price on" stays.
+NOT_NEWS = re.compile(r"\bprice (at|today|for|now)\b|current price of|live price|price chart|to usd\b|"
+                      r"\bprice (index|quote)\b|rings? the .*(opening|closing) bell", re.I)
+LEAD_HOURS = 24
+
+
+def rank_market_headlines(rows: list[dict], now: float) -> list[dict]:
+    """Most important first: the last 24 hours before older, then the most widely reported, then the newest."""
+    recent = now - LEAD_HOURS * 3600
+
+    def key(row):
+        try:
+            stamp = datetime.fromisoformat(str(row.get("published_at"))).timestamp()
+        except ValueError:
+            stamp = 0.0
+        return (stamp >= recent, int(row.get("also_reported") or 0), stamp)
+
+    return sorted(rows, key=key, reverse=True)
+
+
+def gather_market_news(searches, limit: int = 8, now: float | None = None) -> tuple[list[dict], dict]:
+    """(the most important whole-market headlines, what was filtered) from several news searches."""
+    now = time.time() if now is None else now
+    raw, failures = [], 0
+    for search in searches:
+        try:
+            raw += _fetch_raw(search)
+        except Exception:
+            failures += 1
+    if failures == len(searches):
+        raise RuntimeError("no headline search succeeded")
+    kept_raw = [item for item in raw if not NOT_NEWS.search(str(item.get("title") or ""))]
+    rows, stats = news_filter.clean_headlines(kept_raw, now, {}, 400)
+    rows = rank_market_headlines(rows, now)[:limit]
+    stats.update(news_filter.coverage(rows))
+    stats["not_news"] = len(raw) - len(kept_raw)
+    return rows, stats
+
+
+def latest_moves(spec: dict) -> list[dict]:
+    """The latest finished 1-day move of each market the story of the day is checked against (the chart's candles,
+    as the daily briefing tells them)."""
+    import briefing
+
+    out = []
+    for kind, asset_id, name in spec.get("moves") or ():
+        try:
+            moves = briefing._candle_moves(kind, asset_id)
+        except Exception:
+            moves = {}
+        if moves.get("change_1d") is not None:
+            out.append({"name": name, "change_1d": moves["change_1d"], "day": moves.get("last_day")})
+    return out
+
+
+def lead_story(spec: dict, headlines: list[dict], moves: list[dict] | None = None, chat=None) -> dict | None:
+    """The story of the day: the headline that best explains the market's latest moves, with one sentence on why.
+    {"quiet": True, ...} when no headline explains them (a quiet day is said plainly, not dressed up). None when the
+    AI didn't answer."""
+    if not headlines:
+        return None
+    moves = latest_moves(spec) if moves is None else moves
+    langs = languages()
+    lines = "\n".join(f"{i}. {row.get('title')} ({row.get('source') or 'unknown'}, carried by "
+                      f"{1 + int(row.get('also_reported') or 0)} outlets)" for i, row in enumerate(headlines, 1))
+    moved = "; ".join(f"{m['name']} {m['change_1d']:+.2f}% on {m['day']}" for m in moves) or "not available"
+    tr = (', "tr": {"<language code>": "the why sentence in that language"} for each of ' + ", ".join(langs)
+          if langs else "")
+    ask = (f"These are the most widely reported {spec['label'].lower()} headlines, and the market's latest moves "
+           f"({moved}). Name the single story that best explains what is moving this market now. "
+           'Reply with JSON only: {"index": n, "why": "one plain sentence", "explains_moves": true or false' + tr + "}. "
+           "If no headline explains the moves, set explains_moves to false and say in why that no single story "
+           "drove the market. This is research context, not advice.\n" + lines)
+    try:
+        if chat is None:
+            import ai_providers
+
+            text, _done = ai_providers.chat(scoring_provider(), "You pick the lead market story from headlines. "
+                                            "Facts only.", [{"role": "user", "content": ask}], max_tokens=900,
+                                            json_only=True, timeout=60)
+        else:
+            text = chat(ask)
+        start, end = text.find("{"), text.rfind("}")
+        got = json.loads(text[start:end + 1])
+        index = int(got.get("index") or 0)
+        why = " ".join(str(got.get("why") or "").split())
+    except Exception:
+        return None
+    lead = {"why": why, "moves": moves, "explains_moves": bool(got.get("explains_moves"))}
+    if isinstance(got.get("tr"), dict):
+        lead["tr"] = {str(k): str(v) for k, v in got["tr"].items() if v}
+    if not lead["explains_moves"] or not 1 <= index <= len(headlines):
+        return {**lead, "quiet": True}
+    row = headlines[index - 1]
+    return {**lead, "id": row.get("id"), "title": row.get("title"), "source": row.get("source"),
+            "link": row.get("link")}
 _MOOD_SKIP = news_filter.SKIP_WORDS
 
 
@@ -1153,8 +1265,12 @@ def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, 
         stored = cached[1]
         if stored.get("ok") and stored.get("score") is not None and stored.get("headlines"):
             return stored
+    spec = MOOD_SPECS.get(market_key) or {}
     try:
-        headlines, stats = gather_headlines(query, market=True)
+        if spec.get("searches"):
+            headlines, stats = gather_market_news(spec["searches"])
+        else:
+            headlines, stats = gather_headlines(query, market=True)
     except Exception:
         return {"ok": False, "reason": "headlines_error", "headlines": []}
     if not headlines:
@@ -1187,6 +1303,10 @@ def analyze_market_mood(market_key: str, label: str, query: str, enabled: bool, 
         reuse_scores(summary, previous)
         _with_quality(summary, stats)
         combine_mood_score(summary)
+        if spec:
+            lead = lead_story(spec, summary.get("headlines") or [])
+            if lead:
+                summary["lead"] = lead
     if summary.get("ok"):
         _SCORE_CACHE[cache_key] = (time.time(), summary)
     return summary
