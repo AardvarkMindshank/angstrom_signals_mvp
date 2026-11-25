@@ -37,23 +37,46 @@ DISCLAIMER = mark("Read-only connections. Descriptive readings, not financial ad
 
 # ---- data ----------------------------------------------------------------------------------------------------
 
-def load(supabase) -> dict:
-    """The member's connections, trades, snapshots and notes (their own rows only)."""
-    def rows(table, cols="*", order=None):
-        try:
+def _all_rows(supabase, table: str, cols: str = "*", order: str | None = None, page: int = 1000) -> list | None:
+    """Every row the member may read, a page at a time (Supabase hands back at most 1,000 rows per ask; eToro
+    accounts can hold over 15,000 trades). None when the table is not there."""
+    out: list = []
+    try:
+        while True:
             q = supabase.table(table).select(cols)
             if order:
                 q = q.order(order, desc=True)
-            return q.limit(5000).execute().data or []
-        except Exception:
-            return None
-    conns = rows("trade_connections",
-                 "id,platform,label,status,last_sync_at,last_error,history_from,created_at")
+            got = q.range(len(out), len(out) + page - 1).execute().data or []
+            out += got
+            if len(got) < page or len(out) >= 100_000:
+                return out
+    except Exception:
+        return None if not out else out
+
+
+def load(supabase) -> dict:
+    """The member's connections, trades, open positions, snapshots and notes (their own rows only). Read again only
+    after a sync (the connections' sync times change), so a big history isn't fetched on every click."""
+    import streamlit as st
+    conns = _all_rows(supabase, "trade_connections", "id,platform,label,status,last_sync_at,last_error,history_from,"
+                      "created_at,cash_usd,open_pnl_usd,portfolio_at")
+    if conns is None:                       # before the open-positions SQL: the older columns only
+        conns = _all_rows(supabase, "trade_connections",
+                          "id,platform,label,status,last_sync_at,last_error,history_from,created_at")
     if conns is None:
         return {"ready": False}
-    return {"ready": True, "connections": conns, "trips": rows("trade_round_trips", order="closed_at") or [],
-            "snapshots": rows("trade_snapshots", "round_trip_id,moment,readings,source") or [],
-            "notes": rows("trade_notes", "round_trip_id,note,tags") or []}
+    stamp = repr(sorted((c["id"], c.get("last_sync_at"), c.get("portfolio_at")) for c in conns))
+    kept = st.session_state.get("_tl_loaded")
+    if kept and kept[0] == stamp:
+        return {**kept[1], "connections": conns, "notes": _all_rows(supabase, "trade_notes",
+                                                                    "round_trip_id,note,tags") or []}
+    data = {"ready": True, "connections": conns,
+            "trips": _all_rows(supabase, "trade_round_trips", order="closed_at") or [],
+            "open": _all_rows(supabase, "trade_open_positions", order="value_usd") or [],
+            "snapshots": _all_rows(supabase, "trade_snapshots", "round_trip_id,moment,readings,source") or [],
+            "notes": _all_rows(supabase, "trade_notes", "round_trip_id,note,tags") or []}
+    st.session_state["_tl_loaded"] = (stamp, {k: v for k, v in data.items() if k not in ("connections", "notes")})
+    return data
 
 
 def _zone(st) -> ZoneInfo:
@@ -364,9 +387,46 @@ def _review_card(st, supabase, trips: list[dict], snaps: dict, plan: str, ai: st
         st.caption(t("Describes your past trades. Not advice."))
 
 
-def _overview(st, trips: list[dict], snaps: dict, copied: bool) -> None:
+def _open_card(st, opened: list[dict], conns: list[dict], whose: str) -> None:
+    """📂 Open now: what is still in the market, from the account's portfolio at the last sync (26 Nov 2026)."""
+    if not any(c.get("portfolio_at") for c in conns):
+        return
+    cash = sum(c.get("cash_usd") or 0 for c in conns)
+    invested = sum(o.get("invested_usd") or 0 for o in opened)
+    value = sum(o.get("value_usd") or 0 for o in opened)
+    pnl = sum(o.get("pnl_usd") or 0 for o in opened)
+    with st.container(key="tl_card_open"):
+        st.html(CSS + f"<div class='tl-h'>{html.escape(t('**Open now**').strip('*'))}</div>")
+        tiles = [
+            _tile(t("Account value"), _money(value + cash) if whose != "copied" else _money(value),
+                  t("Open trades plus spare cash.") if whose != "copied" else "", "",
+                  t("At the last sync. Prices move between syncs.")),
+            _tile(t("In open trades"), _money(invested), t("{n} open trades", n=len(opened))),
+            _tile(t("Open profit or loss"), _money(pnl), (f"{pnl / invested * 100:+.1f}%" if invested else ""),
+                  _tone(pnl)),
+            _tile(t("Spare cash"), _money(cash) if whose != "copied" else "—", t("Not in any trade.")),
+        ]
+        st.html(CSS + "<div class='tl-tiles'>" + "".join(tiles) + "</div>")
+        if opened:
+            table = pd.DataFrame([{
+                t("Asset"): o.get("name") or o.get("symbol"),
+                t("Direction"): t("Buy") if o.get("direction") == "long" else t("Sell"),
+                t("Invested (USD)"): o.get("invested_usd"),
+                t("Value (USD)"): o.get("value_usd"),
+                t("Profit or loss (USD)"): o.get("pnl_usd"),
+                t("Opened"): (str(o.get("opened_at") or "")[:10]),
+            } for o in sorted(opened, key=lambda o: -(o.get("value_usd") or 0))])
+            with st.expander(t("Open trades ({n})", n=len(opened))):
+                st.dataframe(table, hide_index=True, use_container_width=True,
+                             column_config=_usd_cols(st, t("Invested (USD)"), t("Value (USD)"),
+                                                     t("Profit or loss (USD)")))
+        when = max(_when(c["portfolio_at"]) for c in conns if c.get("portfolio_at"))
+        st.caption(t("As at the last sync, {when}.", when=when.strftime("%d %b %H:%M UTC")))
+
+
+def _overview(st, trips: list[dict], snaps: dict, copied: bool, opened: list[dict] | None = None) -> None:
     _headline(st, tradelog.stats(trips, copied))
-    curve = tradelog.invested_by_day(trips, copied)
+    curve = tradelog.invested_by_day(trips, copied, opened)
     platforms = tradelog.stats_by(trips, "platform", copied)
     if len(curve) >= 2:
         with st.container(key="tl_card_curve"):
@@ -606,7 +666,9 @@ def _render(st, supabase, plan: str, ai: str | None = None) -> None:
     with tabs[0]:
         pick, whose = _filters(st, "all")
         shown = _whose([x for x in trips if pick is None or x.get("asset_class") == pick], whose)
-        _overview(st, shown, snaps, True)          # already narrowed to the chosen trades
+        opened = _whose([o for o in data.get("open") or [] if pick is None or o.get("asset_class") == pick], whose)
+        _open_card(st, opened, conns, whose)
+        _overview(st, shown, snaps, True, opened)  # already narrowed to the chosen trades
         _review_card(st, supabase, trips, snaps, plan, ai, zone)
     for tab, conn in zip(tabs[1:], conns):
         with tab:

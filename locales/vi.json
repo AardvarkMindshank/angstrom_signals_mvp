@@ -2504,5 +2504,20 @@
   "Invested in open trades (USD)": "Đã đầu tư vào giao dịch đang mở (USD)",
   "Profit or loss from closed trades (USD)": "Lãi hoặc lỗ từ giao dịch đã đóng (USD)",
   "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "Đã đầu tư: số tiền trong các giao dịch bạn nắm giữ vào ngày đó. Lãi hoặc lỗ: kết quả của từng giao dịch, cộng vào ngày đóng. Tiền mặt trong tài khoản không được hiển thị, và lãi lỗ của giao dịch chỉ được tính khi đã đóng.",
-  "Net result (USD)": "Kết quả ròng (USD)"
+  "Net result (USD)": "Kết quả ròng (USD)",
+  "**Open now**": "**Đang mở**",
+  "Account value": "Giá trị tài khoản",
+  "Open trades plus spare cash.": "Các giao dịch đang mở cộng tiền mặt nhàn rỗi.",
+  "At the last sync. Prices move between syncs.": "Tại lần đồng bộ gần nhất. Giá thay đổi giữa các lần đồng bộ.",
+  "In open trades": "Trong giao dịch đang mở",
+  "{n} open trades": "{n} giao dịch đang mở",
+  "Open profit or loss": "Lãi lỗ chưa chốt",
+  "Spare cash": "Tiền mặt nhàn rỗi",
+  "Not in any trade.": "Không nằm trong giao dịch nào.",
+  "Invested (USD)": "Đã đầu tư (USD)",
+  "Value (USD)": "Giá trị (USD)",
+  "Profit or loss (USD)": "Lãi hoặc lỗ (USD)",
+  "Opened": "Ngày mở",
+  "Open trades ({n})": "Giao dịch đang mở ({n})",
+  "As at the last sync, {when}.": "Theo lần đồng bộ gần nhất, {when}."
 }

@@ -2504,5 +2504,20 @@
   "Invested in open trades (USD)": "Açık işlemlere yatırılan (USD)",
   "Profit or loss from closed trades (USD)": "Kapanan işlemlerden kâr ya da zarar (USD)",
   "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "Yatırılan: o gün tuttuğun işlemlerdeki para. Kâr ya da zarar: her işlemin sonucu, kapandığı gün eklenir. Hesabında bekleyen nakit gösterilmez ve bir işlemin kâr ya da zararı ancak kapandığında sayılır.",
-  "Net result (USD)": "Net sonuç (USD)"
+  "Net result (USD)": "Net sonuç (USD)",
+  "**Open now**": "**Şu an açık**",
+  "Account value": "Hesap değeri",
+  "Open trades plus spare cash.": "Açık işlemler artı boştaki nakit.",
+  "At the last sync. Prices move between syncs.": "Son eşitlemede. Fiyatlar eşitlemeler arasında değişir.",
+  "In open trades": "Açık işlemlerde",
+  "{n} open trades": "{n} açık işlem",
+  "Open profit or loss": "Açık kâr ya da zarar",
+  "Spare cash": "Boştaki nakit",
+  "Not in any trade.": "Hiçbir işlemde değil.",
+  "Invested (USD)": "Yatırılan (USD)",
+  "Value (USD)": "Değer (USD)",
+  "Profit or loss (USD)": "Kâr ya da zarar (USD)",
+  "Opened": "Açılış",
+  "Open trades ({n})": "Açık işlemler ({n})",
+  "As at the last sync, {when}.": "Son eşitlemeye göre, {when}."
 }

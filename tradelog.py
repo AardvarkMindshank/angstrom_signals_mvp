@@ -222,6 +222,57 @@ def etoro_round_trips(positions: list[dict], instruments: dict[int, dict] | None
     return trips
 
 
+def fetch_portfolio(session, keys: dict) -> dict:
+    """The account as it is now: {"cash": USD, "pnl": open profit or loss, "positions": [raw open positions]}.
+    Positions inside copy-trading funds are marked "_copied". eToro's trade history has closed trades only."""
+    body = _get(session, "/trading/info/real/pnl", keys) or {}
+    cp = body.get("clientPortfolio") or {} if isinstance(body, dict) else {}
+    positions = [dict(p, _copied=bool(_num(p.get("mirrorID")))) for p in cp.get("positions") or []
+                 if isinstance(p, dict)]
+    for m in cp.get("mirrors") or []:
+        positions += [dict(p, _copied=True) for p in (m or {}).get("positions") or [] if isinstance(p, dict)]
+    return {"cash": _num(cp.get("credit")), "pnl": _num(cp.get("unrealizedPnL")), "positions": positions}
+
+
+def etoro_open_positions(positions: list[dict], instruments: dict[int, dict] | None = None,
+                         types: dict[int, str] | None = None, asset_keys: dict | None = None) -> list[dict]:
+    """eToro's open positions → rows for trade_open_positions. Value = money in it (amount) + its profit or loss."""
+    instruments, types, asset_keys = instruments or {}, types or {}, asset_keys or {}
+    out = []
+    for p in positions:
+        if p.get("positionID") is None:
+            continue
+        iid = p.get("instrumentID")
+        info = instruments.get(int(iid)) if iid is not None else None
+        info = info or {}
+        symbol = str(info.get("symbolFull") or "")
+        cls = asset_class_of(types.get(int(info["instrumentTypeID"]), "")) if info.get("instrumentTypeID") is not None else "other"
+        upnl = p.get("unrealizedPnL") if isinstance(p.get("unrealizedPnL"), dict) else {}
+        pnl = _num(upnl.get("pnL")) if upnl else _num(p.get("pnL"))
+        amount = _num(p.get("amount"))
+        out.append({
+            "platform": "etoro",
+            "position_id": str(p["positionID"]),
+            "instrument_id": "" if iid is None else str(iid),
+            "symbol": symbol[:40],
+            "name": str(info.get("instrumentDisplayName") or symbol or f"Instrument {iid}")[:120],
+            "asset_class": cls,
+            "asset_key": asset_keys.get((cls, symbol.upper())),
+            "direction": "long" if p.get("isBuy", True) else "short",
+            "opened_at": p.get("openDateTime") or None,
+            "entry_price": _num(p.get("openRate")),
+            "current_price": _num(upnl.get("closeRate")) if upnl else _num(p.get("closeRate")),
+            "units": _num(p.get("units")),
+            "invested_usd": amount,
+            "value_usd": round(amount + (pnl or 0), 2) if amount is not None else None,
+            "pnl_usd": round(pnl, 2) if pnl is not None else None,
+            "leverage": _num(p.get("leverage")) or 1,
+            "copied": bool(p.get("_copied")),
+        })
+    out.sort(key=lambda r: -(r["value_usd"] or 0))
+    return out
+
+
 # ---- stats ---------------------------------------------------------------------------------------------------
 
 def _hold_days(trip: dict) -> float | None:
@@ -271,18 +322,26 @@ def equity_curve(trips: list[dict], include_copied: bool = False) -> list[tuple[
     return out
 
 
-def invested_by_day(trips: list[dict], include_copied: bool = False) -> list[tuple[str, float, float]]:
+def invested_by_day(trips: list[dict], include_copied: bool = False,
+                    open_positions: list[dict] | None = None) -> list[tuple[str, float, float]]:
     """Each day from the first open to the last close: (YYYY-MM-DD, money in open trades at the day's end, running
     net result of the trades closed by then). Built from each trade's open and close times and amount invested, so
     it shows the money put to work rising and falling over the years (26 Nov 2026). Not the account's full value:
-    cash waiting in the account and the open trades' gains or losses before they closed are not in it."""
+    cash waiting in the account and the open trades' gains or losses before they closed are not in it.
+    open_positions: trades still open count from the day they opened to today."""
     from datetime import timedelta
     rows = [t for t in trips if (include_copied or not t.get("copied"))
             and _when(t.get("opened_at")) and _when(t.get("closed_at"))]
-    if not rows:
+    still = [o for o in (open_positions or []) if (include_copied or not o.get("copied")) and _when(o.get("opened_at"))]
+    if not rows and not still:
         return []
     change: dict = {}
     result: dict = {}
+    for o in still:                                   # trades still open: in the market from their open to today
+        d = _when(o["opened_at"]).date()
+        change[d] = change.get(d, 0.0) + (_num(o.get("invested_usd")) or 0.0)
+    if still:
+        change.setdefault(datetime.now(timezone.utc).date(), 0.0)
     for t in rows:
         o, c = _when(t["opened_at"]).date(), _when(t["closed_at"]).date()
         amount = _num(t.get("invested_usd")) or 0.0

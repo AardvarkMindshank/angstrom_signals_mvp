@@ -2504,5 +2504,20 @@
   "Invested in open trades (USD)": "ลงทุนในเทรดที่เปิดอยู่ (USD)",
   "Profit or loss from closed trades (USD)": "กำไรหรือขาดทุนจากเทรดที่ปิดแล้ว (USD)",
   "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "ลงทุน: เงินในเทรดที่คุณถืออยู่ในวันนั้น กำไรหรือขาดทุน: ผลของแต่ละเทรด รวมในวันที่ปิดเทรด ไม่แสดงเงินสดที่พักอยู่ในบัญชี และกำไรหรือขาดทุนของเทรดจะนับเมื่อปิดเทรดแล้วเท่านั้น",
-  "Net result (USD)": "ผลลัพธ์สุทธิ (USD)"
+  "Net result (USD)": "ผลลัพธ์สุทธิ (USD)",
+  "**Open now**": "**ที่เปิดอยู่ตอนนี้**",
+  "Account value": "มูลค่าบัญชี",
+  "Open trades plus spare cash.": "เทรดที่เปิดอยู่รวมเงินสดว่าง",
+  "At the last sync. Prices move between syncs.": "ณ การซิงก์ครั้งล่าสุด ราคาเปลี่ยนไปได้ระหว่างการซิงก์",
+  "In open trades": "ในเทรดที่เปิดอยู่",
+  "{n} open trades": "เทรดที่เปิดอยู่ {n} รายการ",
+  "Open profit or loss": "กำไรขาดทุนที่ยังไม่ปิด",
+  "Spare cash": "เงินสดว่าง",
+  "Not in any trade.": "ไม่ได้อยู่ในเทรดใด",
+  "Invested (USD)": "ลงทุน (USD)",
+  "Value (USD)": "มูลค่า (USD)",
+  "Profit or loss (USD)": "กำไรหรือขาดทุน (USD)",
+  "Opened": "เปิดเมื่อ",
+  "Open trades ({n})": "เทรดที่เปิดอยู่ ({n})",
+  "As at the last sync, {when}.": "ณ การซิงก์ครั้งล่าสุด {when}"
 }

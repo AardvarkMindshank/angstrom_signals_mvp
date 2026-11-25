@@ -2504,5 +2504,20 @@
   "Invested in open trades (USD)": "Diinvestasikan di trade terbuka (USD)",
   "Profit or loss from closed trades (USD)": "Laba atau rugi dari trade yang ditutup (USD)",
   "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "Diinvestasikan: uang di trade yang Anda pegang hari itu. Laba atau rugi: hasil setiap trade, ditambahkan pada hari trade ditutup. Uang tunai di akun Anda tidak ditampilkan, dan laba atau rugi trade baru dihitung setelah ditutup.",
-  "Net result (USD)": "Hasil bersih (USD)"
+  "Net result (USD)": "Hasil bersih (USD)",
+  "**Open now**": "**Terbuka sekarang**",
+  "Account value": "Nilai akun",
+  "Open trades plus spare cash.": "Trade terbuka ditambah kas bebas.",
+  "At the last sync. Prices move between syncs.": "Pada sinkronisasi terakhir. Harga bergerak di antara sinkronisasi.",
+  "In open trades": "Di trade terbuka",
+  "{n} open trades": "{n} trade terbuka",
+  "Open profit or loss": "Laba atau rugi terbuka",
+  "Spare cash": "Kas bebas",
+  "Not in any trade.": "Tidak di trade mana pun.",
+  "Invested (USD)": "Diinvestasikan (USD)",
+  "Value (USD)": "Nilai (USD)",
+  "Profit or loss (USD)": "Laba atau rugi (USD)",
+  "Opened": "Dibuka",
+  "Open trades ({n})": "Trade terbuka ({n})",
+  "As at the last sync, {when}.": "Per sinkronisasi terakhir, {when}."
 }

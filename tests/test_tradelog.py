@@ -189,3 +189,30 @@ def test_invested_by_day_rises_and_falls_with_open_trades():
     assert tl.invested_by_day(trips) == [("2026-01-01", 100.0, 0.0), ("2026-01-02", 150.0, 0.0),
                                          ("2026-01-03", 50.0, 10.0), ("2026-01-04", 0.0, 5.0)]
     assert tl.invested_by_day(trips, include_copied=True)[1] == ("2026-01-02", 150.0, 1.0)
+
+
+def test_portfolio_open_positions_and_copied_funds():
+    body = {"clientPortfolio": {"credit": 120.5, "unrealizedPnL": -40.0, "positions": [
+        {"positionID": 1, "instrumentID": 1001, "isBuy": True, "amount": 500.0, "openRate": 10.0, "units": 50,
+         "leverage": 1, "mirrorID": 0, "openDateTime": "2026-03-01T00:00:00Z",
+         "unrealizedPnL": {"pnL": -50.0, "closeRate": 9.0}}],
+        "mirrors": [{"mirrorID": 7, "positions": [{"positionID": 2, "instrumentID": 1001, "isBuy": False,
+                                                   "amount": 20.0, "mirrorID": 7, "unrealizedPnL": {"pnL": 10.0}}]}]}}
+    s = _Session([_Resp(200, body)])
+    got = tl.fetch_portfolio(s, KEYS)
+    assert got["cash"] == 120.5 and got["pnl"] == -40.0 and len(got["positions"]) == 2
+    rows = tl.etoro_open_positions(got["positions"], {1001: {"symbolFull": "NVDA", "instrumentDisplayName": "NVIDIA",
+                                                             "instrumentTypeID": 5}}, {5: "Stocks"})
+    first = rows[0]
+    assert first["value_usd"] == 450.0 and first["pnl_usd"] == -50.0 and first["current_price"] == 9.0
+    assert first["name"] == "NVIDIA" and not first["copied"] and rows[1]["copied"] and rows[1]["direction"] == "short"
+
+
+def test_invested_by_day_keeps_open_trades_to_today():
+    from datetime import datetime, timezone
+    opened = [{"opened_at": "2026-01-02T00:00:00Z", "invested_usd": 30.0}]
+    trips = [{"opened_at": "2026-01-01T10:00:00Z", "closed_at": "2026-01-03T10:00:00Z", "invested_usd": 100.0,
+              "net_result_usd": 10.0}]
+    days = tl.invested_by_day(trips, open_positions=opened)
+    assert days[1] == ("2026-01-02", 130.0, 0.0) and days[2] == ("2026-01-03", 30.0, 10.0)
+    assert days[-1][0] == datetime.now(timezone.utc).date().isoformat() and days[-1][1] == 30.0

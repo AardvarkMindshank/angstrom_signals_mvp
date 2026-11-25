@@ -127,6 +127,21 @@ def _update(supabase, conn_id: str, **fields) -> None:
     supabase.table("trade_connections").update(fields).eq("id", conn_id).execute()
 
 
+def _save_open(supabase, conn: dict, portfolio: dict, rows: list[dict], now: datetime) -> None:
+    """Replace this connection's open positions and note its cash. Quietly skipped until the SQL is run."""
+    try:
+        table = supabase.table("trade_open_positions")
+        table.delete().eq("connection_id", conn["id"]).execute()
+        rows = [{**r, "user_id": conn["user_id"], "connection_id": conn["id"], "read_at": now.isoformat()}
+                for r in rows]
+        for start in range(0, len(rows), 200):
+            supabase.table("trade_open_positions").insert(rows[start:start + 200]).execute()
+        _update(supabase, conn["id"], cash_usd=portfolio.get("cash"), open_pnl_usd=portfolio.get("pnl"),
+                portfolio_at=now.isoformat())
+    except Exception as exc:
+        print(f"Trade Log open positions skipped: {type(exc).__name__}")
+
+
 def sync_connection(supabase, conn: dict, session, inputs: Inputs, deadline: float, now: datetime) -> dict:
     """Import one connection's closed trades and as many missing snapshots as time allows. Counts only."""
     summary = {"trades": 0, "snapshots": 0, "failed": False}
@@ -144,7 +159,13 @@ def sync_connection(supabase, conn: dict, session, inputs: Inputs, deadline: flo
         recent = conn.get("status") == "ok" and last is not None and not conn.get("refresh_requested_at")
         stop = (last - timedelta(days=7)).isoformat()[:10] if recent else None
         positions = tradelog.fetch_closed_positions(session, keys, stop_before=stop, workers=2)
-        ids = {p.get("instrumentId") for p in positions}
+        try:                                               # what is open now (26 Nov 2026)
+            portfolio = tradelog.fetch_portfolio(session, keys)
+        except tradelog.EtoroError:
+            portfolio = None
+        ids = {p.get("instrumentId") for p in positions} | {p.get("instrumentID") for p in
+                                                           (portfolio or {}).get("positions", [])}
+        ids.discard(None)
         instruments = tradelog.fetch_instruments(session, keys, ids) if ids else {}
         types = tradelog.fetch_instrument_types(session, keys) if ids else {}
     except tradelog.EtoroError as exc:
@@ -154,7 +175,11 @@ def sync_connection(supabase, conn: dict, session, inputs: Inputs, deadline: flo
         return summary
     finally:
         keys = None                                          # don't keep the key around longer than needed
-    trips = tradelog.etoro_round_trips(positions, instruments, types, asset_keys_for(supabase, instruments, types))
+    keys_map = asset_keys_for(supabase, instruments, types)
+    trips = tradelog.etoro_round_trips(positions, instruments, types, keys_map)
+    if portfolio is not None:
+        _save_open(supabase, conn, portfolio, tradelog.etoro_open_positions(portfolio["positions"], instruments,
+                                                                            types, keys_map), now)
     rows = [{**t, "user_id": conn["user_id"], "connection_id": conn["id"]} for t in trips]
     for start in range(0, len(rows), 200):
         supabase.table("trade_round_trips").upsert(rows[start:start + 200],

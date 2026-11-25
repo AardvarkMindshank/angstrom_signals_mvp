@@ -2504,5 +2504,20 @@
   "Invested in open trades (USD)": "Investi dans les trades ouverts (USD)",
   "Profit or loss from closed trades (USD)": "Gain ou perte des trades clôturés (USD)",
   "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "Investi : l'argent placé dans les trades que vous déteniez ce jour-là. Gain ou perte : le résultat de chaque trade, ajouté le jour de sa clôture. Les liquidités sur votre compte ne sont pas affichées, et le gain ou la perte d'un trade ne compte qu'une fois clôturé.",
-  "Net result (USD)": "Résultat net (USD)"
+  "Net result (USD)": "Résultat net (USD)",
+  "**Open now**": "**Ouvert maintenant**",
+  "Account value": "Valeur du compte",
+  "Open trades plus spare cash.": "Trades ouverts plus liquidités disponibles.",
+  "At the last sync. Prices move between syncs.": "À la dernière synchronisation. Les prix bougent entre deux synchronisations.",
+  "In open trades": "Dans les trades ouverts",
+  "{n} open trades": "{n} trades ouverts",
+  "Open profit or loss": "Gain ou perte en cours",
+  "Spare cash": "Liquidités disponibles",
+  "Not in any trade.": "Dans aucun trade.",
+  "Invested (USD)": "Investi (USD)",
+  "Value (USD)": "Valeur (USD)",
+  "Profit or loss (USD)": "Gain ou perte (USD)",
+  "Opened": "Ouvert le",
+  "Open trades ({n})": "Trades ouverts ({n})",
+  "As at the last sync, {when}.": "À la dernière synchronisation, {when}."
 }

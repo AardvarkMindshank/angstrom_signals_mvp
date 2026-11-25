@@ -23,6 +23,9 @@ def _app(plan, empty=False, setup=False):
         def limit(self, *_a):
             return self
 
+        def range(self, *_a):
+            return self
+
         def eq(self, *_a):
             return self
 
@@ -44,7 +47,13 @@ def _app(plan, empty=False, setup=False):
               "readings": {"regime": "trending_up", "trend": 40, "stretch": 10, "flow": -5,
                            "fear": {"name": "VIX", "value": 16.2}, "asset_sentiment": {"value": None},
                            "market_sentiment": {"value": 55}}}]
+    opened = [{"id": 1, "connection_id": "c1", "position_id": "9", "name": "Bitcoin", "symbol": "BTC",
+               "asset_class": "crypto", "direction": "long", "opened_at": "2026-11-20T10:00:00Z",
+               "invested_usd": 500.0, "value_usd": 450.0, "pnl_usd": -50.0, "copied": False}]
+    if not empty:
+        conn = {**conn, "cash_usd": 120.0, "open_pnl_usd": -50.0, "portfolio_at": "2026-11-22T06:00:00Z"}
     tables = {"trade_connections": [] if empty else [conn], "trade_round_trips": [] if empty else trips,
+              "trade_open_positions": [] if empty else opened,
               "trade_snapshots": snaps, "trade_notes": [],
               "trade_reviews": [{"review": {"happened": "Seven trades closed (T1).", "pattern": "Held losers longer (T2).",
                                             "question": "What made you close T1 when you did?", "cited": ["T1"],
@@ -68,6 +77,7 @@ def test_page_draws_for_pro_with_trades():
     page = "".join(h.proto.body for h in at.get("html"))
     assert "Net result" in page and "tl-tiles" in page and "tl-bars" in page
     assert "What made you close T1 when you did?" in page and "Patterns in your own trades" in page
+    assert "Open now" in page and "Account value" in page and "$570" in page      # 450 in the trade + 120 cash
     assert len(at.tabs) == 2                                       # Overview, eToro
     assert not at.text_input                                       # keys are set up in the sidebar, not here
 

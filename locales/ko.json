@@ -2504,5 +2504,20 @@
   "Invested in open trades (USD)": "보유 중인 거래에 투자된 금액(USD)",
   "Profit or loss from closed trades (USD)": "청산된 거래의 손익(USD)",
   "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "투자 금액: 그날 보유한 거래에 들어 있던 돈. 손익: 각 거래의 결과를 청산한 날에 더한 값. 계좌의 현금은 표시되지 않으며, 거래의 손익은 청산해야 반영됩니다.",
-  "Net result (USD)": "순손익(USD)"
+  "Net result (USD)": "순손익(USD)",
+  "**Open now**": "**현재 보유 중**",
+  "Account value": "계좌 가치",
+  "Open trades plus spare cash.": "보유 중인 거래와 여유 현금의 합.",
+  "At the last sync. Prices move between syncs.": "마지막 동기화 시점. 동기화 사이에도 가격은 움직입니다.",
+  "In open trades": "보유 중인 거래",
+  "{n} open trades": "보유 중인 거래 {n}건",
+  "Open profit or loss": "평가 손익",
+  "Spare cash": "여유 현금",
+  "Not in any trade.": "어떤 거래에도 들어 있지 않은 돈.",
+  "Invested (USD)": "투자 금액(USD)",
+  "Value (USD)": "평가액(USD)",
+  "Profit or loss (USD)": "손익(USD)",
+  "Opened": "진입일",
+  "Open trades ({n})": "보유 중인 거래 ({n})",
+  "As at the last sync, {when}.": "마지막 동기화 기준, {when}."
 }

@@ -2504,5 +2504,20 @@
   "Invested in open trades (USD)": "未平仓交易中的投入(USD)",
   "Profit or loss from closed trades (USD)": "已平仓交易的盈亏(USD)",
   "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "投入:当天持有的交易中的资金。盈亏:每笔交易的结果,在平仓当天累加。不显示账户中的闲置现金,交易的盈亏只有平仓后才计入。",
-  "Net result (USD)": "净结果（USD）"
+  "Net result (USD)": "净结果（USD）",
+  "**Open now**": "**当前持仓**",
+  "Account value": "账户价值",
+  "Open trades plus spare cash.": "未平仓交易加闲置现金。",
+  "At the last sync. Prices move between syncs.": "以上次同步为准。两次同步之间价格会变动。",
+  "In open trades": "未平仓交易中",
+  "{n} open trades": "{n} 笔未平仓交易",
+  "Open profit or loss": "浮动盈亏",
+  "Spare cash": "闲置现金",
+  "Not in any trade.": "未投入任何交易。",
+  "Invested (USD)": "投入(USD)",
+  "Value (USD)": "市值(USD)",
+  "Profit or loss (USD)": "盈亏(USD)",
+  "Opened": "开仓日",
+  "Open trades ({n})": "未平仓交易({n})",
+  "As at the last sync, {when}.": "以上次同步为准,{when}。"
 }

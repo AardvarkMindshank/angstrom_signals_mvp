@@ -2504,5 +2504,20 @@
   "Invested in open trades (USD)": "保有中の取引への投資額(USD)",
   "Profit or loss from closed trades (USD)": "決済済み取引の損益(USD)",
   "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "投資額:その日に保有していた取引に入っていた金額。損益:各取引の結果を決済日に加算したもの。口座内の現金は表示されず、取引の損益は決済して初めて反映されます。",
-  "Net result (USD)": "純損益（USD）"
+  "Net result (USD)": "純損益（USD）",
+  "**Open now**": "**現在保有中**",
+  "Account value": "口座価値",
+  "Open trades plus spare cash.": "保有中の取引と余剰現金の合計。",
+  "At the last sync. Prices move between syncs.": "前回の同期時点。同期の間にも価格は動きます。",
+  "In open trades": "保有中の取引",
+  "{n} open trades": "保有中の取引 {n} 件",
+  "Open profit or loss": "含み損益",
+  "Spare cash": "余剰現金",
+  "Not in any trade.": "どの取引にも入っていない資金。",
+  "Invested (USD)": "投資額(USD)",
+  "Value (USD)": "評価額(USD)",
+  "Profit or loss (USD)": "損益(USD)",
+  "Opened": "建玉日",
+  "Open trades ({n})": "保有中の取引({n})",
+  "As at the last sync, {when}.": "前回の同期時点({when})。"
 }
