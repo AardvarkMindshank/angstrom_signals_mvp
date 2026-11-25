@@ -76,8 +76,11 @@ def all_texts() -> list[str]:
 
 def _js_files() -> list[str]:
     """The browser code the app ships (not the *_check.js test scripts)."""
-    return sorted(os.path.join(HERE, f) for f in os.listdir(HERE)
-                  if f.endswith(".js") and not f.endswith("_check.js"))
+    import glob
+
+    own = [os.path.join(HERE, f) for f in os.listdir(HERE) if f.endswith(".js") and not f.endswith("_check.js")]
+    react = glob.glob(os.path.join(HERE, "tradelog_ui", "src", "**", "*.js*"), recursive=True)   # the React page
+    return sorted(own + react)
 
 
 def report(code: str, texts: list[str] | None = None) -> dict:

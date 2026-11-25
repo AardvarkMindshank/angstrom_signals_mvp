@@ -101,6 +101,10 @@ def market_state(readings: dict | None) -> str | None:
     regime, trend = str(r.get("regime") or ""), _num(r.get("trend"))
     if not regime:
         return None
+    if regime == "trending_up":
+        return "up"
+    if regime == "trending_down":
+        return "down"
     if regime == "trending" and trend is not None:
         return "up" if trend > 0 else "down"
     return "side"
@@ -128,7 +132,10 @@ def edge(trips: list[dict], snaps: dict) -> dict:
         {"dim": "day", "cells": group(_day, ("mon_thu", "fri", "weekend"))},
     ]
     rows = [r for r in rows if r["cells"]]
-    flat = [(r["dim"], c) for r in rows for c in r["cells"] if c["trades"] >= MIN_CELL and len(r["cells"]) > 1]
+    # A box holding nearly all the trades ("long", say) says nothing about where the edge is: leave those out.
+    flat = [(r["dim"], c) for r in rows for c in r["cells"]
+            if c["trades"] >= MIN_CELL and len(r["cells"]) > 1
+            and c["trades"] <= 0.85 * sum(x["trades"] for x in r["cells"])]
     best = max(flat, key=lambda x: x[1]["net"], default=None)
     worst = min(flat, key=lambda x: x[1]["net"], default=None)
     return {"rows": rows,
@@ -174,7 +181,8 @@ def exits(trips: list[dict]) -> dict:
             continue
         rs = [_num(t.get("risk_r")) for t in sel if _num(t.get("risk_r")) is not None]
         out.append({"kind": k, "share": _r(len(sel) / len(known) * 100, 1), "trades": len(sel),
-                    "avg_r": _r(sum(rs) / len(rs), 2) if len(rs) >= 3 else None,
+                    # an average in R only when most of these trades had a real stop; otherwise in dollars
+                    "avg_r": _r(sum(rs) / len(rs), 2) if len(rs) >= max(3, 0.5 * len(sel)) else None,
                     "avg_usd": _r(sum(_num(t.get("net_result_usd")) or 0 for t in sel) / len(sel))})
     return {"known": len(known), "kinds": out}
 

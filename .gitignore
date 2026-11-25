@@ -6,3 +6,4 @@ __pycache__/
 *.pyc
 .streamlit/secrets-test.toml
 static/boot.txt
+tradelog_ui/node_modules/
