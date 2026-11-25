@@ -208,7 +208,7 @@ def main() -> int:
         sys.path.insert(0, ".")
         import tradelog
         t0 = _t.monotonic()
-        got = tradelog.fetch_closed_positions(_rq.Session(), {"api_key": api_key, "user_key": user_key}, workers=4)
+        got = tradelog.fetch_closed_positions(_rq.Session(), {"api_key": api_key, "user_key": user_key}, workers=2)
         print(f"App reader: {len(got)} positions in {_t.monotonic() - t0:.0f} s")
         print("\n".join(summarise(got)[:7]))
         return 0

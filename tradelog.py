@@ -37,11 +37,11 @@ def _headers(keys: dict) -> dict:
 
 
 def _get(session, path: str, keys: dict, params: dict | None = None):
-    for attempt in range(3):         # a 504 is eToro's own server timing out: wait and ask again
+    for attempt in range(4):         # 504: eToro's own server timed out; 429: too fast. Wait and ask again.
         if attempt:
-            time.sleep(10)
+            time.sleep(10 * attempt)
         r = session.get(f"{ETORO_API}{path}", headers=_headers(keys), params=params or {}, timeout=60)
-        if r.status_code != 504:
+        if r.status_code not in (504, 429):
             break
     if r.status_code in (401, 403):
         raise EtoroError("eToro refused the key. Check it is a Read key for the real account.")
@@ -73,7 +73,7 @@ def fetch_closed_positions(session, keys: dict, min_date: str = "2010-01-01", st
     eToro support advised (26 Nov 2026); stopping at the first short page had read only 98 of over 12,000 trades.
     A page that brings nothing new also ends it, in case eToro ever repeats a page. stop_before (an ISO date): stop
     once a whole page closed before it (the daily sync only needs the latest days). workers: pages read side by side
-    (eToro takes a few seconds a page, so a big history is read about four times faster with four)."""
+    (eToro takes a few seconds a page; two side by side halves the wait, and more makes eToro ask us to slow down)."""
     from concurrent.futures import ThreadPoolExecutor
 
     def one(page: int) -> list[dict]:
