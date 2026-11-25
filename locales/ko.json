@@ -2414,7 +2414,6 @@
   "Synced recently. Try again in a few minutes.": "방금 동기화했습니다. 몇 분 뒤 다시 시도하세요.",
   "Paste both keys and tick the box first.": "먼저 두 키를 붙여 넣고 상자에 체크하세요.",
   "too few trades to call anything a pattern yet": "패턴이라 부르기엔 아직 거래가 너무 적습니다",
-  "Net result (USD)": "순손익(USD)",
   "Buy": "매수",
   "Sell": "매도",
   "Overview": "개요",
@@ -2501,6 +2500,9 @@
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "모두가 함께 듣는 모닝 아웃룩와, 회원이 아직 작성하지 않았을 때 음성 플랜용으로 백그라운드 작업이 작성하는 Passage Plan을 씁니다. Claude, Grok, ChatGPT, Gemini 키가 있는 백그라운드 작업에서 실행됩니다.",
   "Yours": "내 거래",
   "Which trades to count: yours, those copied from other eToro traders, or both.": "집계할 거래: 내 거래, 다른 eToro 트레이더에게서 복사한 거래, 또는 둘 다.",
-  "**Profit and loss from closed trades**": "**청산된 거래의 손익**",
-  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "각 거래의 결과를 청산한 날에 누적한 값입니다. 계좌 가치가 아닙니다. 입금, 출금, 보유 중인 포지션은 포함되지 않으며, 손실은 거래를 청산해야 표시됩니다."
+  "**Money invested and profit or loss over time**": "**투자 금액과 손익 추이**",
+  "Invested in open trades (USD)": "보유 중인 거래에 투자된 금액(USD)",
+  "Profit or loss from closed trades (USD)": "청산된 거래의 손익(USD)",
+  "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "투자 금액: 그날 보유한 거래에 들어 있던 돈. 손익: 각 거래의 결과를 청산한 날에 더한 값. 계좌의 현금은 표시되지 않으며, 거래의 손익은 청산해야 반영됩니다.",
+  "Net result (USD)": "순손익(USD)"
 }

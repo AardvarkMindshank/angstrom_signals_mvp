@@ -2414,7 +2414,6 @@
   "Synced recently. Try again in a few minutes.": "Sincronizado há pouco. Tente de novo em alguns minutos.",
   "Paste both keys and tick the box first.": "Cole as duas chaves e marque a caixa primeiro.",
   "too few trades to call anything a pattern yet": "poucas operações para chamar algo de padrão ainda",
-  "Net result (USD)": "Resultado líquido (USD)",
   "Buy": "Compra",
   "Sell": "Venda",
   "Overview": "Visão geral",
@@ -2501,6 +2500,9 @@
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Escreve o Panorama da manhã compartilhado e os Passage Plans que o processo em segundo plano escreve para o plano falado quando o membro ainda não escreveu um. Roda no processo em segundo plano, que tem as chaves do Claude, Grok, ChatGPT e Gemini.",
   "Yours": "Suas",
   "Which trades to count: yours, those copied from other eToro traders, or both.": "Quais operações contar: as suas, as copiadas de outros traders da eToro ou ambas.",
-  "**Profit and loss from closed trades**": "**Lucros e prejuízos de operações fechadas**",
-  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "O resultado de cada operação somado no dia em que foi fechada. Não é o valor da sua conta: depósitos, saques e posições abertas não entram, e um prejuízo só aparece quando a operação é fechada."
+  "**Money invested and profit or loss over time**": "**Dinheiro investido e lucro ou prejuízo ao longo do tempo**",
+  "Invested in open trades (USD)": "Investido em operações abertas (USD)",
+  "Profit or loss from closed trades (USD)": "Lucro ou prejuízo de operações fechadas (USD)",
+  "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "Investido: o dinheiro nas operações que você mantinha naquele dia. Lucro ou prejuízo: o resultado de cada operação, somado no dia em que foi fechada. O dinheiro parado na conta não aparece, e o lucro ou prejuízo de uma operação só conta quando ela é fechada.",
+  "Net result (USD)": "Resultado líquido (USD)"
 }

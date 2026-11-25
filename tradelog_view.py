@@ -366,18 +366,20 @@ def _review_card(st, supabase, trips: list[dict], snaps: dict, plan: str, ai: st
 
 def _overview(st, trips: list[dict], snaps: dict, copied: bool) -> None:
     _headline(st, tradelog.stats(trips, copied))
-    curve = tradelog.equity_curve(trips, copied)
+    curve = tradelog.invested_by_day(trips, copied)
     platforms = tradelog.stats_by(trips, "platform", copied)
     if len(curve) >= 2:
         with st.container(key="tl_card_curve"):
-            # Not the account's value (no deposits, withdrawals or open positions): said so, 26 Nov 2026.
-            st.html(CSS + f"<div class='tl-h'>{html.escape(t('**Profit and loss from closed trades**').strip('*'))}</div>")
-            st.caption(t("Each trade's result added up on the day it closed. This is not your account value: money "
-                         "paid in or taken out and open positions are not included, and a loss only shows once the "
-                         "trade is closed."))
-            st.line_chart(pd.DataFrame({t("Net result (USD)"): [v for _, v in curve]},
-                                       index=pd.to_datetime([d for d, _ in curve], utc=True, format="ISO8601")),
-                          height=220)
+            # Money in open trades each day, from each trade's open and close (26 Nov 2026), with the running result
+            # of closed trades. Not the account's full value: said so under the chart.
+            st.html(CSS + f"<div class='tl-h'>{html.escape(t('**Money invested and profit or loss over time**').strip('*'))}</div>")
+            st.line_chart(pd.DataFrame({t("Invested in open trades (USD)"): [h for _, h, _ in curve],
+                                        t("Profit or loss from closed trades (USD)"): [r for _, _, r in curve]},
+                                       index=pd.to_datetime([d for d, _, _ in curve])),
+                          height=240)
+            st.caption(t("Invested: the money in trades you held that day. Profit or loss: each trade's result, "
+                         "added on the day it closed. Cash waiting in your account is not shown, and a trade's gain "
+                         "or loss only counts once it is closed."))
     left, right = st.columns(2)
     with left, st.container(key="tl_card_classes"):
         st.html(CSS + f"<div class='tl-h'>{html.escape(t('**By asset class**').strip('*'))}</div>"

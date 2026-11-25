@@ -2414,7 +2414,6 @@
   "Synced recently. Try again in a few minutes.": "Baru saja disinkronkan. Coba lagi dalam beberapa menit.",
   "Paste both keys and tick the box first.": "Tempel kedua kunci dan centang kotaknya dulu.",
   "too few trades to call anything a pattern yet": "terlalu sedikit trading untuk disebut pola",
-  "Net result (USD)": "Hasil bersih (USD)",
   "Buy": "Beli",
   "Sell": "Jual",
   "Overview": "Ringkasan",
@@ -2501,6 +2500,9 @@
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Menulis Prospek Pagi bersama, dan Passage Plan yang ditulis worker latar belakang untuk rencana lisan saat anggota belum menulisnya. Berjalan di worker latar belakang, yang punya kunci Claude, Grok, ChatGPT, dan Gemini.",
   "Yours": "Milik Anda",
   "Which trades to count: yours, those copied from other eToro traders, or both.": "Trade mana yang dihitung: milik Anda, yang disalin dari trader eToro lain, atau keduanya.",
-  "**Profit and loss from closed trades**": "**Laba rugi dari trade yang ditutup**",
-  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "Hasil setiap trade dijumlahkan pada hari trade itu ditutup. Ini bukan nilai akun Anda: setoran, penarikan, dan posisi terbuka tidak termasuk, dan kerugian baru tampak setelah trade ditutup."
+  "**Money invested and profit or loss over time**": "**Uang yang diinvestasikan dan laba rugi dari waktu ke waktu**",
+  "Invested in open trades (USD)": "Diinvestasikan di trade terbuka (USD)",
+  "Profit or loss from closed trades (USD)": "Laba atau rugi dari trade yang ditutup (USD)",
+  "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "Diinvestasikan: uang di trade yang Anda pegang hari itu. Laba atau rugi: hasil setiap trade, ditambahkan pada hari trade ditutup. Uang tunai di akun Anda tidak ditampilkan, dan laba atau rugi trade baru dihitung setelah ditutup.",
+  "Net result (USD)": "Hasil bersih (USD)"
 }

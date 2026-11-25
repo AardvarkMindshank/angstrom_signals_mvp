@@ -2414,7 +2414,6 @@
   "Synced recently. Try again in a few minutes.": "Vừa đồng bộ. Hãy thử lại sau vài phút.",
   "Paste both keys and tick the box first.": "Hãy dán cả hai khóa và đánh dấu ô trước.",
   "too few trades to call anything a pattern yet": "quá ít giao dịch để gọi là một mô thức",
-  "Net result (USD)": "Kết quả ròng (USD)",
   "Buy": "Mua",
   "Sell": "Bán",
   "Overview": "Tổng quan",
@@ -2501,6 +2500,9 @@
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Viết Triển vọng buổi sáng dùng chung, và các Passage Plan mà tiến trình nền viết cho bản kế hoạch nói khi thành viên chưa tự viết. Chạy trên tiến trình nền, nơi có khóa Claude, Grok, ChatGPT và Gemini.",
   "Yours": "Của bạn",
   "Which trades to count: yours, those copied from other eToro traders, or both.": "Tính giao dịch nào: của bạn, giao dịch sao chép từ trader eToro khác, hoặc cả hai.",
-  "**Profit and loss from closed trades**": "**Lãi lỗ từ các giao dịch đã đóng**",
-  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "Kết quả của từng giao dịch được cộng dồn vào ngày đóng. Đây không phải giá trị tài khoản của bạn: tiền nạp, tiền rút và vị thế đang mở không được tính, và khoản lỗ chỉ hiện khi giao dịch đã đóng."
+  "**Money invested and profit or loss over time**": "**Tiền đầu tư và lãi lỗ theo thời gian**",
+  "Invested in open trades (USD)": "Đã đầu tư vào giao dịch đang mở (USD)",
+  "Profit or loss from closed trades (USD)": "Lãi hoặc lỗ từ giao dịch đã đóng (USD)",
+  "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "Đã đầu tư: số tiền trong các giao dịch bạn nắm giữ vào ngày đó. Lãi hoặc lỗ: kết quả của từng giao dịch, cộng vào ngày đóng. Tiền mặt trong tài khoản không được hiển thị, và lãi lỗ của giao dịch chỉ được tính khi đã đóng.",
+  "Net result (USD)": "Kết quả ròng (USD)"
 }

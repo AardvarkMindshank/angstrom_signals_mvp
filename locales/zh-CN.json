@@ -2414,7 +2414,6 @@
   "Synced recently. Try again in a few minutes.": "刚刚同步过，请几分钟后再试。",
   "Paste both keys and tick the box first.": "请先粘贴两个密钥并勾选方框。",
   "too few trades to call anything a pattern yet": "交易太少，还谈不上规律",
-  "Net result (USD)": "净结果（USD）",
   "Buy": "买入",
   "Sell": "卖出",
   "Overview": "概览",
@@ -2501,6 +2500,9 @@
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "撰写大家共享的晨间展望，以及会员尚未撰写时由后台程序为语音计划撰写的 Passage Plan。在拥有 Claude、Grok、ChatGPT 和 Gemini 密钥的后台程序上运行。",
   "Yours": "我的",
   "Which trades to count: yours, those copied from other eToro traders, or both.": "统计哪些交易:你自己的、从其他 eToro 交易者复制的,或两者。",
-  "**Profit and loss from closed trades**": "**已平仓交易的盈亏**",
-  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "每笔交易的结果在平仓当天累加。这不是你的账户价值:不包括入金、出金和未平仓持仓,亏损只有在平仓后才会显示。"
+  "**Money invested and profit or loss over time**": "**投入资金与盈亏走势**",
+  "Invested in open trades (USD)": "未平仓交易中的投入(USD)",
+  "Profit or loss from closed trades (USD)": "已平仓交易的盈亏(USD)",
+  "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "投入:当天持有的交易中的资金。盈亏:每笔交易的结果,在平仓当天累加。不显示账户中的闲置现金,交易的盈亏只有平仓后才计入。",
+  "Net result (USD)": "净结果（USD）"
 }

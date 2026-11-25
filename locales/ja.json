@@ -2414,7 +2414,6 @@
   "Synced recently. Try again in a few minutes.": "最近同期しました。数分後にもう一度お試しください。",
   "Paste both keys and tick the box first.": "先に両方のキーを貼り付け、チェックを入れてください。",
   "too few trades to call anything a pattern yet": "パターンと呼ぶにはまだ取引が少なすぎます",
-  "Net result (USD)": "純損益（USD）",
   "Buy": "買い",
   "Sell": "売り",
   "Overview": "概要",
@@ -2501,6 +2500,9 @@
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "全員共通の「モーニング・アウトルック」と、メンバーがまだ書いていないときに音声プラン用にバックグラウンドワーカーが書く Passage Plan を作成します。Claude、Grok、ChatGPT、Gemini のキーを持つバックグラウンドワーカーで動きます。",
   "Yours": "自分",
   "Which trades to count: yours, those copied from other eToro traders, or both.": "集計する取引:自分の取引、他の eToro トレーダーからコピーした取引、またはその両方。",
-  "**Profit and loss from closed trades**": "**決済済み取引の損益**",
-  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "各取引の結果を決済日に積み上げたものです。口座残高ではありません。入金・出金や保有中のポジションは含まれず、損失は取引を決済した時点で初めて表示されます。"
+  "**Money invested and profit or loss over time**": "**投資額と損益の推移**",
+  "Invested in open trades (USD)": "保有中の取引への投資額(USD)",
+  "Profit or loss from closed trades (USD)": "決済済み取引の損益(USD)",
+  "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "投資額:その日に保有していた取引に入っていた金額。損益:各取引の結果を決済日に加算したもの。口座内の現金は表示されず、取引の損益は決済して初めて反映されます。",
+  "Net result (USD)": "純損益（USD）"
 }

@@ -175,3 +175,17 @@ def test_asset_class_gap_only_with_ten_trades_each():
     gap = [p for p in tl.patterns(trips) if p["kind"] == "class_gap"]
     assert gap and gap[0]["better"] == "crypto" and gap[0]["worse"] == "stocks" and gap[0]["trades"] == 20
     assert not [p for p in tl.patterns(trips[:15]) if p["kind"] == "class_gap"]
+
+
+def test_invested_by_day_rises_and_falls_with_open_trades():
+    trips = [
+        {"opened_at": "2026-01-01T10:00:00Z", "closed_at": "2026-01-03T10:00:00Z", "invested_usd": 100.0,
+         "net_result_usd": 10.0},
+        {"opened_at": "2026-01-02T10:00:00Z", "closed_at": "2026-01-04T10:00:00Z", "invested_usd": 50.0,
+         "net_result_usd": -5.0},
+        {"opened_at": "2026-01-02T10:00:00Z", "closed_at": "2026-01-02T12:00:00Z", "invested_usd": 999.0,
+         "net_result_usd": 1.0, "copied": True},
+    ]
+    assert tl.invested_by_day(trips) == [("2026-01-01", 100.0, 0.0), ("2026-01-02", 150.0, 0.0),
+                                         ("2026-01-03", 50.0, 10.0), ("2026-01-04", 0.0, 5.0)]
+    assert tl.invested_by_day(trips, include_copied=True)[1] == ("2026-01-02", 150.0, 1.0)

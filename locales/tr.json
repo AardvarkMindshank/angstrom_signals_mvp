@@ -2414,7 +2414,6 @@
   "Synced recently. Try again in a few minutes.": "Az önce eşitlendi. Birkaç dakika sonra tekrar deneyin.",
   "Paste both keys and tick the box first.": "Önce iki anahtarı da yapıştırın ve kutuyu işaretleyin.",
   "too few trades to call anything a pattern yet": "bir örüntüden söz etmek için henüz çok az işlem var",
-  "Net result (USD)": "Net sonuç (USD)",
   "Buy": "Al",
   "Sell": "Sat",
   "Overview": "Genel bakış",
@@ -2501,6 +2500,9 @@
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Herkesin ortak Sabah Görünümüni ve üye henüz yazmadığında arka plan işleyicisinin sesli plan için yazdığı Passage Plan'leri yazar. Claude, Grok, ChatGPT ve Gemini anahtarlarına sahip arka plan işleyicisinde çalışır.",
   "Yours": "Seninkiler",
   "Which trades to count: yours, those copied from other eToro traders, or both.": "Hangi işlemler sayılsın: seninkiler, diğer eToro yatırımcılarından kopyalananlar ya da ikisi.",
-  "**Profit and loss from closed trades**": "**Kapanan işlemlerden kâr ve zarar**",
-  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "Her işlemin sonucu, kapandığı gün toplanır. Bu hesap değerin değildir: yatırılan ya da çekilen para ve açık pozisyonlar dahil değildir; zarar ancak işlem kapandığında görünür."
+  "**Money invested and profit or loss over time**": "**Zaman içinde yatırılan para ve kâr ya da zarar**",
+  "Invested in open trades (USD)": "Açık işlemlere yatırılan (USD)",
+  "Profit or loss from closed trades (USD)": "Kapanan işlemlerden kâr ya da zarar (USD)",
+  "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "Yatırılan: o gün tuttuğun işlemlerdeki para. Kâr ya da zarar: her işlemin sonucu, kapandığı gün eklenir. Hesabında bekleyen nakit gösterilmez ve bir işlemin kâr ya da zararı ancak kapandığında sayılır.",
+  "Net result (USD)": "Net sonuç (USD)"
 }

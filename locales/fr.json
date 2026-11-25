@@ -2414,7 +2414,6 @@
   "Synced recently. Try again in a few minutes.": "Synchronisé récemment. Réessayez dans quelques minutes.",
   "Paste both keys and tick the box first.": "Collez les deux clés et cochez la case d'abord.",
   "too few trades to call anything a pattern yet": "trop peu de trades pour parler de tendance",
-  "Net result (USD)": "Résultat net (USD)",
   "Buy": "Achat",
   "Sell": "Vente",
   "Overview": "Vue d'ensemble",
@@ -2501,6 +2500,9 @@
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Rédige les Perspectives du matin communes, et les Passage Plans que le processus en arrière-plan rédige pour le plan parlé quand le membre n'en a pas encore écrit. Tourne sur le processus en arrière-plan, qui a les clés Claude, Grok, ChatGPT et Gemini.",
   "Yours": "Les vôtres",
   "Which trades to count: yours, those copied from other eToro traders, or both.": "Quels trades compter : les vôtres, ceux copiés d'autres traders eToro, ou les deux.",
-  "**Profit and loss from closed trades**": "**Gains et pertes des trades clôturés**",
-  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "Le résultat de chaque trade, additionné le jour de sa clôture. Ce n'est pas la valeur de votre compte : les dépôts, retraits et positions ouvertes ne sont pas inclus, et une perte n'apparaît qu'une fois le trade clôturé."
+  "**Money invested and profit or loss over time**": "**Argent investi et gains ou pertes dans le temps**",
+  "Invested in open trades (USD)": "Investi dans les trades ouverts (USD)",
+  "Profit or loss from closed trades (USD)": "Gain ou perte des trades clôturés (USD)",
+  "Invested: the money in trades you held that day. Profit or loss: each trade's result, added on the day it closed. Cash waiting in your account is not shown, and a trade's gain or loss only counts once it is closed.": "Investi : l'argent placé dans les trades que vous déteniez ce jour-là. Gain ou perte : le résultat de chaque trade, ajouté le jour de sa clôture. Les liquidités sur votre compte ne sont pas affichées, et le gain ou la perte d'un trade ne compte qu'une fois clôturé.",
+  "Net result (USD)": "Résultat net (USD)"
 }

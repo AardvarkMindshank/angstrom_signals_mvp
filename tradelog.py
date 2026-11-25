@@ -271,6 +271,35 @@ def equity_curve(trips: list[dict], include_copied: bool = False) -> list[tuple[
     return out
 
 
+def invested_by_day(trips: list[dict], include_copied: bool = False) -> list[tuple[str, float, float]]:
+    """Each day from the first open to the last close: (YYYY-MM-DD, money in open trades at the day's end, running
+    net result of the trades closed by then). Built from each trade's open and close times and amount invested, so
+    it shows the money put to work rising and falling over the years (26 Nov 2026). Not the account's full value:
+    cash waiting in the account and the open trades' gains or losses before they closed are not in it."""
+    from datetime import timedelta
+    rows = [t for t in trips if (include_copied or not t.get("copied"))
+            and _when(t.get("opened_at")) and _when(t.get("closed_at"))]
+    if not rows:
+        return []
+    change: dict = {}
+    result: dict = {}
+    for t in rows:
+        o, c = _when(t["opened_at"]).date(), _when(t["closed_at"]).date()
+        amount = _num(t.get("invested_usd")) or 0.0
+        change[o] = change.get(o, 0.0) + amount
+        change[c] = change.get(c, 0.0) - amount
+        result[c] = result.get(c, 0.0) + (_num(t.get("net_result_usd")) or 0.0)
+    day, last = min(change), max(change)
+    held = total = 0.0
+    out = []
+    while day <= last:
+        held += change.get(day, 0.0)
+        total += result.get(day, 0.0)
+        out.append((day.isoformat(), round(max(held, 0.0), 2), round(total, 2)))
+        day += timedelta(days=1)
+    return out
+
+
 # ---- patterns (plain rules on the member's own numbers; no AI) ------------------------------------------------
 
 def patterns(trips: list[dict], include_copied: bool = False) -> list[dict]:
