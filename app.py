@@ -5143,7 +5143,7 @@ def _flag_is_true(data) -> bool:
 
 _HANDOFF_HOST_JS = """
 export default function(component) {
-  const { data, parentElement } = component;
+  const { data, parentElement, setTriggerValue } = component;
   const shell = parentElement.closest(".stBidiComponent") || parentElement;
   shell.style.display = "none";
   const holder = shell.closest('[data-testid="stElementContainer"]');
@@ -5151,14 +5151,28 @@ export default function(component) {
   if (!("BroadcastChannel" in window)) return;
   const access = String((data && data.access) || "");
   window.__angstromAccess = access;
+  window.__angstromRenew = setTriggerValue;
   if (!window.__angstromHandoffHost) {
     const channel = new BroadcastChannel("angstrom-handoff");
     window.__angstromHandoffHost = channel;
+    // The sign-in pass lasts an hour. A page left open longer would hand the 📓 Logbook and ✨ AI panels an expired
+    // one, and they showed the sign-in page (25 Nov 2026). So a pass with under 5 minutes left is renewed first:
+    // the page reruns, the server renews it, and the new one goes to every panel waiting for it.
+    const minutesLeft = (token) => {
+      try {
+        const part = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+        const exp = JSON.parse(atob(part + "===".slice((part.length + 3) % 4))).exp;
+        return (exp * 1000 - Date.now()) / 60000;
+      } catch (e) { return 60; }
+    };
     channel.onmessage = (event) => {
       const msg = event.data || {};
-      if (msg.type === "ask" && window.__angstromAccess) {
-        channel.postMessage({ type: "token", to: String(msg.id || ""), access: window.__angstromAccess });
+      if (msg.type !== "ask" || !window.__angstromAccess) return;
+      if (minutesLeft(window.__angstromAccess) < 5) {
+        window.__angstromRenew("renew", String(Date.now()));
+        return;
       }
+      channel.postMessage({ type: "token", to: String(msg.id || ""), access: window.__angstromAccess });
     };
   }
   if (access && window.__angstromAccessSent !== access) {
@@ -5211,7 +5225,7 @@ export default function(component) {
   const ask = () => {
     if (window.__angstromHandoffCurrent) return;
     tries += 1;
-    if (tries > 5) {
+    if (tries > 10) {
       window.__angstromHandoffSet("none", String(Date.now()));
       return;
     }
@@ -10821,7 +10835,7 @@ def _show_members() -> None:
                 "sign_in": cc.TextColumn(_en("Signs in with")),
             },
         )
-        st.caption(_en("Click a column title to sort. Hover a title for what it means. Times are UTC. Hours in app, "
+        st.caption(_en("Click a column title to sort. Hover a title for what it means. Times are in your account time zone. Hours in app, "
                        "visits and AI use are counted from when this list was switched on (19 Nov 2026)."))
 
 
@@ -17289,7 +17303,19 @@ if _POPOUT_VIEW == "social":
 if _POPOUT_VIEW:
     _keep_handoff_fresh()
 else:
-    _handoff_host(key="handoff_host", data={"access": str(st.session_state.get("access_token") or "")})
+    if st.session_state.pop("_renew_pass", False):
+        # A panel asked for the sign-in pass and it had under 5 minutes left: renew it now, so the panel gets a good
+        # one (25 Nov 2026).
+        _access, _refresh = st.session_state.get("access_token"), st.session_state.get("refresh_token")
+        if _refresh and _refresh != _POPOUT_MARK and session_guard.needs_refresh(_access, margin=300):
+            try:
+                _renewed = getattr(supabase.auth.refresh_session(_refresh), "session", None)
+                if _renewed is not None and _renewed.access_token and _renewed.refresh_token:
+                    _store_session_tokens(_renewed.access_token, _renewed.refresh_token)
+            except Exception as exc:
+                _session_failed(exc)
+    _handoff_host(key="handoff_host", data={"access": str(st.session_state.get("access_token") or "")},
+                  on_renew_change=lambda: st.session_state.update(_renew_pass=True))
     _popout_buttons(
         key="popout_buttons",
         data={

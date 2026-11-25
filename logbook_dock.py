@@ -129,6 +129,8 @@ export default function(component) {
     document.addEventListener("pointerdown", (e) => {
       if (root.__pinned || !root.classList.contains("is-open")) return;
       if (panel.contains(e.target) || edge.contains(e.target)) return;
+      // Opening or using another panel (📓 Logbook, ✨ AI, social) never closes this one (25 Nov 2026).
+      if (e.target.closest && e.target.closest("#ang-log-root, #ang-ai-root, #social-stream-root")) return;
       window.angstromCloseLogbook();
     });
     // The handle sits under the sidebar's own handle, and moves with it when the sidebar opens or closes.

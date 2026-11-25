@@ -154,6 +154,8 @@ export default function(component) {
     document.addEventListener("pointerdown", (e) => {
       if (root.__pinned || !root.classList.contains("is-open")) return;
       if (panel.contains(e.target) || edge.contains(e.target)) return;
+      // Opening or using another panel (📓 Logbook, ✨ AI, social) never closes this one (25 Nov 2026).
+      if (e.target.closest && e.target.closest("#ang-log-root, #ang-ai-root, #social-stream-root")) return;
       window.angstromCloseAI();
     });
     // Width: drag the grip on its left edge (320 to 900 px), remembered in this browser.
