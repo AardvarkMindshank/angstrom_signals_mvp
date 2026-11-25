@@ -19,7 +19,7 @@ import requests
 
 URL = "https://public-api.etoro.com/api/v1/trading/info/trade/history"
 PAGE_SIZE = int(os.environ.get("PAGE_SIZE") or 100)
-MAX_PAGES = 200
+MAX_PAGES = int(os.environ.get("MAX_PAGES") or 200)
 
 
 def fetch_page(api_key: str, user_key: str, min_date: str, page: int) -> tuple[int, object]:

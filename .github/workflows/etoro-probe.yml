@@ -30,4 +30,5 @@ jobs:
           MIN_DATE: ${{ inputs.min_date }}
           MODE: ${{ inputs.mode }}
           PAGE_SIZE: ${{ inputs.page_size }}
+          MAX_PAGES: "600"
         run: python .github/scripts/etoro_probe.py
