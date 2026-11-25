@@ -202,6 +202,28 @@ def main() -> int:
         print("Missing secrets: add ETORO_API_KEY and ETORO_USER_KEY in GitHub (Settings, Secrets, Actions).")
         return 1
     min_date = os.environ.get("MIN_DATE") or "2010-01-01"
+    if os.environ.get("MODE") == "pnl":            # field NAMES and counts only, never values
+        r = requests.get("https://public-api.etoro.com/api/v1/trading/info/real/pnl",
+                         headers={"x-request-id": str(uuid.uuid4()), "x-api-key": api_key, "x-user-key": user_key,
+                                  "Accept": "application/json"}, timeout=60)
+        print(f"real/pnl: HTTP {r.status_code}")
+
+        def shape(v, path="", depth=0):
+            if isinstance(v, dict):
+                for k, x in v.items():
+                    if isinstance(x, (dict, list)):
+                        shape(x, f"{path}.{k}", depth + 1)
+                    else:
+                        print(f"  {path}.{k}: {type(x).__name__}")
+            elif isinstance(v, list):
+                print(f"  {path}[]: {len(v)} item(s)")
+                if v:
+                    shape(v[0], path + "[0]", depth + 1)
+        try:
+            shape(r.json())
+        except ValueError:
+            print("  not JSON")
+        return 0
     if os.environ.get("MODE") == "app":            # the app's own reader, four pages side by side
         import time as _t
         import requests as _rq
