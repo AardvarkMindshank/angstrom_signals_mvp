@@ -159,9 +159,13 @@ def all_pages(api_key: str, user_key: str, min_date: str) -> None:
     for page in range(1, MAX_PAGES + 1):
         rid = str(uuid.uuid4())
         at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-        r = requests.get(URL, headers={"x-request-id": rid, "x-api-key": api_key, "x-user-key": user_key,
-                                       "Accept": "application/json"},
-                         params={"minDate": min_date, "page": page, "pageSize": PAGE_SIZE}, timeout=30)
+        try:
+            r = requests.get(URL, headers={"x-request-id": rid, "x-api-key": api_key, "x-user-key": user_key,
+                                           "Accept": "application/json"},
+                             params={"minDate": min_date, "page": page, "pageSize": PAGE_SIZE}, timeout=120)
+        except requests.RequestException as e:
+            print(f"  page {page}: x-request-id {rid}, sent {at}, no answer ({type(e).__name__})")
+            break
         try:
             batch = [b for b in items_of(r.json()) if isinstance(b, dict)]
         except ValueError:
