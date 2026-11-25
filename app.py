@@ -2248,7 +2248,9 @@ export default function(component) {
         : 255;
       panel.classList.toggle("is-dark", shade < 140);
       const main = document.querySelector("[data-testid='stMain']");
-      if (main) main.style.paddingRight = state.open && state.pinned ? "min(420px, 100vw)" : "";
+      // The room the page makes comes from --ang-dock-social (with the ✨ and 📓 panels' own shares) in one shared
+      // rule. An old fixed padding here overrode it and hid the AI panel's share (25 Nov 2026), so it is cleared.
+      if (main) main.style.paddingRight = "";
       const pin = panel.querySelector(".pin");
       if (pin) {
         pin.classList.toggle("is-on", !!state.pinned);
