@@ -16,7 +16,7 @@ on:
         description: "export mode only: a public key (base64 PEM). The export is encrypted to it; never stored or shown in plain"
         default: ""
 permissions:
-  contents: read
+  contents: write
 jobs:
   probe:
     runs-on: ubuntu-latest
@@ -49,11 +49,5 @@ jobs:
           openssl pkeyutl -encrypt -pubin -inkey pub.pem -pkeyopt rsa_padding_mode:oaep -in k.bin -out key.enc
           shred -u k.bin out/export.json.gz
           ls -la sealed.enc key.enc
-      - uses: actions/upload-artifact@v4
-        if: ${{ inputs.mode == 'export' && inputs.seal_to != '' }}
-        with:
-          name: sealed-export
-          path: |
-            sealed.enc
-            key.enc
-          retention-days: 1
+          mkdir -p sealed && mv sealed.enc key.enc sealed/
+          bash .github/scripts/save_to_reports.sh "probe_sealed/r${GITHUB_RUN_ID}" sealed
