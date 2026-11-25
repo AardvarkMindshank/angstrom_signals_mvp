@@ -12,6 +12,9 @@ on:
       mode:
         description: "pages: read every page until an empty one, with request IDs (for eToro support)"
         default: ""
+      seal_to:
+        description: "export mode only: a public key (base64 PEM). The export is encrypted to it; never stored or shown in plain"
+        default: ""
 permissions:
   contents: read
 jobs:
@@ -32,3 +35,25 @@ jobs:
           PAGE_SIZE: ${{ inputs.page_size }}
           MAX_PAGES: "600"
         run: python .github/scripts/etoro_probe.py
+      - name: Seal the export (encrypted to the given public key; the plain file is deleted)
+        if: ${{ inputs.mode == 'export' && inputs.seal_to != '' }}
+        env:
+          SEAL_TO: ${{ inputs.seal_to }}
+        run: |
+          set -e
+          test -f out/export.json
+          echo "$SEAL_TO" | base64 -d > pub.pem
+          gzip -9 out/export.json
+          openssl rand -out k.bin 32
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in out/export.json.gz -out sealed.enc -pass file:k.bin
+          openssl pkeyutl -encrypt -pubin -inkey pub.pem -pkeyopt rsa_padding_mode:oaep -in k.bin -out key.enc
+          shred -u k.bin out/export.json.gz
+          ls -la sealed.enc key.enc
+      - uses: actions/upload-artifact@v4
+        if: ${{ inputs.mode == 'export' && inputs.seal_to != '' }}
+        with:
+          name: sealed-export
+          path: |
+            sealed.enc
+            key.enc
+          retention-days: 1
