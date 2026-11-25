@@ -166,8 +166,21 @@ export default function(component) {
     });
     // Width: drag the grip on its left edge (320 to 900 px), remembered in this browser.
     const rightOf = () => parseFloat(root.style.getPropertyValue("--ai-right")) || 0;
+    const pageRoomWithout = (mine) => {     // the page's width if this panel made no room (25 Nov 2026 audit)
+      const d = document.documentElement.style;
+      const others = ["--ang-dock-ai", "--ang-dock-log", "--ang-dock-social"].filter((v) => v !== mine)
+        .reduce((a, v) => a + (parseFloat(d.getPropertyValue(v)) || 0), 0);
+      const sb = document.querySelector("[data-testid='stSidebar']");
+      const side = sb && sb.getAttribute("data-collapsed") !== "true" ? sb.getBoundingClientRect().width : 0;
+      return window.innerWidth - side - others;
+    };
+    const PAGE_MIN = 420;                    // a docked panel never leaves the page narrower than this
     const applyWidth = (px) => {
-      const max = Math.max(320, Math.min(900, window.innerWidth - 36 - rightOf()));
+      const docked = root.__pinned && root.classList.contains("is-open") && window.innerWidth >= 900;
+      const social = parseFloat(document.documentElement.style.getPropertyValue("--ang-dock-social")) || 0;
+      const gap = Math.max(0, rightOf() - social);
+      const room = docked ? pageRoomWithout("--ang-dock-ai") - gap - PAGE_MIN : 900;
+      const max = Math.max(320, Math.min(900, window.innerWidth - 36 - rightOf(), room));
       const next = Math.min(max, Math.max(320, Math.round(px)));
       root.style.setProperty("--ai-width", next + "px");
       if (root.__dock) root.__dock();
@@ -179,6 +192,7 @@ export default function(component) {
       if (event.button !== 0) return;
       event.preventDefault();
       root.classList.add("is-width-dragging");
+      document.documentElement.classList.add("ang-panel-drag");
       grip.classList.add("is-dragging");
       try { grip.setPointerCapture(event.pointerId); } catch (error) {}
       let last = saved >= 320 ? saved : 460;
@@ -187,6 +201,7 @@ export default function(component) {
       const move = (m) => { last = applyWidth(window.innerWidth - rightOf() - m.clientX); };
       const stop = (end) => {
         root.classList.remove("is-width-dragging");
+        document.documentElement.classList.remove("ang-panel-drag");
         grip.classList.remove("is-dragging");
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", stop);
@@ -237,6 +252,7 @@ export default function(component) {
     }
     root.classList.add("is-open");
     if (root.__dock) root.__dock();
+    document.dispatchEvent(new CustomEvent("ang-panel-open", { detail: "ai" }));
   };
   window.angstromCloseAI = () => { root.classList.remove("is-open"); if (root.__dock) root.__dock(); };
 
@@ -249,6 +265,17 @@ export default function(component) {
     root.style.setProperty("--ai-right", (open && panelEl ? Math.round(panelEl.getBoundingClientRect().width) : 0) + "px");
     if (root.__dock) root.__dock();
   };
+  window.angstromAiRestack = stackRight;          // the social panel calls this as it opens, closes or resizes
+  if (!root.__listen) {
+    root.__listen = true;
+    // A phone or narrow screen shows one panel at a time; Escape closes this panel when it isn't pinned (25 Nov 2026).
+    document.addEventListener("ang-panel-open", (e) => {
+      if (e.detail !== "ai" && window.innerWidth < 900 && root.classList.contains("is-open")) window.angstromCloseAI();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !root.__pinned && root.classList.contains("is-open")) window.angstromCloseAI();
+    });
+  }
   if (!root.__stackTimer) { root.__stackTimer = window.setInterval(stackRight, 400); window.addEventListener("resize", stackRight); }
   stackRight();
   // The social panel can be rebuilt, so watch whichever is there now.

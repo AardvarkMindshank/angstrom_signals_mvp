@@ -107,6 +107,7 @@ export default function(component) {
       }
       root.classList.add("is-open");
       root.__dock();
+      document.dispatchEvent(new CustomEvent("ang-panel-open", { detail: "log" }));
     };
     window.angstromCloseLogbook = () => { root.classList.remove("is-open"); root.__dock(); };
     edge.addEventListener("click", () => (root.classList.contains("is-open") ? window.angstromCloseLogbook() : window.angstromOpenLogbook()));
@@ -135,6 +136,13 @@ export default function(component) {
       if (e.target.closest && e.target.closest("#ang-log-root, #ang-ai-root, #social-stream-root")) return;
       window.angstromCloseLogbook();
     });
+    // A phone or narrow screen shows one panel at a time; Escape closes this panel when it isn't pinned (25 Nov 2026).
+    document.addEventListener("ang-panel-open", (e) => {
+      if (e.detail !== "log" && window.innerWidth < 900 && root.classList.contains("is-open")) window.angstromCloseLogbook();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !root.__pinned && root.classList.contains("is-open")) window.angstromCloseLogbook();
+    });
     // The handle sits under the sidebar's own handle, and moves with it when the sidebar opens or closes.
     const follow = () => {
       const tab = document.querySelector(".angstrom-sidebar-tab");
@@ -146,8 +154,20 @@ export default function(component) {
     };
     follow();
     window.setInterval(follow, 400);
+    const pageRoomWithout = (mine) => {     // the page's width if this panel made no room (25 Nov 2026 audit)
+      const d = document.documentElement.style;
+      const others = ["--ang-dock-ai", "--ang-dock-log", "--ang-dock-social"].filter((v) => v !== mine)
+        .reduce((a, v) => a + (parseFloat(d.getPropertyValue(v)) || 0), 0);
+      const sb = document.querySelector("[data-testid='stSidebar']");
+      const side = sb && sb.getAttribute("data-collapsed") !== "true" ? sb.getBoundingClientRect().width : 0;
+      return window.innerWidth - side - others;
+    };
+    const PAGE_MIN = 420;                    // a docked panel never leaves the page narrower than this
     const applyWidth = (px) => {
-      const max = Math.max(320, Math.min(900, window.innerWidth - 36));
+      const docked = root.__pinned && root.classList.contains("is-open") && window.innerWidth >= 900;
+      const tabLeft = parseFloat(root.style.getPropertyValue("--log-tab-left")) || 0;
+      const room = docked ? pageRoomWithout("--ang-dock-log") - PAGE_MIN : 900;
+      const max = Math.max(320, Math.min(900, window.innerWidth - 36 - tabLeft, room));
       const next = Math.min(max, Math.max(320, Math.round(px)));
       root.style.setProperty("--log-width", next + "px");
       root.__dock();
@@ -159,6 +179,7 @@ export default function(component) {
       if (event.button !== 0) return;
       event.preventDefault();
       root.classList.add("is-width-dragging");
+      document.documentElement.classList.add("ang-panel-drag");
       grip.classList.add("is-dragging");
       try { grip.setPointerCapture(event.pointerId); } catch (error) {}
       let last = saved >= 320 ? saved : 440;
@@ -166,6 +187,7 @@ export default function(component) {
       const move = (m) => { last = applyWidth(m.clientX - start); };
       const stop = (end) => {
         root.classList.remove("is-width-dragging");
+        document.documentElement.classList.remove("ang-panel-drag");
         grip.classList.remove("is-dragging");
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", stop);

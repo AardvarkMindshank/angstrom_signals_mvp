@@ -451,6 +451,7 @@ export default function(component) {
       // A pinned right-hand panel (✨ AI Navigator, or social and chat) docks: the page makes room for it and follows
       // its width, instead of sitting under it (ai_panel.py and the social panel set these widths).
       "[data-testid='stMain']{padding-right:calc(var(--ang-dock-ai,0px) + var(--ang-dock-social,0px));padding-left:var(--ang-dock-log,0px);transition:padding-right .22s ease,padding-left .22s ease;}",
+      "html.ang-panel-drag [data-testid='stMain']{transition:none !important;}",
       // Plotly's toolbar hints (Zoom, Pan, Reset...) show above the buttons, not under the mouse pointer.
       ".js-plotly-plot .plotly .modebar [data-title]:before,.js-plotly-plot .plotly .modebar [data-title]:after{top:auto !important;bottom:110% !important;}",
       ".js-plotly-plot .plotly .modebar [data-title]:before{border-bottom-color:transparent !important;border-top-color:#69738a !important;margin-bottom:-12px;}",
@@ -1869,6 +1870,11 @@ export default function(component) {
         window.renderSocialStream();
       };
       root.querySelector(".scrim").addEventListener("click", closeStream);
+      // A phone or narrow screen shows one panel at a time (25 Nov 2026 audit: the 📓 Logbook didn't close it).
+      document.addEventListener("ang-panel-open", (e) => {
+        if (e.detail !== "social" && window.innerWidth < 900 && !window.socialPopout
+            && window.socialStreamState && window.socialStreamState.open) closeStream();
+      }, {signal: streamSignal});
       root.querySelector(".close").addEventListener("click", closeStream);
       const reportPanel = () => {
         if (!window.socialStreamReport) return;
@@ -1995,15 +2001,26 @@ export default function(component) {
         }
         closeStream();
       }, {signal: streamSignal});
+      const pageRoomWithout = (mine) => {     // the page's width if this panel made no room (25 Nov 2026 audit)
+        const d = document.documentElement.style;
+        const others = ["--ang-dock-ai", "--ang-dock-log", "--ang-dock-social"].filter((v) => v !== mine)
+          .reduce((a, v) => a + (parseFloat(d.getPropertyValue(v)) || 0), 0);
+        const sb = document.querySelector("[data-testid='stSidebar']");
+        const side = sb && sb.getAttribute("data-collapsed") !== "true" ? sb.getBoundingClientRect().width : 0;
+        return window.innerWidth - side - others;
+      };
+      const PAGE_MIN = 420;                    // a docked panel never leaves the page narrower than this
       const applyWidth = (px) => {
-        const max = Math.max(320, Math.min(900, window.innerWidth - 36));
+        const st_ = window.socialStreamState;
+        const docked = !window.socialPopout && st_ && st_.open && st_.pinned && window.innerWidth >= 900;
+        const room = docked ? pageRoomWithout("--ang-dock-social") - PAGE_MIN : 900;
+        const max = Math.max(320, Math.min(900, window.innerWidth - 36, room));
         const next = Math.min(max, Math.max(320, Math.round(px)));
         root.style.setProperty("--social-width", next + "px");
         window.socialPanelWidth = next;
-        if (window.socialStreamState && window.socialStreamState.open && window.socialStreamState.pinned
-            && window.innerWidth >= 900) {
-          document.documentElement.style.setProperty("--ang-dock-social", next + "px");
-        }
+        // Docked or not, every time (25 Nov 2026 audit: a window narrowed below 900 kept the page's room).
+        document.documentElement.style.setProperty("--ang-dock-social", docked ? next + "px" : "0px");
+        if (window.angstromAiRestack) window.angstromAiRestack();
       };
       applyWidth(Number(window.socialPanelWidth) >= 320 ? Number(window.socialPanelWidth) : 420);
       const grip = root.querySelector(".width-grip");
@@ -2013,11 +2030,13 @@ export default function(component) {
           event.preventDefault();
           event.stopPropagation();
           root.classList.add("is-width-dragging");
+          document.documentElement.classList.add("ang-panel-drag");
           grip.classList.add("is-dragging");
           try { grip.setPointerCapture(event.pointerId); } catch (error) {}
           const move = (moveEvent) => applyWidth(window.innerWidth - moveEvent.clientX);
           const stop = (endEvent) => {
             root.classList.remove("is-width-dragging");
+            document.documentElement.classList.remove("ang-panel-drag");
             grip.classList.remove("is-dragging");
             window.removeEventListener("pointermove", move);
             window.removeEventListener("pointerup", stop);
@@ -2224,6 +2243,9 @@ export default function(component) {
       const docked = !window.socialPopout && state.open && state.pinned && window.innerWidth >= 900;
       document.documentElement.style.setProperty("--ang-dock-social",
         docked ? (Number(window.socialPanelWidth) || 420) + "px" : "0px");
+      if (window.angstromAiRestack) window.angstromAiRestack();
+      if (state.open && !panel.__wasOpen) document.dispatchEvent(new CustomEvent("ang-panel-open", { detail: "social" }));
+      panel.__wasOpen = !!state.open;
       window.socialApplyLayout(panel);
       panel.querySelectorAll(".layout-btn").forEach((button) => {
         const mine = (button.getAttribute("data-layout") || "") === state.layout;
