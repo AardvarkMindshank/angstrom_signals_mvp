@@ -230,8 +230,15 @@ def main() -> int:
         types = tradelog.fetch_instrument_types(sess, keys)
         inst = tradelog.fetch_instruments(sess, keys, {p.get("instrumentId") for p in pos if p.get("instrumentId")})
         os.makedirs("out", exist_ok=True)
+        import tradelog_sync
+        from datetime import datetime as _dt, timezone as _tz
+        series = tradelog_sync._fetch_series(sess, keys, _dt.now(_tz.utc))
+        try:
+            portfolio = tradelog.fetch_portfolio(sess, keys)
+        except tradelog.EtoroError:
+            portfolio = None
         with open("out/export.json", "w") as f:
-            _json.dump({"positions": pos, "types": types,
+            _json.dump({"positions": pos, "types": types, "series": series, "portfolio": portfolio,
                         "instruments": {k: {x: v.get(x) for x in ("instrumentID", "instrumentDisplayName", "symbolFull",
                                                                   "instrumentTypeID")} for k, v in inst.items()}}, f)
         print(f"Export written: {len(pos)} positions (encrypted in the next step)")
