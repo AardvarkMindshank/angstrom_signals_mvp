@@ -66,6 +66,8 @@ html.angstrom-night #ang-ai-root .ai-head .ai-pin.is-on{background:#f3f4f6;color
 #ang-ai-root .ai-body iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;}
 html.angstrom-night #ang-ai-root .ai-edge{background:#262730;border-color:rgba(250,250,250,.2);}
 html.angstrom-night #ang-ai-root .ai-edge:hover{background:#31333f;}
+/* One row down on a wider screen (25 Nov 2026): the sidebar and social handles keep the top row to themselves, and this panel's header lines up with its own handle. */
+@media (min-width: 641px){#ang-ai-root .ai-panel{top:calc(2.75rem + env(safe-area-inset-top, 0px));height:calc(100% - 2.75rem - env(safe-area-inset-top, 0px));border-top-left-radius:10px;}}
 @media (max-width: 640px){
   #ang-ai-root .ai-panel{width:100vw;}
   #ang-ai-root .ai-grip,#ang-ai-root .ai-pin{display:none !important;}

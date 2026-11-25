@@ -25,7 +25,7 @@ POP_SVG = ("<svg viewBox='0 0 24 24' width='15' height='15' aria-hidden='true' f
 
 CSS = """
 .st-key-ang_log_panel{display:none !important;}
-#ang-log-root{position:fixed;inset:0;z-index:10000000;pointer-events:none;}
+#ang-log-root{position:fixed;inset:0;z-index:10000001;pointer-events:none;}  /* above the social panel's dimmed cover, like ✨ AI (25 Nov 2026) */
 #ang-log-root .log-edge{position:fixed;top:calc(3rem + env(safe-area-inset-top, 0px));left:var(--log-tab-left,0px);
   pointer-events:auto;display:flex;align-items:center;justify-content:center;width:2rem;height:2rem;padding:0;
   font-size:1rem;line-height:1;border:1px solid rgba(49,51,63,.2);border-left:0;border-radius:0 .5rem .5rem 0;
@@ -59,6 +59,8 @@ html.angstrom-night #ang-log-root .log-pin.is-on{background:#f3f4f6;color:#11182
 html.angstrom-night #ang-log-root .log-edge{background:#262730;border-color:rgba(250,250,250,.2);}
 html.angstrom-night #ang-log-root .log-edge:hover{background:#31333f;}
 @media print{#ang-log-root{display:none !important;}}
+/* One row down on a wider screen (25 Nov 2026): the sidebar and social handles keep the top row to themselves, and this panel's header lines up with its own handle. */
+@media (min-width: 641px){#ang-log-root .log-panel{top:calc(2.75rem + env(safe-area-inset-top, 0px));height:calc(100% - 2.75rem - env(safe-area-inset-top, 0px));border-top-right-radius:10px;}}
 @media (max-width: 640px){
   #ang-log-root .log-panel{width:100vw;left:0;}
   #ang-log-root .log-grip,#ang-log-root .log-pin{display:none !important;}
