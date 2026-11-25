@@ -5248,10 +5248,19 @@ export default function(component) {
         return (exp * 1000 - Date.now()) / 60000;
       } catch (e) { return 60; }
     };
+    // Renew in the background before the pass runs low, so a panel opened at any moment gets a good one at once
+    // (26 Nov 2026). At most once every 3 minutes; the server renews when under 15 minutes are left.
+    let lastRenew = 0;
+    window.setInterval(() => {
+      const access = window.__angstromAccess;
+      if (!access || minutesLeft(access) >= 10 || Date.now() - lastRenew < 180000) return;
+      lastRenew = Date.now();
+      window.__angstromRenew("renew", String(lastRenew));
+    }, 60000);
     channel.onmessage = (event) => {
       const msg = event.data || {};
       if (msg.type !== "ask" || !window.__angstromAccess) return;
-      if (minutesLeft(window.__angstromAccess) < 5) {
+      if (minutesLeft(window.__angstromAccess) < 2) {
         window.__angstromRenew("renew", String(Date.now()));
         return;
       }
@@ -5308,7 +5317,9 @@ export default function(component) {
   const ask = () => {
     if (window.__angstromHandoffCurrent) return;
     tries += 1;
-    if (tries > 10) {
+    // About 28 seconds: long enough for the main page to renew an expiring pass, which reruns the whole page
+    // (26 Nov 2026: the AI panel gave up after 7 seconds while the renewal was still running).
+    if (tries > 40) {
       window.__angstromHandoffSet("none", String(Date.now()));
       return;
     }
@@ -17377,6 +17388,10 @@ def _keep_handoff_fresh() -> None:
             st.rerun()
 
 
+if _POPOUT_VIEW and _POPOUT_VIEW != "social" and st.session_state.get("refresh_token") == _POPOUT_MARK:
+    # The ✨ AI and 📓 Logbook panels (and other pop-outs) take the main page's renewed pass too, not only the social
+    # one: without it they lost their sign-in an hour after opening (26 Nov 2026).
+    _keep_handoff_fresh()
 if _POPOUT_VIEW == "social":
     _keep_handoff_fresh()
     remember_favourites()
@@ -17390,7 +17405,7 @@ else:
         # A panel asked for the sign-in pass and it had under 5 minutes left: renew it now, so the panel gets a good
         # one (25 Nov 2026).
         _access, _refresh = st.session_state.get("access_token"), st.session_state.get("refresh_token")
-        if _refresh and _refresh != _POPOUT_MARK and session_guard.needs_refresh(_access, margin=300):
+        if _refresh and _refresh != _POPOUT_MARK and session_guard.needs_refresh(_access, margin=900):
             try:
                 _renewed = getattr(supabase.auth.refresh_session(_refresh), "session", None)
                 if _renewed is not None and _renewed.access_token and _renewed.refresh_token:
