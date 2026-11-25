@@ -81,6 +81,56 @@ def history_counts(api_key: str, user_key: str) -> None:
         print("  none")
 
 
+def by_windows(api_key: str, user_key: str, years: int = 16) -> None:
+    """eToro support (25 Nov 2026): each request must cover under a year from minDate, so read the history in windows
+    of 364 days going back. Prints counts per window only."""
+    from datetime import date, timedelta
+
+    seen: set = set()
+    start = date.today() - timedelta(days=365)
+    print("Windows of under a year (eToro support's advice):")
+    for k in range(years):
+        min_date = (start - timedelta(days=364 * k)).isoformat()
+        got: list = []
+        for page in range(1, MAX_PAGES + 1):
+            status, body = fetch_page(api_key, user_key, min_date, page)
+            if status != 200:
+                print(f"  minDate {min_date} page {page}: HTTP {status}")
+                break
+            batch = [b for b in items_of(body) if isinstance(b, dict)]
+            got += batch
+            if len(batch) < PAGE_SIZE:
+                break
+        ids = {t.get("positionId") or t.get("positionID") for t in got}
+        new = ids - seen
+        seen |= ids
+        closes = sorted(str(t.get("closeTimestamp") or "")[:10] for t in got if t.get("closeTimestamp"))
+        span = f"closes {closes[0]} to {closes[-1]}" if closes else "no closes"
+        print(f"  minDate {min_date}: {len(got)} trades, {len(new)} not seen in a later window, {span}")
+    print(f"Distinct positions across all windows: {len(seen)}")
+
+
+def my_permissions(api_key: str, user_key: str) -> None:
+    """GET /me: the permission scopes of this key (names only; no account ids)."""
+    headers = {"x-request-id": str(uuid.uuid4()), "x-api-key": api_key, "x-user-key": user_key,
+               "Accept": "application/json"}
+    r = requests.get("https://public-api.etoro.com/api/v1/me", headers=headers, timeout=30)
+    if r.status_code != 200:
+        print(f"Permissions (/me): eToro answered HTTP {r.status_code}")
+        return
+    body = r.json() if r.content else {}
+    def scopes(x):
+        if isinstance(x, dict):
+            for k, v in x.items():
+                if any(w in k.lower() for w in ("scope", "permission")):
+                    yield k, v
+                else:
+                    yield from scopes(v)
+    found = list(scopes(body))
+    print("Permissions (/me): " + ("; ".join(f"{k}: {v}" for k, v in found) if found else
+                                   f"no scope field; top-level fields {sorted(body) if isinstance(body, dict) else type(body).__name__}"))
+
+
 def main() -> int:
     api_key, user_key = os.environ.get("ETORO_API_KEY", ""), os.environ.get("ETORO_USER_KEY", "")
     if not api_key or not user_key:
@@ -108,6 +158,8 @@ def main() -> int:
     print(f"Pages read: {page} (page size {PAGE_SIZE})")
     print("\n".join(summarise(trades)))
     history_counts(api_key, user_key)
+    by_windows(api_key, user_key)
+    my_permissions(api_key, user_key)
     return 0
 
 
