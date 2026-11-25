@@ -2357,7 +2357,6 @@
   "**Connect eToro (read-only)**": "**เชื่อมต่อ eToro (อ่านอย่างเดียว)**",
   "1. In eToro, open **Settings → Trading → API Key Management** and create a key.\n2. Choose **Read** permission only (never Write) and your real account. Leave the IP list empty.\n3. Paste the key below, with eToro's public key. MarketNavi stores them encrypted and can only read your closed trades. It can never place, change or close a trade.\n\nMarketNavi will never ask for a key by email or message.": "1. ใน eToro เปิด **การตั้งค่า → การเทรด → การจัดการคีย์ API** แล้วสร้างคีย์\n2. เลือกสิทธิ์ **อ่าน** เท่านั้น (ห้ามเลือกเขียน) และบัญชีจริงของคุณ เว้นรายการ IP ว่างไว้\n3. วางคีย์ด้านล่าง พร้อมคีย์สาธารณะของ eToro MarketNavi เก็บคีย์แบบเข้ารหัสและอ่านได้เฉพาะเทรดที่ปิดแล้วของคุณ ไม่สามารถเปิด แก้ไข หรือปิดเทรดได้เลย\n\nMarketNavi จะไม่ขอคีย์ทางอีเมลหรือข้อความ",
   "Asset class": "ประเภทสินทรัพย์",
-  "Include copied trades": "รวมเทรดที่คัดลอก",
   "Net result": "ผลลัพธ์สุทธิ",
   "Win rate": "อัตราชนะ",
   "Profit factor": "Profit factor",
@@ -2377,7 +2376,6 @@
   "Connect": "เชื่อมต่อ",
   "Delete every connection, trade, snapshot and note": "ลบทุกการเชื่อมต่อ เทรด ภาพรวมค่า และบันทึก",
   "Delete all my Trade Log data": "ลบข้อมูล Trade Log ทั้งหมดของฉัน",
-  "Trades copied from other eToro traders are left out unless you include them.": "เทรดที่คัดลอกจากเทรดเดอร์ eToro คนอื่นจะไม่ถูกนับ เว้นแต่คุณเลือกรวม",
   "Costs included in the price (eToro's spread).": "ต้นทุนรวมอยู่ในราคาแล้ว (สเปรดของ eToro)",
   "{w} wins, {l} losses": "ชนะ {w} แพ้ {l}",
   "Gross wins divided by gross losses.": "กำไรรวมหารด้วยขาดทุนรวม",
@@ -2501,5 +2499,7 @@
   "Sea": "ทะเล",
   "{change} pts this week": "{change} จุดในสัปดาห์นี้",
   "Open Tides ›": "เปิด Tides ›",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "เขียนมุมมองยามเช้าที่ทุกคนฟังร่วมกัน และ Passage Plan ที่ระบบเบื้องหลังเขียนให้แผนแบบเสียงเมื่อสมาชิกยังไม่ได้เขียนเอง ทำงานบนระบบเบื้องหลังที่มีคีย์ของ Claude, Grok, ChatGPT และ Gemini"
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "เขียนมุมมองยามเช้าที่ทุกคนฟังร่วมกัน และ Passage Plan ที่ระบบเบื้องหลังเขียนให้แผนแบบเสียงเมื่อสมาชิกยังไม่ได้เขียนเอง ทำงานบนระบบเบื้องหลังที่มีคีย์ของ Claude, Grok, ChatGPT และ Gemini",
+  "Yours": "ของคุณ",
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "นับเทรดใด: ของคุณ, ที่คัดลอกจากเทรดเดอร์ eToro คนอื่น หรือทั้งสองแบบ"
 }

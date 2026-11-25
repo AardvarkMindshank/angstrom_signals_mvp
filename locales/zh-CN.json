@@ -2357,7 +2357,6 @@
   "**Connect eToro (read-only)**": "**连接 eToro（只读）**",
   "1. In eToro, open **Settings → Trading → API Key Management** and create a key.\n2. Choose **Read** permission only (never Write) and your real account. Leave the IP list empty.\n3. Paste the key below, with eToro's public key. MarketNavi stores them encrypted and can only read your closed trades. It can never place, change or close a trade.\n\nMarketNavi will never ask for a key by email or message.": "1. 在 eToro 中打开 **设置 → 交易 → API 密钥管理**，创建一个密钥。\n2. 只选择 **读取** 权限（切勿选写入）和你的真实账户。IP 列表留空。\n3. 把密钥和 eToro 的公钥一起粘贴到下面。MarketNavi 加密保存它们，只能读取你已平仓的交易，永远无法开仓、修改或平仓。\n\nMarketNavi 绝不会通过邮件或消息索要密钥。",
   "Asset class": "资产类别",
-  "Include copied trades": "包含跟单交易",
   "Net result": "净结果",
   "Win rate": "胜率",
   "Profit factor": "盈亏比",
@@ -2377,7 +2376,6 @@
   "Connect": "连接",
   "Delete every connection, trade, snapshot and note": "删除所有连接、交易、快照和备注",
   "Delete all my Trade Log data": "删除我的全部 Trade Log 数据",
-  "Trades copied from other eToro traders are left out unless you include them.": "跟单其他 eToro 交易者的交易默认不计入，除非你选择包含。",
   "Costs included in the price (eToro's spread).": "成本已含在价格中（eToro 的点差）。",
   "{w} wins, {l} losses": "盈 {w}，亏 {l}",
   "Gross wins divided by gross losses.": "总盈利除以总亏损。",
@@ -2501,5 +2499,7 @@
   "Sea": "海况",
   "{change} pts this week": "本周 {change} 点",
   "Open Tides ›": "打开 Tides ›",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "撰写大家共享的晨间展望，以及会员尚未撰写时由后台程序为语音计划撰写的 Passage Plan。在拥有 Claude、Grok、ChatGPT 和 Gemini 密钥的后台程序上运行。"
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "撰写大家共享的晨间展望，以及会员尚未撰写时由后台程序为语音计划撰写的 Passage Plan。在拥有 Claude、Grok、ChatGPT 和 Gemini 密钥的后台程序上运行。",
+  "Yours": "我的",
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "统计哪些交易:你自己的、从其他 eToro 交易者复制的,或两者。"
 }

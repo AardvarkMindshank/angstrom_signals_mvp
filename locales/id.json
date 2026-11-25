@@ -2357,7 +2357,6 @@
   "**Connect eToro (read-only)**": "**Hubungkan eToro (hanya baca)**",
   "1. In eToro, open **Settings → Trading → API Key Management** and create a key.\n2. Choose **Read** permission only (never Write) and your real account. Leave the IP list empty.\n3. Paste the key below, with eToro's public key. MarketNavi stores them encrypted and can only read your closed trades. It can never place, change or close a trade.\n\nMarketNavi will never ask for a key by email or message.": "1. Di eToro, buka **Pengaturan → Trading → Manajemen Kunci API** lalu buat kunci.\n2. Pilih izin **Baca** saja (jangan pernah Tulis) dan akun riil Anda. Biarkan daftar IP kosong.\n3. Tempel kunci di bawah, bersama kunci publik eToro. MarketNavi menyimpannya dalam bentuk terenkripsi dan hanya dapat membaca trading Anda yang sudah ditutup. MarketNavi tidak pernah bisa membuka, mengubah, atau menutup trading.\n\nMarketNavi tidak akan pernah meminta kunci lewat email atau pesan.",
   "Asset class": "Kelas aset",
-  "Include copied trades": "Sertakan trading salinan",
   "Net result": "Hasil bersih",
   "Win rate": "Rasio menang",
   "Profit factor": "Faktor profit",
@@ -2377,7 +2376,6 @@
   "Connect": "Hubungkan",
   "Delete every connection, trade, snapshot and note": "Hapus setiap koneksi, trading, cuplikan, dan catatan",
   "Delete all my Trade Log data": "Hapus semua data Trade Log saya",
-  "Trades copied from other eToro traders are left out unless you include them.": "Trading yang disalin dari trader eToro lain tidak dihitung kecuali Anda menyertakannya.",
   "Costs included in the price (eToro's spread).": "Biaya sudah termasuk dalam harga (spread eToro).",
   "{w} wins, {l} losses": "{w} menang, {l} kalah",
   "Gross wins divided by gross losses.": "Total keuntungan kotor dibagi total kerugian kotor.",
@@ -2501,5 +2499,7 @@
   "Sea": "Laut",
   "{change} pts this week": "{change} poin minggu ini",
   "Open Tides ›": "Buka Tides ›",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Menulis Prospek Pagi bersama, dan Passage Plan yang ditulis worker latar belakang untuk rencana lisan saat anggota belum menulisnya. Berjalan di worker latar belakang, yang punya kunci Claude, Grok, ChatGPT, dan Gemini."
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Menulis Prospek Pagi bersama, dan Passage Plan yang ditulis worker latar belakang untuk rencana lisan saat anggota belum menulisnya. Berjalan di worker latar belakang, yang punya kunci Claude, Grok, ChatGPT, dan Gemini.",
+  "Yours": "Milik Anda",
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "Trade mana yang dihitung: milik Anda, yang disalin dari trader eToro lain, atau keduanya."
 }

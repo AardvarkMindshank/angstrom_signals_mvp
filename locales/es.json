@@ -2357,7 +2357,6 @@
   "**Connect eToro (read-only)**": "**Conectar eToro (solo lectura)**",
   "1. In eToro, open **Settings → Trading → API Key Management** and create a key.\n2. Choose **Read** permission only (never Write) and your real account. Leave the IP list empty.\n3. Paste the key below, with eToro's public key. MarketNavi stores them encrypted and can only read your closed trades. It can never place, change or close a trade.\n\nMarketNavi will never ask for a key by email or message.": "1. En eToro, abre **Configuración → Trading → Gestión de claves API** y crea una clave.\n2. Elige solo el permiso de **Lectura** (nunca Escritura) y tu cuenta real. Deja vacía la lista de IP.\n3. Pega la clave abajo, junto con la clave pública de eToro. MarketNavi las guarda cifradas y solo puede leer tus operaciones cerradas. Nunca puede abrir, cambiar ni cerrar una operación.\n\nMarketNavi nunca te pedirá una clave por correo o mensaje.",
   "Asset class": "Clase de activo",
-  "Include copied trades": "Incluir operaciones copiadas",
   "Net result": "Resultado neto",
   "Win rate": "Tasa de acierto",
   "Profit factor": "Factor de beneficio",
@@ -2377,7 +2376,6 @@
   "Connect": "Conectar",
   "Delete every connection, trade, snapshot and note": "Eliminar todas las conexiones, operaciones, instantáneas y notas",
   "Delete all my Trade Log data": "Eliminar todos mis datos del Trade Log",
-  "Trades copied from other eToro traders are left out unless you include them.": "Las operaciones copiadas de otros traders de eToro quedan fuera salvo que las incluyas.",
   "Costs included in the price (eToro's spread).": "Costes incluidos en el precio (el spread de eToro).",
   "{w} wins, {l} losses": "{w} ganadoras, {l} perdedoras",
   "Gross wins divided by gross losses.": "Ganancias brutas divididas entre pérdidas brutas.",
@@ -2501,5 +2499,7 @@
   "Sea": "Mar",
   "{change} pts this week": "{change} pts esta semana",
   "Open Tides ›": "Abrir Tides ›",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Escribe el Panorama matinal compartido y los Passage Plans que el proceso en segundo plano escribe para el plan hablado cuando el miembro aún no ha escrito uno. Se ejecuta en el proceso en segundo plano, que tiene las claves de Claude, Grok, ChatGPT y Gemini."
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Escribe el Panorama matinal compartido y los Passage Plans que el proceso en segundo plano escribe para el plan hablado cuando el miembro aún no ha escrito uno. Se ejecuta en el proceso en segundo plano, que tiene las claves de Claude, Grok, ChatGPT y Gemini.",
+  "Yours": "Tuyas",
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "Qué operaciones contar: las tuyas, las copiadas de otros traders de eToro o ambas."
 }

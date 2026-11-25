@@ -166,15 +166,27 @@ def _manage(st, supabase, conns: list[dict]) -> None:
 
 # ---- views ---------------------------------------------------------------------------------------------------
 
-def _filters(st, key: str) -> tuple[str | None, bool]:
+WHOSE = ("own", "copied", "all")
+
+
+def _filters(st, key: str) -> tuple[str | None, str]:
+    """(asset class or None, whose trades: "own", "copied" or "all")."""
     cols = st.columns([4, 2])
     classes = ["all", "crypto", "stocks", "etfs", "commodities", "currencies", "indices"]
     pick = cols[0].pills(
         t("Asset class"), classes, default="all", key=f"tl_class_{key}",
         format_func=lambda c: t("All") if c == "all" else t(CLASS_WORDS[c]), label_visibility="collapsed")
-    copied = cols[1].checkbox(t("Include copied trades"), key=f"tl_copied_{key}",
-                              help=t("Trades copied from other eToro traders are left out unless you include them."))
-    return (None if pick in (None, "all") else pick), copied
+    whose = cols[1].segmented_control(
+        t("Trades"), WHOSE, default="own", key=f"tl_whose_{key}", label_visibility="collapsed",
+        format_func=lambda w: {"own": t("Yours"), "copied": t("Copied"), "all": t("All")}[w],
+        help=t("Which trades to count: yours, those copied from other eToro traders, or both."))
+    return (None if pick in (None, "all") else pick), (whose or "own")
+
+
+def _whose(trips: list[dict], whose: str) -> list[dict]:
+    if whose == "all":
+        return trips
+    return [x for x in trips if bool(x.get("copied")) == (whose == "copied")]
 
 
 CSS = """<style>
@@ -586,16 +598,16 @@ def _render(st, supabase, plan: str, ai: str | None = None) -> None:
     names = [by_id[c["id"]] for c in conns]
     tabs = st.tabs([t("Overview")] + names)
     with tabs[0]:
-        pick, copied = _filters(st, "all")
-        shown = [x for x in trips if pick is None or x.get("asset_class") == pick]
-        _overview(st, shown, snaps, copied)
+        pick, whose = _filters(st, "all")
+        shown = _whose([x for x in trips if pick is None or x.get("asset_class") == pick], whose)
+        _overview(st, shown, snaps, True)          # already narrowed to the chosen trades
         _review_card(st, supabase, trips, snaps, plan, ai, zone)
     for tab, conn in zip(tabs[1:], conns):
         with tab:
-            pick, copied = _filters(st, conn["id"])
-            mine = [x for x in trips if x["connection_id"] == conn["id"]
-                    and (pick is None or x.get("asset_class") == pick)]
-            _headline(st, tradelog.stats(mine, copied))
+            pick, whose = _filters(st, conn["id"])
+            mine = _whose([x for x in trips if x["connection_id"] == conn["id"]
+                           and (pick is None or x.get("asset_class") == pick)], whose)
+            _headline(st, tradelog.stats(mine, True))
             with st.container(key=f"tl_card_list_{conn['id']}"):
                 chosen = _trade_list(st, mine, snaps, zone, conn["id"])
             if chosen:

@@ -2357,7 +2357,6 @@
   "**Connect eToro (read-only)**": "**Kết nối eToro (chỉ đọc)**",
   "1. In eToro, open **Settings → Trading → API Key Management** and create a key.\n2. Choose **Read** permission only (never Write) and your real account. Leave the IP list empty.\n3. Paste the key below, with eToro's public key. MarketNavi stores them encrypted and can only read your closed trades. It can never place, change or close a trade.\n\nMarketNavi will never ask for a key by email or message.": "1. Trong eToro, mở **Cài đặt → Giao dịch → Quản lý khóa API** và tạo một khóa.\n2. Chỉ chọn quyền **Đọc** (không bao giờ chọn Ghi) và tài khoản thật của bạn. Để trống danh sách IP.\n3. Dán khóa vào bên dưới, cùng với khóa công khai của eToro. MarketNavi lưu chúng ở dạng mã hóa và chỉ có thể đọc các giao dịch đã đóng của bạn. Nó không bao giờ có thể mở, thay đổi hay đóng một giao dịch.\n\nMarketNavi sẽ không bao giờ hỏi khóa qua email hay tin nhắn.",
   "Asset class": "Loại tài sản",
-  "Include copied trades": "Bao gồm giao dịch sao chép",
   "Net result": "Kết quả ròng",
   "Win rate": "Tỷ lệ thắng",
   "Profit factor": "Hệ số lợi nhuận",
@@ -2377,7 +2376,6 @@
   "Connect": "Kết nối",
   "Delete every connection, trade, snapshot and note": "Xóa mọi kết nối, giao dịch, ảnh chụp chỉ số và ghi chú",
   "Delete all my Trade Log data": "Xóa toàn bộ dữ liệu Trade Log của tôi",
-  "Trades copied from other eToro traders are left out unless you include them.": "Giao dịch sao chép từ trader eToro khác bị loại ra trừ khi bạn chọn bao gồm.",
   "Costs included in the price (eToro's spread).": "Chi phí đã nằm trong giá (spread của eToro).",
   "{w} wins, {l} losses": "{w} thắng, {l} thua",
   "Gross wins divided by gross losses.": "Tổng lãi gộp chia cho tổng lỗ gộp.",
@@ -2501,5 +2499,7 @@
   "Sea": "Biển",
   "{change} pts this week": "{change} điểm tuần này",
   "Open Tides ›": "Mở Tides ›",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Viết Triển vọng buổi sáng dùng chung, và các Passage Plan mà tiến trình nền viết cho bản kế hoạch nói khi thành viên chưa tự viết. Chạy trên tiến trình nền, nơi có khóa Claude, Grok, ChatGPT và Gemini."
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Viết Triển vọng buổi sáng dùng chung, và các Passage Plan mà tiến trình nền viết cho bản kế hoạch nói khi thành viên chưa tự viết. Chạy trên tiến trình nền, nơi có khóa Claude, Grok, ChatGPT và Gemini.",
+  "Yours": "Của bạn",
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "Tính giao dịch nào: của bạn, giao dịch sao chép từ trader eToro khác, hoặc cả hai."
 }

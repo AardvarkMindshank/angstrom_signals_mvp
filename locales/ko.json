@@ -2357,7 +2357,6 @@
   "**Connect eToro (read-only)**": "**eToro 연결(읽기 전용)**",
   "1. In eToro, open **Settings → Trading → API Key Management** and create a key.\n2. Choose **Read** permission only (never Write) and your real account. Leave the IP list empty.\n3. Paste the key below, with eToro's public key. MarketNavi stores them encrypted and can only read your closed trades. It can never place, change or close a trade.\n\nMarketNavi will never ask for a key by email or message.": "1. eToro에서 **설정 → 거래 → API 키 관리**를 열고 키를 만드세요.\n2. **읽기** 권한만(쓰기는 절대 선택하지 않음) 실계좌로 선택하세요. IP 목록은 비워 두세요.\n3. eToro의 공개 키와 함께 키를 아래에 붙여 넣으세요. MarketNavi는 키를 암호화해 저장하며 종료된 거래만 읽을 수 있습니다. 거래를 열거나 바꾸거나 닫을 수 없습니다.\n\nMarketNavi는 이메일이나 메시지로 키를 요청하지 않습니다.",
   "Asset class": "자산군",
-  "Include copied trades": "복사한 거래 포함",
   "Net result": "순손익",
   "Win rate": "승률",
   "Profit factor": "손익비",
@@ -2377,7 +2376,6 @@
   "Connect": "연결",
   "Delete every connection, trade, snapshot and note": "모든 연결, 거래, 스냅샷, 메모 삭제",
   "Delete all my Trade Log data": "내 Trade Log 데이터 모두 삭제",
-  "Trades copied from other eToro traders are left out unless you include them.": "다른 eToro 트레이더에게서 복사한 거래는 포함하지 않는 한 제외됩니다.",
   "Costs included in the price (eToro's spread).": "비용은 가격에 포함되어 있습니다(eToro 스프레드).",
   "{w} wins, {l} losses": "승 {w}, 패 {l}",
   "Gross wins divided by gross losses.": "총이익을 총손실로 나눈 값.",
@@ -2501,5 +2499,7 @@
   "Sea": "해상",
   "{change} pts this week": "이번 주 {change}포인트",
   "Open Tides ›": "Tides 열기 ›",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "모두가 함께 듣는 모닝 아웃룩와, 회원이 아직 작성하지 않았을 때 음성 플랜용으로 백그라운드 작업이 작성하는 Passage Plan을 씁니다. Claude, Grok, ChatGPT, Gemini 키가 있는 백그라운드 작업에서 실행됩니다."
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "모두가 함께 듣는 모닝 아웃룩와, 회원이 아직 작성하지 않았을 때 음성 플랜용으로 백그라운드 작업이 작성하는 Passage Plan을 씁니다. Claude, Grok, ChatGPT, Gemini 키가 있는 백그라운드 작업에서 실행됩니다.",
+  "Yours": "내 거래",
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "집계할 거래: 내 거래, 다른 eToro 트레이더에게서 복사한 거래, 또는 둘 다."
 }

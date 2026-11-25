@@ -2357,7 +2357,6 @@
   "**Connect eToro (read-only)**": "**eToro を接続（読み取り専用）**",
   "1. In eToro, open **Settings → Trading → API Key Management** and create a key.\n2. Choose **Read** permission only (never Write) and your real account. Leave the IP list empty.\n3. Paste the key below, with eToro's public key. MarketNavi stores them encrypted and can only read your closed trades. It can never place, change or close a trade.\n\nMarketNavi will never ask for a key by email or message.": "1. eToro で **設定 → 取引 → API キー管理** を開き、キーを作成します。\n2. **読み取り** 権限のみ（書き込みは選ばない）とリアル口座を選びます。IP リストは空のままにします。\n3. eToro の公開キーと一緒に、キーを下に貼り付けます。MarketNavi はキーを暗号化して保存し、決済済みの取引を読むことしかできません。取引の発注、変更、決済は一切できません。\n\nMarketNavi がメールやメッセージでキーを求めることはありません。",
   "Asset class": "資産クラス",
-  "Include copied trades": "コピー取引を含める",
   "Net result": "純損益",
   "Win rate": "勝率",
   "Profit factor": "プロフィットファクター",
@@ -2377,7 +2376,6 @@
   "Connect": "接続",
   "Delete every connection, trade, snapshot and note": "すべての接続、取引、スナップショット、メモを削除",
   "Delete all my Trade Log data": "Trade Log のデータをすべて削除",
-  "Trades copied from other eToro traders are left out unless you include them.": "他の eToro トレーダーからコピーした取引は、含めない限り除外されます。",
   "Costs included in the price (eToro's spread).": "コストは価格に含まれています（eToro のスプレッド）。",
   "{w} wins, {l} losses": "勝ち {w}、負け {l}",
   "Gross wins divided by gross losses.": "総利益 ÷ 総損失。",
@@ -2501,5 +2499,7 @@
   "Sea": "海況",
   "{change} pts this week": "今週 {change} pt",
   "Open Tides ›": "Tidesを開く ›",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "全員共通の「モーニング・アウトルック」と、メンバーがまだ書いていないときに音声プラン用にバックグラウンドワーカーが書く Passage Plan を作成します。Claude、Grok、ChatGPT、Gemini のキーを持つバックグラウンドワーカーで動きます。"
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "全員共通の「モーニング・アウトルック」と、メンバーがまだ書いていないときに音声プラン用にバックグラウンドワーカーが書く Passage Plan を作成します。Claude、Grok、ChatGPT、Gemini のキーを持つバックグラウンドワーカーで動きます。",
+  "Yours": "自分",
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "集計する取引:自分の取引、他の eToro トレーダーからコピーした取引、またはその両方。"
 }

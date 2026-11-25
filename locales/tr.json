@@ -2357,7 +2357,6 @@
   "**Connect eToro (read-only)**": "**eToro'yu bağla (salt okunur)**",
   "1. In eToro, open **Settings → Trading → API Key Management** and create a key.\n2. Choose **Read** permission only (never Write) and your real account. Leave the IP list empty.\n3. Paste the key below, with eToro's public key. MarketNavi stores them encrypted and can only read your closed trades. It can never place, change or close a trade.\n\nMarketNavi will never ask for a key by email or message.": "1. eToro'da **Ayarlar → İşlem → API Anahtar Yönetimi** bölümünü açın ve bir anahtar oluşturun.\n2. Yalnızca **Okuma** iznini (asla Yazma değil) ve gerçek hesabınızı seçin. IP listesini boş bırakın.\n3. Anahtarı, eToro'nun genel anahtarıyla birlikte aşağıya yapıştırın. MarketNavi bunları şifreli saklar ve yalnızca kapanmış işlemlerinizi okuyabilir. Asla işlem açamaz, değiştiremez veya kapatamaz.\n\nMarketNavi asla e-posta veya mesajla anahtar istemez.",
   "Asset class": "Varlık sınıfı",
-  "Include copied trades": "Kopyalanan işlemleri dahil et",
   "Net result": "Net sonuç",
   "Win rate": "Kazanma oranı",
   "Profit factor": "Kâr faktörü",
@@ -2377,7 +2376,6 @@
   "Connect": "Bağla",
   "Delete every connection, trade, snapshot and note": "Her bağlantıyı, işlemi, anlık görüntüyü ve notu sil",
   "Delete all my Trade Log data": "Tüm Trade Log verilerimi sil",
-  "Trades copied from other eToro traders are left out unless you include them.": "Diğer eToro yatırımcılarından kopyalanan işlemler, siz dahil etmedikçe hesaba katılmaz.",
   "Costs included in the price (eToro's spread).": "Maliyetler fiyata dahildir (eToro'nun spread'i).",
   "{w} wins, {l} losses": "{w} kazanç, {l} kayıp",
   "Gross wins divided by gross losses.": "Brüt kazançların brüt kayıplara bölümü.",
@@ -2501,5 +2499,7 @@
   "Sea": "Deniz",
   "{change} pts this week": "bu hafta {change} puan",
   "Open Tides ›": "Tides'ı aç ›",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Herkesin ortak Sabah Görünümüni ve üye henüz yazmadığında arka plan işleyicisinin sesli plan için yazdığı Passage Plan'leri yazar. Claude, Grok, ChatGPT ve Gemini anahtarlarına sahip arka plan işleyicisinde çalışır."
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Herkesin ortak Sabah Görünümüni ve üye henüz yazmadığında arka plan işleyicisinin sesli plan için yazdığı Passage Plan'leri yazar. Claude, Grok, ChatGPT ve Gemini anahtarlarına sahip arka plan işleyicisinde çalışır.",
+  "Yours": "Seninkiler",
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "Hangi işlemler sayılsın: seninkiler, diğer eToro yatırımcılarından kopyalananlar ya da ikisi."
 }

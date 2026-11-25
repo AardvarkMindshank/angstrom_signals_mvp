@@ -164,3 +164,11 @@ def test_price_chart_marks_entry_and_exit():
     assert not at.exception
     assert any("Price around the trade" in m.value for m in at.markdown)
     assert sum(type(e).__name__ == "UnknownElement" for e in at.main) == 1      # the chart
+
+
+def test_whose_trades_yours_copied_or_all():
+    import tradelog_view as tv
+    trips = [{"id": 1, "copied": False}, {"id": 2, "copied": True}, {"id": 3}]
+    assert [x["id"] for x in tv._whose(trips, "own")] == [1, 3]
+    assert [x["id"] for x in tv._whose(trips, "copied")] == [2]
+    assert len(tv._whose(trips, "all")) == 3
