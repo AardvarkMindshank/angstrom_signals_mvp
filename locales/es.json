@@ -2487,7 +2487,6 @@
   "Most active stocks, up and down": "Acciones más negociadas, al alza y a la baja",
   "US stocks, up and down": "Acciones de EE. UU., al alza y a la baja",
   "Morning Outlook": "Panorama matinal",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Escribe el Panorama matinal compartido y los Passage Plans que el proceso en segundo plano escribe para el plan hablado cuando el miembro aún no ha escrito uno. Se ejecuta en el proceso en segundo plano, que tiene las claves de Grok, ChatGPT y Gemini.",
   "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 Cuaderno de bitácora: el Passage Plan de hoy para leer o escuchar, los planes anteriores y el Panorama matinal.",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.": "El Passage Plan de IA de hoy para tu propia lista de seguimiento y tus embudos, leído en voz alta: el mismo plan que puedes leer en el 📓 Cuaderno de bitácora. Está listo cada día una hora antes de la hora de tu resumen diario; elige la hora, la zona horaria y la voz en 🔔 Notificaciones.",
   "Your morning time": "Tu hora de la mañana",
@@ -2501,5 +2500,6 @@
   "held {n} trading days": "desde hace {n} sesiones",
   "Sea": "Mar",
   "{change} pts this week": "{change} pts esta semana",
-  "Open Tides ›": "Abrir Tides ›"
+  "Open Tides ›": "Abrir Tides ›",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Escribe el Panorama matinal compartido y los Passage Plans que el proceso en segundo plano escribe para el plan hablado cuando el miembro aún no ha escrito uno. Se ejecuta en el proceso en segundo plano, que tiene las claves de Claude, Grok, ChatGPT y Gemini."
 }

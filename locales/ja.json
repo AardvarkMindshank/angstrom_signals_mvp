@@ -2487,7 +2487,6 @@
   "Most active stocks, up and down": "売買上位銘柄の上昇・下落数",
   "US stocks, up and down": "米国株の上昇・下落数",
   "Morning Outlook": "モーニング・アウトルック",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "全員共通の「モーニング・アウトルック」と、メンバーがまだ書いていないときに音声プラン用にバックグラウンドワーカーが書く Passage Plan を作成します。Grok、ChatGPT、Gemini のキーを持つバックグラウンドワーカーで動きます。",
   "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 ログブック：今日の Passage Plan（読む・聴く）、これまでのプラン、モーニング・アウトルック。",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.": "あなたのウォッチリストとファネル向けの今日のAI Passage Planを読み上げます。📓 ログブックで読めるものと同じプランです。毎日、日次サマリーの時刻の1時間前に用意されます。時刻・タイムゾーン・声は🔔 通知で設定できます。",
   "Your morning time": "朝の時刻",
@@ -2501,5 +2500,6 @@
   "held {n} trading days": "{n}営業日続いています",
   "Sea": "海況",
   "{change} pts this week": "今週 {change} pt",
-  "Open Tides ›": "Tidesを開く ›"
+  "Open Tides ›": "Tidesを開く ›",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "全員共通の「モーニング・アウトルック」と、メンバーがまだ書いていないときに音声プラン用にバックグラウンドワーカーが書く Passage Plan を作成します。Claude、Grok、ChatGPT、Gemini のキーを持つバックグラウンドワーカーで動きます。"
 }

@@ -2487,7 +2487,6 @@
   "Most active stocks, up and down": "En çok işlem gören hisseler, yükselen ve düşen",
   "US stocks, up and down": "ABD hisseleri, yükselen ve düşen",
   "Morning Outlook": "Sabah Görünümü",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Herkesin ortak Sabah Görünümüni ve üye henüz yazmadığında arka plan işleyicisinin sesli plan için yazdığı Passage Plan'leri yazar. Grok, ChatGPT ve Gemini anahtarlarına sahip arka plan işleyicisinde çalışır.",
   "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 Seyir defteri: bugünün okunacak ya da dinlenecek Passage Plan'i, önceki planlar ve Sabah Görünümü.",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.": "Kendi izleme listen ve hunilerin için bugünün yapay zekâ Passage Plan'i, sesli okunur: 📓 Seyir defterinde okuyabildiğin planın aynısı. Her gün günlük özetinin saatinden bir saat önce hazır olur; saati, saat dilimini ve sesi 🔔 Bildirimler'den ayarla.",
   "Your morning time": "Sabah saatin",
@@ -2501,5 +2500,6 @@
   "held {n} trading days": "{n} işlem günüdür sürüyor",
   "Sea": "Deniz",
   "{change} pts this week": "bu hafta {change} puan",
-  "Open Tides ›": "Tides'ı aç ›"
+  "Open Tides ›": "Tides'ı aç ›",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Herkesin ortak Sabah Görünümüni ve üye henüz yazmadığında arka plan işleyicisinin sesli plan için yazdığı Passage Plan'leri yazar. Claude, Grok, ChatGPT ve Gemini anahtarlarına sahip arka plan işleyicisinde çalışır."
 }

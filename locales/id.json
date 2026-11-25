@@ -2487,7 +2487,6 @@
   "Most active stocks, up and down": "Saham teraktif, naik dan turun",
   "US stocks, up and down": "Saham AS, naik dan turun",
   "Morning Outlook": "Prospek Pagi",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Menulis Prospek Pagi bersama, dan Passage Plan yang ditulis worker latar belakang untuk rencana lisan saat anggota belum menulisnya. Berjalan di worker latar belakang, yang punya kunci Grok, ChatGPT, dan Gemini.",
   "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 Logbook: Passage Plan hari ini untuk dibaca atau didengar, rencana sebelumnya, dan Prospek Pagi.",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.": "Passage Plan AI hari ini untuk watchlist dan corong milikmu, dibacakan: rencana yang sama yang bisa kamu baca di 📓 Logbook. Siap setiap hari satu jam sebelum waktu ringkasan harianmu; atur waktu, zona waktu, dan suara di 🔔 Notifikasi.",
   "Your morning time": "Waktu pagimu",
@@ -2501,5 +2500,6 @@
   "held {n} trading days": "bertahan {n} hari perdagangan",
   "Sea": "Laut",
   "{change} pts this week": "{change} poin minggu ini",
-  "Open Tides ›": "Buka Tides ›"
+  "Open Tides ›": "Buka Tides ›",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Menulis Prospek Pagi bersama, dan Passage Plan yang ditulis worker latar belakang untuk rencana lisan saat anggota belum menulisnya. Berjalan di worker latar belakang, yang punya kunci Claude, Grok, ChatGPT, dan Gemini."
 }

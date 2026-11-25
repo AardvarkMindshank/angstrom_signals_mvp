@@ -2487,7 +2487,6 @@
   "Most active stocks, up and down": "หุ้นที่ซื้อขายมากที่สุด ขึ้นและลง",
   "US stocks, up and down": "หุ้นสหรัฐฯ ขึ้นและลง",
   "Morning Outlook": "มุมมองยามเช้า",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "เขียนมุมมองยามเช้าที่ทุกคนฟังร่วมกัน และ Passage Plan ที่ระบบเบื้องหลังเขียนให้แผนแบบเสียงเมื่อสมาชิกยังไม่ได้เขียนเอง ทำงานบนระบบเบื้องหลังที่มีคีย์ของ Grok, ChatGPT และ Gemini",
   "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 สมุดบันทึกเดินเรือ: Passage Plan ของวันนี้ให้อ่านหรือฟัง แผนก่อนหน้า และมุมมองยามเช้า",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.": "Passage Plan จาก AI ของวันนี้สำหรับรายการเฝ้าดูและ Funnel ของคุณเอง อ่านออกเสียง: แผนเดียวกับที่อ่านได้ใน 📓 สมุดบันทึกเดินเรือ พร้อมทุกวันก่อนเวลาสรุปประจำวันของคุณหนึ่งชั่วโมง ตั้งเวลา เขตเวลา และเสียงได้ใน 🔔 การแจ้งเตือน",
   "Your morning time": "เวลาเช้าของคุณ",
@@ -2501,5 +2500,6 @@
   "held {n} trading days": "คงอยู่ {n} วันทำการ",
   "Sea": "ทะเล",
   "{change} pts this week": "{change} จุดในสัปดาห์นี้",
-  "Open Tides ›": "เปิด Tides ›"
+  "Open Tides ›": "เปิด Tides ›",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "เขียนมุมมองยามเช้าที่ทุกคนฟังร่วมกัน และ Passage Plan ที่ระบบเบื้องหลังเขียนให้แผนแบบเสียงเมื่อสมาชิกยังไม่ได้เขียนเอง ทำงานบนระบบเบื้องหลังที่มีคีย์ของ Claude, Grok, ChatGPT และ Gemini"
 }

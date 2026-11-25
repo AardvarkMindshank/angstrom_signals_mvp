@@ -2487,7 +2487,6 @@
   "Most active stocks, up and down": "成交最活跃股票的涨跌数",
   "US stocks, up and down": "美国股票涨跌数",
   "Morning Outlook": "晨间展望",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "撰写大家共享的晨间展望，以及会员尚未撰写时由后台程序为语音计划撰写的 Passage Plan。在拥有 Grok、ChatGPT 和 Gemini 密钥的后台程序上运行。",
   "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 航海日志：今日 Passage Plan（可读可听）、之前的计划以及晨间展望。",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.": "为你自己的关注列表和漏斗准备的今日AI Passage Plan，朗读版：与你在📓 航海日志中阅读的计划相同。每天在你的每日摘要时间前一小时准备好；在🔔 通知中设置时间、时区和声音。",
   "Your morning time": "你的早间时间",
@@ -2501,5 +2500,6 @@
   "held {n} trading days": "已持续 {n} 个交易日",
   "Sea": "海况",
   "{change} pts this week": "本周 {change} 点",
-  "Open Tides ›": "打开 Tides ›"
+  "Open Tides ›": "打开 Tides ›",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "撰写大家共享的晨间展望，以及会员尚未撰写时由后台程序为语音计划撰写的 Passage Plan。在拥有 Claude、Grok、ChatGPT 和 Gemini 密钥的后台程序上运行。"
 }

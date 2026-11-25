@@ -2487,7 +2487,6 @@
   "Most active stocks, up and down": "Cổ phiếu giao dịch nhiều nhất, tăng và giảm",
   "US stocks, up and down": "Cổ phiếu Mỹ, tăng và giảm",
   "Morning Outlook": "Triển vọng buổi sáng",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Viết Triển vọng buổi sáng dùng chung, và các Passage Plan mà tiến trình nền viết cho bản kế hoạch nói khi thành viên chưa tự viết. Chạy trên tiến trình nền, nơi có khóa Grok, ChatGPT và Gemini.",
   "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 Nhật ký hải trình: Passage Plan hôm nay để đọc hoặc nghe, các kế hoạch trước đó và Triển vọng buổi sáng.",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.": "Passage Plan AI hôm nay cho danh sách theo dõi và các phễu của riêng bạn, được đọc to: cùng kế hoạch bạn có thể đọc trong 📓 Nhật ký hải trình. Kế hoạch sẵn sàng mỗi ngày một giờ trước giờ gửi bản tóm tắt hằng ngày; đặt giờ, múi giờ và giọng đọc trong 🔔 Thông báo.",
   "Your morning time": "Giờ buổi sáng của bạn",
@@ -2501,5 +2500,6 @@
   "held {n} trading days": "đã giữ {n} phiên giao dịch",
   "Sea": "Biển",
   "{change} pts this week": "{change} điểm tuần này",
-  "Open Tides ›": "Mở Tides ›"
+  "Open Tides ›": "Mở Tides ›",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Viết Triển vọng buổi sáng dùng chung, và các Passage Plan mà tiến trình nền viết cho bản kế hoạch nói khi thành viên chưa tự viết. Chạy trên tiến trình nền, nơi có khóa Claude, Grok, ChatGPT và Gemini."
 }

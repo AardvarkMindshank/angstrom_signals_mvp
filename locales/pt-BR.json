@@ -2487,7 +2487,6 @@
   "Most active stocks, up and down": "Ações mais negociadas, em alta e em baixa",
   "US stocks, up and down": "Ações dos EUA, em alta e em baixa",
   "Morning Outlook": "Panorama da manhã",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Escreve o Panorama da manhã compartilhado e os Passage Plans que o processo em segundo plano escreve para o plano falado quando o membro ainda não escreveu um. Roda no processo em segundo plano, que tem as chaves do Grok, ChatGPT e Gemini.",
   "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 Diário de bordo: o Passage Plan de hoje para ler ou ouvir, os planos anteriores e o Panorama da manhã.",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.": "O Passage Plan de IA de hoje para a sua própria lista de acompanhamento e seus funis, lido em voz alta: o mesmo plano que você pode ler no 📓 Diário de bordo. Fica pronto todos os dias uma hora antes do horário do seu resumo diário; defina o horário, o fuso horário e a voz em 🔔 Notificações.",
   "Your morning time": "Seu horário da manhã",
@@ -2501,5 +2500,6 @@
   "held {n} trading days": "há {n} pregões",
   "Sea": "Mar",
   "{change} pts this week": "{change} pts nesta semana",
-  "Open Tides ›": "Abrir Tides ›"
+  "Open Tides ›": "Abrir Tides ›",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Escreve o Panorama da manhã compartilhado e os Passage Plans que o processo em segundo plano escreve para o plano falado quando o membro ainda não escreveu um. Roda no processo em segundo plano, que tem as chaves do Claude, Grok, ChatGPT e Gemini."
 }

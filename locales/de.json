@@ -2487,7 +2487,6 @@
   "Most active stocks, up and down": "Meistgehandelte Aktien, gestiegen und gefallen",
   "US stocks, up and down": "US-Aktien, gestiegen und gefallen",
   "Morning Outlook": "Morgenausblick",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Schreibt den gemeinsamen Morgenausblick und die Passage Plans, die der Hintergrund-Worker für den gesprochenen Plan schreibt, wenn das Mitglied noch keinen geschrieben hat. Läuft auf dem Hintergrund-Worker, der die Schlüssel für Grok, ChatGPT und Gemini hat.",
   "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 Logbuch: der heutige Passage Plan zum Lesen oder Hören, die Pläne davor und den Morgenausblick.",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.": "Der heutige KI-Passage-Plan für deine eigene Watchlist und deine Trichter, vorgelesen: derselbe Plan, den du im 📓 Logbuch lesen kannst. Er ist jeden Tag eine Stunde vor der Uhrzeit deiner täglichen Zusammenfassung fertig; Uhrzeit, Zeitzone und Stimme stellst du unter 🔔 Benachrichtigungen ein.",
   "Your morning time": "Deine Morgenzeit",
@@ -2501,5 +2500,6 @@
   "held {n} trading days": "seit {n} Handelstagen",
   "Sea": "Seegang",
   "{change} pts this week": "{change} Pkt. diese Woche",
-  "Open Tides ›": "Tides öffnen ›"
+  "Open Tides ›": "Tides öffnen ›",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Schreibt den gemeinsamen Morgenausblick und die Passage Plans, die der Hintergrund-Worker für den gesprochenen Plan schreibt, wenn das Mitglied noch keinen geschrieben hat. Läuft auf dem Hintergrund-Worker, der die Schlüssel für Claude, Grok, ChatGPT und Gemini hat."
 }

@@ -2487,7 +2487,6 @@
   "Most active stocks, up and down": "거래 상위 종목, 상승과 하락",
   "US stocks, up and down": "미국 주식, 상승과 하락",
   "Morning Outlook": "모닝 아웃룩",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "모두가 함께 듣는 모닝 아웃룩와, 회원이 아직 작성하지 않았을 때 음성 플랜용으로 백그라운드 작업이 작성하는 Passage Plan을 씁니다. Grok, ChatGPT, Gemini 키가 있는 백그라운드 작업에서 실행됩니다.",
   "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 로그북: 읽거나 들을 수 있는 오늘의 Passage Plan, 지난 플랜, 모닝 아웃룩.",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.": "내 관심 목록과 퍼널을 위한 오늘의 AI Passage Plan을 읽어 드립니다. 📓 로그북에서 읽을 수 있는 것과 같은 플랜입니다. 매일 일일 요약 시간 한 시간 전에 준비되며, 시간·시간대·목소리는 🔔 알림에서 설정합니다.",
   "Your morning time": "아침 시간",
@@ -2501,5 +2500,6 @@
   "held {n} trading days": "{n}거래일째 유지",
   "Sea": "해상",
   "{change} pts this week": "이번 주 {change}포인트",
-  "Open Tides ›": "Tides 열기 ›"
+  "Open Tides ›": "Tides 열기 ›",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "모두가 함께 듣는 모닝 아웃룩와, 회원이 아직 작성하지 않았을 때 음성 플랜용으로 백그라운드 작업이 작성하는 Passage Plan을 씁니다. Claude, Grok, ChatGPT, Gemini 키가 있는 백그라운드 작업에서 실행됩니다."
 }

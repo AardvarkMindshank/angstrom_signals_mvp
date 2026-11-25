@@ -2487,7 +2487,6 @@
   "Most active stocks, up and down": "Actions les plus échangées, en hausse et en baisse",
   "US stocks, up and down": "Actions américaines, en hausse et en baisse",
   "Morning Outlook": "Perspectives du matin",
-  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Grok, ChatGPT and Gemini keys.": "Rédige les Perspectives du matin communes, et les Passage Plans que le processus en arrière-plan rédige pour le plan parlé quand le membre n'en a pas encore écrit. Tourne sur le processus en arrière-plan, qui a les clés Grok, ChatGPT et Gemini.",
   "📓 Logbook: today's Passage Plan to read or hear, the plans before it, and the Morning Outlook.": "📓 Journal de bord : le Passage Plan du jour à lire ou à écouter, les plans précédents et les Perspectives du matin.",
   "Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.": "Le Passage Plan IA du jour pour ta propre liste de suivi et tes entonnoirs, lu à voix haute : le même plan que tu peux lire dans le 📓 Journal de bord. Il est prêt chaque jour une heure avant l'heure de ton résumé quotidien ; choisis l'heure, le fuseau horaire et la voix dans 🔔 Notifications.",
   "Your morning time": "Ton heure du matin",
@@ -2501,5 +2500,6 @@
   "held {n} trading days": "depuis {n} séances",
   "Sea": "Mer",
   "{change} pts this week": "{change} pts cette semaine",
-  "Open Tides ›": "Ouvrir Tides ›"
+  "Open Tides ›": "Ouvrir Tides ›",
+  "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Rédige les Perspectives du matin communes, et les Passage Plans que le processus en arrière-plan rédige pour le plan parlé quand le membre n'en a pas encore écrit. Tourne sur le processus en arrière-plan, qui a les clés Claude, Grok, ChatGPT et Gemini."
 }

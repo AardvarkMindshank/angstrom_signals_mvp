@@ -9493,10 +9493,11 @@ def _admin_ai() -> None:
         else:
             st.toast(f"News sentiment will be scored by {ap.label(picked)} from its next refresh.")
             _sentiment_ai_choice.clear()
-    # 🎧 Morning briefing scripts are written by the background worker (GitHub), which has these keys, not Claude's.
+    # 🎧 Morning briefing scripts are written by the background worker (GitHub), which has these keys (Claude's too,
+    # since 25 Nov 2026).
     b_label, b_default, _who, b_tip = ap.USES["briefing"]
     b_current = ap.app_choice(supabase, "briefing") or b_default
-    b_options = list(dict.fromkeys([b_current, "grok", "chatgpt", "gemini"]))
+    b_options = list(dict.fromkeys([b_current, "claude", "grok", "chatgpt", "gemini"]))
     b_picked = st.selectbox(f"{b_label}, for everyone", b_options, index=0, key="admin_ai_briefing",
                             format_func=ap.label, help=b_tip, placeholder="Choose an option")
     if b_picked != b_current:
@@ -10694,17 +10695,18 @@ def _member_status(seen) -> str:
     if seen is not None and seen < 300:
         return "🟢 " + _en("Active now")
     if seen is not None and seen < 86400:
-        return "🟠 " + _en("Today")
+        return "🟠 " + _en("Last 24 hours")
     if seen is not None and seen < 7 * 86400:
-        return "⚪ " + _en("This week")
+        return "⚪ " + _en("Last 7 days")
     return "⚫ " + _en("Earlier") if seen is not None else "⚫ " + _en("Not seen yet")
 
 
-def _member_table(rows: list[dict]) -> pd.DataFrame:
-    """One line per account, for a table you sort by clicking a column title."""
+def _member_table(rows: list[dict], zone: str = "UTC") -> pd.DataFrame:
+    """One line per account, for a table you sort by clicking a column title. Times in the admin's own time zone
+    (25 Nov 2026: in UTC, "last seen 24 Nov 17:29" looked like yesterday when it was 00:29 today in Bangkok)."""
     def when(value):
         stamp = pd.to_datetime(value, utc=True, errors="coerce") if value else pd.NaT
-        return stamp.tz_convert(None) if pd.notna(stamp) else pd.NaT
+        return stamp.tz_convert(zone).tz_localize(None) if pd.notna(stamp) else pd.NaT
 
     lines = []
     for m in rows:
@@ -10776,22 +10778,29 @@ def _show_members() -> None:
             rows = [r for r in rows if str(r.get("plan") or "pro") == plan_pick.lower()]
         cc = st.column_config
         when = "D MMM YYYY, HH:mm"
+        zone = str(_briefing_settings().get("zone") or "UTC")
+        try:
+            pd.Timestamp.now(tz=zone)
+        except Exception:
+            zone = "UTC"
+        zone_name = zone.split("/")[-1].replace("_", " ")
         st.dataframe(
-            _member_table(rows), hide_index=True, width="stretch", key="admin_members_table",
+            _member_table(rows, zone), hide_index=True, width="stretch", key="admin_members_table",
             height=min(42 + 46 * max(len(rows), 1), 640), row_height=44,
             column_config={
                 "photo": cc.ImageColumn("", width=48),
-                "status": cc.TextColumn(_en("Status"), help=_en("🟢 the app open in the last 5 minutes · 🟠 seen today · "
-                                                               "⚪ this week · ⚫ earlier")),
+                "status": cc.TextColumn(_en("Status"), help=_en("🟢 the app open in the last 5 minutes · 🟠 seen in the "
+                                                               "last 24 hours · ⚪ in the last 7 days · ⚫ earlier")),
                 "name": cc.TextColumn(_en("Name"), help=_en("🛡️ marks an admin")),
                 "email": cc.TextColumn(_en("Email")),
                 "plan": cc.TextColumn(_en("Plan")),
-                "joined": cc.DatetimeColumn(_en("📅 Joined"), format="D MMM YYYY", help=_en("When the account was made")),
+                "joined": cc.DatetimeColumn(_en("📅 Joined"), format="D MMM YYYY",
+                                            help=_en("When the account was made ({z} time)", z=zone_name)),
                 "member_days": cc.NumberColumn(_en("Days a member"), format="%d"),
-                "last_sign_in": cc.DatetimeColumn(_en("🔑 Last sign-in"), format=when,
-                                                  help=_en("The last time this account signed in (UTC)")),
-                "last_seen": cc.DatetimeColumn(_en("👀 Last seen"), format=when,
-                                               help=_en("The last time the app was open on this account (UTC)")),
+                "last_sign_in": cc.DatetimeColumn(_en("🔑 Last sign-in ({z})", z=zone_name), format=when,
+                                                  help=_en("The last time this account signed in ({z} time)", z=zone_name)),
+                "last_seen": cc.DatetimeColumn(_en("👀 Last seen ({z})", z=zone_name), format=when,
+                                               help=_en("The last time the app was open on this account ({z} time)", z=zone_name)),
                 "hours": cc.NumberColumn(_en("⏱️ Hours in app"), format="%.1f",
                                          help=_en("Time with the app open (gaps over 10 minutes not counted)")),
                 "visits": cc.NumberColumn(_en("🔁 Visits"), help=_en("A new visit after 30 minutes away")),
