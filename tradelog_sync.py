@@ -192,15 +192,28 @@ def sync_connection(supabase, conn: dict, session, inputs: Inputs, deadline: flo
     return summary
 
 
+def _pages(make_query, page: int = 1000) -> list:
+    """Every row of a query, a page at a time. make_query() builds a fresh query (with a stable order)."""
+    out: list = []
+    while True:
+        got = make_query().range(len(out), len(out) + page - 1).execute().data or []
+        out += got
+        if len(got) < page or len(out) >= 200_000:
+            return out
+
+
 def fill_snapshots(supabase, conn: dict, inputs: Inputs, deadline: float) -> int:
     """Snapshots for this connection's trades that have none yet, newest first, until the deadline."""
-    trips = (supabase.table("trade_round_trips").select("id,asset_key,asset_class,opened_at,closed_at")
-             .eq("connection_id", conn["id"]).order("closed_at", desc=True).execute().data or [])
+    # The member's own trades only: copied trades (often thousands of small ones) get no snapshot, which keeps the
+    # table and each pass small (26 Nov 2026). Read in pages: Supabase returns at most 1,000 rows per ask, and a
+    # capped "done" list had the worker rewriting the same snapshots every pass.
+    trips = _pages(lambda: supabase.table("trade_round_trips").select("id,asset_key,asset_class,opened_at,closed_at")
+                   .eq("connection_id", conn["id"]).eq("copied", False).order("closed_at", desc=True))
     if not trips:
         return 0
     done = {(r["round_trip_id"], r["moment"]) for r in
-            (supabase.table("trade_snapshots").select("round_trip_id,moment").eq("user_id", conn["user_id"])
-             .execute().data or [])}
+            _pages(lambda: supabase.table("trade_snapshots").select("round_trip_id,moment")
+                   .eq("user_id", conn["user_id"]).order("round_trip_id"))}
     since = (min(_when(t["opened_at"]) for t in trips) - timedelta(days=4)).isoformat()
     made = 0
     for trip in trips:

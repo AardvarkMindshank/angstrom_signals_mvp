@@ -66,17 +66,23 @@ def load(supabase) -> dict:
     if conns is None:
         return {"ready": False}
     stamp = repr(sorted((c["id"], c.get("last_sync_at"), c.get("portfolio_at")) for c in conns))
-    kept = st.session_state.get("_tl_loaded")
-    if kept and kept[0] == stamp:
-        return {**kept[1], "connections": conns, "notes": _all_rows(supabase, "trade_notes",
-                                                                    "round_trip_id,note,tags") or []}
-    data = {"ready": True, "connections": conns,
-            "trips": _all_rows(supabase, "trade_round_trips", order="closed_at") or [],
-            "open": _all_rows(supabase, "trade_open_positions", order="value_usd") or [],
-            "snapshots": _all_rows(supabase, "trade_snapshots", "round_trip_id,moment,readings,source") or [],
+    member = getattr(st.session_state.get("user"), "id", None) or stamp
+    heavy = _heavy_cached(supabase, str(member), stamp)
+    return {"ready": True, **heavy, "connections": conns,
             "notes": _all_rows(supabase, "trade_notes", "round_trip_id,note,tags") or []}
-    st.session_state["_tl_loaded"] = (stamp, {k: v for k, v in data.items() if k not in ("connections", "notes")})
-    return data
+
+
+TRIP_COLS = ("id,user_id,connection_id,platform,position_id,instrument_id,symbol,name,asset_class,asset_key,direction,"
+             "opened_at,closed_at,entry_price,exit_price,units,invested_usd,leverage,fees_usd,net_result_usd,"
+             "result_pct,copied,parts")
+
+
+def _heavy_uncached(_supabase, member: str, stamp: str) -> dict:
+    """Trades, open positions and snapshots: read once per sync per member and shared by that member's tabs and
+    devices for an hour (a 15,000-trade history is several MB a read; 26 Nov 2026)."""
+    return {"trips": _all_rows(_supabase, "trade_round_trips", TRIP_COLS, order="closed_at") or [],
+            "open": _all_rows(_supabase, "trade_open_positions", order="value_usd") or [],
+            "snapshots": _all_rows(_supabase, "trade_snapshots", "round_trip_id,moment,readings,source") or []}
 
 
 def _zone(st) -> ZoneInfo:
@@ -688,6 +694,7 @@ import streamlit as _streamlit                                           # noqa:
 
 _render_fragment = _streamlit.fragment(_render)
 _closes_cached = _streamlit.cache_data(ttl=3600, show_spinner=False)(_closes_uncached)
+_heavy_cached = _streamlit.cache_data(ttl=3600, max_entries=20, show_spinner=False)(_heavy_uncached)
 
 
 def has_connections(supabase) -> bool:

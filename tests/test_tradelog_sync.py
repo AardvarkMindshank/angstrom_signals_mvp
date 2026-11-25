@@ -34,6 +34,10 @@ class _Query:
     def limit(self, *_a):
         return self
 
+    def range(self, start, end):
+        self.window = (start, end)
+        return self
+
     def upsert(self, rows, on_conflict=None, **_k):
         self.op, self.payload, self.conflict = "upsert", rows if isinstance(rows, list) else [rows], on_conflict
         return self
@@ -46,7 +50,10 @@ class _Query:
         rows = self.db.tables.setdefault(self.table, [])
         match = lambda r: all(r.get(c) == v for c, v in self.filters)
         if self.op == "select":
-            return _Result([dict(r) for r in rows if match(r)])
+            got = [dict(r) for r in rows if match(r)]
+            if getattr(self, "window", None):
+                got = got[self.window[0]:self.window[1] + 1]
+            return _Result(got)
         if self.op == "update":
             for r in rows:
                 if match(r):
@@ -155,3 +162,16 @@ def test_worker_step_reports_counts_only():
     text = sync.run_from_worker(db, _Session(), budget_seconds=60)
     assert text.startswith("1 connections, 1 synced") and "NVDA" not in text and "NVIDIA" not in text
     assert tradelog.MIN_TRADES == 10
+
+
+def test_snapshots_skip_copied_trades_and_read_every_page():
+    db = _Db({"api_key": "A", "user_key": "U"})
+    db.tables["trade_round_trips"] = (
+        [{"id": i, "connection_id": "c1", "copied": False, "asset_key": None, "asset_class": "stocks",
+          "opened_at": "2026-11-01T00:00:00Z", "closed_at": "2026-11-03T00:00:00Z"} for i in range(1, 4)]
+        + [{"id": 99, "connection_id": "c1", "copied": True, "asset_key": None, "asset_class": "stocks",
+            "opened_at": "2026-11-01T00:00:00Z", "closed_at": "2026-11-03T00:00:00Z"}])
+    made = sync.fill_snapshots(db, dict(CONN), sync.Inputs(db, _Session()), time.monotonic() + 60)
+    assert made == 6 and {r["round_trip_id"] for r in db.tables["trade_snapshots"]} == {1, 2, 3}
+    rows = sync._pages(lambda: db.table("trade_round_trips").select("id"), page=2)
+    assert len(rows) == 4                                       # read past a full first page
