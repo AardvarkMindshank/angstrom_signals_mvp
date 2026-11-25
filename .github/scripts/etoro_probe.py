@@ -131,6 +131,24 @@ def my_permissions(api_key: str, user_key: str) -> None:
                                    f"no scope field; top-level fields {sorted(body) if isinstance(body, dict) else type(body).__name__}"))
 
 
+def request_ids(api_key: str, user_key: str) -> None:
+    """For eToro support (25 Nov 2026): the x-request-id and UTC time of two calls, with the trade count only."""
+    from datetime import datetime, timezone
+
+    print("Request IDs for eToro support:")
+    for min_date in ("2025-11-25", "2010-12-14"):
+        rid = str(uuid.uuid4())
+        at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        r = requests.get(URL, headers={"x-request-id": rid, "x-api-key": api_key, "x-user-key": user_key,
+                                       "Accept": "application/json"},
+                         params={"minDate": min_date, "page": 1, "pageSize": PAGE_SIZE}, timeout=30)
+        try:
+            n = len(items_of(r.json()))
+        except ValueError:
+            n = 0
+        print(f"  minDate={min_date} page=1 pageSize={PAGE_SIZE}: x-request-id {rid}, sent {at}, HTTP {r.status_code}, {n} trades")
+
+
 def main() -> int:
     api_key, user_key = os.environ.get("ETORO_API_KEY", ""), os.environ.get("ETORO_USER_KEY", "")
     if not api_key or not user_key:
@@ -157,9 +175,7 @@ def main() -> int:
             break
     print(f"Pages read: {page} (page size {PAGE_SIZE})")
     print("\n".join(summarise(trades)))
-    history_counts(api_key, user_key)
-    by_windows(api_key, user_key)
-    my_permissions(api_key, user_key)
+    request_ids(api_key, user_key)
     return 0
 
 
