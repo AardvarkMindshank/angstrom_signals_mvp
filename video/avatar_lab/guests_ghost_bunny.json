@@ -1,0 +1,65 @@
+{
+ "about": "26 Nov 2026: the Ghost Captain (Halloween) and the Easter Bunny cameos, welcome and sign-off, from their chosen portraits (take 2 of each). Run with in_guests.",
+ "jobs": [
+  {
+   "id": "say_ghost_welcome_1",
+   "speak": "Boo! Did I give you a fright? Happy Halloween. The Captain's hiding below decks, so this old ghost has the wheel today.",
+   "voice": "bm_daniel",
+   "speed": 0.95
+  },
+  {
+   "id": "ghost_welcome_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:guest_ghost_2.png",
+    "audio_url": "out:say_ghost_welcome_1.wav",
+    "prompt": "The animated character from the picture speaking to camera, expressive, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "say_ghost_signoff_1",
+   "speak": "That's the outlook. Fair winds, following seas, and sweet dreams, if you dare. Happy Halloween.",
+   "voice": "bm_daniel",
+   "speed": 0.95
+  },
+  {
+   "id": "ghost_signoff_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:guest_ghost_2.png",
+    "audio_url": "out:say_ghost_signoff_1.wav",
+    "prompt": "The animated character from the picture speaking to camera, expressive, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "say_bunny_welcome_1",
+   "speak": "Happy Easter, everyone! The Captain's off hunting for eggs, so I've hopped aboard to bring you the outlook.",
+   "voice": "af_sky",
+   "speed": 1.08
+  },
+  {
+   "id": "bunny_welcome_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:guest_bunny_2.png",
+    "audio_url": "out:say_bunny_welcome_1.wav",
+    "prompt": "The animated character from the picture speaking to camera, expressive, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "say_bunny_signoff_1",
+   "speak": "That's the outlook. Fair winds, following seas, and a very happy Easter to all.",
+   "voice": "af_sky",
+   "speed": 1.08
+  },
+  {
+   "id": "bunny_signoff_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:guest_bunny_2.png",
+    "audio_url": "out:say_bunny_signoff_1.wav",
+    "prompt": "The animated character from the picture speaking to camera, expressive, natural head movement and blinking."
+   }
+  }
+ ]
+}
