@@ -202,6 +202,82 @@ def main() -> int:
         print("Missing secrets: add ETORO_API_KEY and ETORO_USER_KEY in GitHub (Settings, Secrets, Actions).")
         return 1
     min_date = os.environ.get("MIN_DATE") or "2010-01-01"
+    if os.environ.get("MODE") == "names":           # public instrument names for a few ids, and a candle check
+        import requests as _rq
+        sys.path.insert(0, ".")
+        import tradelog
+        keys = {"api_key": api_key, "user_key": user_key}
+        sess = _rq.Session()
+        ids = [int(x) for x in (os.environ.get("MIN_DATE") or "").split(",") if x.strip().isdigit()]
+        got = tradelog.fetch_instruments(sess, keys, ids)
+        for i in ids:
+            v = got.get(i, {})
+            print(f"  {i}: {v.get('instrumentDisplayName')!r} {v.get('symbolFull')!r} type {v.get('instrumentTypeID')}")
+        r = sess.get(f"https://public-api.etoro.com/api/v1/market-data/instruments/{ids[0]}/history/candles/asc/OneWeek/1000",
+                     headers={"x-request-id": str(uuid.uuid4()), "x-api-key": api_key, "x-user-key": user_key}, timeout=60)
+        body = r.json() if r.ok else {}
+        c = ((body.get("candles") or [{}])[0] or {}).get("candles") or []
+        print(f"weekly candles for {ids[0]}: HTTP {r.status_code}, {len(c)}" + (f", {c[0]['fromDate'][:10]} to {c[-1]['fromDate'][:10]}" if c else ""))
+        return 0
+    if os.environ.get("MODE") == "export":         # written to a file that the next step encrypts; never printed
+        import json as _json
+        import requests as _rq
+        sys.path.insert(0, ".")
+        import tradelog
+        keys = {"api_key": api_key, "user_key": user_key}
+        sess = _rq.Session()
+        pos = tradelog.fetch_closed_positions(sess, keys, workers=2)
+        types = tradelog.fetch_instrument_types(sess, keys)
+        inst = tradelog.fetch_instruments(sess, keys, {p.get("instrumentId") for p in pos if p.get("instrumentId")})
+        os.makedirs("out", exist_ok=True)
+        import tradelog_sync
+        from datetime import datetime as _dt, timezone as _tz
+        series = tradelog_sync._fetch_series(sess, keys, _dt.now(_tz.utc))
+        try:
+            portfolio = tradelog.fetch_portfolio(sess, keys)
+        except tradelog.EtoroError:
+            portfolio = None
+        with open("out/export.json", "w") as f:
+            _json.dump({"positions": pos, "types": types, "series": series, "portfolio": portfolio,
+                        "instruments": {k: {x: v.get(x) for x in ("instrumentID", "instrumentDisplayName", "symbolFull",
+                                                                  "instrumentTypeID")} for k, v in inst.items()}}, f)
+        print(f"Export written: {len(pos)} positions (encrypted in the next step)")
+        return 0
+    if os.environ.get("MODE") == "check":          # pipeline checks: ratios and yes/no only, no trade data
+        import requests as _rq
+        sys.path.insert(0, ".")
+        import tradelog
+        keys = {"api_key": api_key, "user_key": user_key}
+        sess = _rq.Session()
+        pos = tradelog.fetch_closed_positions(sess, keys, workers=2)
+        types = tradelog.fetch_instrument_types(sess, keys)
+        print("eToro instrument types (public list):")
+        for k in sorted(types):
+            print(f"  {k}: {types[k]!r} -> {tradelog.asset_class_of(types[k])}")
+        ids = {p.get("instrumentId") for p in pos if p.get("instrumentId") is not None}
+        inst = tradelog.fetch_instruments(sess, keys, ids)
+        print(f"Instrument lookups answered: {len(set(inst) & {int(i) for i in ids}) / max(len(ids), 1):.0%}")
+        wrong = sum(1 for k, v in inst.items() if int(v.get("instrumentID", -1)) != k)
+        print(f"Lookups keyed to a different id: {wrong}")
+        notype = sum(1 for v in inst.values() if v.get("instrumentTypeID") is None)
+        print(f"Looked-up instruments with no type: {notype}")
+        unknown = {v.get("instrumentTypeID") for v in inst.values()} - set(types)
+        print(f"Type ids not in eToro's list: {sorted(x for x in unknown if x is not None)}")
+        by_id = {str(p.get("positionId")): p for p in pos}
+        linked = [p for p in pos if str(p.get("parentPositionId") or "0") not in ("", "0")]
+        inside = [p for p in linked if str(p.get("parentPositionId")) in by_id]
+        cross = [p for p in inside if by_id[str(p["parentPositionId"])].get("instrumentId") != p.get("instrumentId")]
+        print(f"Positions with a parent id: {len(linked) / max(len(pos), 1):.0%}; parent found in the list: "
+              f"{len(inside) / max(len(linked), 1):.0%}; of those, parent on a DIFFERENT asset: {len(cross) / max(len(inside), 1):.0%}")
+        cp = [p for p in pos if tradelog._num(p.get("socialTradeId"))]
+        print(f"Marked copied (socialTradeId): {len(cp) / max(len(pos), 1):.0%}; copied with a parent id: "
+              f"{sum(1 for p in cp if str(p.get('parentPositionId') or '0') != '0') / max(len(cp), 1):.0%}; "
+              f"own with a parent id: {sum(1 for p in pos if p not in cp and str(p.get('parentPositionId') or '0') != '0') / max(len(pos) - len(cp), 1):.0%}")
+        trips = tradelog.etoro_round_trips(pos, inst, types)
+        multi = [t for t in trips if t["parts"] > 1]
+        print(f"Trips: {len(trips) / max(len(pos), 1):.0%} of positions; trips merging several positions: "
+              f"{len(multi) / max(len(trips), 1):.0%}; largest merge: {max((t['parts'] for t in trips), default=0)} positions")
+        return 0
     if os.environ.get("MODE") == "pnl":            # field NAMES and counts only, never values
         r = requests.get("https://public-api.etoro.com/api/v1/trading/info/real/pnl",
                          headers={"x-request-id": str(uuid.uuid4()), "x-api-key": api_key, "x-user-key": user_key,
