@@ -1,0 +1,35 @@
+{
+ "about": "26 Nov 2026: the Captain's two weekend welcomes said 'weekend forecast' (missed on 24 Nov); now 'weekend outlook'. Same voice, portrait and prompts. Private portrait: run with in_captain.",
+ "jobs": [
+  {
+   "id": "say_welcome_weekend_1",
+   "speak": "Good morning, and welcome to the weekend outlook.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "say_welcome_weekend_2",
+   "speak": "Morning, all hands. Here's your weekend outlook.",
+   "voice": "bm_george",
+   "speed": 1.1
+  },
+  {
+   "id": "cap_welcome_weekend_1",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_welcome_weekend_1.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, relaxed, cheerful expression, natural head movement and blinking."
+   }
+  },
+  {
+   "id": "cap_welcome_weekend_2",
+   "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+   "input": {
+    "image_url": "file:face_3d_1.png",
+    "audio_url": "out:say_welcome_weekend_2.wav",
+    "prompt": "A friendly animated ship's captain speaking to camera on the bridge, relaxed, cheerful expression, natural head movement and blinking."
+   }
+  }
+ ]
+}
