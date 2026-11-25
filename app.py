@@ -9639,8 +9639,28 @@ export default function(component) {
   const d = data || {};
   if (!d.day || !d.show || navigator.webdriver) return;          // never during the recorded tours and screenshots
   const seenKey = "ang-daily-video-" + d.day;
+  try { if (window.sessionStorage.getItem(seenKey)) return; } catch (e) {}
+  if (document.getElementById("ang-dv-pop") || window.__angDvWait === d.day) return;
+  // Only in front of someone (25 Nov 2026: a tab left open overnight picked up the new video at 05:10 and used up the
+  // day's pop-up with nobody there). A page just opened shows it at once; an older page waits until the tab is in
+  // view and someone moves the mouse, types, scrolls or touches it. Only then does the account count it as seen.
+  const fresh = () => performance.now() < 120000;
+  const ready = () => document.visibilityState === "visible";
+  if (fresh() && ready()) return show();
+  window.__angDvWait = d.day;
+  const kinds = ["pointermove", "pointerdown", "keydown", "wheel", "touchstart", "visibilitychange"];
+  const go = () => {
+    if (!ready()) return;
+    kinds.forEach((k) => document.removeEventListener(k, go, true));
+    window.__angDvWait = null;
+    show();
+  };
+  kinds.forEach((k) => document.addEventListener(k, go, { capture: true, passive: true }));
+
+  function show() {
   try { if (window.sessionStorage.getItem(seenKey)) return; window.sessionStorage.setItem(seenKey, "1"); } catch (e) {}
   if (document.getElementById("ang-dv-pop")) return;
+  setTriggerValue("shown", d.day);
   const w = d.words || {};
   const tall = window.matchMedia("(max-width: 640px), (orientation: portrait)").matches;
   const pop = document.createElement("div");
@@ -9679,6 +9699,7 @@ export default function(component) {
   pop.querySelector(".close").addEventListener("click", shut);
   pop.querySelector(".stop").addEventListener("click", () => { setTriggerValue("stop", Date.now()); shut(); });
   video.play().catch(() => {});
+  }
 }
 """
 _daily_video_pop = st.components.v2.component("daily_video_pop", js=_DAILY_VIDEO_JS, isolate_styles=False)
@@ -9698,15 +9719,19 @@ def _daily_video_popup() -> None:
     day = days[0]
     auto = bool(stored.get("daily_video_auto", True))
     fresh = str(stored.get("daily_video_seen") or "") != day or st.session_state.get("_dv_showing") == day
-    if auto and fresh and st.session_state.get("_dv_showing") != day:
-        st.session_state["_dv_showing"] = day          # this visit shows it; the account remembers for other visits
-        save_account_settings({"daily_video_seen": day})
+
+    def _shown():
+        # The page reports the pop-up once it is actually on screen in front of someone (25 Nov 2026); only then does
+        # the account count today's video as seen.
+        if st.session_state.get("_dv_showing") != day:
+            st.session_state["_dv_showing"] = day
+            save_account_settings({"daily_video_seen": day})
 
     def _stop():
         save_account_settings({"daily_video_auto": False})
         st.session_state["daily_video_auto"] = False
 
-    _daily_video_pop(key="daily_video_pop", on_stop_change=_stop,
+    _daily_video_pop(key="daily_video_pop", on_stop_change=_stop, on_shown_change=_shown,
                      data={"day": day, "show": bool(auto and fresh), **_video_urls(base, day, (meta.get(day) or {}).get("made_at")),
                            "words": {"sound": t("Tap for sound"), "close": t("Close"),
                                      "stop": t("Close and stop daily autoplay")}})

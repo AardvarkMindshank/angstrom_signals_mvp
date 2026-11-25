@@ -120,6 +120,9 @@ jobs:
       - name: Clip audit
         if: inputs.audit
         run: python video/clip_audit.py lib/avatar_lab
+      - name: Tide up to the latest close (so the screens and the script agree with the Tides panel)
+        if: ${{ !inputs.audit && inputs.publish_test == '' }}
+        run: python daily_video.py --tide-only || echo "Tides refresh skipped."
       - name: App screens (fresh from the live app; a stored copy for any that fail)
         if: ${{ !inputs.audit && inputs.publish_test == '' }}
         timeout-minutes: 9

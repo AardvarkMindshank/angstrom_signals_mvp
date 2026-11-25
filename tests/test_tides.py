@@ -140,3 +140,35 @@ def test_flat_is_always_neutral():
     assert tv.pull_of({"direction": "flat", "contribution": -0.4})[0] == "neutral"
     assert tv.pull_of({"direction": "rising", "contribution": -0.6})[0] == "risk-defensive"
     assert tv.pull_of({"direction": "falling", "contribution": 0.6})[0] == "risk-supportive"
+
+
+def test_last_close_is_the_latest_weekday_after_the_us_close():
+    from datetime import datetime, timezone
+    import tides
+
+    utc = lambda *a: datetime(*a, tzinfo=timezone.utc)                  # noqa: E731
+    assert tides.last_close(utc(2026, 11, 24, 21, 36)) == utc(2026, 11, 24, 21, 30)   # the video run, Tuesday
+    assert tides.last_close(utc(2026, 11, 24, 18, 0)) == utc(2026, 11, 23, 21, 30)    # before Tuesday's close
+    assert tides.last_close(utc(2026, 11, 29, 21, 40)) == utc(2026, 11, 27, 21, 30)   # Sunday: Friday's close
+
+
+def test_refresh_since_close_rebuilds_a_snapshot_from_before_the_close(monkeypatch):
+    from datetime import datetime, timezone
+    import tides
+
+    class Q:
+        def __init__(self, rows): self.rows, self.inserted = rows, []
+        def table(self, _): return self
+        def select(self, *_): return self
+        def order(self, *_, **__): return self
+        def limit(self, _): return self
+        def insert(self, body): self.inserted.append(body); return self
+        def execute(self): return type("R", (), {"data": self.rows})()
+
+    snap = {"tide": {"status": "ok", "label": "out", "score": -0.5}, "sea": {}, "computed_at": "x", "version": tides.VERSION}
+    monkeypatch.setattr(tides, "build", lambda *a, **k: snap)
+    now = datetime(2026, 11, 24, 21, 36, tzinfo=timezone.utc)
+    before = Q([{"computed_at": "2026-11-24T20:10:00+00:00", "version": tides.VERSION}])
+    assert tides.refresh_since_close(before, now, log=lambda *_: None) and before.inserted
+    after = Q([{"computed_at": "2026-11-24T21:33:00+00:00", "version": tides.VERSION}])
+    assert not tides.refresh_since_close(after, now, log=lambda *_: None) and not after.inserted

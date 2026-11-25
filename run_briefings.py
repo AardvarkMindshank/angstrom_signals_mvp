@@ -450,6 +450,13 @@ def main() -> int:
             with open(out, "a") as fh:
                 fh.write(f"due={len(rows) + len(editions)}\n")
         return 0
+    if editions or rows:
+        try:
+            import tides
+
+            tides.refresh_since_close(db, now)
+        except Exception as exc:
+            print(f"Tides refresh skipped: {type(exc).__name__}")
     for edition, eid in editions:
         try:
             make_general(db, url, edition, eid, now)

@@ -169,6 +169,18 @@ def _ordinal(n: int) -> str:
 
 # ------------------------------------------------------------------------------------------------ the app's cards
 
+def refresh_tide(supabase, now: datetime | None = None) -> None:
+    """A new Tides snapshot when the newest is from before the latest US close, so the video counts yesterday's close
+    in "held for N trading days", as the Tides panel does (25 Nov 2026)."""
+    try:
+        import tides
+
+        print("Tides: refreshed after the close." if tides.refresh_since_close(supabase, now)
+              else "Tides: already up to date.")
+    except Exception as exc:
+        print(f"Tides refresh skipped: {type(exc).__name__}")
+
+
 def refresh_moods(supabase) -> None:
     """Rewrite the two Market sentiment cards just before the video, with the same code and data sources as the app's
     background job (shared_refresh), so the video shows the latest and the 12-hour clock restarts from here. The
@@ -909,6 +921,7 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     # The video carries the date it is made on, in its edition's zone (Angus, 24 Nov 2026: a test made on Tuesday
     # afternoon was branded Wednesday). The daily run comes after the Asia & Europe edition, early morning there.
     day = briefing.local_now(briefing.EDITIONS[edition]["zone"], now)
+    refresh_tide(supabase, now)
     refresh_moods(supabase)
     facts = briefing.general_facts(supabase, now)
     reports = app_moods(supabase)
@@ -1058,6 +1071,9 @@ def main() -> int:
     db, _url = run_briefings._client()
     if "--check" in a:                              # alerts.yml: start the video job when today's is due
         print(video_due(db) or "0")
+        return 0
+    if "--tide-only" in a:                          # before the app screens, so they show the same Tide (25 Nov 2026)
+        refresh_tide(db)
         return 0
     if "--publish-from" in a:                       # publish a reviewed test exactly as it is (24 Nov 2026)
         src = Path(get("--publish-from"))

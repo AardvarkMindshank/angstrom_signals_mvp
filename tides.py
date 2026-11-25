@@ -27,7 +27,7 @@ the daily record); CPI uses revised data, not first prints; real-rate, auction a
 from __future__ import annotations
 
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import numpy as np
 import pandas as pd
@@ -476,8 +476,27 @@ def build(supabase=None, log=print) -> dict:
     return snapshot(fetch_all(log), btc_dominance=dom, fear_greed=fng)
 
 
-def refresh_due(supabase, log=print) -> bool:
-    """Background worker: save a new snapshot when the latest is older than REFRESH_HOURS."""
+def last_close(now: datetime | None = None) -> datetime:
+    """The latest weekday 21:30 UTC at or before now: half an hour after the US close in winter (20:00 in summer), by
+    when the day's closing prices are in."""
+    now = now or datetime.now(timezone.utc)
+    at = now.replace(hour=21, minute=30, second=0, microsecond=0)
+    if at > now:
+        at -= timedelta(days=1)
+    while at.weekday() >= 5:
+        at -= timedelta(days=1)
+    return at
+
+
+def refresh_since_close(supabase, now: datetime | None = None, log=print) -> bool:
+    """Before the Morning Outlook and the daily video: a new snapshot when the newest one is from before the latest
+    close, so "held for N trading days" counts yesterday too (25 Nov 2026: the video said 25 days, from a snapshot made
+    before Tuesday's close, while the Tides panel said 26)."""
+    return refresh_due(supabase, log, before=last_close(now))
+
+
+def refresh_due(supabase, log=print, before: datetime | None = None) -> bool:
+    """Background worker: save a new snapshot when the latest is older than REFRESH_HOURS (or than `before`)."""
     try:      # only the time and version of the newest snapshot, not its body (17 Nov 2026: data out)
         rows = (supabase.table("tides_snapshots").select("computed_at, version").order("computed_at", desc=True)
                 .limit(1).execute().data or [])
@@ -485,7 +504,10 @@ def refresh_due(supabase, log=print) -> bool:
         log(f"Tides skipped (run sql/2026-11-23_tides.sql): {str(exc)[:120]}")
         return False
     last = rows[0] if rows else None
-    if age_hours(last) < REFRESH_HOURS - 0.25 and (last or {}).get("version") == VERSION:
+    fresh = age_hours(last) < REFRESH_HOURS - 0.25
+    if before is not None:
+        fresh = age_hours(last, before) < 0 if last else False      # made after `before`
+    if fresh and (last or {}).get("version") == VERSION:
         return False
     snap = build(supabase, log)
     if (snap.get("tide") or {}).get("status") != "ok":
