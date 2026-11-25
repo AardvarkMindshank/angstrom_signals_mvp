@@ -1,0 +1,20 @@
+{
+  "about": "Father Christmas's sign-off re-recorded to say 'outlook' (the show is the Morning Outlook), same voice, portrait and model as before.",
+  "jobs": [
+    {
+      "id": "say_santa_signoff_1",
+      "speak": "That's the outlook. Fair winds, following seas, and a very merry Christmas to all.",
+      "voice": "am_fenrir",
+      "speed": 1.0
+    },
+    {
+      "id": "santa_signoff_1",
+      "model": "fal-ai/kling-video/ai-avatar/v2/standard",
+      "input": {
+        "image_url": "file:guest_santa_1.png",
+        "audio_url": "out:say_santa_signoff_1.wav",
+        "prompt": "The animated character from the picture speaking to camera, expressive, natural head movement and blinking."
+      }
+    }
+  ]
+}
