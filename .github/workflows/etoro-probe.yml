@@ -6,6 +6,9 @@ on:
       min_date:
         description: "Read closed trades from this date (YYYY-MM-DD)"
         default: "2010-01-01"
+      mode:
+        description: "pages: read every page until an empty one, with request IDs (for eToro support)"
+        default: ""
 permissions:
   contents: read
 jobs:
@@ -22,4 +25,5 @@ jobs:
           ETORO_API_KEY: ${{ secrets.ETORO_API_KEY }}
           ETORO_USER_KEY: ${{ secrets.ETORO_USER_KEY }}
           MIN_DATE: ${{ inputs.min_date }}
+          MODE: ${{ inputs.mode }}
         run: python .github/scripts/etoro_probe.py

@@ -149,12 +149,46 @@ def request_ids(api_key: str, user_key: str) -> None:
         print(f"  minDate={min_date} page=1 pageSize={PAGE_SIZE}: x-request-id {rid}, sent {at}, HTTP {r.status_code}, {n} trades")
 
 
+def all_pages(api_key: str, user_key: str, min_date: str) -> None:
+    """eToro support (26 Nov 2026): page on until an EMPTY page, not until a short one. Prints, per page, the
+    x-request-id, the time, the HTTP status and row counts only."""
+    from datetime import datetime, timezone
+    seen: set = set()
+    trades: list = []
+    print(f"All pages from minDate={min_date}, pageSize={PAGE_SIZE}, until an empty page:")
+    for page in range(1, MAX_PAGES + 1):
+        rid = str(uuid.uuid4())
+        at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+        r = requests.get(URL, headers={"x-request-id": rid, "x-api-key": api_key, "x-user-key": user_key,
+                                       "Accept": "application/json"},
+                         params={"minDate": min_date, "page": page, "pageSize": PAGE_SIZE}, timeout=30)
+        try:
+            batch = [b for b in items_of(r.json()) if isinstance(b, dict)]
+        except ValueError:
+            batch = []
+        ids = {t.get("positionId") or t.get("positionID") for t in batch}
+        new = ids - seen
+        seen |= ids
+        trades += [t for t in batch if (t.get("positionId") or t.get("positionID")) in new]
+        closes = sorted(str(t.get("closeTimestamp") or "")[:10] for t in batch if t.get("closeTimestamp"))
+        span = f", closes {closes[0]} to {closes[-1]}" if closes else ""
+        print(f"  page {page}: x-request-id {rid}, sent {at}, HTTP {r.status_code}, {len(batch)} rows, "
+              f"{len(new)} new{span}")
+        if r.status_code != 200 or not batch or (batch and not new and page > 3):
+            break
+    print(f"Distinct positions: {len(seen)}")
+    print("\n".join(summarise(trades)[:7]))
+
+
 def main() -> int:
     api_key, user_key = os.environ.get("ETORO_API_KEY", ""), os.environ.get("ETORO_USER_KEY", "")
     if not api_key or not user_key:
         print("Missing secrets: add ETORO_API_KEY and ETORO_USER_KEY in GitHub (Settings, Secrets, Actions).")
         return 1
     min_date = os.environ.get("MIN_DATE") or "2010-01-01"
+    if os.environ.get("MODE") == "pages":
+        all_pages(api_key, user_key, min_date)
+        return 0
     trades: list = []
     for page in range(1, MAX_PAGES + 1):
         status, body = fetch_page(api_key, user_key, min_date, page)
