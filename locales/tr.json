@@ -2381,7 +2381,6 @@
   "Gross wins divided by gross losses.": "Brüt kazançların brüt kayıplara bölümü.",
   "Winners / losers.": "Kazananlar / kaybedenler.",
   "{n} closed trades": "{n} kapanmış işlem",
-  "**Equity curve**": "**Sonuç eğrisi**",
   "**By asset class**": "**Varlık sınıfına göre**",
   "**Results by regime at entry**": "**Girişteki rejime göre sonuçlar**",
   "Shows what happened together, not a cause.": "Neyin birlikte olduğunu gösterir, bir neden değil.",
@@ -2501,5 +2500,7 @@
   "Open Tides ›": "Tides'ı aç ›",
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Herkesin ortak Sabah Görünümüni ve üye henüz yazmadığında arka plan işleyicisinin sesli plan için yazdığı Passage Plan'leri yazar. Claude, Grok, ChatGPT ve Gemini anahtarlarına sahip arka plan işleyicisinde çalışır.",
   "Yours": "Seninkiler",
-  "Which trades to count: yours, those copied from other eToro traders, or both.": "Hangi işlemler sayılsın: seninkiler, diğer eToro yatırımcılarından kopyalananlar ya da ikisi."
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "Hangi işlemler sayılsın: seninkiler, diğer eToro yatırımcılarından kopyalananlar ya da ikisi.",
+  "**Profit and loss from closed trades**": "**Kapanan işlemlerden kâr ve zarar**",
+  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "Her işlemin sonucu, kapandığı gün toplanır. Bu hesap değerin değildir: yatırılan ya da çekilen para ve açık pozisyonlar dahil değildir; zarar ancak işlem kapandığında görünür."
 }

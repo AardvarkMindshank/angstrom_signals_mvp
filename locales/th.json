@@ -2381,7 +2381,6 @@
   "Gross wins divided by gross losses.": "กำไรรวมหารด้วยขาดทุนรวม",
   "Winners / losers.": "ชนะ / แพ้",
   "{n} closed trades": "{n} เทรดที่ปิดแล้ว",
-  "**Equity curve**": "**กราฟผลลัพธ์สะสม**",
   "**By asset class**": "**แยกตามประเภทสินทรัพย์**",
   "**Results by regime at entry**": "**ผลลัพธ์ตาม regime ตอนเข้า**",
   "Shows what happened together, not a cause.": "แสดงสิ่งที่เกิดขึ้นพร้อมกัน ไม่ใช่สาเหตุ",
@@ -2501,5 +2500,7 @@
   "Open Tides ›": "เปิด Tides ›",
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "เขียนมุมมองยามเช้าที่ทุกคนฟังร่วมกัน และ Passage Plan ที่ระบบเบื้องหลังเขียนให้แผนแบบเสียงเมื่อสมาชิกยังไม่ได้เขียนเอง ทำงานบนระบบเบื้องหลังที่มีคีย์ของ Claude, Grok, ChatGPT และ Gemini",
   "Yours": "ของคุณ",
-  "Which trades to count: yours, those copied from other eToro traders, or both.": "นับเทรดใด: ของคุณ, ที่คัดลอกจากเทรดเดอร์ eToro คนอื่น หรือทั้งสองแบบ"
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "นับเทรดใด: ของคุณ, ที่คัดลอกจากเทรดเดอร์ eToro คนอื่น หรือทั้งสองแบบ",
+  "**Profit and loss from closed trades**": "**กำไรขาดทุนจากเทรดที่ปิดแล้ว**",
+  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "ผลของแต่ละเทรดรวมสะสมในวันที่ปิดเทรด นี่ไม่ใช่มูลค่าบัญชีของคุณ: ไม่รวมเงินฝาก การถอนเงิน และสถานะที่ยังเปิดอยู่ และผลขาดทุนจะแสดงเมื่อปิดเทรดแล้วเท่านั้น"
 }

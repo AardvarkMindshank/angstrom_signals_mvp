@@ -2381,7 +2381,6 @@
   "Gross wins divided by gross losses.": "Tổng lãi gộp chia cho tổng lỗ gộp.",
   "Winners / losers.": "Thắng / thua.",
   "{n} closed trades": "{n} giao dịch đã đóng",
-  "**Equity curve**": "**Đường kết quả**",
   "**By asset class**": "**Theo loại tài sản**",
   "**Results by regime at entry**": "**Kết quả theo chế độ thị trường lúc vào lệnh**",
   "Shows what happened together, not a cause.": "Cho thấy điều gì xảy ra cùng lúc, không phải nguyên nhân.",
@@ -2501,5 +2500,7 @@
   "Open Tides ›": "Mở Tides ›",
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Viết Triển vọng buổi sáng dùng chung, và các Passage Plan mà tiến trình nền viết cho bản kế hoạch nói khi thành viên chưa tự viết. Chạy trên tiến trình nền, nơi có khóa Claude, Grok, ChatGPT và Gemini.",
   "Yours": "Của bạn",
-  "Which trades to count: yours, those copied from other eToro traders, or both.": "Tính giao dịch nào: của bạn, giao dịch sao chép từ trader eToro khác, hoặc cả hai."
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "Tính giao dịch nào: của bạn, giao dịch sao chép từ trader eToro khác, hoặc cả hai.",
+  "**Profit and loss from closed trades**": "**Lãi lỗ từ các giao dịch đã đóng**",
+  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "Kết quả của từng giao dịch được cộng dồn vào ngày đóng. Đây không phải giá trị tài khoản của bạn: tiền nạp, tiền rút và vị thế đang mở không được tính, và khoản lỗ chỉ hiện khi giao dịch đã đóng."
 }

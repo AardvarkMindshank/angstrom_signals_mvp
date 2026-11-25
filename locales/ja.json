@@ -2381,7 +2381,6 @@
   "Gross wins divided by gross losses.": "総利益 ÷ 総損失。",
   "Winners / losers.": "勝ち / 負け。",
   "{n} closed trades": "決済済み取引 {n} 件",
-  "**Equity curve**": "**損益曲線**",
   "**By asset class**": "**資産クラス別**",
   "**Results by regime at entry**": "**エントリー時のレジーム別の結果**",
   "Shows what happened together, not a cause.": "同時に起きたことを示すもので、原因ではありません。",
@@ -2501,5 +2500,7 @@
   "Open Tides ›": "Tidesを開く ›",
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "全員共通の「モーニング・アウトルック」と、メンバーがまだ書いていないときに音声プラン用にバックグラウンドワーカーが書く Passage Plan を作成します。Claude、Grok、ChatGPT、Gemini のキーを持つバックグラウンドワーカーで動きます。",
   "Yours": "自分",
-  "Which trades to count: yours, those copied from other eToro traders, or both.": "集計する取引:自分の取引、他の eToro トレーダーからコピーした取引、またはその両方。"
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "集計する取引:自分の取引、他の eToro トレーダーからコピーした取引、またはその両方。",
+  "**Profit and loss from closed trades**": "**決済済み取引の損益**",
+  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "各取引の結果を決済日に積み上げたものです。口座残高ではありません。入金・出金や保有中のポジションは含まれず、損失は取引を決済した時点で初めて表示されます。"
 }

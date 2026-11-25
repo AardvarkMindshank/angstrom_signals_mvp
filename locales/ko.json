@@ -2381,7 +2381,6 @@
   "Gross wins divided by gross losses.": "총이익을 총손실로 나눈 값.",
   "Winners / losers.": "이긴 거래 / 진 거래.",
   "{n} closed trades": "청산된 거래 {n}건",
-  "**Equity curve**": "**손익 곡선**",
   "**By asset class**": "**자산군별**",
   "**Results by regime at entry**": "**진입 시 레짐별 결과**",
   "Shows what happened together, not a cause.": "함께 일어난 일을 보여줄 뿐 원인이 아닙니다.",
@@ -2501,5 +2500,7 @@
   "Open Tides ›": "Tides 열기 ›",
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "모두가 함께 듣는 모닝 아웃룩와, 회원이 아직 작성하지 않았을 때 음성 플랜용으로 백그라운드 작업이 작성하는 Passage Plan을 씁니다. Claude, Grok, ChatGPT, Gemini 키가 있는 백그라운드 작업에서 실행됩니다.",
   "Yours": "내 거래",
-  "Which trades to count: yours, those copied from other eToro traders, or both.": "집계할 거래: 내 거래, 다른 eToro 트레이더에게서 복사한 거래, 또는 둘 다."
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "집계할 거래: 내 거래, 다른 eToro 트레이더에게서 복사한 거래, 또는 둘 다.",
+  "**Profit and loss from closed trades**": "**청산된 거래의 손익**",
+  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "각 거래의 결과를 청산한 날에 누적한 값입니다. 계좌 가치가 아닙니다. 입금, 출금, 보유 중인 포지션은 포함되지 않으며, 손실은 거래를 청산해야 표시됩니다."
 }

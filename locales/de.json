@@ -2381,7 +2381,6 @@
   "Gross wins divided by gross losses.": "Bruttogewinne geteilt durch Bruttoverluste.",
   "Winners / losers.": "Gewinner / Verlierer.",
   "{n} closed trades": "{n} geschlossene Trades",
-  "**Equity curve**": "**Ergebniskurve**",
   "**By asset class**": "**Nach Anlageklasse**",
   "**Results by regime at entry**": "**Ergebnisse nach Regime beim Einstieg**",
   "Shows what happened together, not a cause.": "Zeigt, was zusammen auftrat, keine Ursache.",
@@ -2501,5 +2500,7 @@
   "Open Tides ›": "Tides öffnen ›",
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Schreibt den gemeinsamen Morgenausblick und die Passage Plans, die der Hintergrund-Worker für den gesprochenen Plan schreibt, wenn das Mitglied noch keinen geschrieben hat. Läuft auf dem Hintergrund-Worker, der die Schlüssel für Claude, Grok, ChatGPT und Gemini hat.",
   "Yours": "Meine",
-  "Which trades to count: yours, those copied from other eToro traders, or both.": "Welche Trades gezählt werden: deine, die von anderen eToro-Tradern kopierten oder beide."
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "Welche Trades gezählt werden: deine, die von anderen eToro-Tradern kopierten oder beide.",
+  "**Profit and loss from closed trades**": "**Gewinn und Verlust aus geschlossenen Trades**",
+  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "Das Ergebnis jedes Trades, aufaddiert am Tag seiner Schließung. Das ist nicht dein Kontowert: Ein- und Auszahlungen sowie offene Positionen sind nicht enthalten, und ein Verlust erscheint erst, wenn der Trade geschlossen ist."
 }

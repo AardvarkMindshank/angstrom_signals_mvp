@@ -2381,7 +2381,6 @@
   "Gross wins divided by gross losses.": "Total keuntungan kotor dibagi total kerugian kotor.",
   "Winners / losers.": "Menang / kalah.",
   "{n} closed trades": "{n} trading ditutup",
-  "**Equity curve**": "**Kurva hasil**",
   "**By asset class**": "**Menurut kelas aset**",
   "**Results by regime at entry**": "**Hasil menurut rezim saat masuk**",
   "Shows what happened together, not a cause.": "Menunjukkan apa yang terjadi bersamaan, bukan penyebab.",
@@ -2501,5 +2500,7 @@
   "Open Tides ›": "Buka Tides ›",
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "Menulis Prospek Pagi bersama, dan Passage Plan yang ditulis worker latar belakang untuk rencana lisan saat anggota belum menulisnya. Berjalan di worker latar belakang, yang punya kunci Claude, Grok, ChatGPT, dan Gemini.",
   "Yours": "Milik Anda",
-  "Which trades to count: yours, those copied from other eToro traders, or both.": "Trade mana yang dihitung: milik Anda, yang disalin dari trader eToro lain, atau keduanya."
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "Trade mana yang dihitung: milik Anda, yang disalin dari trader eToro lain, atau keduanya.",
+  "**Profit and loss from closed trades**": "**Laba rugi dari trade yang ditutup**",
+  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "Hasil setiap trade dijumlahkan pada hari trade itu ditutup. Ini bukan nilai akun Anda: setoran, penarikan, dan posisi terbuka tidak termasuk, dan kerugian baru tampak setelah trade ditutup."
 }

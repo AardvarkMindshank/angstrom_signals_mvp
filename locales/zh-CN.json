@@ -2381,7 +2381,6 @@
   "Gross wins divided by gross losses.": "总盈利除以总亏损。",
   "Winners / losers.": "盈利 / 亏损。",
   "{n} closed trades": "{n} 笔已平仓交易",
-  "**Equity curve**": "**收益曲线**",
   "**By asset class**": "**按资产类别**",
   "**Results by regime at entry**": "**按入场时行情状态的结果**",
   "Shows what happened together, not a cause.": "显示同时发生的情况，并非原因。",
@@ -2501,5 +2500,7 @@
   "Open Tides ›": "打开 Tides ›",
   "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys.": "撰写大家共享的晨间展望，以及会员尚未撰写时由后台程序为语音计划撰写的 Passage Plan。在拥有 Claude、Grok、ChatGPT 和 Gemini 密钥的后台程序上运行。",
   "Yours": "我的",
-  "Which trades to count: yours, those copied from other eToro traders, or both.": "统计哪些交易:你自己的、从其他 eToro 交易者复制的,或两者。"
+  "Which trades to count: yours, those copied from other eToro traders, or both.": "统计哪些交易:你自己的、从其他 eToro 交易者复制的,或两者。",
+  "**Profit and loss from closed trades**": "**已平仓交易的盈亏**",
+  "Each trade's result added up on the day it closed. This is not your account value: money paid in or taken out and open positions are not included, and a loss only shows once the trade is closed.": "每笔交易的结果在平仓当天累加。这不是你的账户价值:不包括入金、出金和未平仓持仓,亏损只有在平仓后才会显示。"
 }

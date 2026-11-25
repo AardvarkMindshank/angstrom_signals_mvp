@@ -370,7 +370,11 @@ def _overview(st, trips: list[dict], snaps: dict, copied: bool) -> None:
     platforms = tradelog.stats_by(trips, "platform", copied)
     if len(curve) >= 2:
         with st.container(key="tl_card_curve"):
-            st.html(CSS + f"<div class='tl-h'>{html.escape(t('**Equity curve**').strip('*'))}</div>")
+            # Not the account's value (no deposits, withdrawals or open positions): said so, 26 Nov 2026.
+            st.html(CSS + f"<div class='tl-h'>{html.escape(t('**Profit and loss from closed trades**').strip('*'))}</div>")
+            st.caption(t("Each trade's result added up on the day it closed. This is not your account value: money "
+                         "paid in or taken out and open positions are not included, and a loss only shows once the "
+                         "trade is closed."))
             st.line_chart(pd.DataFrame({t("Net result (USD)"): [v for _, v in curve]},
                                        index=pd.to_datetime([d for d, _ in curve], utc=True, format="ISO8601")),
                           height=220)
