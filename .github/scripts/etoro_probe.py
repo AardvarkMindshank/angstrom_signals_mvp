@@ -202,6 +202,23 @@ def main() -> int:
         print("Missing secrets: add ETORO_API_KEY and ETORO_USER_KEY in GitHub (Settings, Secrets, Actions).")
         return 1
     min_date = os.environ.get("MIN_DATE") or "2010-01-01"
+    if os.environ.get("MODE") == "names":           # public instrument names for a few ids, and a candle check
+        import requests as _rq
+        sys.path.insert(0, ".")
+        import tradelog
+        keys = {"api_key": api_key, "user_key": user_key}
+        sess = _rq.Session()
+        ids = [int(x) for x in (os.environ.get("MIN_DATE") or "").split(",") if x.strip().isdigit()]
+        got = tradelog.fetch_instruments(sess, keys, ids)
+        for i in ids:
+            v = got.get(i, {})
+            print(f"  {i}: {v.get('instrumentDisplayName')!r} {v.get('symbolFull')!r} type {v.get('instrumentTypeID')}")
+        r = sess.get(f"https://public-api.etoro.com/api/v1/market-data/instruments/{ids[0]}/history/candles/asc/OneWeek/1000",
+                     headers={"x-request-id": str(uuid.uuid4()), "x-api-key": api_key, "x-user-key": user_key}, timeout=60)
+        body = r.json() if r.ok else {}
+        c = ((body.get("candles") or [{}])[0] or {}).get("candles") or []
+        print(f"weekly candles for {ids[0]}: HTTP {r.status_code}, {len(c)}" + (f", {c[0]['fromDate'][:10]} to {c[-1]['fromDate'][:10]}" if c else ""))
+        return 0
     if os.environ.get("MODE") == "export":         # written to a file that the next step encrypts; never printed
         import json as _json
         import requests as _rq
