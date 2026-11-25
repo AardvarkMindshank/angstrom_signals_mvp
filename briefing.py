@@ -616,6 +616,7 @@ PLAN_HEADINGS = {"conditions": "First, the conditions.", "weather on the route":
 
 def _say_numbers(text: str) -> str:
     """Signs and symbols a voice reads badly, as words: +2.1% -> plus 2.1 percent, 62/100 -> 62 out of 100."""
+    text = full_dates(text)
     text = re.sub(r"(?<![\w.])\+(?=\d)", "plus ", text)
     text = re.sub(r"(?<![\w.])[-−–](?=\d)", "minus ", text)
     text = re.sub(r"(\d)\s*/\s*100\b", r"\1 out of 100", text)
@@ -752,9 +753,25 @@ def plain_script(facts: dict, b: dict, day: datetime) -> str:
     return " ".join(x for x in out if x)
 
 
+_MONTHS = {"jan": "January", "feb": "February", "mar": "March", "apr": "April", "jun": "June", "jul": "July",
+           "aug": "August", "sep": "September", "sept": "September", "oct": "October", "nov": "November",
+           "dec": "December"}
+_DAYS = {"mon": "Monday", "tue": "Tuesday", "tues": "Tuesday", "wed": "Wednesday", "thu": "Thursday",
+         "thur": "Thursday", "thurs": "Thursday", "fri": "Friday", "sat": "Saturday", "sun": "Sunday"}
+_MONTH_RE = re.compile(r"(?<=\d )(" + "|".join(_MONTHS) + r")\b\.?|\b(" + "|".join(_MONTHS) + r")\.?(?= \d)", re.I)
+_DAY_RE = re.compile(r"\b(" + "|".join(d.capitalize() for d in _DAYS) + r")\b\.?(?=,? \d)")   # "Fri 4", not "sun 3"
+
+
+def full_dates(text: str) -> str:
+    """Dates said in full (25 Nov 2026, Angus: "Dec" is confusing in a spoken briefing): "Fri 4 Dec" -> "Friday 4
+    December". Only short names next to a day number change, so words like "march" or "sun" are left alone."""
+    text = _MONTH_RE.sub(lambda m: _MONTHS[(m.group(1) or m.group(2)).lower()], text or "")
+    return _DAY_RE.sub(lambda m: _DAYS[m.group(1).lower()], text)
+
+
 def clean(text: str) -> str:
-    """Strip what a voice would read out badly: markdown marks, emoji, URLs, stray symbols."""
-    text = re.sub(r"https?://\S+", "", text or "")
+    """Strip what a voice would read out badly: markdown marks, emoji, URLs, stray symbols; dates in full."""
+    text = full_dates(re.sub(r"https?://\S+", "", text or ""))
     text = re.sub(r"[*_#`>|~\[\]]", "", text).replace("\\n", " ")
     text = re.sub(r"[\U0001F000-\U0001FAFF☀-➿️]", "", text)
     return re.sub(r"[ \t]+", " ", text).strip()

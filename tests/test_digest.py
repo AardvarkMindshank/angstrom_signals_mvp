@@ -85,14 +85,14 @@ def test_render_has_sections_times_and_escaping():
     subject, page, plain = digest.render_digest(
         notes, [{"symbol": "BTC", "trend": 72}], cfg(), "https://app.example.com"
     )
-    assert subject == "Angstrom daily summary: 2 alerts"
+    assert subject == "MarketNavi daily summary: 2 alerts"
     assert "Turned up (1)" in page and "Turned down (1)" in page
     assert "BTC &lt;b&gt;" in page and "&amp; rising" in page
     assert "08:30" in page  # 01:30 UTC shown in Bangkok time
     assert "https://app.example.com" in page and "Asia/Bangkok" in page
     assert "Turned up (1)" in plain and "- ETH: Score fell to 28" in plain
     one = digest.render_digest(notes[:1], [], cfg(), "u")[0]
-    assert one == "Angstrom daily summary: 1 alert"
+    assert one == "MarketNavi daily summary: 1 alert"
 
 
 class FakeTable:
@@ -268,7 +268,7 @@ def test_watchlist_section_colours_and_text():
         asset("tsla", -75, "stock", price=403.3, change=-0.018, sentiment=38, market_score=44, stretch=30, flow=-5),
     ]
     subject, page, plain = digest.render_digest([], results, cfg(), "https://app")
-    assert subject == "Angstrom daily summary: no new alerts"
+    assert subject == "MarketNavi daily summary: no new alerts"
     assert "Your watchlist today" in page and "&#9650; 2.3%" in page and "&#9660; 1.8%" in page
     assert "#15803d" in page and "#b91c1c" in page          # deep green and red bars for Trend +75 and -75
     assert "- BTC: 67,250 (+2.3%) · trend +75 · sentiment +28" in plain

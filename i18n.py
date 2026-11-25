@@ -11,7 +11,7 @@ Which language a person sees, in order:
 Never the person's location or IP address: an English speaker in Thailand sees English.
 
 A language is "live" (everyone can pick it), "beta" (admins and ?lang= links only, while it is checked), or not
-offered yet. Product names (Angstrom, Lattice, Prism, Funnels, Tides, Sonar, Navigator) stay in English.
+offered yet. Product names (MarketNavi, Lattice, Prism, Funnels, Tides, Sonar, Navigator) stay in English.
 
 Writing text in the app:
     t("Save")                                  plain text

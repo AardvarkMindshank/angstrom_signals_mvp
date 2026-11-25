@@ -1,6 +1,6 @@
 {
   "name": "MarketNavi",
-  "short_name": "Angstrom",
+  "short_name": "MarketNavi",
   "description": "Navigate crypto and equity markets with AI-guided analysis and alerts, with a community alongside.",
   "id": "/",
   "start_url": "/?source=homescreen",

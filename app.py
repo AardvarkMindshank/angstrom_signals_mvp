@@ -384,7 +384,7 @@ export default function(component) {
     put("link", { rel: "apple-touch-icon", href: "/app/static/icons/apple-touch-icon.png" });
     put("meta", { name: "apple-mobile-web-app-capable", content: "yes" });
     put("meta", { name: "mobile-web-app-capable", content: "yes" });
-    put("meta", { name: "apple-mobile-web-app-title", content: "Angstrom" });
+    put("meta", { name: "apple-mobile-web-app-title", content: "MarketNavi" });
     put("meta", { name: "apple-mobile-web-app-status-bar-style", content: "default" });
     put("meta", { name: "theme-color", content: "#0b2d72" });
     if ("serviceWorker" in navigator) {
@@ -4746,7 +4746,7 @@ def _push_settings() -> None:
                     st.toast(t("Push isn't fully set up on the server yet (the private push key is missing)."))
                 else:
                     sent = push_notify.send_to_user(supabase, user_id, {
-                        "title": "📱 Angstrom", "url": "/", "tag": "test",
+                        "title": "📱 MarketNavi", "url": "/", "tag": "test",
                         "body": t("Notifications work. Alerts, funnel Candidates and shared charts will arrive like this.")})
                     st.toast(t('Test sent to {sent} device{s_if_sent_1_else}.', sent=sent, s_if_sent_1_else='s' if sent != 1 else '') if sent
                              else t("The test couldn't be delivered. Try turning notifications off and on again."))
@@ -8972,7 +8972,7 @@ tested what usually followed these answers.
 - **Not checked**: an asset that hasn't reached a stage is never counted as a No there.
 
 **Provided funnels and your own** (the same idea as provided Groups and Sets)
-- Angstrom provides four: **Trend crypto longs ▲**, **Trend crypto shorts ▼**, **Trend equity longs ▲** and
+- MarketNavi provides four: **Trend crypto longs ▲**, **Trend crypto shorts ▼**, **Trend equity longs ▲** and
   **Trend equity shorts ▼**. They can't be changed or deleted. To use one, press **Make my own copy**: your copy
   runs for your account, with its own places and alerts. Longs and shorts are separate funnels.
 - **Crypto:** daily trend (wide) → daily WaveTrend turn → 12-hour → 4-hour (the shortlist) → 1-hour entry.
@@ -8986,7 +8986,7 @@ tested what usually followed these answers.
   the candle came back to the EMA 20 and closed on the trend's side (or crossed back), momentum agrees, and volume
   is at least 0.7 times usual. Each stage's Set is a provided Set you can open in Lattice or Prism.
 - Your copy is labelled *Your copy of a provided funnel* until you change it, then *Customised*; one built from
-  your own Sets is *My funnel*. Changed funnels are not reviewed or tested by Angstrom.
+  your own Sets is *My funnel*. Changed funnels are not reviewed or tested by MarketNavi.
 
 **On the tables: Dynamic funnel**
 - Above the crypto or equity table, switch **My Watchlist** to **Dynamic funnel** (your choice is saved). Each of
@@ -9065,10 +9065,10 @@ that checks the same Set, so funnels stay quick as more people use them.
   market's mood.
 - 📱 **Phone and desktop notifications**: every notification (alerts, funnel Candidates, shared charts, community
   news) can also pop up on your phone or computer, within a few minutes. Turn them on **per device** with 🔔 under
-  Notifications, and use 📨 to send yourself a test. On an **iPhone or iPad**, first add Angstrom to your Home Screen
+  Notifications, and use 📨 to send yourself a test. On an **iPhone or iPad**, first add MarketNavi to your Home Screen
   (Safari → Share → **Add to Home Screen**, iOS 16.4 or later), open it from the new icon and turn them on there.
   On a computer or Android phone they work straight from the browser, and Chrome and Edge also offer to install
-  Angstrom as an app (the install icon in the address bar).
+  MarketNavi as an app (the install icon in the address bar).
 - 📋 **Include watchlist summary** (under the daily summary, on by default): adds a colour-coded look at your
   watchlist with price, the change since the previous daily close, the Trend, Stretch and Flow readings and sentiment for your strongest
   and weakest Trends. With it on,
@@ -10114,7 +10114,7 @@ with tracked_expander("⚙️ " + t("Settings"), "settings_panel", sidebar=True)
                 help=t("Back to saved: puts the pickers back to your saved colours."),
             )
             if st.button(t(":material/restart_alt:"), key="reset_colours", width="content",
-                         help=t("Reset to default: the original Angstrom colours.")):
+                         help=t("Reset to default: the original MarketNavi colours.")):
                 st.session_state._reset_colours = True
                 save_account_settings({"colours": {key: default for key, default in _THEME_COLOURS}})
                 st.rerun()
@@ -10284,7 +10284,7 @@ def _email_feedback(kind: str, body: str, user_email: str, user_id: str,
     payload = {
         "from": sender,
         "to": [inbox],
-        "subject": f"Angstrom feedback: {label}",
+        "subject": f"MarketNavi feedback: {label}",
         "html": (
             f"<p><strong>{label}</strong> from {html.escape(user_email or 'unknown account')}</p>"
             f"<p>User {html.escape(user_id)} · status submitted</p>"
@@ -10344,7 +10344,7 @@ def _email_report(reason: str, note: str, place: str, kind: str, row: dict, asse
     payload = {
         "from": sender,
         "to": [inbox],
-        "subject": f"Angstrom report: {label}",
+        "subject": f"MarketNavi report: {label}",
         "html": (
             f"<p><strong>{html.escape(label)}</strong> · {html.escape(where)} {html.escape(note_kind)}</p>"
             f"<p>Comment: {html.escape(str(row.get('body') or ''))}</p>"

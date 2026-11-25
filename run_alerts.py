@@ -123,7 +123,7 @@ def send_alert_email(to_email: str, asset_name: str, message: str, logo_url: str
         send_alert_email._warned_test_sender = True
     safe_name = html.escape(str(asset_name))
     safe_message = html.escape(str(message))
-    subject = "Angstrom alert: " + " ".join(str(asset_name).split())
+    subject = "MarketNavi alert: " + " ".join(str(asset_name).split())
     app_url = (os.getenv("APP_URL") or "https://app.marketnavi.ai").strip()
     page, plain = render_email(
         f"{asset_logo(logo_url, size=26)}{safe_name} crossed an alert boundary",

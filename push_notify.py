@@ -31,7 +31,7 @@ TITLES = {                    # the notification's title by kind; anything else:
     "group_invite": "👥 Community invite",
     "group_joined": "👥 Community",
     "invite_joined": "👋 Invite accepted",
-    "test": "📱 Angstrom",
+    "test": "📱 MarketNavi",
 }
 
 

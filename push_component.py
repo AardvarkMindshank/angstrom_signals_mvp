@@ -49,11 +49,11 @@ export default function anglePush(component) {
   const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 
   if (apple && !standalone) {
-    line(T("On an {device}, notifications work in the <b>Angstrom app on your Home Screen</b>:", {device: shown}));
+    line(T("On an {device}, notifications work in the <b>MarketNavi app on your Home Screen</b>:", {device: shown}));
     const ol = document.createElement("ol");
     ol.innerHTML = "<li>" + T("Open this site in <b>Safari</b>.") + "</li><li>" +
       T("Tap <b>Share</b> (the square with an arrow), then <b>Add to Home Screen</b>.") + "</li><li>" +
-      T("Open Angstrom from its new icon, sign in, and turn notifications on here.") + "</li>";
+      T("Open MarketNavi from its new icon, sign in, and turn notifications on here.") + "</li>";
     root.appendChild(ol);
     line(T("Needs iOS 16.4 or later."), "quiet");
     return;

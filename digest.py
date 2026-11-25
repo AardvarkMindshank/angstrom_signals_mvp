@@ -353,9 +353,9 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
     plural = "" if total == 1 else "s"
     with_watchlist = watchlist_on(config) and bool(results)
     if total:
-        subject = t('Angstrom daily summary: {total} alert{plural}', total=total, plural=plural)
+        subject = t('MarketNavi daily summary: {total} alert{plural}', total=total, plural=plural)
     else:
-        subject = t("Angstrom daily summary: no new alerts")
+        subject = t("MarketNavi daily summary: no new alerts")
 
     html_parts: list[str] = []
     plain: list[str] = []
@@ -434,7 +434,7 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
             plain.append(f"- {name}: {text}" + (f" ({when})" if when else ""))
         plain.append("")
         if not total:
-            subject = t('Angstrom daily summary: {len_prism} Prism match{if_len_prism_1_else_es}', len_prism=len(prism), if_len_prism_1_else_es='' if len(prism) == 1 else 'es')
+            subject = t('MarketNavi daily summary: {len_prism} Prism match{if_len_prism_1_else_es}', len_prism=len(prism), if_len_prism_1_else_es='' if len(prism) == 1 else 'es')
 
     if funnels:
         f_html, f_plain = _funnel_section(funnels)
@@ -442,7 +442,7 @@ def render_digest(notes, results, config, app_url: str, markets=None, prism=None
         plain += f_plain
         if not total and not prism:
             n = sum(f["count"] for f in funnels)
-            subject = t('Angstrom daily summary: {n} funnel Candidate{if_n_1_else_s}', n=n, if_n_1_else_s='' if n == 1 else 's')
+            subject = t('MarketNavi daily summary: {n} funnel Candidate{if_n_1_else_s}', n=n, if_n_1_else_s='' if n == 1 else 's')
 
     if listen:
         # 🎧 The spoken briefings (briefing.listen_links): the newest Morning Outlook, and your Passage Plan.

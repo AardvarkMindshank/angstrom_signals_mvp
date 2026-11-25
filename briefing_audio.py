@@ -60,6 +60,9 @@ def speak(text: str, path: Path, voice: str = "bf_emma", models: Path = MODELS, 
     your daily market briefing for …"); returns its length in seconds."""
     from kokoro_onnx import Kokoro
 
+    import briefing
+
+    text, tag = briefing.full_dates(text), briefing.full_dates(tag)        # "4 December", never "4 Dec" (25 Nov 2026)
     kokoro = Kokoro(str(models / "kokoro-v1.0.onnx"), str(models / "voices-v1.0.bin"))
     lang = "en-gb" if voice.startswith("b") else "en-us"
     pieces, rate = [], 24000

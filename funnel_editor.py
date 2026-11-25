@@ -240,11 +240,11 @@ def render(st, supabase, user_id: str) -> None:
     badge = provenance(f, library)
     st.markdown(f"**{t(MARKET_WORDS[market])}** · {fn.DIRECTION_ICONS[f['direction']]} "
                 f"{'Long' if f['direction'] == 'long' else 'Short'} · *{badge}*"
-                + ("" if badge.startswith("Your copy") else t(" · not reviewed or tested by Angstrom")))
+                + ("" if badge.startswith("Your copy") else t(" · not reviewed or tested by MarketNavi")))
     if badge.startswith("Your copy of an earlier version"):
         latest = template(market, f["direction"], ft.kind_of(f["stages"]))
         if st.button(t("⬆ Update to the latest provided version"), key=f"fe_latest_{pick}",
-                     help=t("Angstrom's provided funnel has changed since you made your copy (its daily stage reads "
+                     help=t("MarketNavi's provided funnel has changed since you made your copy (its daily stage reads "
                           "WaveTrend turning back from an extreme; crypto funnels now start with a wider daily-trend "
                           "stage). This takes its stages; your name, pool and alerts stay. Then Save and activate: "
                           "every asset starts again from the pool, quietly.")):
@@ -471,10 +471,10 @@ def pool_data(f: dict, readonly: bool = False) -> dict:
     else:
         summary = size_words(top) + (f" · {t('at least {v} traded a day', v=_money(vol))}" if vol else "")
     if readonly:
-        summary = t("All eligible = {whole} that pass Angstrom's data checks.", whole=whole)
+        summary = t("All eligible = {whole} that pass MarketNavi's data checks.", whole=whole)
     return {"top": top, "min_volume": vol, "watchlist_only": only, "summary": summary,
             "sizes": [[n, size_words(n)] for n in POOL_SIZES], "floors": [[v, vol_words(v)] for v in floors],
-            "help": t("All eligible = {whole} that pass Angstrom's data checks. Narrow it by size, by how much trades a day (on the coin's venue: Binance, or across exchanges for Yahoo coins; equities in New York), or to your own watchlist. Changing the pool starts every asset again from the pool.", whole=whole),
+            "help": t("All eligible = {whole} that pass MarketNavi's data checks. Narrow it by size, by how much trades a day (on the coin's venue: Binance, or across exchanges for Yahoo coins; equities in New York), or to your own watchlist. Changing the pool starts every asset again from the pool.", whole=whole),
             "watch_help": t("The funnel checks only your own watchlist's eligible {coins_if_market_crypto_e}, not the market.",
                             coins_if_market_crypto_e='coins' if market == 'crypto' else 'equities')}
 
@@ -589,7 +589,7 @@ def _provided_view(st, supabase, pick: str, funnels: list[dict], library: dict) 
     t_ = template(market, direction, kind)
     if kind in ABOUT:
         st.caption(t(ABOUT[kind]))
-    st.markdown(t("**{market_words_market}** · {fn_direction_icons_direc} {long_if_direction_long_e} · *Provided by Angstrom* · can't be changed or deleted", market_words_market=t(MARKET_WORDS[market]), fn_direction_icons_direc=fn.DIRECTION_ICONS[direction], long_if_direction_long_e='Long' if direction == 'long' else 'Short'))
+    st.markdown(t("**{market_words_market}** · {fn_direction_icons_direc} {long_if_direction_long_e} · *Provided by MarketNavi* · can't be changed or deleted", market_words_market=t(MARKET_WORDS[market]), fn_direction_icons_direc=fn.DIRECTION_ICONS[direction], long_if_direction_long_e='Long' if direction == 'long' else 'Short'))
     st.caption(t('{a_coin_if_market_crypto_} leaves a stage after two No closes in a row. Alerts on new Candidates.',
                  a_coin_if_market_crypto_='A coin' if market == 'crypto' else 'An equity'))
     _readonly_board(st, t_, f"{pick}:{market}:{direction}")

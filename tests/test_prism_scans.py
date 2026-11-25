@@ -251,7 +251,7 @@ def test_digest_gains_a_prism_section_only_when_there_are_prism_notes():
     note = {"asset_symbol": "bitcoin", "asset_name": "Bitcoin", "alert_type": "prism",
             "message": "Prism: “Daily check” says Yes. Every line holds.", "created_at": "2026-11-05T00:12:00+00:00"}
     subject, page, text = digest.render_digest([], [], config, "https://app", prism=[note])
-    assert subject == "Angstrom daily summary: 1 Prism match" and "Prism scans (1)" in text and "Bitcoin" in page
+    assert subject == "MarketNavi daily summary: 1 Prism match" and "Prism scans (1)" in text and "Bitcoin" in page
 
 
 def test_sql_is_rerunnable_owner_only_and_claims_once():

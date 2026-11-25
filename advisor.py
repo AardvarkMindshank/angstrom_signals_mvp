@@ -264,7 +264,7 @@ def language_line(code: str | None = None) -> list[str]:
     if not lang or code == i18n.BASE:
         return []
     return ["", f"Language: the person uses the app in {lang['english']} ({lang['name']}). Write your whole answer "
-                f"in {lang['english']}. Keep product names in English (Angstrom, Lattice, Prism, Funnels, Tides, "
+                f"in {lang['english']}. Keep product names in English (MarketNavi, Lattice, Prism, Funnels, Tides, "
                 "Sonar, Navigator) and quote the names of signals, Groups and Sets as they are written."]
 
 

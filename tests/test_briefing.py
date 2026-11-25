@@ -293,3 +293,13 @@ def test_spoken_plan_reads_in_paragraphs_and_sounds_the_same():
     assert out.count("  \nExpectation:") == 2 and out.endswith("  \nFair winds and following seas.")
     assert briefing.plan_paragraphs(out) == out
     assert briefing.plan_paragraphs(" ".join(out.split())) == out
+
+
+def test_dates_are_said_in_full():
+    import briefing
+
+    assert briefing.full_dates("Jobs report on 4 Dec, Fed on 9 Dec") == "Jobs report on 4 December, Fed on 9 December"
+    assert briefing.full_dates("Fri 4 Dec, 13:30") == "Friday 4 December, 13:30"
+    assert briefing.full_dates("Sept 30 and Wed, 25 Nov") == "September 30 and Wednesday, 25 November"
+    assert briefing.full_dates("They march on in the sun.") == "They march on in the sun."
+    assert "December" in briefing.clean("CPI on 10 Dec.") and "December" in briefing._say_numbers("on 10 Dec")
