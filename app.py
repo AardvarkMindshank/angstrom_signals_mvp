@@ -6176,8 +6176,13 @@ def _password_login() -> None:
                                            else t("Login failed. Check your email and password."))
 
 
+_HANDOFF_ASKED = False          # the handoff ask is drawn at most once per run (one key)
+
+
 def _take_handoff() -> None:
     """A pop-out tab has no login yet. Ask the signed-in tab in this browser for one."""
+    global _HANDOFF_ASKED
+    _HANDOFF_ASKED = True
     reported = _handoff_ask(
         key="handoff_ask",
         data={"current": ""},
@@ -17368,7 +17373,11 @@ def render_social_popout(crypto_watchlist, stock_watchlist) -> None:
 
 
 def _keep_handoff_fresh() -> None:
-    """The main tab hands over a new access token when it renews its own. Use it here too."""
+    """The main tab hands over a new access token when it renews its own. Use it here too. Once per run."""
+    global _HANDOFF_ASKED
+    if _HANDOFF_ASKED:
+        return
+    _HANDOFF_ASKED = True
     reported = _handoff_ask(
         key="handoff_ask",
         data={"current": str(st.session_state.get("access_token") or "")},
@@ -17388,10 +17397,9 @@ def _keep_handoff_fresh() -> None:
             st.rerun()
 
 
-if _POPOUT_VIEW and _POPOUT_VIEW != "social" and st.session_state.get("refresh_token") == _POPOUT_MARK:
-    # The ✨ AI and 📓 Logbook panels (and other pop-outs) take the main page's renewed pass too, not only the social
-    # one: without it they lost their sign-in an hour after opening (26 Nov 2026).
-    _keep_handoff_fresh()
+# Every pop-out (the ✨ AI and 📓 Logbook panels included, not only the social one) takes the main page's renewed pass:
+# without it they lost their sign-in an hour after opening (26 Nov 2026). Asked once per run: a second ask in the
+# same run is a duplicate element and broke the Logbook panel (26 Nov 2026).
 if _POPOUT_VIEW == "social":
     _keep_handoff_fresh()
     remember_favourites()
