@@ -40,7 +40,8 @@ def _get(session, path: str, keys: dict, params: dict | None = None):
     for attempt in range(4):         # 504: eToro's own server timed out; 429: too fast. Wait and ask again.
         if attempt:
             time.sleep(10 * attempt)
-        r = session.get(f"{ETORO_API}{path}", headers=_headers(keys), params=params or {}, timeout=60)
+        url = ETORO_API.rsplit("/v1", 1)[0] + path if path.startswith("/v2/") else ETORO_API + path
+        r = session.get(url, headers=_headers(keys), params=params or {}, timeout=60)
         if r.status_code not in (504, 429):
             break
     if r.status_code in (401, 403):
@@ -217,9 +218,122 @@ def etoro_round_trips(positions: list[dict], instruments: dict[int, dict] | None
             "result_pct": round(net / invested * 100, 2) if invested else None,
             "copied": any(_num(p.get("socialTradeId")) for p in parts),
             "parts": len(parts),
+            **exit_facts(first, max(parts, key=lambda p: _when(p.get("closeTimestamp")) or max(closed)),
+                         invested, net),
         })
     trips.sort(key=lambda t: t["closed_at"], reverse=True)
     return trips
+
+
+NEW_TRIP_FIELDS = ("stop_loss", "take_profit", "trailing_stop", "exit_kind", "risk_r")
+EXIT_TOLERANCE = 0.006          # a close within 0.6% of the stop or target counts as hitting it
+
+
+def real_stop(entry: float | None, stop: float | None, leverage: float, is_long: bool) -> bool:
+    """True when the stop loss was set by the trader, not eToro's far default (0 for an unleveraged buy, or about
+    the margin's worth away for a leveraged trade)."""
+    if not entry or not stop or stop <= 0:
+        return False
+    dist = (entry - stop) / entry if is_long else (stop - entry) / entry
+    return 0 < dist < 0.8 / max(leverage or 1, 1)
+
+
+def real_target(entry: float | None, target: float | None, is_long: bool) -> bool:
+    """True when the take profit was set by the trader (eToro's default sits ten times or more away)."""
+    if not entry or not target or target <= 0:
+        return False
+    gain = (target - entry) / entry if is_long else (entry - target) / entry
+    return 0 < gain <= 2.0
+
+
+def exit_facts(first: dict, last: dict, invested: float, net: float) -> dict:
+    """Stop loss, take profit and trailing stop set on a trade, how it ended, and its result in R (multiples of
+    the money at risk at the stop loss). R and the stop-loss ending only when the trader set a real stop."""
+    entry, close = _num(first.get("openRate")), _num(last.get("closeRate"))
+    stop, target = _num(last.get("stopLossRate")), _num(last.get("takeProfitRate"))
+    trailing = bool(last.get("trailingStopLoss"))
+    is_long = bool(first.get("isBuy", True))
+    lev = _num(first.get("leverage")) or 1
+    has_stop, has_target = real_stop(entry, stop, lev, is_long), real_target(entry, target, is_long)
+    kind = "by_hand"
+    if entry and close:
+        if has_stop and abs(close - stop) / entry <= EXIT_TOLERANCE:
+            kind = "trailing_stop" if trailing else "stop_loss"
+        elif has_target and abs(close - target) / entry <= EXIT_TOLERANCE:
+            kind = "take_profit"
+    risk = None
+    if has_stop and invested:
+        risk = invested * lev * abs(entry - stop) / entry
+    return {"stop_loss": stop if has_stop else None, "take_profit": target if has_target else None,
+            "trailing_stop": trailing if has_stop else None, "exit_kind": kind,
+            "risk_r": round(net / risk, 2) if risk else None}
+
+
+def fetch_me(session, keys: dict) -> dict:
+    return _get(session, "/me", keys) or {}
+
+
+def fetch_daily_gain(session, keys: dict, username: str, today: str) -> list[list]:
+    """eToro's own return for each day since the account began: [[YYYY-MM-DD, fraction], ...] (0.01 = 1%)."""
+    body = _get(session, f"/v2/portfolios/{username}/gain/daily", keys, {"minDate": "2007-01-01", "maxDate": today})
+    out = []
+    for g in (body or {}).get("gains") or []:
+        if isinstance(g, dict) and g.get("date") and _num(g.get("gain")) is not None:
+            out.append([str(g["date"])[:10], _num(g["gain"])])
+    return sorted(out)
+
+
+def fetch_allocation(session, keys: dict, username: str, today: str) -> list[dict]:
+    """Share of the account in cash and in each asset, one entry per month end (eToro keeps about 3 years)."""
+    body = _get(session, f"/v2/portfolios/{username}/assets/history", keys,
+                {"minDate": "2018-01-01", "maxDate": today, "count": 0})
+    by_month: dict[str, dict] = {}
+    for r in (body or {}).get("results") or []:
+        if not isinstance(r, dict) or not r.get("date"):
+            continue
+        by_month[str(r["date"])[:7]] = r                     # the last day seen in each month
+    out = []
+    for month in sorted(by_month):
+        r = by_month[month]
+        assets = {str(a.get("symbol") or a.get("instrumentId")): _num(a.get("valuePct")) or 0
+                  for a in r.get("assets") or [] if isinstance(a, dict)}
+        out.append({"month": month, "cash": _num(r.get("cashOfTotalEquityPct")) or 0, "assets": assets})
+    return out
+
+
+def fetch_candles(session, keys: dict, instrument_id: int, interval: str = "OneDay", count: int = 1000) -> list:
+    """[[YYYY-MM-DD, open, high, low, close], ...] oldest first, from eToro (at most 1,000 candles)."""
+    body = _get(session, f"/market-data/instruments/{int(instrument_id)}/history/candles/asc/{interval}/{count}", keys)
+    groups = (body or {}).get("candles") or []
+    rows = (groups[0] or {}).get("candles") if groups and isinstance(groups[0], dict) else []
+    return [[str(c["fromDate"])[:10], _num(c.get("open")), _num(c.get("high")), _num(c.get("low")), _num(c.get("close"))]
+            for c in rows or [] if isinstance(c, dict) and c.get("fromDate")]
+
+
+def trade_moves(trip: dict, candles: list) -> dict:
+    """How much of the best price move a winning trade kept, and what the price did in the 20 trading days after
+    it closed (positive = further in the trade's favour). None when the candles don't cover the trade."""
+    if not candles:
+        return {"kept_pct": None, "after20_pct": None}
+    o, c = str(trip.get("opened_at"))[:10], str(trip.get("closed_at"))[:10]
+    if candles[0][0] > o:
+        return {"kept_pct": None, "after20_pct": None}
+    long = trip.get("direction") != "short"
+    entry, exit_ = _num(trip.get("entry_price")), _num(trip.get("exit_price"))
+    inside = [k for k in candles if o <= k[0] <= c]
+    after = [k for k in candles if k[0] > c]
+    kept = None
+    if inside and entry and exit_ and (_num(trip.get("net_result_usd")) or 0) > 0:
+        best = max(k[2] for k in inside if k[2] is not None) if long else min(k[3] for k in inside if k[3] is not None)
+        room = (best - entry) if long else (entry - best)
+        made = (exit_ - entry) if long else (entry - exit_)
+        if room > 0:
+            kept = round(max(0.0, min(made / room, 1.0)) * 100, 1)
+    later = None
+    if len(after) >= 20 and exit_ and after[19][4]:
+        move = after[19][4] / exit_ - 1
+        later = round((move if long else -move) * 100, 2)
+    return {"kept_pct": kept, "after20_pct": later}
 
 
 def fetch_portfolio(session, keys: dict) -> dict:
@@ -268,6 +382,10 @@ def etoro_open_positions(positions: list[dict], instruments: dict[int, dict] | N
             "pnl_usd": round(pnl, 2) if pnl is not None else None,
             "leverage": _num(p.get("leverage")) or 1,
             "copied": bool(p.get("_copied")),
+            "stop_loss": (_num(p.get("stopLossRate")) if real_stop(_num(p.get("openRate")), _num(p.get("stopLossRate")),
+                                                                  _num(p.get("leverage")) or 1, p.get("isBuy", True))
+                          else None),
+            "overnight_fees_usd": _num(p.get("totalFees")),
         })
     out.sort(key=lambda r: -(r["value_usd"] or 0))
     return out

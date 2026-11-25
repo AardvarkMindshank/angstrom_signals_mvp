@@ -127,6 +127,66 @@ def _update(supabase, conn_id: str, **fields) -> None:
     supabase.table("trade_connections").update(fields).eq("id", conn_id).execute()
 
 
+BENCHMARKS = {"btc": 100000, "spx": 27}          # eToro's Bitcoin and SPX500 instruments
+
+
+def _fetch_series(session, keys: dict, now: datetime) -> dict:
+    """eToro's daily return and allocation history for the account, and weekly benchmark prices. Each part is
+    skipped quietly when eToro doesn't give it (a key without that permission, or the service down)."""
+    today = now.date().isoformat()
+    out: dict = {}
+    try:
+        user = str((tradelog.fetch_me(session, keys) or {}).get("username") or "")
+    except tradelog.EtoroError:
+        user = ""
+    if user:
+        for kind, fetch in (("daily_gain", tradelog.fetch_daily_gain), ("allocation", tradelog.fetch_allocation)):
+            try:
+                out[kind] = fetch(session, keys, user, today)
+            except tradelog.EtoroError:
+                pass
+    bench = {}
+    for name, iid in BENCHMARKS.items():
+        try:
+            bench[name] = [[d, c] for d, _o, _h, _l, c in tradelog.fetch_candles(session, keys, iid, "OneWeek", 1000)
+                           if c]
+        except tradelog.EtoroError:
+            pass
+    if bench:
+        out["benchmarks"] = bench
+    return out
+
+
+def _save_series(supabase, conn: dict, series: dict, now: datetime) -> None:
+    """Keep the series (one row per kind). Quietly skipped until the insights SQL is run."""
+    for kind, data in series.items():
+        if not data:
+            continue
+        try:
+            supabase.table("trade_series").upsert({"connection_id": conn["id"], "user_id": conn["user_id"],
+                                                   "kind": kind, "data": data, "read_at": now.isoformat()},
+                                                  on_conflict="connection_id,kind").execute()
+        except Exception as exc:
+            print(f"Trade Log series skipped: {type(exc).__name__}")
+            return
+
+
+def _upsert_trips(supabase, rows: list[dict]) -> None:
+    """Save the round trips. Before the insights SQL is run the new columns don't exist yet: save without them."""
+    plain = None
+    for start in range(0, len(rows), 200):
+        part = rows[start:start + 200] if plain is None else [
+            {k: v for k, v in r.items() if k not in tradelog.NEW_TRIP_FIELDS} for r in rows[start:start + 200]]
+        try:
+            supabase.table("trade_round_trips").upsert(part, on_conflict="connection_id,position_id").execute()
+        except Exception:
+            if plain is not None:
+                raise
+            plain = True
+            part = [{k: v for k, v in r.items() if k not in tradelog.NEW_TRIP_FIELDS} for r in part]
+            supabase.table("trade_round_trips").upsert(part, on_conflict="connection_id,position_id").execute()
+
+
 def _save_open(supabase, conn: dict, portfolio: dict, rows: list[dict], now: datetime) -> None:
     """Replace this connection's open positions and note its cash. Quietly skipped until the SQL is run."""
     try:
@@ -135,7 +195,11 @@ def _save_open(supabase, conn: dict, portfolio: dict, rows: list[dict], now: dat
         rows = [{**r, "user_id": conn["user_id"], "connection_id": conn["id"], "read_at": now.isoformat()}
                 for r in rows]
         for start in range(0, len(rows), 200):
-            supabase.table("trade_open_positions").insert(rows[start:start + 200]).execute()
+            try:
+                supabase.table("trade_open_positions").insert(rows[start:start + 200]).execute()
+            except Exception:                       # before the insights SQL: without the newer columns
+                rows = [{k: v for k, v in r.items() if k not in ("stop_loss", "overnight_fees_usd")} for r in rows]
+                supabase.table("trade_open_positions").insert(rows[start:start + 200]).execute()
         _update(supabase, conn["id"], cash_usd=portfolio.get("cash"), open_pnl_usd=portfolio.get("pnl"),
                 portfolio_at=now.isoformat())
     except Exception as exc:
@@ -168,6 +232,7 @@ def sync_connection(supabase, conn: dict, session, inputs: Inputs, deadline: flo
         ids.discard(None)
         instruments = tradelog.fetch_instruments(session, keys, ids) if ids else {}
         types = tradelog.fetch_instrument_types(session, keys) if ids else {}
+        series = _fetch_series(session, keys, now)
     except tradelog.EtoroError as exc:
         _update(supabase, conn["id"], status="failing", last_error=str(exc)[:300], last_sync_at=now.isoformat(),
                 refresh_requested_at=None)
@@ -181,9 +246,8 @@ def sync_connection(supabase, conn: dict, session, inputs: Inputs, deadline: flo
         _save_open(supabase, conn, portfolio, tradelog.etoro_open_positions(portfolio["positions"], instruments,
                                                                             types, keys_map), now)
     rows = [{**t, "user_id": conn["user_id"], "connection_id": conn["id"]} for t in trips]
-    for start in range(0, len(rows), 200):
-        supabase.table("trade_round_trips").upsert(rows[start:start + 200],
-                                                    on_conflict="connection_id,position_id").execute()
+    _upsert_trips(supabase, rows)
+    _save_series(supabase, conn, series, now)
     summary["trades"] = len(rows)
     earliest = min((t["opened_at"] for t in trips), default=None)
     _update(supabase, conn["id"], status="ok", last_error="", last_sync_at=now.isoformat(), refresh_requested_at=None,
@@ -213,7 +277,7 @@ def fill_snapshots(supabase, conn: dict, inputs: Inputs, deadline: float) -> int
         return 0
     done = {(r["round_trip_id"], r["moment"]) for r in
             _pages(lambda: supabase.table("trade_snapshots").select("round_trip_id,moment")
-                   .eq("user_id", conn["user_id"]).order("round_trip_id"))}
+                   .eq("user_id", conn["user_id"]).order("round_trip_id").order("moment"))}
     since = (min(_when(t["opened_at"]) for t in trips) - timedelta(days=4)).isoformat()
     made = 0
     for trip in trips:
@@ -237,6 +301,42 @@ def fill_snapshots(supabase, conn: dict, inputs: Inputs, deadline: float) -> int
     return made
 
 
+def fill_moves(supabase, conn: dict, session, deadline: float) -> int:
+    """For the member's own trades: how much of the best move each kept and the price 20 trading days after it
+    closed, from eToro's daily candles (one ask per asset, the last 1,000 days). Until the deadline; returns the
+    number of trades done. Quietly nothing before the insights SQL is run."""
+    try:
+        todo = _pages(lambda: supabase.table("trade_round_trips")
+                      .select("id,instrument_id,direction,opened_at,closed_at,entry_price,exit_price,net_result_usd")
+                      .eq("connection_id", conn["id"]).eq("copied", False).eq("moves_checked", False).order("id"))
+    except Exception:
+        return 0
+    if not todo or time.monotonic() > deadline:
+        return 0
+    keys = supabase.rpc("tradelog_connection_keys", {"p_id": conn["id"]}).execute().data
+    if not isinstance(keys, dict) or not keys.get("api_key"):
+        return 0
+    by_asset: dict[str, list] = {}
+    for t in todo:
+        by_asset.setdefault(str(t.get("instrument_id") or ""), []).append(t)
+    done = 0
+    try:
+        for iid, trips in by_asset.items():
+            if time.monotonic() > deadline:
+                break
+            try:
+                candles = tradelog.fetch_candles(session, keys, int(iid)) if iid.isdigit() else []
+            except tradelog.EtoroError:
+                candles = []
+            for t in trips:
+                supabase.table("trade_round_trips").update({**tradelog.trade_moves(t, candles),
+                                                            "moves_checked": True}).eq("id", t["id"]).execute()
+                done += 1
+    finally:
+        keys = None
+    return done
+
+
 def run_from_worker(supabase, session=None, budget_seconds: float = PASS_BUDGET_SECONDS) -> str:
     """The worker's step: due connections, then leftover snapshots, all within the budget. Returns counts."""
     import requests
@@ -249,6 +349,7 @@ def run_from_worker(supabase, session=None, budget_seconds: float = PASS_BUDGET_
         return f"not set up ({str(exc)[:80]})"
     inputs = Inputs(supabase, session)
     synced = trades = snaps = failed = 0
+    progressed: set = set()
     for conn in conns:
         if time.monotonic() > deadline:
             break
@@ -259,5 +360,15 @@ def run_from_worker(supabase, session=None, budget_seconds: float = PASS_BUDGET_
             snaps += s["snapshots"]
             failed += s["failed"]
         elif conn.get("status") == "ok" and now - (_when(conn.get("last_sync_at")) or now) < timedelta(days=2):
-            snaps += fill_snapshots(supabase, conn, inputs, deadline)      # finishing a recent import's snapshots
+            made = fill_snapshots(supabase, conn, inputs, deadline)      # finishing a recent import's snapshots
+            made += fill_moves(supabase, conn, session, deadline)
+            snaps += made
+            if made:
+                progressed.add(conn["user_id"])
+    try:
+        import tradelog_insights
+
+        tradelog_insights.refresh_stale(supabase, conns, inputs, now, progressed)
+    except Exception as exc:                                  # never let the summaries stop the worker
+        print(f"Trade Log insights skipped: {type(exc).__name__}: {str(exc)[:120]}")
     return f"{len(conns)} connections, {synced} synced ({failed} failing), {trades} trades, {snaps} new snapshots"
