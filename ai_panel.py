@@ -143,10 +143,14 @@ export default function(component) {
       pin.setAttribute("aria-pressed", root.__pinned ? "true" : "false");
     };
     // Pinned and open on a wide screen: the page makes room for it (docked) instead of sitting under it.
+    // With the social panel open, this panel sits at its left edge (--ai-right). If social isn't pinned, the page has
+    // made no room for it, so the room made here covers that gap too (25 Nov 2026: the page ran under the panel).
     root.__dock = () => {
       const on = root.__pinned && root.classList.contains("is-open") && window.innerWidth >= 900;
-      const w = getComputedStyle(root).getPropertyValue("--ai-width").trim() || "460px";
-      document.documentElement.style.setProperty("--ang-dock-ai", on ? w : "0px");
+      const w = parseFloat(getComputedStyle(root).getPropertyValue("--ai-width")) || 460;
+      const right = parseFloat(root.style.getPropertyValue("--ai-right")) || 0;
+      const social = parseFloat(document.documentElement.style.getPropertyValue("--ang-dock-social")) || 0;
+      document.documentElement.style.setProperty("--ang-dock-ai", on ? Math.round(w + Math.max(0, right - social)) + "px" : "0px");
     };
     paintPin();
     pin.addEventListener("click", () => {
@@ -161,8 +165,9 @@ export default function(component) {
       window.angstromCloseAI();
     });
     // Width: drag the grip on its left edge (320 to 900 px), remembered in this browser.
+    const rightOf = () => parseFloat(root.style.getPropertyValue("--ai-right")) || 0;
     const applyWidth = (px) => {
-      const max = Math.max(320, Math.min(900, window.innerWidth - 36));
+      const max = Math.max(320, Math.min(900, window.innerWidth - 36 - rightOf()));
       const next = Math.min(max, Math.max(320, Math.round(px)));
       root.style.setProperty("--ai-width", next + "px");
       if (root.__dock) root.__dock();
@@ -177,7 +182,9 @@ export default function(component) {
       grip.classList.add("is-dragging");
       try { grip.setPointerCapture(event.pointerId); } catch (error) {}
       let last = saved >= 320 ? saved : 460;
-      const move = (m) => { last = applyWidth(window.innerWidth - m.clientX); };
+      // Measured from the panel's own right edge, which is the social panel's left edge when that is open (25 Nov 2026:
+      // measuring from the screen edge made the panel jump wide and the edge run away from the mouse).
+      const move = (m) => { last = applyWidth(window.innerWidth - rightOf() - m.clientX); };
       const stop = (end) => {
         root.classList.remove("is-width-dragging");
         grip.classList.remove("is-dragging");
@@ -240,6 +247,7 @@ export default function(component) {
     const panelEl = s && s.querySelector(".panel");
     const open = s && s.classList.contains("is-open") && window.innerWidth >= 900;
     root.style.setProperty("--ai-right", (open && panelEl ? Math.round(panelEl.getBoundingClientRect().width) : 0) + "px");
+    if (root.__dock) root.__dock();
   };
   if (!root.__stackTimer) { root.__stackTimer = window.setInterval(stackRight, 400); window.addEventListener("resize", stackRight); }
   stackRight();
