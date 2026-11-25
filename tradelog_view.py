@@ -280,7 +280,11 @@ def _bars_html(by: dict) -> str:
     for k, v in rows:
         colour = "#15803d" if v["net"] >= 0 else "#b91c1c"
         width = max(3, round(abs(v["net"]) / top * 100))
-        out.append(f"<span title='{v['trades']}'>{html.escape(t(CLASS_WORDS.get(k, k)))}</span>"
+        # The bar is money (net result); the trade count sits under the name so the bar isn't read as a count
+        # (26 Nov 2026: a short crypto bar read as "hardly any crypto trades" when there were 709).
+        count = html.escape(t("{n} closed trades", n=f"{v['trades']:,}"))
+        out.append(f"<span>{html.escape(t(CLASS_WORDS.get(k, k)))}<br><span style='font-size:.75rem;opacity:.7'>"
+                   f"{count}</span></span>"
                    f"<span class='tl-track'><span class='tl-fill' style='display:block;width:{width}%;"
                    f"background:{colour}'></span></span><span class='tl-num {_tone(v['net'])}'>{_money(v['net'])}</span>")
     return "<div class='tl-bars'>" + "".join(out) + "</div>"
