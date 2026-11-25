@@ -14,12 +14,13 @@ Rules from the spec:
 
 from __future__ import annotations
 
+import time
 import uuid
 from datetime import datetime, timezone
 
 ETORO_API = "https://public-api.etoro.com/api/v1"
 PAGE_SIZE = 100
-MAX_PAGES = 200
+MAX_PAGES = 1000                 # 12,000 trades at 100 a page is about 125 pages
 MIN_TRADES = 10
 ASSET_CLASSES = ("crypto", "stocks", "etfs", "indices", "commodities", "currencies", "other")
 
@@ -36,7 +37,12 @@ def _headers(keys: dict) -> dict:
 
 
 def _get(session, path: str, keys: dict, params: dict | None = None):
-    r = session.get(f"{ETORO_API}{path}", headers=_headers(keys), params=params or {}, timeout=30)
+    for attempt in range(3):         # a 504 is eToro's own server timing out: wait and ask again
+        if attempt:
+            time.sleep(10)
+        r = session.get(f"{ETORO_API}{path}", headers=_headers(keys), params=params or {}, timeout=60)
+        if r.status_code != 504:
+            break
     if r.status_code in (401, 403):
         raise EtoroError("eToro refused the key. Check it is a Read key for the real account.")
     if r.status_code == 429:
@@ -59,16 +65,43 @@ def _items(body) -> list:
     return []
 
 
-def fetch_closed_positions(session, keys: dict, min_date: str = "2010-01-01") -> list[dict]:
-    """Every closed position since min_date (YYYY-MM-DD), all pages."""
+def fetch_closed_positions(session, keys: dict, min_date: str = "2010-01-01", stop_before: str | None = None,
+                           workers: int = 1) -> list[dict]:
+    """Every closed position since min_date (YYYY-MM-DD), all pages, newest first.
+
+    eToro's pages can come back short (98 of 100) with more pages after them, so we read on until an EMPTY page, as
+    eToro support advised (26 Nov 2026); stopping at the first short page had read only 98 of over 12,000 trades.
+    A page that brings nothing new also ends it, in case eToro ever repeats a page. stop_before (an ISO date): stop
+    once a whole page closed before it (the daily sync only needs the latest days). workers: pages read side by side
+    (eToro takes a few seconds a page, so a big history is read about four times faster with four)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    def one(page: int) -> list[dict]:
+        return [b for b in _items(_get(session, "/trading/info/trade/history", keys,
+                                       {"minDate": min_date, "page": page, "pageSize": PAGE_SIZE}))
+                if isinstance(b, dict)]
+
     out: list[dict] = []
-    for page in range(1, MAX_PAGES + 1):
-        batch = _items(_get(session, "/trading/info/trade/history", keys,
-                            {"minDate": min_date, "page": page, "pageSize": PAGE_SIZE}))
-        out += [b for b in batch if isinstance(b, dict)]
-        if len(batch) < PAGE_SIZE:
-            break
+    seen: set = set()
+    page = 1
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+        while page <= MAX_PAGES:
+            pages = list(range(page, min(page + max(1, workers), MAX_PAGES + 1)))
+            for batch in (pool.map(one, pages) if workers > 1 else map(one, pages)):
+                new = [b for b in batch if _pid(b) not in seen]
+                if not new:
+                    return out
+                seen.update(_pid(b) for b in new)
+                out += new
+                closes = [str(b.get("closeTimestamp") or "") for b in new]
+                if stop_before and closes and all(c and c < stop_before for c in closes):
+                    return out
+            page += len(pages)
     return out
+
+
+def _pid(p: dict):
+    return p.get("positionId") or p.get("positionID") or id(p)
 
 
 def fetch_instruments(session, keys: dict, ids) -> dict[int, dict]:

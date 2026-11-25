@@ -97,13 +97,41 @@ class _Session:
 KEYS = {"api_key": "A", "user_key": "U"}
 
 
-def test_fetch_pages_until_a_short_page():
-    full = [_pos(i) for i in range(tl.PAGE_SIZE)]
-    s = _Session([_Resp(200, full), _Resp(200, [_pos(999)])])
+def test_fetch_reads_past_short_pages_until_an_empty_one():
+    short = [_pos(i) for i in range(98)]                 # eToro's first page can be short with more to come
+    s = _Session([_Resp(200, short), _Resp(200, [_pos(999)]), _Resp(200, [])])
     got = tl.fetch_closed_positions(s, KEYS, "2020-01-01")
-    assert len(got) == tl.PAGE_SIZE + 1
-    assert [c[1]["page"] for c in s.calls] == [1, 2] and s.calls[0][1]["minDate"] == "2020-01-01"
+    assert len(got) == 99
+    assert [c[1]["page"] for c in s.calls] == [1, 2, 3] and s.calls[0][1]["minDate"] == "2020-01-01"
     assert s.calls[0][2]["x-api-key"] == "A" and s.calls[0][2]["x-user-key"] == "U"
+
+
+def test_fetch_stops_when_a_page_repeats():
+    page = [_pos(i) for i in range(5)]
+    s = _Session([_Resp(200, page), _Resp(200, page)])
+    assert len(tl.fetch_closed_positions(s, KEYS)) == 5 and len(s.calls) == 2
+
+
+def test_fetch_stops_at_pages_older_than_stop_before():
+    new = [_pos(i, closeTimestamp="2026-11-20T00:00:00Z") for i in range(3)]
+    old = [_pos(10 + i, closeTimestamp="2026-10-01T00:00:00Z") for i in range(3)]
+    s = _Session([_Resp(200, new), _Resp(200, old), _Resp(200, [_pos(99)])])
+    assert len(tl.fetch_closed_positions(s, KEYS, stop_before="2026-11-01")) == 6 and len(s.calls) == 2
+
+
+def test_fetch_side_by_side_reads_every_page():
+    class Paged:
+        def get(self, url, headers=None, params=None, timeout=None):
+            n = params["page"]
+            return _Resp(200, [_pos(n * 1000 + i) for i in range(98 if n == 1 else 100)] if n <= 7 else [])
+    got = tl.fetch_closed_positions(Paged(), KEYS, workers=4)
+    assert len(got) == 98 + 6 * 100 and len({p["positionId"] for p in got}) == len(got)
+
+
+def test_fetch_asks_again_after_a_504(monkeypatch):
+    monkeypatch.setattr(tl.time, "sleep", lambda s: None)
+    s = _Session([_Resp(504, {}), _Resp(200, [_pos(1)]), _Resp(200, [])])
+    assert len(tl.fetch_closed_positions(s, KEYS)) == 1
 
 
 def test_refused_key_message_never_contains_the_key():

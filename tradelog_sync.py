@@ -139,7 +139,11 @@ def sync_connection(supabase, conn: dict, session, inputs: Inputs, deadline: flo
         summary["failed"] = True
         return summary
     try:
-        positions = tradelog.fetch_closed_positions(session, keys)
+        # A daily sync reads back a week before the last one; a new connection or a Refresh reads everything.
+        last = _when(conn.get("last_sync_at"))
+        recent = conn.get("status") == "ok" and last is not None and not conn.get("refresh_requested_at")
+        stop = (last - timedelta(days=7)).isoformat()[:10] if recent else None
+        positions = tradelog.fetch_closed_positions(session, keys, stop_before=stop, workers=4)
         ids = {p.get("instrumentId") for p in positions}
         instruments = tradelog.fetch_instruments(session, keys, ids) if ids else {}
         types = tradelog.fetch_instrument_types(session, keys) if ids else {}
