@@ -763,6 +763,59 @@ export default function(component) {
       attributeFilter: ["data-collapsed", "style", "class"]
     });
     window.addEventListener("resize", () => placeSidebarTab());
+    // Room for the page (25 Nov 2026 audit). When a panel opens: it goes on top of the other pull-out (📓 or ✨), and
+    // if the sidebar plus the pinned panels would leave the page under 420px, the sidebar folds away first; if that
+    // is still not enough, the panel opened longest ago closes. Opening the sidebar again yourself is left alone.
+    if (!window.__angRoomWatch) {
+      window.__angRoomWatch = true;
+      const PAGE_MIN = 420;
+      const order = [];
+      const docks = () => ["--ang-dock-ai", "--ang-dock-log", "--ang-dock-social"]
+        .reduce((a, v) => a + (parseFloat(document.documentElement.style.getPropertyValue(v)) || 0), 0);
+      const sideWidth = () => {
+        const sb = document.querySelector("[data-testid='stSidebar']");
+        return sb && sb.getAttribute("data-collapsed") !== "true" ? sb.getBoundingClientRect().width : 0;
+      };
+      const isOpen = {
+        log: () => !!document.querySelector("#ang-log-root.is-open"),
+        ai: () => !!document.querySelector("#ang-ai-root.is-open"),
+        social: () => !!(window.socialStreamState && window.socialStreamState.open),
+      };
+      const close = {
+        log: () => window.angstromCloseLogbook && window.angstromCloseLogbook(),
+        ai: () => window.angstromCloseAI && window.angstromCloseAI(),
+        social: () => { if (window.socialStreamState) { window.socialStreamState.open = false; window.renderSocialStream(); } },
+      };
+      document.addEventListener("ang-panel-open", (e) => {
+        const name = e.detail;
+        const i = order.indexOf(name);
+        if (i >= 0) order.splice(i, 1);
+        order.push(name);
+        const logRoot = document.getElementById("ang-log-root");
+        const aiRoot = document.getElementById("ang-ai-root");
+        if (name === "log" || name === "ai") {
+          if (logRoot) logRoot.style.zIndex = name === "log" ? "10000002" : "";
+          if (aiRoot) aiRoot.style.zIndex = name === "ai" ? "10000002" : "";
+        }
+        if (window.innerWidth < 900) return;
+        window.setTimeout(() => {
+          if (window.innerWidth - sideWidth() - docks() >= PAGE_MIN) return;
+          const fold = sideWidth() ? document.querySelector("[data-testid='stSidebarCollapseButton'] button") : null;
+          if (fold) { fold.click(); followSidebarTab(400); }
+          const room = () => window.innerWidth - (fold ? 0 : sideWidth()) - docks();
+          for (const other of order.slice()) {
+            if (room() >= PAGE_MIN) break;
+            const pinned = other === "log" ? !!(logRoot && logRoot.__pinned)
+              : other === "ai" ? !!(aiRoot && aiRoot.__pinned)
+              : !!(window.socialStreamState && window.socialStreamState.pinned);
+            if (other !== name && pinned && isOpen[other] && isOpen[other]()) {
+              close[other]();
+              order.splice(order.indexOf(other), 1);
+            }
+          }
+        }, 60);
+      });
+    }
     // While the sidebar width is dragged its text re-wraps and the content changes height. Keep the
     // item at the top of the view where it is on screen, so the view does not slide away.
     let dragAnchor = null;
