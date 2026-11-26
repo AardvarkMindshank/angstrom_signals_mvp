@@ -1,5 +1,5 @@
 {
- "built_at": "2026-11-26T04:22:14.115758+00:00",
+ "built_at": "2026-11-26T22:40:27.797317+00:00",
  "rules": {
   "list": "S&P 500",
   "min_price": 5.0,
@@ -1426,7 +1426,7 @@
    "price": 641.02,
    "volume_usd": 771214749,
    "market_cap": null,
-   "next_earnings": null,
+   "next_earnings": "2027-02-11",
    "rank": 142
   },
   {
@@ -3264,7 +3264,7 @@
    "name": "Newmont",
    "sector": "Materials",
    "price": 101.44,
-   "volume_usd": 802025966,
+   "volume_usd": 803080942,
    "market_cap": null,
    "next_earnings": "2027-02-18",
    "rank": 326
@@ -3494,7 +3494,7 @@
    "name": "Oracle Corporation",
    "sector": "Information Technology",
    "price": 103.88,
-   "volume_usd": 3744695189,
+   "volume_usd": 3753363975,
    "market_cap": null,
    "next_earnings": "2026-12-14",
    "rank": 349
@@ -3874,7 +3874,7 @@
    "name": "ResMed",
    "sector": "Health Care",
    "price": 245.7,
-   "volume_usd": 286005584,
+   "volume_usd": 288917128,
    "market_cap": null,
    "next_earnings": "2027-01-28",
    "rank": 387
@@ -4314,7 +4314,7 @@
    "name": "Tesla, Inc.",
    "sector": "Consumer Discretionary",
    "price": 380.14,
-   "volume_usd": 13191298514,
+   "volume_usd": 13215228328,
    "market_cap": null,
    "next_earnings": "2027-01-27",
    "rank": 431
