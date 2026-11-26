@@ -2663,5 +2663,12 @@
   "Ended by": "结束方式",
   "Kept of best move": "保住的最佳波动比例",
   "Loading…": "加载中…",
-  "Show 50 more": "再显示 50 笔"
+  "Show 50 more": "再显示 50 笔",
+  "Your own closed trades": "你自己的已平仓交易",
+  "Copied closed trades": "跟单的已平仓交易",
+  "All closed trades": "全部已平仓交易",
+  "Fees: {v}": "费用：{v}",
+  "Staking rewards": "质押奖励",
+  "{n} rewards and airdrops, not counted as trades": "{n} 笔奖励和空投，不计为交易",
+  "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "eToro 每月以小额新持仓的形式发放加密货币质押奖励。它们不计入交易数字；这里显示的是卖出时的价值。"
 }

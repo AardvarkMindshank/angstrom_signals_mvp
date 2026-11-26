@@ -2663,5 +2663,12 @@
   "Ended by": "Diakhiri oleh",
   "Kept of best move": "Dipertahankan dari pergerakan terbaik",
   "Loading…": "Memuat…",
-  "Show 50 more": "Tampilkan 50 lagi"
+  "Show 50 more": "Tampilkan 50 lagi",
+  "Your own closed trades": "Trade tertutup Anda sendiri",
+  "Copied closed trades": "Trade salinan yang tertutup",
+  "All closed trades": "Semua trade tertutup",
+  "Fees: {v}": "Biaya: {v}",
+  "Staking rewards": "Hadiah staking",
+  "{n} rewards and airdrops, not counted as trades": "{n} hadiah dan airdrop, tidak dihitung sebagai trade",
+  "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "eToro membayar hadiah staking kripto sebagai posisi baru kecil setiap bulan. Hadiah ini tidak masuk angka trade; ini nilainya saat dijual."
 }

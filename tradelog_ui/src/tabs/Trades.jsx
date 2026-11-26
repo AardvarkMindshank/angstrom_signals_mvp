@@ -11,13 +11,13 @@ function state(readings) {
   return "side";
 }
 
-export default function Trades({ whose, since }) {
+export default function Trades({ whose, since, hideRewards }) {
   const [rows, setRows] = useState([]);
   const [done, setDone] = useState(false);
   const [busy, setBusy] = useState(false);
   const load = (offset) => {
     setBusy(true);
-    trades(whose, since, offset).then((got) => {
+    trades(whose, since, offset, 50, hideRewards).then((got) => {
       setRows((r) => (offset ? r.concat(got) : got));
       setDone(got.length < 50);
     }).catch(() => setDone(true)).finally(() => setBusy(false));

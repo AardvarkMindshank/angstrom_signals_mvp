@@ -83,3 +83,14 @@ def test_open_now_groups_by_asset_and_adds_cash():
     o = ti.open_now(opened, [{"cash_usd": 10, "portfolio_at": "2026-11-26T00:00:00Z"}], {"k": {"regime": "ranging"}})
     assert o["account"] == 150.0 and o["pnl"] == -10.0 and o["rows"][0]["positions"] == 2
     assert o["rows"][0]["stop_pct"] is None and o["rows"][0]["stops_set"] == 1 and o["rows"][0]["now"] == "side"
+
+
+def test_staking_rewards_are_not_trades():
+    first = {"openTimestamp": "2026-06-08T08:54:18Z", "isBuy": True, "leverage": 1, "socialTradeId": 0}
+    assert tradelog.is_reward(first, "ADA", "crypto", 2.34)
+    assert not tradelog.is_reward(first, "ADA", "crypto", 400.0)                 # a real buy
+    assert not tradelog.is_reward(dict(first, openTimestamp="2026-06-20T08:00:00Z"), "ADA", "crypto", 2.0)
+    assert not tradelog.is_reward(first, "MANA", "crypto", 24.99)
+    trips = [_t(1, 50), _t(2, -1, reward=True)]
+    doc = ti.build(trips, {}, [], [], {}, {}, "own", "all", date(2026, 11, 26))
+    assert doc["closed"]["trades"] == 1 and doc["rewards"]["count"] == 1

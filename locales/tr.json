@@ -2663,5 +2663,12 @@
   "Ended by": "Bitiren",
   "Kept of best move": "En iyi hareketten tutulan",
   "Loading…": "Yükleniyor…",
-  "Show 50 more": "50 tane daha göster"
+  "Show 50 more": "50 tane daha göster",
+  "Your own closed trades": "Kendi kapanan işlemlerin",
+  "Copied closed trades": "Kopyalanan kapanan işlemler",
+  "All closed trades": "Tüm kapanan işlemler",
+  "Fees: {v}": "Ücretler: {v}",
+  "Staking rewards": "Staking ödülleri",
+  "{n} rewards and airdrops, not counted as trades": "{n} ödül ve airdrop, işlem sayılmaz",
+  "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "eToro kripto staking ödüllerini her ay küçük yeni pozisyonlar olarak öder. İşlem rakamlarına katılmazlar; bu, satıldıklarındaki değerleridir."
 }

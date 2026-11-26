@@ -2663,5 +2663,12 @@
   "Ended by": "Beendet durch",
   "Kept of best move": "Behalten der besten Bewegung",
   "Loading…": "Wird geladen…",
-  "Show 50 more": "50 weitere zeigen"
+  "Show 50 more": "50 weitere zeigen",
+  "Your own closed trades": "Deine eigenen geschlossenen Trades",
+  "Copied closed trades": "Kopierte geschlossene Trades",
+  "All closed trades": "Alle geschlossenen Trades",
+  "Fees: {v}": "Gebühren: {v}",
+  "Staking rewards": "Staking-Belohnungen",
+  "{n} rewards and airdrops, not counted as trades": "{n} Belohnungen und Airdrops, nicht als Trades gezählt",
+  "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "eToro zahlt Krypto-Staking-Belohnungen jeden Monat als kleine neue Positionen aus. Sie bleiben aus den Trade-Zahlen heraus; das ist ihr Wert beim Verkauf."
 }

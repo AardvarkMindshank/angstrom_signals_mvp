@@ -172,19 +172,20 @@ def _save_series(supabase, conn: dict, series: dict, now: datetime) -> None:
 
 
 def _upsert_trips(supabase, rows: list[dict]) -> None:
-    """Save the round trips. Before the insights SQL is run the new columns don't exist yet: save without them."""
-    plain = None
+    """Save the round trips. Columns added by a later SQL file may not exist yet: drop the newest first ("reward"),
+    then all of them, so whatever has been run is still filled."""
+    drops = [(), ("reward",), tradelog.NEW_TRIP_FIELDS]
+    level = 0
     for start in range(0, len(rows), 200):
-        part = rows[start:start + 200] if plain is None else [
-            {k: v for k, v in r.items() if k not in tradelog.NEW_TRIP_FIELDS} for r in rows[start:start + 200]]
-        try:
-            supabase.table("trade_round_trips").upsert(part, on_conflict="connection_id,position_id").execute()
-        except Exception:
-            if plain is not None:
-                raise
-            plain = True
-            part = [{k: v for k, v in r.items() if k not in tradelog.NEW_TRIP_FIELDS} for r in part]
-            supabase.table("trade_round_trips").upsert(part, on_conflict="connection_id,position_id").execute()
+        while True:
+            part = [{k: v for k, v in r.items() if k not in drops[level]} for r in rows[start:start + 200]]
+            try:
+                supabase.table("trade_round_trips").upsert(part, on_conflict="connection_id,position_id").execute()
+                break
+            except Exception:
+                if level == len(drops) - 1:
+                    raise
+                level += 1
 
 
 def _save_open(supabase, conn: dict, portfolio: dict, rows: list[dict], now: datetime) -> None:

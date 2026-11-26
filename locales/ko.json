@@ -2663,5 +2663,12 @@
   "Ended by": "종료 방식",
   "Kept of best move": "최고 움직임 중 지킨 비율",
   "Loading…": "불러오는 중…",
-  "Show 50 more": "50개 더 보기"
+  "Show 50 more": "50개 더 보기",
+  "Your own closed trades": "내 청산된 거래",
+  "Copied closed trades": "복사한 청산된 거래",
+  "All closed trades": "모든 청산된 거래",
+  "Fees: {v}": "수수료: {v}",
+  "Staking rewards": "스테이킹 보상",
+  "{n} rewards and airdrops, not counted as trades": "보상과 에어드롭 {n}건 (거래로 세지 않음)",
+  "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "eToro는 암호화폐 스테이킹 보상을 매달 작은 새 포지션으로 지급합니다. 거래 수치에서는 빼고, 여기에는 매도 시점의 가치를 보여 줍니다."
 }

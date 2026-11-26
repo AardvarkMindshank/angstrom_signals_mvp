@@ -217,6 +217,7 @@ def etoro_round_trips(positions: list[dict], instruments: dict[int, dict] | None
             "net_result_usd": round(net, 2),
             "result_pct": round(net / invested * 100, 2) if invested else None,
             "copied": any(_num(p.get("socialTradeId")) for p in parts),
+            "reward": len(parts) == 1 and is_reward(first, symbol, cls, invested),
             "parts": len(parts),
             **exit_facts(first, max(parts, key=lambda p: _when(p.get("closeTimestamp")) or max(closed)),
                          invested, net),
@@ -225,7 +226,28 @@ def etoro_round_trips(positions: list[dict], instruments: dict[int, dict] | None
     return trips
 
 
-NEW_TRIP_FIELDS = ("stop_loss", "take_profit", "trailing_stop", "exit_kind", "risk_r")
+NEW_TRIP_FIELDS = ("stop_loss", "take_profit", "trailing_stop", "exit_kind", "risk_r", "reward")
+
+# eToro pays crypto staking rewards (and passed on some airdrops) as small new positions, one a month per coin,
+# credited in the first two weeks of the month. They aren't trades the member made: kept apart from every trade
+# number (26 Nov 2026: 59 "Cardano trades" of $1 to $5 all closed on one day were monthly staking rewards).
+STAKING = {"ADA", "SOL", "TRX", "DOT", "ETH", "ALGO", "ATOM", "XTZ", "AVAX", "NEAR", "POL", "MATIC", "ADA.X"}
+AIRDROPS = {"LUNA2", "LUNA", "LUNC", "FLR", "SGB"}
+REWARD_MAX_USD = 25.0
+
+
+def is_reward(first: dict, symbol: str, asset_class: str, invested: float) -> bool:
+    """A staking reward or airdrop position: an unleveraged crypto buy under $25 in a coin eToro stakes (credited in
+    the first two weeks of a month) or one it airdropped. Never a copied position."""
+    if asset_class != "crypto" or _num(first.get("socialTradeId")) or (_num(first.get("leverage")) or 1) != 1:
+        return False
+    if not first.get("isBuy", True) or not invested or invested >= REWARD_MAX_USD:
+        return False
+    sym = (symbol or "").upper()
+    opened = _when(first.get("openTimestamp"))
+    if sym in AIRDROPS:
+        return True
+    return sym in STAKING and opened is not None and opened.day <= 14
 EXIT_TOLERANCE = 0.006          # a close within 0.6% of the stop or target counts as hitting it
 
 
@@ -400,7 +422,7 @@ def _hold_days(trip: dict) -> float | None:
 
 def stats(trips: list[dict], include_copied: bool = False) -> dict:
     """The headline numbers for a set of round trips. `enough` is False below MIN_TRADES trades."""
-    rows = [t for t in trips if include_copied or not t.get("copied")]
+    rows = [t for t in trips if (include_copied or not t.get("copied")) and not t.get("reward")]
     results = [_num(t.get("net_result_usd")) or 0.0 for t in rows]
     wins = [r for r in results if r > 0]
     losses = [r for r in results if r < 0]

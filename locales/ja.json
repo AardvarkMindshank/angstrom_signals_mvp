@@ -2663,5 +2663,12 @@
   "Ended by": "終了方法",
   "Kept of best move": "最良の値動きのうち保てた割合",
   "Loading…": "読み込み中…",
-  "Show 50 more": "さらに 50 件表示"
+  "Show 50 more": "さらに 50 件表示",
+  "Your own closed trades": "自分の決済済み取引",
+  "Copied closed trades": "コピーの決済済み取引",
+  "All closed trades": "すべての決済済み取引",
+  "Fees: {v}": "手数料：{v}",
+  "Staking rewards": "ステーキング報酬",
+  "{n} rewards and airdrops, not counted as trades": "{n} 件の報酬とエアドロップ（取引には含めない）",
+  "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "eToro は暗号資産のステーキング報酬を毎月小さな新規ポジションとして支払います。取引の数字には含めず、ここでは売却時の価値を示します。"
 }

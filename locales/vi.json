@@ -2663,5 +2663,12 @@
   "Ended by": "Kết thúc bởi",
   "Kept of best move": "Giữ được từ biến động tốt nhất",
   "Loading…": "Đang tải…",
-  "Show 50 more": "Xem thêm 50"
+  "Show 50 more": "Xem thêm 50",
+  "Your own closed trades": "Giao dịch đã đóng của bạn",
+  "Copied closed trades": "Giao dịch sao chép đã đóng",
+  "All closed trades": "Tất cả giao dịch đã đóng",
+  "Fees: {v}": "Phí: {v}",
+  "Staking rewards": "Phần thưởng staking",
+  "{n} rewards and airdrops, not counted as trades": "{n} phần thưởng và airdrop, không tính là giao dịch",
+  "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "eToro trả phần thưởng staking crypto dưới dạng các vị thế mới nhỏ mỗi tháng. Chúng không được tính vào số liệu giao dịch; đây là giá trị khi bán."
 }

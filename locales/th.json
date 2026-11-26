@@ -2663,5 +2663,12 @@
   "Ended by": "จบโดย",
   "Kept of best move": "เก็บได้จากการเคลื่อนไหวที่ดีที่สุด",
   "Loading…": "กำลังโหลด…",
-  "Show 50 more": "แสดงอีก 50"
+  "Show 50 more": "แสดงอีก 50",
+  "Your own closed trades": "เทรดที่ปิดแล้วของคุณเอง",
+  "Copied closed trades": "เทรดคัดลอกที่ปิดแล้ว",
+  "All closed trades": "เทรดที่ปิดแล้วทั้งหมด",
+  "Fees: {v}": "ค่าธรรมเนียม: {v}",
+  "Staking rewards": "รางวัลการ Staking",
+  "{n} rewards and airdrops, not counted as trades": "รางวัลและแอร์ดรอป {n} รายการ ไม่นับเป็นเทรด",
+  "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "eToro จ่ายรางวัล Staking คริปโตเป็นสถานะใหม่ขนาดเล็กทุกเดือน จึงไม่นับรวมในตัวเลขเทรด นี่คือมูลค่าเมื่อขาย"
 }

@@ -30,11 +30,12 @@ export async function insights(whose, period) {
 const TRADE_COLS = "id,closed_at,opened_at,name,symbol,direction,net_result_usd,result_pct,risk_r,exit_kind,kept_pct,copied,leverage";
 
 // A page of closed trades, newest first, for the Trades tab.
-export async function trades(whose, since, offset, limit = 50) {
+export async function trades(whose, since, offset, limit = 50, hideRewards = false) {
   let q = `trade_round_trips?select=${TRADE_COLS}&order=closed_at.desc&offset=${offset}&limit=${limit}`;
   if (whose === "own") q += "&copied=eq.false";
   if (whose === "copied") q += "&copied=eq.true";
   if (since) q += `&closed_at=gte.${since}`;
+  if (hideRewards) q += "&reward=eq.false";          // staking rewards and airdrops aren't trades
   const rows = await rest(q);
   const ids = rows.map((r) => r.id);
   let snaps = [];

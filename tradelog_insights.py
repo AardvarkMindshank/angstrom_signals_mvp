@@ -435,7 +435,9 @@ def build(trips: list[dict], snaps: dict, opened: list[dict], conns: list[dict],
           whose: str, period: str, today: date) -> dict:
     days = PERIODS[period]
     start = (today - timedelta(days=days)).isoformat() if days else None
-    in_period = [t for t in trips if start is None or str(t.get("closed_at") or "")[:10] >= start]
+    closed_in = [t for t in trips if start is None or str(t.get("closed_at") or "")[:10] >= start]
+    rewards = [t for t in closed_in if t.get("reward")]
+    in_period = [t for t in closed_in if not t.get("reward")]     # staking rewards and airdrops aren't trades
     chosen = _whose(in_period, whose)
     own = _whose(in_period, "own")
     acct = account(series.get("daily_gain") or [], series.get("benchmarks") or {}, start)
@@ -452,6 +454,9 @@ def build(trips: list[dict], snaps: dict, opened: list[dict], conns: list[dict],
         "habits": habits(own),
         "allocation": allocation(series.get("allocation") or [], start),
         "open": open_now(_whose(opened, whose), conns, regimes),
+        "rewards": {"count": len(rewards),
+                    "credited": _r(sum(_num(t.get("invested_usd")) or 0 for t in rewards)),
+                    "result": _r(sum(_num(t.get("net_result_usd")) or 0 for t in rewards))},
     }
 
 

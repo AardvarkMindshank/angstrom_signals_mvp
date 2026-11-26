@@ -68,6 +68,7 @@ export default function App() {
       {state === "error" && !d && <div className="empty">{T("The Trade Log could not load just now.")}</div>}
 
       {d && <Scorecard d={d} whose={whose} />}
+      {d && <ClosedRow d={d} whose={whose} />}
 
       {d && (
         <nav className="tabs" aria-label={T("Trade Log sections")}>
@@ -81,7 +82,7 @@ export default function App() {
       {d && tab === "risk" && <Risk d={d} />}
       {d && tab === "behav" && <Behaviour d={d} />}
       {d && tab === "open" && <OpenNow d={d} />}
-      {d && tab === "trades" && <Trades whose={whose} since={d.start} />}
+      {d && tab === "trades" && <Trades whose={whose} since={d.start} hideRewards={!!(d.rewards && d.rewards.count)} />}
     </div>
   );
 }
@@ -122,6 +123,29 @@ function Scorecard({ d, whose }) {
       <Tile label={T("Closed trades result")} value={money(c.net)} cls={tone(c.net)} sub={T("{n} closed trades", { n: c.trades })} />
       <Tile label={T("Win rate")} value={pct(c.win_rate, 0, false)} sub={T("{w} wins, {l} losses", { w: c.wins, l: c.losses })} />
       <Tile label={T("Profit factor")} value={c.profit_factor == null ? "—" : c.profit_factor.toFixed(2)} sub={T("Gross wins divided by gross losses.")} />
+    </section>
+  );
+}
+
+// The chosen trades (Yours / Copied / All), closed in this period: the row that changes with the switch. The tiles
+// above are the whole account, which eToro's daily return can't split (26 Nov 2026: the switch seemed to do nothing).
+function ClosedRow({ d, whose }) {
+  const c = d.closed;
+  const r = d.rewards;
+  const title = { own: T("Your own closed trades"), copied: T("Copied closed trades"), all: T("All closed trades") }[whose];
+  return (
+    <section aria-label={title}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ang-muted)", textTransform: "uppercase", letterSpacing: ".04em", margin: "0 0 8px" }}>{title}</div>
+      <div className="tiles">
+        <Tile label={T("Result")} value={money(c.net)} cls={tone(c.net)} sub={T("{n} closed trades", { n: c.trades.toLocaleString() })} />
+        <Tile label={T("Win rate")} value={pct(c.win_rate, 0, false)} sub={T("{w} wins, {l} losses", { w: c.wins.toLocaleString(), l: c.losses.toLocaleString() })} />
+        <Tile label={T("Profit factor")} value={c.profit_factor == null ? "—" : c.profit_factor.toFixed(2)} sub={T("Gross wins divided by gross losses.")} />
+        <Tile label={T("Average trade")} value={money(c.average)} cls={tone(c.average)} sub={T("Fees: {v}", { v: money(c.fees, false) })} />
+        {r && r.count > 0 && whose !== "copied" && (
+          <Tile label={T("Staking rewards")} value={money(r.credited + r.result, false)} sub={T("{n} rewards and airdrops, not counted as trades", { n: r.count.toLocaleString() })}
+            tip={T("eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.")} />
+        )}
+      </div>
     </section>
   );
 }
