@@ -6,9 +6,12 @@ const nf1 = new Intl.NumberFormat(LOCALE, { maximumFractionDigits: 1, minimumFra
 
 export const stamp = (iso) => new Date(iso).toLocaleString(LOCALE, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 export const num = (v) => (v == null ? "—" : nf0.format(v));
+const nf2 = new Intl.NumberFormat(LOCALE, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+// Small amounts keep their cents, so an average of a few cents isn't shown as "$0" (26 Nov 2026).
 export function money(v, signed = true) {
   if (v == null) return "—";
-  const s = "$" + nf0.format(Math.abs(Math.round(v)));
+  const s = "$" + (Math.abs(v) < 10 && v !== 0 ? nf2.format(Math.abs(v)) : nf0.format(Math.abs(Math.round(v))));
   if (!signed) return (v < 0 ? "−" : "") + s;
   return (v > 0 ? "+" : v < 0 ? "−" : "") + s;
 }
