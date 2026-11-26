@@ -326,7 +326,7 @@ def test_every_number_in_the_script_must_be_the_apps():
     assert dv.unknown_numbers("The Nasdaq rose 8.3 percent and Bitcoin hit 70,000 dollars.", known) == ["8.3", "70,000"]
 
 
-def test_a_number_not_in_the_apps_data_is_sent_back_then_the_template():
+def test_a_number_not_in_the_apps_data_is_sent_back_then_that_section_is_the_template():
     import ai_providers
 
     base = {"headline": "Up", "story": {"title": "t", "text": "Stocks rose 4.7 percent on Monday.", "asset": ""},
@@ -342,7 +342,7 @@ def test_a_number_not_in_the_apps_data_is_sent_back_then_the_template():
         got, who = dv.write_sections(None, facts, chat=lambda *a, **k: replies.pop(0), views=views)
         assert who == "grok" and got["equities"] == "e" and not replies
         got, who = dv.write_sections(None, facts, chat=lambda *a, **k: json.dumps(wrong), views=views)
-        assert who == "template"
+        assert who == "grok (partly template)" and got["headline"] == "Up" and got["equities"] != wrong["equities"]
     finally:
         ai_providers.available, ai_providers.app_choice = old
 
@@ -380,3 +380,38 @@ def test_numbers_said_in_words_are_checked_too():
     known = dv.known_numbers({"a": 7.0, "b": 4.71, "c": -25, "d": 60354})
     assert dv.script_numbers_problems({"x": text}, known) == {}
     assert dv.script_numbers_problems({"x": "It rose nine point nine percent."}, known) == {"x": ["9.9"]}
+
+
+def test_scale_words_and_dotted_times_pass_the_number_check():
+    known = dv.known_numbers("Record $4.7 Billion as Bitcoin falls below $60,000")
+    out = {"story": "ETF outflows hit a record 4.7 billion dollars.", "horizon": "Jobs data at 13.30 UTC."}
+    assert dv.script_numbers_problems(out, known) == {}
+    assert dv.script_numbers_problems({"story": "Outflows of 9.9 billion dollars."}, known) == {"story": ["9.9"]}
+
+
+def test_a_failing_section_keeps_the_rest_of_the_ai_script():
+    good = {"headline": "Bitcoin slips under 60,000", "story": {"title": "t", "text": "Outflows hit 4.7 billion dollars.",
+            "asset": ""}, "tides": "The Tide is going out.", "equities": "Stocks were mixed.",
+            "crypto": "Bitcoin fell 2.4 percent over the last 24 hours.", "horizon": "Jobs data on Friday."}
+    bad_story = dict(good, story={"title": "t", "text": "Outflows hit 9.9 billion dollars.", "asset": ""})
+    replies = iter([json.dumps(bad_story)] * 3)
+    facts = {"key_markets": [], "cryptos": [{"name": "Bitcoin", "change_1d": -2.4}], "tide": ["The Tide is going out."],
+             "events": []}
+    story = {"title": "Crypto Market Today, Nov. 24: Bitcoin Falls Below $60,000 as ETF Outflows Hit a Record $4.7 Billion",
+             "why": "Record outflows.", "market": "crypto"}
+    import ai_providers
+    old = ai_providers.available
+    ai_providers.available = lambda p: True
+    try:
+        out, who = dv.write_sections(None, facts, chat=lambda *a, **k: {"text": next(replies)},
+                                     sections={"tides": 1, "story": 1, "crypto": 1}, story=story)
+    finally:
+        ai_providers.available = old
+    assert "partly template" in who and out["tides"] == "The Tide is going out."
+    assert out["story"]["text"].startswith("Crypto Market Today")          # only the story fell back
+
+
+def test_template_headline_comes_from_the_story():
+    assert dv.story_headline({"title": "Crypto Market Today, Nov. 24: Bitcoin Falls Below $60,000 as ETF Outflows "
+                                       "Hit a Record $4.7 Billion"}) == "Bitcoin Falls Below $60,000"
+    assert dv.story_headline(None) == dv.GENERIC_HEADLINE

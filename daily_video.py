@@ -398,6 +398,8 @@ def unknown_numbers(text: str, known: list[float]) -> list[str]:
         value = float(token.replace(",", ""))
         if re.match(r"(st|nd|rd|th)\b|:\d", after) or re.search(r"\d:$", before):
             continue                                          # ordinals and times
+        if re.fullmatch(r"(?:[01]?\d|2[0-3])\.[0-5]\d", token) and re.match(r"\s*(utc|gmt|am|pm|et|uk time)\b", after):
+            continue                                          # times with a dot: "13.30 UTC"
         if re.search(r"(s&p|nasdaq|dow|russell|ftse|dax|nikkei|coindesk|top)\s*$", before):
             continue                                          # names: the S&P 500, the Nasdaq 100, the top 5
         if re.match(r"\s*hours?\b", after):
@@ -452,9 +454,16 @@ def _words_value(words: str) -> str:
     return value + ("." + digits if digits else "")
 
 
+_DIGIT_SCALE = re.compile(r"(\d[\d,]*(?:\.\d+)?)\s+(thousand|million|billion)\b", re.I)
+
+
 def digits_for_words(text: str) -> str:
     """The text with spelled-out numbers as digits, so the check sees them too (24 Nov 2026: the script said "four
-    point seven percent" in words, which a digits-only check would never look at). "One" alone is left as a word."""
+    point seven percent" in words, which a digits-only check would never look at). "One" alone is left as a word.
+    Digits followed by a scale word ("4.7 billion") stay as they are: the check already allows thousands, millions
+    and billions of a known number (26 Nov 2026: "billion" alone was read as a second number, 1,000,000,000)."""
+    text = _DIGIT_SCALE.sub(lambda m: m.group(1), text)
+
     def swap(m):
         words = m.group(0)
         if re.match(r"[\s-]+(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth)\b", m.string[m.end():], re.I):
@@ -533,7 +542,40 @@ def write_sections(supabase, facts: dict, chat=None, sections: dict = SECTIONS, 
                 print(f"Video script: numbers not in the app's data, asking again: {json.dumps(numbers)}")
             messages = messages + [{"role": "assistant", "content": text},
                                    {"role": "user", "content": " ".join(ask) + " Write it again, JSON only."}]
-    return _template(facts, sections, views, story), "template"
+            last = (out, numbers, wrong)
+        if "last" in locals():
+            # Three tries and still a stray number or "today" somewhere: keep every section that passed and use the
+            # plain template only for the ones that didn't (26 Nov 2026: one number in the story section had thrown
+            # the whole script away, headline included, and the video opened with just "Your Morning Outlook").
+            out, numbers, wrong = last
+            plain = _template(facts, sections, views, story)
+            for k in set(numbers) | set(wrong):
+                out[k] = plain[k] if k != "headline" else story_headline(story)
+            print(f"Video script by AI, with the template for: {sorted(set(numbers) | set(wrong))}")
+            return out, f"{provider} (partly template)"
+    out = _template(facts, sections, views, story)
+    out["headline"] = story_headline(story)
+    return out, "template"
+
+
+GENERIC_HEADLINE = "Your Morning Outlook"
+
+
+def story_headline(story: dict | None) -> str:
+    """A short headline from the story of the day's own title, for when the AI's can't be used: the part after a
+    "Crypto Market Today, Nov. 24:" style lead-in, cut to about ten words. The generic headline when there's no story."""
+    title = str((story or {}).get("title") or "").strip().strip('"\u201c\u201d')
+    if not title:
+        return GENERIC_HEADLINE
+    if ":" in title and len(title.split(":", 1)[1].split()) >= 4:
+        title = title.split(":", 1)[1].strip()
+    words = title.split()
+    if len(words) > 8:                       # a long title: its first clause ("Bitcoin Falls Below $60,000")
+        for cut in (" as ", " after ", " amid ", " while ", ", "):
+            head = title.split(cut, 1)[0] if cut in title else ""
+            if 3 <= len(head.split()) <= 10:
+                return head.rstrip(",")
+    return " ".join(words[:12])
 
 
 # ------------------------------------------------------------------------------------------------ the graphics' data
@@ -935,8 +977,10 @@ def build(supabase, library: Path, music_dir: Path, out_dir: Path, models: Path,
     crew = PRESENTERS[who]
     spec["presenter"] = {"key": who, "title": crew["title"]}
     # The headline is the story of the day's, told after the Tide: so the date line says so (Angus, 24 Nov 2026).
-    date_line = (f"{day.strftime('%A')}, the {_ordinal(day.day)} of {day.strftime('%B')}. {sections['headline']}. "
-                 "More on that after a look at the tides.")
+    # Only a story's headline is promised for later: never the generic "Your Morning Outlook" (26 Nov 2026).
+    date_line = f"{day.strftime('%A')}, the {_ordinal(day.day)} of {day.strftime('%B')}."
+    if sections["headline"] and sections["headline"] != GENERIC_HEADLINE:
+        date_line += f" {sections['headline'].rstrip('.…')}. More on that after a look at the tides."
     edition_name = "Weekend Outlook" if weekend else "Morning Outlook"
     close_line = f"That was your {edition_name} for {day.strftime('%A')} the {_ordinal(day.day)} of {day.strftime('%B')}."
     if brand.SHOW_IN_VIDEO:
