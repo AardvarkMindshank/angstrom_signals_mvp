@@ -2923,7 +2923,6 @@
   "Unpin: let the panel slide over the page": "고정 해제: 패널이 페이지 위로 열립니다",
   "Pin beside the page": "페이지 옆에 고정",
   "Show": "보기",
-  "Members' comments on your watchlist, the markets and the Tides, from the last 12 hours. Open an asset's Community tab to add yours.": "지난 12시간 동안 내 관심 목록, 시장, Tides에 달린 회원 댓글입니다. 내 댓글은 자산의 커뮤니티 탭에서 남기세요.",
   "No comments in the last 12 hours.": "지난 12시간 동안 댓글이 없습니다.",
   "That didn't send. Please try again.": "전송되지 않았습니다. 다시 시도하세요.",
   "To": "받는 사람",
@@ -2991,5 +2990,6 @@
   "Daily alerts summary": "일일 알림 요약",
   "Include watchlist summary": "관심 목록 요약 포함",
   "Include funnels summary": "퍼널 요약 포함",
-  "The app's tables, alerts and daily summary follow these.": "앱의 표, 알림, 일일 요약이 이 목록을 따릅니다."
+  "The app's tables, alerts and daily summary follow these.": "앱의 표, 알림, 일일 요약이 이 목록을 따릅니다.",
+  "Members' comments on your watchlist, the markets and the Tides. Comments last 12 hours; on the Tides, until the Tide changes. Open an asset's Community tab to add yours.": "내 관심 목록, 시장, Tides에 달린 회원 댓글입니다. 댓글은 12시간 동안 남고, Tides 댓글은 Tide가 바뀔 때까지 남습니다. 내 댓글은 자산의 커뮤니티 탭에서 남기세요."
 }

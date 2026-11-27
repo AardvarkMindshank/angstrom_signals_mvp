@@ -2923,7 +2923,6 @@
   "Unpin: let the panel slide over the page": "取消固定：让面板浮在页面上",
   "Pin beside the page": "固定在页面旁边",
   "Show": "显示",
-  "Members' comments on your watchlist, the markets and the Tides, from the last 12 hours. Open an asset's Community tab to add yours.": "过去 12 小时内会员对你的自选列表、市场和 Tides 的评论。打开某个资产的社区标签即可发表你的评论。",
   "No comments in the last 12 hours.": "过去 12 小时内没有评论。",
   "That didn't send. Please try again.": "发送失败，请重试。",
   "To": "发给",
@@ -2991,5 +2990,6 @@
   "Daily alerts summary": "每日提醒摘要",
   "Include watchlist summary": "包含关注列表摘要",
   "Include funnels summary": "包含漏斗摘要",
-  "The app's tables, alerts and daily summary follow these.": "应用的表格、提醒和每日摘要都以此为准。"
+  "The app's tables, alerts and daily summary follow these.": "应用的表格、提醒和每日摘要都以此为准。",
+  "Members' comments on your watchlist, the markets and the Tides. Comments last 12 hours; on the Tides, until the Tide changes. Open an asset's Community tab to add yours.": "会员对你的自选列表、市场和 Tides 的评论。评论保留 12 小时；Tides 的评论保留到 Tide 改变为止。打开某个资产的社区标签即可发表你的评论。"
 }

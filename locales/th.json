@@ -2923,7 +2923,6 @@
   "Unpin: let the panel slide over the page": "เลิกปักหมุด: ให้แผงเลื่อนทับหน้า",
   "Pin beside the page": "ปักหมุดไว้ข้างหน้า",
   "Show": "แสดง",
-  "Members' comments on your watchlist, the markets and the Tides, from the last 12 hours. Open an asset's Community tab to add yours.": "ความเห็นของสมาชิกเกี่ยวกับวอทช์ลิสต์ของคุณ ตลาด และ Tides ใน 12 ชั่วโมงที่ผ่านมา เปิดแท็บชุมชนของสินทรัพย์เพื่อเพิ่มความเห็นของคุณ",
   "No comments in the last 12 hours.": "ไม่มีความเห็นใน 12 ชั่วโมงที่ผ่านมา",
   "That didn't send. Please try again.": "ส่งไม่สำเร็จ โปรดลองอีกครั้ง",
   "To": "ถึง",
@@ -2991,5 +2990,6 @@
   "Daily alerts summary": "สรุปการแจ้งเตือนรายวัน",
   "Include watchlist summary": "รวมสรุปรายการเฝ้าดู",
   "Include funnels summary": "รวมสรุปฟันเนล",
-  "The app's tables, alerts and daily summary follow these.": "ตาราง การแจ้งเตือน และสรุปรายวันของแอปจะยึดตามรายการนี้"
+  "The app's tables, alerts and daily summary follow these.": "ตาราง การแจ้งเตือน และสรุปรายวันของแอปจะยึดตามรายการนี้",
+  "Members' comments on your watchlist, the markets and the Tides. Comments last 12 hours; on the Tides, until the Tide changes. Open an asset's Community tab to add yours.": "ความเห็นของสมาชิกเกี่ยวกับวอทช์ลิสต์ของคุณ ตลาด และ Tides ความเห็นจะอยู่ 12 ชั่วโมง ส่วนใน Tides จะอยู่จนกว่า Tide จะเปลี่ยน เปิดแท็บชุมชนของสินทรัพย์เพื่อเพิ่มความเห็นของคุณ"
 }

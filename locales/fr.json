@@ -2923,7 +2923,6 @@
   "Unpin: let the panel slide over the page": "Détacher : le panneau glisse par-dessus la page",
   "Pin beside the page": "Épingler à côté de la page",
   "Show": "Afficher",
-  "Members' comments on your watchlist, the markets and the Tides, from the last 12 hours. Open an asset's Community tab to add yours.": "Les commentaires des membres sur votre liste de suivi, les marchés et les Tides, sur les 12 dernières heures. Ouvrez l'onglet Communauté d'un actif pour ajouter le vôtre.",
   "No comments in the last 12 hours.": "Aucun commentaire ces 12 dernières heures.",
   "That didn't send. Please try again.": "L'envoi a échoué. Veuillez réessayer.",
   "To": "À",
@@ -2991,5 +2990,6 @@
   "Daily alerts summary": "Récapitulatif quotidien des alertes",
   "Include watchlist summary": "Inclure le résumé de la liste",
   "Include funnels summary": "Inclure le résumé des entonnoirs",
-  "The app's tables, alerts and daily summary follow these.": "Les tableaux, alertes et le récapitulatif quotidien de l'application les suivent."
+  "The app's tables, alerts and daily summary follow these.": "Les tableaux, alertes et le récapitulatif quotidien de l'application les suivent.",
+  "Members' comments on your watchlist, the markets and the Tides. Comments last 12 hours; on the Tides, until the Tide changes. Open an asset's Community tab to add yours.": "Les commentaires des membres sur votre liste de suivi, les marchés et les Tides. Les commentaires restent 12 heures ; sur les Tides, jusqu'à ce que la Tide change. Ouvrez l'onglet Communauté d'un actif pour ajouter le vôtre."
 }

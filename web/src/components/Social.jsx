@@ -47,7 +47,7 @@ function Comments({ visible }) {
       <div className="chips" role="group" aria-label={T("Show")} style={{ margin: "10px 0 4px" }}>
         {[["all", T("All")], ["crypto", T("Crypto")], ["equity", T("Equities")]].map(([k, l]) => <button key={k} type="button" className={scope === k ? "on" : ""} aria-pressed={scope === k} onClick={() => setScope(k)}>{l}</button>)}
       </div>
-      <p className="sub" style={{ margin: "4px 0 10px" }}>{T("Members' comments on your watchlist, the markets and the Tides, from the last 12 hours. Open an asset's Community tab to add yours.")}</p>
+      <p className="sub" style={{ margin: "4px 0 10px" }}>{T("Members' comments on your watchlist, the markets and the Tides. Comments last 12 hours; on the Tides, until the Tide changes. Open an asset's Community tab to add yours.")}</p>
       {rows === null ? <p className="sub">{T("Loading…")}</p> : !shown.length ? <p className="sub">{T("No comments in the last 12 hours.")}</p> : (
         <ol className="comments compact">
           {shown.map((n) => (
