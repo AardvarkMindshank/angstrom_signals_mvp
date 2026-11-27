@@ -112,7 +112,7 @@ export function watchIcons(root) {
 
 // Text from the data that may hold emoji anywhere ("🔻✅", "Trend 📈 (provided)"): each known one as its icon.
 export function Glyphs({ text, size = 15 }) {
-  const s = String(text == null ? "" : text);
+  const s = String(text == null ? "" : text).replace(/([\u23E9-\u23EF\u23F8-\u23FA\u25B6\u25C0])\uFE0F?/g, "$1\uFE0E");
   const out = [];
   let last = 0, i = 0;
   for (const m of s.matchAll(new RegExp(EMOJI_RE.source, "gu"))) {

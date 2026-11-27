@@ -2,3 +2,4 @@ node_modules/
 dist/
 public/words/
 public/data/
+public/help/

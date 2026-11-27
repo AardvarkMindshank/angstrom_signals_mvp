@@ -6,6 +6,7 @@ import { saveSettings } from "../../lib/account.js";
 import { usd, signed, weekday } from "../../lib/format.js";
 import { assetHref, Logo } from "../../components/Search.jsx";
 import Icon, { Arrow, Emo, Glyphs, Lead, plain } from "../../components/Icon.jsx";
+import GettingStarted from "../../components/GettingStarted.jsx";
 
 // 📸 Quick Snapshot: where a member starts the day. The daily video and the two spoken briefings, the Tides card, what
 // changed since the last visit, the two market moods, the highest and lowest Trend in your watchlist, your funnels and
@@ -42,6 +43,7 @@ export default function Snapshot({ account }) {
   return (
     <div className="page qsnap">
       <h1 className="ptitle">{T("Quick Snapshot")}</h1>
+      <GettingStarted account={account} />
       <div className="snaptop">
         <Video account={account} />
         <div className="snapcol">

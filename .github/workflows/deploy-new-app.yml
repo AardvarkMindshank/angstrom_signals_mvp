@@ -6,7 +6,7 @@ name: Deploy the new app (beta)
 on:
   push:
     branches: [main]
-    paths: ["web/**", "locales/**", "i18n.py", "lattice_component.py", "prism_component.py", "funnel_stages_component.py", "macro_calendar.py", ".github/workflows/deploy-new-app.yml"]
+    paths: ["web/**", "locales/**", "i18n.py", "lattice_component.py", "prism_component.py", "funnel_stages_component.py", "app.py", "training_videos.py", "signals_view.py", "tides.py", "macro_calendar.py", ".github/workflows/deploy-new-app.yml"]
   workflow_dispatch:
     inputs:
       dry_run:
@@ -22,10 +22,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+      - name: The classic app's modules (help and guides read its texts)
+        run: pip install -q -r requirements.txt
       - name: The classic editors the new app hosts
         run: python web/scripts/components.py
       - name: Words for each language
         run: python web/scripts/words.py
+      - name: Help and guides in each language
+        run: python web/scripts/help.py
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
