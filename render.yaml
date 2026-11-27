@@ -13,6 +13,8 @@ services:
     healthCheckPath: /health
     autoDeploy: true
     envVars:
+      - key: PYTHON_VERSION          # numba (used by pandas-ta) doesn't install on Python 3.14 yet
+        value: 3.13.4
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
