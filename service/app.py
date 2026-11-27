@@ -445,6 +445,13 @@ def admin_email(ask: AdminEmailAsk, who: Member = Depends(member)):
     return admin_mail.send(who.db, ask.kind, ask.address, ask.name)
 
 
+@app.get("/admin/status")
+def admin_status(who: Member = Depends(member)):
+    from service import admin_status as st
+
+    return st.status(who.db)
+
+
 # ---- ✍️ Beta NDA -------------------------------------------------------------------------------------------------------
 
 class NdaSign(BaseModel):

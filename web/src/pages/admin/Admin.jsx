@@ -8,9 +8,9 @@ import Icon from "../../components/Icon.jsx";
 // admin database functions with the admin's own sign-in, and each of them checks the admin role itself, so nobody
 // else can read or change these lists even by opening #admin. The welcome and barred emails go through the data
 // service (service/admin_mail.py). The NDA tools, AI provider choice and page timings stay in the classic app.
-export const ADMIN_ICONS = ["users", "message-square-text", "flag", "ticket", "ban", "shield", "check", "x", "trash", "image", "mail", "user-plus", "chevron-up", "chevron-down", "download", "eye"];
+export const ADMIN_ICONS = ["users", "message-square-text", "flag", "ticket", "ban", "shield", "check", "x", "trash", "image", "mail", "user-plus", "chevron-up", "chevron-down", "download", "eye", "server-cog", "external-link"];
 
-const SECTIONS = [["members", "users", "Members"], ["feedback", "message-square-text", "Feedback"], ["reports", "flag", "Reported comments"], ["beta", "ticket", "Beta requests"], ["blacklist", "ban", "Blacklist"]];
+const SECTIONS = [["members", "users", "Members"], ["feedback", "message-square-text", "Feedback"], ["reports", "flag", "Reported comments"], ["beta", "ticket", "Beta requests"], ["blacklist", "ban", "Blacklist"], ["system", "server-cog", "System"]];
 
 const FEEDBACK_STATUS = { submitted: "Submitted", under_review: "Under review", accepted: "Accepted", in_development: "In development", in_production: "In production", rejected: "Rejected", closed: "Closed" };
 const FEEDBACK_NEXT = { submitted: ["under_review"], under_review: ["accepted", "rejected"], accepted: ["in_development"], in_development: ["in_production"], in_production: ["closed"], rejected: ["closed"] };
@@ -64,6 +64,7 @@ export default function Admin({ section, account }) {
         {on === "reports" && <Reports when={when} />}
         {on === "beta" && <Beta when={when} nda={account && account.nda} />}
         {on === "blacklist" && <Blacklist when={when} />}
+        {on === "system" && <System when={when} />}
       </div>
     </div>
   );
@@ -473,6 +474,80 @@ function Blacklist({ when }) {
           <span className="admrow nowrap"><button type="button" className="primary sm" onClick={() => remove(r.email)}>Remove</button><button type="button" className="ghost sm" onClick={() => setRemoving("")}>Cancel</button></span>
         ) : <button type="button" className="ghost icon" onClick={() => setRemoving(r.email)} title="Remove from the blacklist (lets this person log in again)" aria-label="Remove"><Icon n="trash" /></button>} />
       )}
+    </>
+  );
+}
+
+// 🛠️ System: which AI writes the shared news scores and the spoken briefings (for everyone), where each AI key goes,
+// and whether the background lookups (earnings dates, the market overview strip) are working. Page timings and the
+// push-key maker stay in the classic app: they are about the classic server itself.
+const PROVIDERS = [["claude", "Claude (Anthropic)", "ANTHROPIC_API_KEY", "ANTHROPIC_MODEL", "https://console.anthropic.com/settings/keys"],
+  ["grok", "Grok (xAI)", "XAI_API_KEY", "XAI_CHAT_MODEL", "https://console.x.ai"],
+  ["chatgpt", "ChatGPT (OpenAI)", "OPENAI_API_KEY", "OPENAI_MODEL", "https://platform.openai.com/api-keys"],
+  ["gemini", "Gemini (Google)", "GEMINI_API_KEY", "GEMINI_MODEL", "https://aistudio.google.com/apikey"]];
+const USES = [["sentiment", "News sentiment scores", "Scores the headlines for every asset and both markets. Shared by everyone, so an admin picks it for the whole app; new scores use it from their next refresh (every 12 hours)."],
+  ["briefing", "Spoken briefing scripts", "Writes the shared Morning Outlook, and the Passage Plans the background worker writes for the spoken plan when the member hasn't written one yet. Runs on the background worker, which has the Claude, Grok, ChatGPT and Gemini keys."]];
+const ago = (s) => (s == null ? "never" : s < 90 ? "just now" : s < 5400 ? `${Math.round(s / 60)} min ago` : s < 129600 ? `${Math.round(s / 3600)} h ago` : `${Math.round(s / 86400)} days ago`);
+
+function System() {
+  const [ai, setAi] = useState(null);
+  const [st, setSt] = useState(undefined);
+  const [note, setNote] = useState(null);
+  useEffect(() => {
+    supabase.from("app_settings").select("value").eq("key", "ai").limit(1).then(({ data }) => setAi((data && data[0] && data[0].value) || {})).catch(() => setAi({}));
+    call("/admin/status", { timeout: 60000 }).then((r) => setSt(r.ok ? r : null)).catch(() => setSt(null));
+  }, []);
+  const pick = async (use, p) => {
+    const { error } = await supabase.rpc("app_setting_set", { p_key: "ai", p_patch: { [use]: p } });
+    if (error) { setNote(["bad", /not allowed/.test(error.message || "") ? "Only an admin can change this." : "Could not save it. Run sql/2026-11-25_app_settings.sql in the Supabase SQL editor if it hasn't been run."]); return; }
+    setAi({ ...ai, [use]: p });
+    const name = (PROVIDERS.find((x) => x[0] === p) || [, p])[1];
+    setNote(["ok", use === "sentiment" ? `News sentiment will be scored by ${name} from its next refresh.` : `Morning briefings will be written by ${name} from the next one.`]);
+  };
+  const e = st && st.earnings, o = st && st.overview;
+  return (
+    <>
+      <section className="admsec">
+        <h3>AI, for everyone</h3>
+        {ai === null ? <p className="sub">Loading…</p> : USES.map(([use, label, tip]) => (
+          <label key={use} className="admai" title={tip}>
+            <span><b>{label}</b><span className="m">{tip}</span></span>
+            <select value={ai[use] || "grok"} onChange={(ev) => pick(use, ev.target.value)} aria-label={label}>
+              {PROVIDERS.map(([k, n]) => <option key={k} value={k}>{n}</option>)}
+            </select>
+          </label>
+        ))}
+        <Note note={note} />
+        <p className="sub">Each AI needs its key where it runs: in Render (Environment) for the app and data service, and in GitHub (Settings › Secrets and variables › Actions) for the background worker. Add keys there yourself; never paste a key into a chat or a file.</p>
+        <div className="admscroll"><table className="t adm" style={{ minWidth: 640 }}>
+          <thead><tr><th>AI</th><th>Secret name</th><th>Model (secret to change it)</th><th>Get a key</th></tr></thead>
+          <tbody>{PROVIDERS.map(([k, n, env, menv, at]) => <tr key={k}><td>{n}</td><td><code>{env}</code></td><td><code>{menv}</code></td><td><a href={at} target="_blank" rel="noopener noreferrer">{at.replace("https://", "")} <Icon n="external-link" size={13} /></a></td></tr>)}</tbody>
+        </table></div>
+      </section>
+      <section className="admsec">
+        <h3>Market overview strip</h3>
+        {st === undefined ? <p className="sub">Loading…</p> : !o ? <p className="sub">The status could not be read just now.</p> : (
+          <>
+            <p className={"note " + (o.ago != null && o.ago < o.stale ? "good" : "bad")}>{o.readings ? `${o.readings} readings, saved by the background worker ${ago(o.ago)}.` : "Nothing saved yet."} The worker refreshes it about every {Math.round(o.refresh / 60)} minutes{o.ago != null && o.ago >= o.stale ? "; it looks stale, so check the worker's runs in GitHub Actions." : "."}</p>
+            {o.errors.map((x, i) => <p key={i} className="m">{x}</p>)}
+          </>
+        )}
+      </section>
+      <section className="admsec">
+        <h3>Earnings dates</h3>
+        {st === undefined ? <p className="sub">Loading…</p> : !e ? <p className="sub">The saved earnings dates could not be read.</p> : !e.stocks ? <p className="sub">No stocks have been saved yet.</p> : (
+          <>
+            <p className="sub">{e.stocks} stocks: {e.with_date} with a date, {e.none_known} with none known, {e.never_checked} never checked. Last check: {ago(e.newest_check_ago)}. Oldest check: {ago(e.oldest_check_ago)}. A lookup runs about every 12 hours.</p>
+            {e.with_date === 0 && e.stocks >= 3 && <p className="note bad">No stock has a date. The lookups may be failing, so check the Finnhub key and the worker's log.</p>}
+            <SortTable list={e.lines} first="state" desc={false} rowKey={(r) => r.ticker} cols={[
+              ["ticker", "Stock", (r) => r.ticker],
+              ["next", "Next report", (r) => r.next_earnings || ""],
+              ["state", "State", (r) => r.state],
+              ["checked", "Checked", (r) => r.checked_ago, (r) => ago(r.checked_ago), true],
+            ]} />
+          </>
+        )}
+      </section>
     </>
   );
 }

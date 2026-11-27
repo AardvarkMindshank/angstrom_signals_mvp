@@ -958,3 +958,11 @@ a.btnlink:hover { background: var(--ang-hover); }
 .md .mdh { font-family: Montserrat, Inter, sans-serif; letter-spacing: -.01em; margin: 18px 0 6px; line-height: 1.3; }
 .md h3.mdh { font-size: 18px; } .md h4.mdh { font-size: 16px; } .md h5.mdh, .md h6.mdh { font-size: 14.5px; }
 .nda .note { margin: 0; }
+.admsec { display: flex; flex-direction: column; gap: 10px; padding-bottom: 18px; border-bottom: 1px solid var(--ang-border); }
+.admsec:last-child { border-bottom: 0; }
+.admsec h3 { margin: 6px 0 0; font-size: 16px; }
+.admai { display: flex; align-items: center; justify-content: space-between; gap: 18px; max-width: 900px; }
+.admai > span { display: flex; flex-direction: column; gap: 2px; }
+.admai .m { font-size: 12.5px; color: var(--ang-muted); }
+.admai select { font: inherit; padding: 7px 10px; border: 1px solid var(--ang-border); border-radius: 10px; background: var(--ang-surface); color: var(--ang-text); min-width: 190px; }
+.admin .admscroll + .sub { margin-top: 0; }
