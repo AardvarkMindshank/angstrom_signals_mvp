@@ -19,8 +19,9 @@ export default function SignIn() {
   return (
     <div className="signin">
       <div className="card signbox">
-        <img src="/logo.png" alt="" width="56" height="56" style={{ alignSelf: "center", borderRadius: 12 }} />
-        <h1 style={{ margin: 0, textAlign: "center", fontFamily: "Montserrat, Inter, sans-serif", fontSize: 24 }}>MarketNavi</h1>
+        {/* The full MarketNavi logo (compass, name and line), as on the classic sign-in page; night has its own. */}
+        <img className="logo-full day" src={import.meta.env.BASE_URL + "brand/full-light.png"} alt="MarketNavi" width="1003" height="800" />
+        <img className="logo-full night" src={import.meta.env.BASE_URL + "brand/full-dark.png"} alt="MarketNavi" width="1003" height="800" />
         <p className="sub">{T("The new MarketNavi app (beta). Log in with your usual account.")}</p>
         <button type="button" className="google" onClick={google}>{T("Continue with Google")}</button>
         <div className="or">{T("Or continue with")}</div>
