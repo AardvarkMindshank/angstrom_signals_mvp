@@ -3,10 +3,11 @@ import { T } from "../../lib/i18n.js";
 import { funnelStatus } from "../../lib/assets.js";
 import { dayMonthYear } from "../../lib/format.js";
 import { CLASSIC } from "../../lib/supabase.js";
+import { assetSets } from "../../lib/service.js";
 
-// Where this asset stands in the member's funnels, stage by stage, as the funnel job last checked it. Checking the
-// member's own Sets live needs MarketNavi's engine on a server, which comes next; until then they are in the classic app.
-export default function Sets({ who }) {
+// Where this asset stands in the member's funnels, stage by stage, as the funnel job last checked it, and each of the
+// member's own Sets checked on it right now by MarketNavi's engine (the data service), the same answer as Prism gives.
+export default function Sets({ who, assetKey }) {
   const [fu, setFu] = useState(null);
   useEffect(() => { let live = true; funnelStatus(who.id).then((x) => live && setFu(x)); return () => { live = false; }; }, [who.id]);
   const STATUS = { pool: T("In the pool"), stage: T("Passing stage {n} of {m}"), flagged: T("Flagged"), candidate: T("Candidate") };
@@ -38,10 +39,42 @@ export default function Sets({ who }) {
           </div>
         ))}
       </section>
-      <section className="card">
-        <h2>{T("Your Sets on this asset")}</h2>
-        <p className="sub">{T("Checking your own Sets on this asset right now, with their history behind the chart, is coming to the new app next. Until then they're in the classic app's Lattice.")} <a className="linkish" href={CLASSIC}>{T("Open the classic app")} ›</a></p>
-      </section>
+      <LiveSets assetKey={assetKey} />
     </div>
+  );
+}
+
+function LiveSets({ assetKey }) {
+  const [got, setGot] = useState(null);
+  const [err, setErr] = useState("");
+  const [open, setOpen] = useState(null);
+  useEffect(() => {
+    let live = true; setGot(null); setErr("");
+    assetSets(assetKey).then((g) => live && setGot(g)).catch((e) => live && setErr(e.status === 0 ? "down" : "fail"));
+    return () => { live = false; };
+  }, [assetKey]);
+  const ANSWER = { yes: T("Yes"), no: T("No"), unknown: T("Not known yet") };
+  return (
+    <section className="card">
+      <h2>{T("Your Sets on this asset")}</h2>
+      <p className="sub">{T("Each of your own Sets checked on this asset right now, the same answer Prism would give.")}</p>
+      {err ? <p className="sub">{err === "down" ? T("The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.") : T("Your Sets couldn't be checked just now. Please try again in a minute.")} <a className="linkish" href={CLASSIC}>{T("Open the classic app")} ›</a></p>
+        : !got ? <p className="sub">{T("Checking your Sets… this can take up to a minute the first time.")}</p>
+        : !got.sets.length ? <p className="sub">{T("You haven't made any Sets yet. Build one in Lattice in the classic app.")}</p> : (
+          <ol className="fsteps">
+            {got.sets.map((x) => (
+              <li key={x.id} className={x.answer}>
+                <span className="fdot" aria-hidden="true" />
+                <span className="b">{x.name}</span>
+                <span className="m">{({ Definite: T("Definite"), Undecided: T("Undecided") })[x.how_sure] || x.how_sure}</span>
+                <span className="fans">{ANSWER[x.answer] || "—"}</span>
+                {x.why && (open === x.id || x.why.length < 120 ? <span className="m fline">{x.why}</span>
+                  : <button type="button" className="linkish fline" style={{ textAlign: "left" }} onClick={() => setOpen(x.id)}>{x.why.slice(0, 110)}… {T("more")}</button>)}
+              </li>
+            ))}
+          </ol>
+        )}
+      {got && got.more > 0 && <p className="sub">{T("Showing your first {n} Sets.", { n: got.sets.length })}</p>}
+    </section>
   );
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { createChart, CrosshairMode } from "lightweight-charts";
 import { T } from "../../lib/i18n.js";
 import { candles, drawings } from "../../lib/assets.js";
+import { sonar as loadSonar } from "../../lib/service.js";
 import { usd, pct, dayMonthYear, tone } from "../../lib/format.js";
 
 const RANGES = [["1M", 22, 31], ["3M", 66, 92], ["6M", 130, 183], ["1Y", 252, 365], ["2Y", 504, 730]];
@@ -123,7 +124,7 @@ function bollinger(rows, n = 20, k = 2) {
   return out;
 }
 
-const IND = () => [["ma", T("Moving averages")], ["bb", T("Bollinger bands")], ["rsi", "RSI"], ["macd", "MACD"], ["draw", T("Your drawings")]];
+const IND = () => [["ma", T("Moving averages")], ["bb", T("Bollinger bands")], ["rsi", "RSI"], ["macd", "MACD"], ["sonar", "Sonar"], ["draw", T("Your drawings")]];
 
 function Technical({ bars, pair, drawn }) {
   const frames = pair ? [["1h", T("1 hour")], ["4h", T("4 hours")], ["1d", T("Daily")], ["1w", T("Weekly")]] : [["1d", T("Daily")], ["1w", T("Weekly")]];
@@ -132,7 +133,13 @@ function Technical({ bars, pair, drawn }) {
   const [err, setErr] = useState("");
   const [on, setOn] = useState(() => { try { return JSON.parse(localStorage.getItem("mn_chart_ind")) || { ma: true, draw: true }; } catch (e) { return { ma: true, draw: true }; } });
   const flip = (k) => setOn((o) => { const n = { ...o, [k]: !o[k] }; try { localStorage.setItem("mn_chart_ind", JSON.stringify(n)); } catch (e) { /* private window */ } return n; });
-  const box = useRef(null), rbox = useRef(null), mbox = useRef(null), canvas = useRef(null);
+  const box = useRef(null), rbox = useRef(null), mbox = useRef(null), sbox = useRef(null), canvas = useRef(null);
+  const [son, setSon] = useState(null);
+  useEffect(() => {
+    let live = true; setSon(null);
+    if (on.sonar && rows && rows.length >= 40) loadSonar(rows).then((d) => live && setSon(d)).catch(() => live && setSon({ error: true }));
+    return () => { live = false; };
+  }, [rows, on.sonar]);
   const daily = useMemo(() => bars.map((b) => ({ time: Math.floor(new Date(b.t + "T00:00:00Z").getTime() / 1000), open: b.o ?? b.c, high: b.h ?? b.c, low: b.l ?? b.c, close: b.c, volume: b.v || 0 })), [bars]);
 
   useEffect(() => {
@@ -173,8 +180,21 @@ function Technical({ bars, pair, drawn }) {
       h.setData(m.map((x) => ({ time: x.time, value: x.hist, color: x.hist >= 0 ? "rgba(0,127,115,.5)" : "rgba(194,51,63,.5)" })));
       line(mc, "#2962ff", m.map((x) => ({ time: x.time, value: x.line })), 2); line(mc, "#ff9800", m.map((x) => ({ time: x.time, value: x.signal })), 2);
     }
+    if (on.sonar && sbox.current && son && !son.error) {
+      const sc = createChart(sbox.current, base(150, { timeScale: { visible: false } })); charts.push(sc);
+      const pts = (k) => son.time.map((t, i) => (son[k][i] == null ? null : { time: t, value: son[k][i] })).filter(Boolean);
+      const mf = sc.addHistogramSeries({ priceLineVisible: false, lastValueVisible: false });
+      mf.setData(pts("mf").map((x) => ({ ...x, color: x.value >= 0 ? "rgba(0,127,115,.35)" : "rgba(194,51,63,.35)" })));
+      line(sc, "#7fd3f0", pts("wt1"), 2);
+      const w2 = line(sc, "#2962ff", pts("wt2"), 2);
+      w2.createPriceLine({ price: 53, color: bad, lineWidth: 1, lineStyle: 2, axisLabelVisible: false });
+      w2.createPriceLine({ price: -53, color: good, lineWidth: 1, lineStyle: 2, axisLabelVisible: false });
+      w2.setMarkers(son.time.flatMap((t, i) => son.buy[i] ? [{ time: t, position: "belowBar", color: good, shape: "circle", size: 1.4 }]
+        : son.sell[i] ? [{ time: t, position: "aboveBar", color: bad, shape: "circle", size: 1.4 }] : []));
+    }
     // The lower charts follow the main chart's scrolling and zooming.
-    const sync = (r) => { if (r) charts.slice(1).forEach((ch) => ch.timeScale().setVisibleLogicalRange(r)); paint(); };
+    const later = () => requestAnimationFrame(() => requestAnimationFrame(paint));      // after the chart has laid itself out
+    const sync = (r) => { if (r) charts.slice(1).forEach((ch) => ch.timeScale().setVisibleLogicalRange(r)); later(); };
     chart.timeScale().subscribeVisibleLogicalRangeChange(sync);
     const shown = tf === "1w" ? 104 : 160;
     if (rows.length > shown) chart.timeScale().setVisibleLogicalRange({ from: rows.length - shown, to: rows.length + 2 });
@@ -188,7 +208,10 @@ function Technical({ bars, pair, drawn }) {
         while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (times[mid] <= t) lo = mid; else hi = mid; }
         lo = lo + (t - times[lo]) / ((times[lo + 1] - times[lo]) || 1);
       }
-      return chart.timeScale().logicalToCoordinate(lo);
+      // The chart turns whole candle positions into pixels; in between, step proportionally.
+      const ts = chart.timeScale(), i0 = Math.floor(lo), f = lo - i0;
+      const a = ts.logicalToCoordinate(i0), b = ts.logicalToCoordinate(i0 + 1);
+      return a == null || b == null ? null : a + (b - a) * f;
     };
     const Y = (p) => c.priceToCoordinate(p);
     function paint() {
@@ -202,10 +225,10 @@ function Technical({ bars, pair, drawn }) {
       (drawn || []).forEach((it) => drawOne(ctx, it, X, Y, plotW, hgt));
       ctx.restore();
     }
-    const ro = new ResizeObserver(() => paint()); ro.observe(box.current);
-    setTimeout(paint, 50);
-    return () => { ro.disconnect(); chart.timeScale().unsubscribeVisibleLogicalRangeChange(sync); charts.forEach((ch) => ch.remove()); };
-  }, [rows, on, drawn]);
+    const ro = new ResizeObserver(later); ro.observe(box.current);
+    later(); const t1 = setTimeout(paint, 400);
+    return () => { clearTimeout(t1); ro.disconnect(); chart.timeScale().unsubscribeVisibleLogicalRangeChange(sync); charts.forEach((ch) => ch.remove()); };
+  }, [rows, on, drawn, son]);
 
   return (
     <>
@@ -226,6 +249,8 @@ function Technical({ bars, pair, drawn }) {
           </div>
           {on.rsi && <><div className="sublabel">RSI (14)</div><div ref={rbox} style={{ height: 130 }} /></>}
           {on.macd && <><div className="sublabel">MACD (12, 26, 9)</div><div ref={mbox} style={{ height: 130 }} /></>}
+          {on.sonar && <><div className="sublabel">{T("Sonar: the two waves, money flow, and big dots where the waves cross at an extreme")}</div>
+            {son && son.error ? <p className="sub">{T("Sonar couldn't be worked out just now.")}</p> : !son ? <p className="sub" style={{ height: 150 }}>{T("Working out Sonar…")}</p> : <div ref={sbox} style={{ height: 150 }} />}</>}
         </>
       )}
       <div className="legend" style={{ marginTop: 8 }}>

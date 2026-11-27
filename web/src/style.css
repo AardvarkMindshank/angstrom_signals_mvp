@@ -11,7 +11,7 @@
   --bad-bg: rgba(240,98,110,.16); --bad-ink: #ffb3ba; --note-bg: rgba(198,148,32,.18); --note-ink: #f2d38a;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; background: var(--ang-page); min-height: 100%; }
+html, body { margin: 0; background: var(--ang-page); min-height: 100%; overflow-x: clip; }
 body { font-family: Inter, "Source Sans Pro", system-ui, sans-serif; color: var(--ang-text); font-size: 15px; line-height: 1.5; }
 h2 { margin: 0; font-family: Montserrat, Inter, sans-serif; font-size: 17px; font-weight: 700; }
 h3 { margin: 16px 0 6px; font-size: 15px; }
@@ -377,3 +377,34 @@ table.t td { border-top-color: var(--ang-border); }
 .fsteps li.yes .fdot { background: var(--good); } .fsteps li.no .fdot { background: var(--bad); } .fsteps li.unknown .fdot { background: var(--gold); }
 .fans { font-weight: 600; text-align: right; }
 @media (max-width: 640px) { .fsteps li { grid-template-columns: 14px 1fr auto; } .fsteps li .m:not(.fline) { display: none; } .cform.reply, .reply, .reply-open { margin-left: 20px; } }
+
+/* ---- Search results page ---- */
+.ptitle { margin: 0; font-family: Montserrat, Inter, sans-serif; font-size: 28px; letter-spacing: -.02em; }
+.pillink { display: inline-flex; gap: 6px; align-items: baseline; text-decoration: none; padding: 7px 14px; border-radius: 999px; border: 1px solid var(--ang-border); font-size: 14px; }
+.pillink:hover { border-color: var(--ang-text); }
+
+/* ---- AI Navigator panel ---- */
+.navbtn { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; border: 0; background: transparent; color: var(--gold);
+  font: 600 13.5px Inter, sans-serif; padding: 8px 12px; border-radius: 999px; min-height: 36px; }
+.navbtn:hover { background: var(--ang-field); }
+.navpanel { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); z-index: 40; background: var(--ang-raised);
+  box-shadow: -18px 0 50px rgba(11,18,32,.16), -1px 0 0 var(--ang-border); display: flex; flex-direction: column;
+  transform: translateX(105%); visibility: hidden; transition: transform .22s ease, visibility 0s linear .22s; }
+.navpanel.open { transform: none; visibility: visible; transition: transform .22s ease; }
+.navhead { display: flex; align-items: center; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--ang-border); color: var(--gold); }
+.navhead b { color: var(--ang-text); font-size: 15px; margin-right: auto; }
+.navbody { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.navhint p { color: var(--ang-soft); font-size: 14px; margin: 0 0 10px; }
+.navsug { display: block; width: 100%; text-align: left; cursor: pointer; margin: 6px 0; padding: 10px 14px; border-radius: 12px;
+  border: 1px solid var(--ang-border); background: transparent; color: var(--ang-text); font: 14px Inter, sans-serif; }
+.navsug:hover { border-color: var(--gold); }
+.navmsg { font-size: 14.5px; line-height: 1.55; }
+.navmsg.user { align-self: flex-end; background: var(--ang-field); padding: 9px 14px; border-radius: 16px 16px 4px 16px; max-width: 85%; white-space: pre-wrap; }
+.navmsg.assistant p { margin: 0 0 8px; } .navmsg.assistant ul, .navmsg.assistant ol { margin: 0 0 8px; padding-left: 20px; }
+.navmsg code { background: var(--ang-field); padding: 0 4px; border-radius: 4px; font-size: 13px; }
+.navnote { font-size: 12.5px; color: var(--gold); margin-top: 4px; }
+.navform { display: flex; gap: 8px; padding: 12px 16px 16px; border-top: 1px solid var(--ang-border); align-items: flex-end; }
+.navform textarea { flex: 1; resize: none; font: inherit; font-size: 14px; color: var(--ang-text); background: var(--ang-field); border: 1px solid transparent;
+  border-radius: 14px; padding: 10px 12px; }
+.navform textarea:focus { outline: 2px solid var(--gold); }
+@media (max-width: 640px) { .navbtn span { display: none; } }

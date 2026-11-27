@@ -1,0 +1,23 @@
+# The MarketNavi data service (service/app.py) for the new app at marketnavi.ai/new/. Create it once in Render with
+# New → Blueprint and this repository; Render asks for the values marked sync: false (paste them there, never in chat).
+# The classic app's own Render service is not part of this file and is not changed by it.
+services:
+  - type: web
+    name: marketnavi-data
+    runtime: python
+    plan: starter
+    region: singapore
+    branch: main
+    buildCommand: pip install -r requirements.txt -r service/requirements.txt
+    startCommand: uvicorn service.app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://marketnavi.ai

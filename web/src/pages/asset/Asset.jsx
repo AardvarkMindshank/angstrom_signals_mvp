@@ -115,7 +115,7 @@ export default function Asset({ assetKey, tab, account }) {
         {(on === "derivatives" || on === "earnings") && <Derivatives row={row} crypto={crypto} who={who} />}
         {on === "conditions" && <Conditions sea={sea} crypto={crypto} />}
         {on === "activity" && <Activity assetKey={assetKey} who={who} account={account} />}
-        {on === "sets" && <Sets who={who} />}
+        {on === "sets" && <Sets who={who} assetKey={assetKey} />}
         {on === "community" && <Community row={row} score={m} />}
       </div>
       <p className="sub" style={{ marginTop: 8 }}>{crypto ? T("Prices from Binance; derivatives from Coinalyze.") : T("Prices from Yahoo Finance.")} {T("Readings, news mood and Tides from MarketNavi, the same numbers as the rest of the app. Descriptive readings, not financial advice.")}</p>

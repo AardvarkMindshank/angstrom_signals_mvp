@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { T } from "../lib/i18n.js";
 import { universe, watchlists, match, brief, keyFor } from "../lib/assets.js";
 import { usd as price, pct, tone } from "../lib/format.js";
+import { openNavigator } from "./Navigator.jsx";
 
 export const assetHref = (key, tab) => `#asset/${encodeURIComponent(key)}${tab ? "/" + tab : ""}`;
 const go = (href) => { window.location.hash = href.slice(1); };
@@ -51,11 +52,13 @@ export default function Search() {
   useEffect(() => setSel(0), [q]);
 
   const pick = (href) => { setOpen(false); setQ(""); input.current && input.current.blur(); go(href); };
-  const items = [...shown.map((a) => assetHref(a.key)), ...pages.map((p) => p.href)];
+  const topic = q.trim().length >= 2 ? `#search/${encodeURIComponent(q.trim())}` : null;
+  const items = [...shown.map((a) => assetHref(a.key)), ...pages.map((p) => p.href), ...(topic ? [topic, "nav"] : [])];
+  const pickAny = (href) => { if (href === "nav") { const text = q.trim(); setOpen(false); setQ(""); openNavigator({ question: text }); } else pick(href); };
   const key = (e) => {
     if (e.key === "ArrowDown") { e.preventDefault(); setSel((s) => Math.min(items.length - 1, s + 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setSel((s) => Math.max(0, s - 1)); }
-    else if (e.key === "Enter" && items[sel]) { e.preventDefault(); pick(items[sel]); }
+    else if (e.key === "Enter" && items[sel]) { e.preventDefault(); pickAny(items[sel]); }
     else if (e.key === "Escape") { setOpen(false); input.current.blur(); }
   };
   const cls = (a) => (a.kind === "crypto" ? T("crypto") : T("equity"));
@@ -108,7 +111,19 @@ export default function Search() {
               <span className="sname"><b>{p.label}</b></span>
             </a>
           ))}
-          {q.trim() && !hits.length && !pages.length && <div className="sempty">{T("Nothing found for “{q}”. Try a symbol, such as BTC or AAPL.", { q: q.trim() })}</div>}
+          {topic && (
+            <>
+              <div className="shead">{T("Everywhere in MarketNavi")}</div>
+              <a href={topic} className={"srow" + (sel === shown.length + pages.length ? " sel" : "")} onClick={(e) => { e.preventDefault(); pick(topic); }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16v11H8l-4 4z" /></svg>
+                <span className="sname">{T("News and your Logbook mentioning “{q}”", { q: q.trim() })}</span>
+              </a>
+              <a href="#" className={"srow" + (sel === shown.length + pages.length + 1 ? " sel" : "")} onClick={(e) => { e.preventDefault(); pickAny("nav"); }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="var(--gold)" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z" /></svg>
+                <span className="sname">{T("Ask the AI Navigator: “{q}”", { q: q.trim() })}</span>
+              </a>
+            </>
+          )}
         </div>
       )}
     </div>

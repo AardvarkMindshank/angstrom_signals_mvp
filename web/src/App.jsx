@@ -7,6 +7,8 @@ import SignIn from "./pages/SignIn.jsx";
 import TradeLog from "./pages/tradelog/TradeLog.jsx";
 import Asset from "./pages/asset/Asset.jsx";
 import Search from "./components/Search.jsx";
+import Navigator from "./components/Navigator.jsx";
+import SearchPage from "./pages/SearchPage.jsx";
 
 // The new MarketNavi app (beta). One page so far, the Trade Log; each page moves across from the classic app in
 // turn, and the classic app keeps running until every page is here.
@@ -68,6 +70,7 @@ export default function App() {
           {PAGES.map(([k, label]) => <a key={k} href={`#${k}`} className={page === k ? "on" : ""} aria-current={page === k ? "page" : undefined}>{label()}</a>)}
         </nav>
         <div className="right">
+          <Navigator onScreen={page === "asset" ? `The person is looking at the asset page for ${route[1]} (${route[2] || "chart"} tab).` : page === "search" ? `The person searched for “${route[1]}”.` : `The person is on the ${page} page.`} />
           <a className="ghost" href={CLASSIC} title={T("Everything not moved across yet is in the classic app.")}>{T("Classic app")}</a>
           <button type="button" className="ghost" onClick={() => supabase.auth.signOut()} title={account && account.user.email}>{T("Log out")}</button>
         </div>
@@ -75,6 +78,7 @@ export default function App() {
       <main className="main">
         {page === "tradelog" && account && <TradeLog account={account} />}
         {page === "asset" && account && <Asset key={route[1]} assetKey={route[1]} tab={route[2]} account={account} />}
+        {page === "search" && account && <SearchPage key={route[1]} q={route[1] || ""} />}
       </main>
     </div>
   );
