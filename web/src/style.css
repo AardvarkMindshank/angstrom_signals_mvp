@@ -1000,7 +1000,7 @@ a.btnlink:hover { background: var(--ang-hover); }
 }
 @media (max-width: 640px) {
   table.t.sig .phhide { display: none; }               /* the readings come right after the name on a phone */
-  table.t.sig .sticky { box-shadow: 6px 0 8px -8px rgba(0,0,0,.35); }
+  table.t.sig .sticky { position: static; box-shadow: none; }   /* on a narrow screen the whole table scrolls sideways */
   .page { gap: 20px; }
 }
 @media (max-width: 640px) { .admai { flex-wrap: wrap; gap: 8px; } .admai select { width: 100%; } .admsignup { gap: 8px; } }
