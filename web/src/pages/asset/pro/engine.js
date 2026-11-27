@@ -1233,6 +1233,17 @@ function draw(L, root, data) {
     return;
   }
 
+  // 📱 On a phone the whole chart (price and every indicator pane) fits in about two-thirds of the screen, so there is
+  // always page above or below it to scroll with: taller than the screen, a dark chart left nothing to grab and
+  // looked like a black screen with no way back.
+  if (window.matchMedia && window.matchMedia("(max-width: 760px)").matches) {
+    const budget = Math.max(300, Math.round(window.innerHeight * 0.66) - 30);
+    const sum = data.panes.reduce((a, p) => a + p.height, 0);
+    if (sum > budget) {
+      const f = budget / sum;
+      data.panes = data.panes.map((p, i) => ({ ...p, height: Math.max(i === 0 ? 170 : 56, Math.round(p.height * f)) }));
+    }
+  }
   const totalHeight = data.panes.reduce((sum, p) => sum + p.height, 0) + 30;
   host.style.height = totalHeight + "px";
   const hasOsc = data.series.some((s) => s.scale === "osc");
