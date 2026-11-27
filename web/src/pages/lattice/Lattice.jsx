@@ -11,6 +11,7 @@ import latticeGroup, { css as groupCss } from "../../generated/lattice_group.js"
 import latticeSet, { css as setCss } from "../../generated/lattice_set.js";
 import Prism from "./Prism.jsx";
 import Funnels from "./Funnels.jsx";
+import Soundings from "./Soundings.jsx";
 
 // 🧩 Lattice, the research workspace: Signal Groups (signals combined into one reading with labels) and Signal Sets
 // (Groups and signals connected into a Yes / No decision). The editors are the classic app's own (hosted by
@@ -39,6 +40,7 @@ export default function Lattice({ section, start }) {
       {sec === "groups" || sec === "sets" ? <Editor key={sec + (start || "")} kind={sec === "groups" ? "group" : "set"} start={start} />
         : sec === "prism" ? <Prism />
         : sec === "funnels" ? <Funnels />
+        : sec === "soundings" ? <Soundings />
         : <section className="card" style={{ marginTop: 16 }}><p className="sub" style={{ margin: 0 }}>{T("This part of Lattice is still in the classic app while it moves across.")} <a className="linkish" href={CLASSIC} target="_blank" rel="noreferrer">{T("Open the classic app")} ↗</a></p></section>}
     </div>
   );
@@ -75,6 +77,13 @@ function Editor({ kind, start: first }) {
 
   const open = useCallback(async (key) => {
     setStart(key); setScreen(null); setSearch(null); setErr("");
+    if (key === "fromsoundings") {                       // 🧩 Open as Set from Soundings: a new, unsaved Set
+      let got = null;
+      try { got = JSON.parse(window.sessionStorage.getItem("mn_new_set") || "null"); window.sessionStorage.removeItem("mn_new_set"); } catch (e) { /* private window */ }
+      setStart("new"); setSource(null);
+      if (got && got.model) { setFlash(["ok", got.message]); await check(got.model); return; }
+      key = "new";
+    }
     try {
       const o = await call(`/lattice/${kind}/open`, { method: "POST", body: { start: key, lang } });
       setSource(o.source || null);

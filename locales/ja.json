@@ -3208,5 +3208,7 @@
   "Optional: skip this guide. Nothing depends on it; Help and guides › Start here brings it back.": "任意：このガイドはスキップできます。何も影響しません。ヘルプとガイド › はじめに から再表示できます。",
   "This ticks itself.": "自動でチェックされます。",
   "Mark as not done": "未完了にする",
-  "Mark as done": "完了にする"
+  "Mark as done": "完了にする",
+  "Start from past rises and falls, and look back at what came before them.": "過去の上昇と下落から出発し、その前に何があったかを振り返ります。",
+  "Soundings isn't reachable just now. Please try again in a minute.": "現在 Soundings に接続できません。少し後にもう一度お試しください。"
 }

@@ -29,7 +29,7 @@ export async function loadWords(code) {
 // texts carry ("🔻 Your funnels" → "Your funnels", "in ⚙️ Settings" → "in Settings"); the page adds its icon.
 export const EMOJI_RE = /(?![\u00A9\u00AE\u2122\u2190-\u21FF\u23E9-\u23EF\u23F8-\u23FA\u25B6\u25C0])(?:\p{Extended_Pictographic}|\p{Regional_Indicator})(?:\uFE0F|\u200D\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}])*[ \t]*/gu;
 // The play-control signs (▶ ⏪ ⏸) are words in the texts ("press ▶"): kept, drawn as plain text, not emoji.
-export const noEmoji = (s) => String(s).replace(EMOJI_RE, "").replace(/([\u23E9-\u23EF\u23F8-\u23FA\u25B6\u25C0])\uFE0F?/g, "$1\uFE0E").replace(/\([ \t]+/g, "(").replace(/[ \t]{2,}/g, " ").replace(/[ \t]+([.,:;)])/g, "$1").replace(/^[ \t]+|[ \t]+$/gm, "");
+export const noEmoji = (s) => String(s).replace(EMOJI_RE, "").replace(/([\u2190-\u21FF\u23E9-\u23EF\u23F8-\u23FA\u25B6\u25C0])\uFE0F?/g, "$1\uFE0E").replace(/\([ \t]+/g, "(").replace(/[ \t]{2,}/g, " ").replace(/[ \t]+([.,:;)])/g, "$1").replace(/^[ \t]+|[ \t]+$/gm, "");
 
 export function T(text, values) {
   let w = words[text] || text;

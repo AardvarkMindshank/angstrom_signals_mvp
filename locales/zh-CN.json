@@ -3208,5 +3208,7 @@
   "Optional: skip this guide. Nothing depends on it; Help and guides › Start here brings it back.": "可选：跳过此指南。没有任何功能依赖它；帮助和指南 › 从这里开始 可将其恢复。",
   "This ticks itself.": "这一项会自动打勾。",
   "Mark as not done": "标记为未完成",
-  "Mark as done": "标记为已完成"
+  "Mark as done": "标记为已完成",
+  "Start from past rises and falls, and look back at what came before them.": "从过去的上涨和下跌出发，回看它们之前出现了什么。",
+  "Soundings isn't reachable just now. Please try again in a minute.": "暂时无法连接 Soundings，请稍后再试。"
 }

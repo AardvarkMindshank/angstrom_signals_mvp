@@ -391,6 +391,45 @@ def funnels_step(step: str, ask: FunnelAsk, who: Member = Depends(member)):
     raise HTTPException(404, "Unknown step.")
 
 
+# ---- 🧭 Soundings ------------------------------------------------------------------------------------------------------
+
+_soundings_cache = Cache(3600, 100)
+
+
+@app.get("/soundings/report")
+def soundings_report(market: str = Query("crypto", max_length=10), lang: str = Query("en", max_length=8), who: Member = Depends(member)):
+    from service import soundings_page as sp
+
+    hit = _soundings_cache.get(("r", market, lang))
+    return hit if hit is not None else _soundings_cache.put(("r", market, lang), sp.report(market, lang))
+
+
+@app.get("/soundings/chart")
+def soundings_chart(market: str = Query("crypto", max_length=10), coin: str = Query(..., max_length=20),
+                    period: str = Query("12m", max_length=6), target: str = Query("rise", max_length=5),
+                    faded: bool = False, dark: bool = False, lang: str = Query("en", max_length=8), who: Member = Depends(member)):
+    from service import soundings_page as sp
+
+    key = ("c", market, coin, period, target, faded, dark, lang)
+    hit = _soundings_cache.get(key)
+    return hit if hit is not None else _soundings_cache.put(key, sp.chart(market, coin, period, target, faded, dark, lang))
+
+
+class SoundingSetAsk(BaseModel):
+    condition: list[str] = Field(..., max_length=6)
+    target: str = Field("rise", max_length=5)
+    lift: float = 0
+    later: float = 0
+    lang: str = Field("en", max_length=8)
+
+
+@app.post("/soundings/set")
+def soundings_set(ask: SoundingSetAsk, who: Member = Depends(member)):
+    from service import soundings_page as sp
+
+    return sp.as_set(ask.condition, ask.target, ask.lift, ask.later, ask.lang)
+
+
 # ---- 🌊 Tides ----------------------------------------------------------------------------------------------------------
 
 _tides_cache = Cache(300, 200)

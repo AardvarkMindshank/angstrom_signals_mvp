@@ -3208,5 +3208,7 @@
   "Optional: skip this guide. Nothing depends on it; Help and guides › Start here brings it back.": "ไม่บังคับ: ข้ามคู่มือนี้ได้ ไม่มีอะไรขึ้นอยู่กับมัน ความช่วยเหลือและคู่มือ › เริ่มที่นี่ จะนำกลับมา",
   "This ticks itself.": "ติ๊กเองอัตโนมัติ",
   "Mark as not done": "ทำเครื่องหมายว่ายังไม่เสร็จ",
-  "Mark as done": "ทำเครื่องหมายว่าเสร็จแล้ว"
+  "Mark as done": "ทำเครื่องหมายว่าเสร็จแล้ว",
+  "Start from past rises and falls, and look back at what came before them.": "เริ่มจากขาขึ้นและขาลงในอดีต แล้วมองย้อนว่ามีอะไรมาก่อน",
+  "Soundings isn't reachable just now. Please try again in a minute.": "ไม่สามารถเชื่อมต่อ Soundings ได้ในขณะนี้ โปรดลองอีกครั้งในอีกสักครู่"
 }

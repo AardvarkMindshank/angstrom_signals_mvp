@@ -31,4 +31,9 @@ write("lattice_group", lc.JS, lc.CSS, "lattice_component.py (JS)")
 write("lattice_set", lc.SET_JS, lc.CSS, "lattice_component.py (SET_JS)")
 write("prism_board", pc.JS, pc.CSS, "prism_component.py (JS)")
 write("funnel_stages", fsc.JS, fsc.CSS, "funnel_stages_component.py (JS)")
+# The Soundings chart is a plain script file (soundings_chart.js); it draws with the app's own copy of the chart
+# library, which the page puts on window.LightweightCharts before it runs.
+_snd = open(os.path.join(ROOT, "soundings_chart.js"), encoding="utf-8").read().replace(
+    "export default function (component)", "export default function soundingsChart(component)", 1)
+write("soundings_chart", _snd, "", "soundings_chart.js")
 print("components written")

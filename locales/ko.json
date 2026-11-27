@@ -3208,5 +3208,7 @@
   "Optional: skip this guide. Nothing depends on it; Help and guides › Start here brings it back.": "선택 사항: 이 안내를 건너뛸 수 있습니다. 아무것도 영향받지 않으며, 도움말과 가이드 › 시작하기에서 다시 볼 수 있습니다.",
   "This ticks itself.": "자동으로 체크됩니다.",
   "Mark as not done": "완료 안 됨으로 표시",
-  "Mark as done": "완료로 표시"
+  "Mark as done": "완료로 표시",
+  "Start from past rises and falls, and look back at what came before them.": "과거의 상승과 하락에서 출발해 그 전에 무엇이 있었는지 돌아봅니다.",
+  "Soundings isn't reachable just now. Please try again in a minute.": "지금은 Soundings에 연결할 수 없습니다. 잠시 후 다시 시도하세요."
 }

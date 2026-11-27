@@ -872,3 +872,10 @@ button .ic, a .ic { vertical-align: -0.2em; }
 .gtick { background: none; border: 0; padding: 2px; cursor: pointer; color: var(--ang-muted); display: inline-flex; }
 .gsteps li.done .gtick { color: var(--good); }
 .gtick:disabled { cursor: default; }
+
+/* 🧭 Soundings */
+.sndgroup { margin: 16px 0; }
+.sndcard { border: 1px solid var(--ang-border); border-radius: 12px; padding: 10px 14px; margin: 8px 0; display: flex; flex-direction: column; gap: 4px; background: var(--ang-surface); }
+.sndcard .sndcond { font-weight: 600; font-size: 15px; }
+.sndcard .ghost { align-self: flex-start; margin-top: 6px; }
+.classic.sndchart { margin: 8px 0; }

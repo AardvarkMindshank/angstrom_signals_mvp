@@ -406,3 +406,16 @@ def test_funnel_editor_steps():
     assert saved["status"] == "ok" and db.calls[-1][0] == "funnel_save"
     assert c.post("/funnels/screen", json={}).status_code == 400
     assert c.post("/funnels/other", json={"funnel": f}).status_code == 404
+
+
+def test_soundings_report_chart_and_open_as_set():
+    c, _ = _lat_client()
+    rep = c.get("/soundings/report?market=crypto").json()
+    if not rep["ready"]:
+        return                                                   # no checked run in this checkout
+    assert rep["coins"] and rep["targets"]["rise"]["caption"]
+    ch = c.get(f"/soundings/chart?market=crypto&coin={rep['first_coin']}&period=12m&target=rise").json()
+    assert ch["ready"] and (ch["payload"] is None or ch["payload"]["times"])
+    card = next(g["cards"][0] for g in rep["targets"]["rise"]["groups"] if g["cards"])
+    got = c.post("/soundings/set", json={"condition": card["condition"], "target": "rise", "lift": 1.5, "later": 1.2}).json()
+    assert got["ok"] and got["model"]["name"].startswith("Soundings:")

@@ -37,7 +37,7 @@ export const EMOJI = {
   "🔺": "triangle", "♦️": "diamond", "🔶": "diamond", "🩸": "droplet", "⏱": "timer", "⏱️": "timer", "🙈": "eye-off",
   "✋": "hand", "🖍️": "highlighter", "🧽": "eraser", "🔤": "type", "📝": "notebook-pen", "🗓️": "calendar-days",
   "💼": "briefcase", "🏠": "house", "🧪": "flask-conical", "📦": "package", "🎉": "party-popper", "❓": "circle-question-mark", "⏭": "skip-forward", "⏭️": "skip-forward",
-  "✔": "check", "🌦️": "cloud-sun-rain", "🌦": "cloud-sun-rain", "🪨": "mountain", "🧭️": "compass", "🎣": "fish", "📡": "radar", "🌡️": "thermometer", "🌡": "thermometer", "🎚️": "sliders-horizontal", "🎛️": "sliders-vertical", "⛵": "sailboat", "😨": "gauge", "😱": "gauge", "🛍️": "shopping-bag", "🛍": "shopping-bag", "🐟": "fish",
+  "✔": "check", "➖": "minus", "↕️": "arrow-up-down", "🗺️": "map", "🌦️": "cloud-sun-rain", "🌦": "cloud-sun-rain", "🪨": "mountain", "🧭️": "compass", "🎣": "fish", "📡": "radar", "🌡️": "thermometer", "🌡": "thermometer", "🎚️": "sliders-horizontal", "🎛️": "sliders-vertical", "⛵": "sailboat", "😨": "gauge", "😱": "gauge", "🛍️": "shopping-bag", "🛍": "shopping-bag", "🐟": "fish",
   "🔷": "diamond", "〰️": "activity", "〰": "activity", "🏗️": "construction", "🚢": "ship", "🧊": "snowflake", "✔️": "check", "✖": "x", "✖️": "x", "➚": "arrow-up-right", "📶": "signal", "💹": "chart-line",
 };
 
@@ -76,6 +76,11 @@ export function iconify(root) {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   const hits = [];
   while (walker.nextNode()) if (ONE.test(walker.currentNode.nodeValue)) hits.push(walker.currentNode);
+  const walk2 = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  while (walk2.nextNode()) {
+    const v = walk2.currentNode.nodeValue;
+    if (/[\u2190-\u21FF\u23E9-\u23EF\u23F8-\u23FA\u25B6\u25C0]\uFE0F/.test(v)) walk2.currentNode.nodeValue = v.replace(/([\u2190-\u21FF\u23E9-\u23EF\u23F8-\u23FA\u25B6\u25C0])\uFE0F/g, "$1\uFE0E");
+  }
   for (const t of hits) {
     const parent = t.parentNode;
     if (!parent) continue;
@@ -112,7 +117,7 @@ export function watchIcons(root) {
 
 // Text from the data that may hold emoji anywhere ("🔻✅", "Trend 📈 (provided)"): each known one as its icon.
 export function Glyphs({ text, size = 15 }) {
-  const s = String(text == null ? "" : text).replace(/([\u23E9-\u23EF\u23F8-\u23FA\u25B6\u25C0])\uFE0F?/g, "$1\uFE0E");
+  const s = String(text == null ? "" : text).replace(/([\u2190-\u21FF\u23E9-\u23EF\u23F8-\u23FA\u25B6\u25C0])\uFE0F?/g, "$1\uFE0E");
   const out = [];
   let last = 0, i = 0;
   for (const m of s.matchAll(new RegExp(EMOJI_RE.source, "gu"))) {
