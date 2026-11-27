@@ -2772,7 +2772,6 @@
   "For equities": "Para acciones",
   "What is pushing it": "Qué la empuja",
   "Green helps risk assets, red holds them back.": "El verde ayuda a los activos de riesgo, el rojo los frena.",
-  "Open Tides in the classic app": "Abrir Tides en la app clásica",
   "Events ahead": "Próximos eventos",
   "Scheduled US releases that often move markets.": "Publicaciones programadas de EE. UU. que suelen mover los mercados.",
   "tomorrow": "mañana",
@@ -2874,7 +2873,6 @@
   "Longs": "Largos",
   "Stage {n}": "Etapa {n}",
   "Your Sets on this asset": "Tus Sets en este activo",
-  "Open the classic app": "Abrir la app clásica",
   "That's your Navigator questions for today. It's back tomorrow.": "Ya usaste tus preguntas al Navigator de hoy. Vuelve mañana.",
   "The Navigator isn't reachable just now. Please try again in a minute.": "El Navigator no está disponible ahora. Inténtalo en un minuto.",
   "The Navigator couldn't answer just now. Please try again.": "El Navigator no pudo responder ahora. Inténtalo de nuevo.",
@@ -2909,10 +2907,8 @@
   "Sonar couldn't be worked out just now.": "No se pudo calcular el Sonar ahora.",
   "Working out Sonar…": "Calculando el Sonar…",
   "Each of your own Sets checked on this asset right now, the same answer Prism would give.": "Cada uno de tus Sets comprobado ahora en este activo, la misma respuesta que daría Prism.",
-  "The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.": "El servicio que comprueba los Sets no está disponible ahora. Tus Sets también están en el Lattice de la app clásica.",
   "Your Sets couldn't be checked just now. Please try again in a minute.": "No se pudieron comprobar tus Sets. Inténtalo en un minuto.",
   "Checking your Sets… this can take up to a minute the first time.": "Comprobando tus Sets… la primera vez puede tardar hasta un minuto.",
-  "You haven't made any Sets yet. Build one in Lattice in the classic app.": "Aún no has creado ningún Set. Crea uno en el Lattice de la app clásica.",
   "Definite": "Definitivo",
   "Undecided": "Indeciso",
   "more": "más",
@@ -3125,7 +3121,6 @@
   "Prism Scan": "Prism Scan",
   "Soundings": "Soundings",
   "Funnels": "Embudos",
-  "This part of Lattice is still in the classic app while it moves across.": "Esta parte de Lattice sigue en la app clásica mientras se traslada.",
   "Group": "Group",
   "Set": "Set",
   "➕ New Group": "➕ Nuevo Group",
@@ -3211,5 +3206,7 @@
   "Mark as done": "Marcar como hecho",
   "Start from past rises and falls, and look back at what came before them.": "Parte de subidas y bajadas pasadas y mira qué vino antes.",
   "Soundings isn't reachable just now. Please try again in a minute.": "Soundings no está disponible ahora. Inténtalo de nuevo en un minuto.",
-  "plan limit orders spaced by the daily range": "planifica órdenes límite espaciadas por el rango diario"
+  "plan limit orders spaced by the daily range": "planifica órdenes límite espaciadas por el rango diario",
+  "You haven't made any Sets yet. Build one in Lattice › Signal Sets.": "Aún no has creado ningún Set. Crea uno en Lattice › Signal Sets.",
+  "The service that checks Sets isn't reachable just now.": "El servicio que comprueba los Sets no está disponible ahora."
 }

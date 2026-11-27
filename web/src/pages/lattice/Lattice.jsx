@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import Icon, { Lead, plain } from "../../components/Icon.jsx";
 import { T, lang, noEmoji } from "../../lib/i18n.js";
 import { call } from "../../lib/service.js";
-import { supabase, CLASSIC } from "../../lib/supabase.js";
+import { supabase } from "../../lib/supabase.js";
 import { watchlists } from "../../lib/assets.js";
 import { signed } from "../../lib/format.js";
 import { preferences, saveSettings } from "../../lib/account.js";
@@ -41,7 +41,7 @@ export default function Lattice({ section, start }) {
         : sec === "prism" ? <Prism />
         : sec === "funnels" ? <Funnels />
         : sec === "soundings" ? <Soundings />
-        : <section className="card" style={{ marginTop: 16 }}><p className="sub" style={{ margin: 0 }}>{T("This part of Lattice is still in the classic app while it moves across.")} <a className="linkish" href={CLASSIC} target="_blank" rel="noreferrer">{T("Open the classic app")} ↗</a></p></section>}
+        : <Editor key="groups" kind="group" />}
     </div>
   );
 }

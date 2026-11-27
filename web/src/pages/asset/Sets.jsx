@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { T } from "../../lib/i18n.js";
 import { funnelStatus } from "../../lib/assets.js";
 import { dayMonthYear } from "../../lib/format.js";
-import { CLASSIC } from "../../lib/supabase.js";
 import { assetSets } from "../../lib/service.js";
 
 // Where this asset stands in the member's funnels, stage by stage, as the funnel job last checked it, and each of the
@@ -64,14 +63,14 @@ function LiveSets({ assetKey }) {
     <section className="card">
       <h2>{T("Your Sets on this asset")}</h2>
       <p className="sub">{T("Each of your own Sets checked on this asset right now, the same answer Prism would give.")}</p>
-      {err ? <p className="sub">{err === "down" ? T("The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.") : T("Your Sets couldn't be checked just now. Please try again in a minute.")} <button type="button" className="linkish" onClick={() => setRound(round + 1)}>{T("Try again")}</button> · <a className="linkish" href={CLASSIC}>{T("Open the classic app")} ›</a></p>
+      {err ? <p className="sub">{err === "down" ? T("The service that checks Sets isn't reachable just now.") : T("Your Sets couldn't be checked just now. Please try again in a minute.")} <button type="button" className="linkish" onClick={() => setRound(round + 1)}>{T("Try again")}</button></p>
         : !got ? <p className="sub">{T("Checking your Sets… this can take up to a minute the first time.")}</p>
-        : !got.sets.length ? <p className="sub">{T("You haven't made any Sets yet. Build one in Lattice in the classic app.")}</p> : (
+        : !got.sets.length ? <p className="sub">{<a className="linkish" href="#lattice/sets">{T("You haven't made any Sets yet. Build one in Lattice › Signal Sets.")}</a>}</p> : (
           <ol className="fsteps">
             {got.sets.map((x) => (
               <li key={x.id} className={x.answer}>
                 <span className="fdot" aria-hidden="true" />
-                <span className="b">{x.name}</span>
+                <a className="b linkish" href={`#lattice/sets/saved:${encodeURIComponent(x.id)}`} title={T("Open in Signal Sets")}>{x.name}</a>
                 <span className="m">{({ Definite: T("Definite"), Undecided: T("Undecided") })[x.how_sure] || x.how_sure}</span>
                 <span className="fans">{ANSWER[x.answer] || "—"}</span>
                 {x.why && (open === x.id || x.why.length < 120 ? <span className="m fline">{x.why}</span>

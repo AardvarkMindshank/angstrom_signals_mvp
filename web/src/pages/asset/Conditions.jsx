@@ -3,7 +3,6 @@ import { T } from "../../lib/i18n.js";
 import { calendar } from "../../lib/assets.js";
 import { weekday, dayMonthYear } from "../../lib/format.js";
 import { TIDE, TIDE_PLAIN, SEA, SEA_PLAIN, WIND, CURRENT, EFFECT, EVENT } from "./words.js";
-import { CLASSIC } from "../../lib/supabase.js";
 
 const KEYS = ["short_rates", "long_rates", "curve", "dollar", "inflation", "gold", "fear", "copper_gold", "oil", "credit", "equity_rotation", "crypto_rotation"];
 
@@ -38,7 +37,7 @@ export default function Conditions({ sea, crypto }) {
             );
           })}
         </div>
-        <p className="sub">{T("Green helps risk assets, red holds them back.")} <a href={CLASSIC} className="linkish">{T("Open Tides in the classic app")} ›</a></p>
+        <p className="sub">{T("Green helps risk assets, red holds them back.")} <a href="#tides" className="linkish">{T("Open Tides ›")}</a></p>
       </section>
       <section className="card">
         <h2>{T("Events ahead")}</h2>

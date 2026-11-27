@@ -2772,7 +2772,6 @@
   "For equities": "주식에",
   "What is pushing it": "움직이는 요인",
   "Green helps risk assets, red holds them back.": "초록은 위험자산에 도움, 빨강은 부담입니다.",
-  "Open Tides in the classic app": "클래식 앱에서 Tides 열기",
   "Events ahead": "다가오는 일정",
   "Scheduled US releases that often move markets.": "시장을 자주 움직이는 미국의 예정된 발표.",
   "tomorrow": "내일",
@@ -2874,7 +2873,6 @@
   "Longs": "롱",
   "Stage {n}": "{n}단계",
   "Your Sets on this asset": "이 자산에 대한 내 Sets",
-  "Open the classic app": "클래식 앱 열기",
   "That's your Navigator questions for today. It's back tomorrow.": "오늘의 Navigator 질문을 모두 사용했습니다. 내일 다시 이용하세요.",
   "The Navigator isn't reachable just now. Please try again in a minute.": "지금은 Navigator에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "The Navigator couldn't answer just now. Please try again.": "Navigator가 지금은 답할 수 없습니다. 다시 시도해 주세요.",
@@ -2909,10 +2907,8 @@
   "Sonar couldn't be worked out just now.": "지금은 Sonar를 계산할 수 없습니다.",
   "Working out Sonar…": "Sonar 계산 중…",
   "Each of your own Sets checked on this asset right now, the same answer Prism would give.": "내 Set 각각을 지금 이 자산에서 확인한 결과로, Prism과 같은 답입니다.",
-  "The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.": "지금은 Sets를 확인하는 서비스에 연결할 수 없습니다. 내 Sets는 클래식 앱의 Lattice에도 있습니다.",
   "Your Sets couldn't be checked just now. Please try again in a minute.": "지금은 Sets를 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.",
   "Checking your Sets… this can take up to a minute the first time.": "Sets 확인 중… 처음에는 최대 1분이 걸릴 수 있습니다.",
-  "You haven't made any Sets yet. Build one in Lattice in the classic app.": "아직 만든 Set이 없습니다. 클래식 앱의 Lattice에서 만들어 보세요.",
   "Definite": "확정",
   "Undecided": "미정",
   "more": "더 보기",
@@ -3125,7 +3121,6 @@
   "Prism Scan": "Prism Scan",
   "Soundings": "Soundings",
   "Funnels": "퍼널",
-  "This part of Lattice is still in the classic app while it moves across.": "Lattice의 이 부분은 옮겨 오는 동안 아직 클래식 앱에 있습니다.",
   "Group": "Group",
   "Set": "Set",
   "➕ New Group": "➕ 새 Group",
@@ -3211,5 +3206,7 @@
   "Mark as done": "완료로 표시",
   "Start from past rises and falls, and look back at what came before them.": "과거의 상승과 하락에서 출발해 그 전에 무엇이 있었는지 돌아봅니다.",
   "Soundings isn't reachable just now. Please try again in a minute.": "지금은 Soundings에 연결할 수 없습니다. 잠시 후 다시 시도하세요.",
-  "plan limit orders spaced by the daily range": "일일 변동폭 간격으로 지정가 주문 계획"
+  "plan limit orders spaced by the daily range": "일일 변동폭 간격으로 지정가 주문 계획",
+  "You haven't made any Sets yet. Build one in Lattice › Signal Sets.": "아직 만든 Set이 없습니다. Lattice › Signal Sets에서 만들어 보세요.",
+  "The service that checks Sets isn't reachable just now.": "지금은 Sets를 확인하는 서비스에 연결할 수 없습니다."
 }

@@ -2772,7 +2772,6 @@
   "For equities": "Với cổ phiếu",
   "What is pushing it": "Điều gì đang đẩy nó",
   "Green helps risk assets, red holds them back.": "Màu xanh hỗ trợ tài sản rủi ro, màu đỏ kìm hãm chúng.",
-  "Open Tides in the classic app": "Mở Tides trong ứng dụng cổ điển",
   "Events ahead": "Sự kiện sắp tới",
   "Scheduled US releases that often move markets.": "Các công bố theo lịch của Mỹ thường làm thị trường biến động.",
   "tomorrow": "ngày mai",
@@ -2874,7 +2873,6 @@
   "Longs": "Long",
   "Stage {n}": "Giai đoạn {n}",
   "Your Sets on this asset": "Sets của bạn với tài sản này",
-  "Open the classic app": "Mở ứng dụng cổ điển",
   "That's your Navigator questions for today. It's back tomorrow.": "Bạn đã dùng hết lượt hỏi Navigator hôm nay. Ngày mai sẽ có lại.",
   "The Navigator isn't reachable just now. Please try again in a minute.": "Hiện không kết nối được Navigator. Vui lòng thử lại sau một phút.",
   "The Navigator couldn't answer just now. Please try again.": "Navigator chưa trả lời được. Vui lòng thử lại.",
@@ -2909,10 +2907,8 @@
   "Sonar couldn't be worked out just now.": "Chưa tính được Sonar lúc này.",
   "Working out Sonar…": "Đang tính Sonar…",
   "Each of your own Sets checked on this asset right now, the same answer Prism would give.": "Từng Set của bạn được kiểm tra với tài sản này ngay lúc này, cùng câu trả lời như Prism.",
-  "The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.": "Hiện không kết nối được dịch vụ kiểm tra Sets. Sets của bạn cũng có trong Lattice của ứng dụng cổ điển.",
   "Your Sets couldn't be checked just now. Please try again in a minute.": "Chưa kiểm tra được Sets của bạn. Vui lòng thử lại sau một phút.",
   "Checking your Sets… this can take up to a minute the first time.": "Đang kiểm tra Sets của bạn… lần đầu có thể mất đến một phút.",
-  "You haven't made any Sets yet. Build one in Lattice in the classic app.": "Bạn chưa tạo Set nào. Hãy tạo trong Lattice của ứng dụng cổ điển.",
   "Definite": "Chắc chắn",
   "Undecided": "Chưa rõ",
   "more": "thêm",
@@ -3125,7 +3121,6 @@
   "Prism Scan": "Prism Scan",
   "Soundings": "Soundings",
   "Funnels": "Phễu",
-  "This part of Lattice is still in the classic app while it moves across.": "Phần này của Lattice vẫn ở ứng dụng cổ điển trong lúc chuyển sang.",
   "Group": "Group",
   "Set": "Set",
   "➕ New Group": "➕ Group mới",
@@ -3211,5 +3206,7 @@
   "Mark as done": "Đánh dấu đã xong",
   "Start from past rises and falls, and look back at what came before them.": "Bắt đầu từ các lần tăng và giảm trong quá khứ, nhìn lại điều gì đến trước chúng.",
   "Soundings isn't reachable just now. Please try again in a minute.": "Hiện không kết nối được Soundings. Vui lòng thử lại sau một phút.",
-  "plan limit orders spaced by the daily range": "lên kế hoạch lệnh giới hạn cách nhau theo biên độ ngày"
+  "plan limit orders spaced by the daily range": "lên kế hoạch lệnh giới hạn cách nhau theo biên độ ngày",
+  "You haven't made any Sets yet. Build one in Lattice › Signal Sets.": "Bạn chưa tạo Set nào. Hãy tạo trong Lattice › Signal Sets.",
+  "The service that checks Sets isn't reachable just now.": "Hiện không kết nối được dịch vụ kiểm tra Sets."
 }

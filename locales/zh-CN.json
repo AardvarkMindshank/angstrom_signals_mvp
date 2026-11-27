@@ -2772,7 +2772,6 @@
   "For equities": "对股票",
   "What is pushing it": "推动因素",
   "Green helps risk assets, red holds them back.": "绿色利好风险资产，红色拖累风险资产。",
-  "Open Tides in the classic app": "在经典版应用中打开 Tides",
   "Events ahead": "即将发生的事件",
   "Scheduled US releases that often move markets.": "常会影响市场的美国定期数据发布。",
   "tomorrow": "明天",
@@ -2874,7 +2873,6 @@
   "Longs": "做多",
   "Stage {n}": "第 {n} 阶段",
   "Your Sets on this asset": "您在该资产上的 Sets",
-  "Open the classic app": "打开经典版应用",
   "That's your Navigator questions for today. It's back tomorrow.": "今天的 Navigator 提问次数已用完，明天再来吧。",
   "The Navigator isn't reachable just now. Please try again in a minute.": "暂时无法连接 Navigator，请稍后再试。",
   "The Navigator couldn't answer just now. Please try again.": "Navigator 暂时无法回答，请重试。",
@@ -2909,10 +2907,8 @@
   "Sonar couldn't be worked out just now.": "暂时无法计算 Sonar。",
   "Working out Sonar…": "正在计算 Sonar…",
   "Each of your own Sets checked on this asset right now, the same answer Prism would give.": "您自己的每个 Set 现在在该资产上的检查结果，与 Prism 给出的答案相同。",
-  "The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.": "暂时无法连接检查 Sets 的服务。您的 Sets 也在经典版应用的 Lattice 中。",
   "Your Sets couldn't be checked just now. Please try again in a minute.": "暂时无法检查您的 Sets，请稍后再试。",
   "Checking your Sets… this can take up to a minute the first time.": "正在检查您的 Sets…首次可能需要一分钟。",
-  "You haven't made any Sets yet. Build one in Lattice in the classic app.": "您还没有创建任何 Set。可在经典版应用的 Lattice 中创建。",
   "Definite": "确定",
   "Undecided": "未定",
   "more": "更多",
@@ -3125,7 +3121,6 @@
   "Prism Scan": "Prism Scan",
   "Soundings": "Soundings",
   "Funnels": "漏斗",
-  "This part of Lattice is still in the classic app while it moves across.": "Lattice 的这一部分仍在经典版应用中，正在迁移过来。",
   "Group": "Group",
   "Set": "Set",
   "➕ New Group": "➕ 新建 Group",
@@ -3211,5 +3206,7 @@
   "Mark as done": "标记为已完成",
   "Start from past rises and falls, and look back at what came before them.": "从过去的上涨和下跌出发，回看它们之前出现了什么。",
   "Soundings isn't reachable just now. Please try again in a minute.": "暂时无法连接 Soundings，请稍后再试。",
-  "plan limit orders spaced by the daily range": "按每日波幅规划限价单"
+  "plan limit orders spaced by the daily range": "按每日波幅规划限价单",
+  "You haven't made any Sets yet. Build one in Lattice › Signal Sets.": "您还没有创建任何 Set。可在 Lattice › Signal Sets 中创建。",
+  "The service that checks Sets isn't reachable just now.": "暂时无法连接检查 Sets 的服务。"
 }

@@ -2772,7 +2772,6 @@
   "For equities": "Hisseler için",
   "What is pushing it": "Onu ne itiyor",
   "Green helps risk assets, red holds them back.": "Yeşil riskli varlıklara yardım eder, kırmızı onları frenler.",
-  "Open Tides in the classic app": "Tides'ı klasik uygulamada aç",
   "Events ahead": "Yaklaşan olaylar",
   "Scheduled US releases that often move markets.": "Piyasaları sık sık hareketlendiren planlı ABD verileri.",
   "tomorrow": "yarın",
@@ -2874,7 +2873,6 @@
   "Longs": "Long'lar",
   "Stage {n}": "{n}. aşama",
   "Your Sets on this asset": "Bu varlıktaki Set'leriniz",
-  "Open the classic app": "Klasik uygulamayı aç",
   "That's your Navigator questions for today. It's back tomorrow.": "Bugünkü Navigator sorularınız bitti. Yarın tekrar.",
   "The Navigator isn't reachable just now. Please try again in a minute.": "Navigator şu an erişilemiyor. Lütfen bir dakika sonra tekrar deneyin.",
   "The Navigator couldn't answer just now. Please try again.": "Navigator şu an yanıt veremedi. Lütfen tekrar deneyin.",
@@ -2909,10 +2907,8 @@
   "Sonar couldn't be worked out just now.": "Sonar şu an hesaplanamadı.",
   "Working out Sonar…": "Sonar hesaplanıyor…",
   "Each of your own Sets checked on this asset right now, the same answer Prism would give.": "Her Set'iniz şu an bu varlıkta kontrol edildi; Prism'in vereceği yanıtın aynısı.",
-  "The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.": "Set'leri kontrol eden servis şu an erişilemiyor. Set'leriniz klasik uygulamanın Lattice bölümünde de var.",
   "Your Sets couldn't be checked just now. Please try again in a minute.": "Set'leriniz şu an kontrol edilemedi. Lütfen bir dakika sonra tekrar deneyin.",
   "Checking your Sets… this can take up to a minute the first time.": "Set'leriniz kontrol ediliyor… ilk seferde bir dakika kadar sürebilir.",
-  "You haven't made any Sets yet. Build one in Lattice in the classic app.": "Henüz Set oluşturmadınız. Klasik uygulamanın Lattice bölümünde oluşturun.",
   "Definite": "Kesin",
   "Undecided": "Belirsiz",
   "more": "devamı",
@@ -3125,7 +3121,6 @@
   "Prism Scan": "Prism Scan",
   "Soundings": "Soundings",
   "Funnels": "Huniler",
-  "This part of Lattice is still in the classic app while it moves across.": "Lattice'in bu bölümü taşınırken hâlâ klasik uygulamada.",
   "Group": "Group",
   "Set": "Set",
   "➕ New Group": "➕ Yeni Group",
@@ -3211,5 +3206,7 @@
   "Mark as done": "Yapıldı olarak işaretle",
   "Start from past rises and falls, and look back at what came before them.": "Geçmiş yükseliş ve düşüşlerden başla, öncesinde ne olduğuna bak.",
   "Soundings isn't reachable just now. Please try again in a minute.": "Soundings'e şu anda ulaşılamıyor. Lütfen bir dakika sonra tekrar deneyin.",
-  "plan limit orders spaced by the daily range": "günlük aralığa göre aralıklı limit emirleri planlayın"
+  "plan limit orders spaced by the daily range": "günlük aralığa göre aralıklı limit emirleri planlayın",
+  "You haven't made any Sets yet. Build one in Lattice › Signal Sets.": "Henüz Set oluşturmadınız. Lattice › Signal Sets bölümünde oluşturun.",
+  "The service that checks Sets isn't reachable just now.": "Set'leri kontrol eden servis şu an erişilemiyor."
 }

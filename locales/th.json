@@ -2772,7 +2772,6 @@
   "For equities": "สำหรับหุ้น",
   "What is pushing it": "สิ่งที่ผลักดัน",
   "Green helps risk assets, red holds them back.": "สีเขียวช่วยสินทรัพย์เสี่ยง สีแดงฉุดรั้ง",
-  "Open Tides in the classic app": "เปิด Tides ในแอปคลาสสิก",
   "Events ahead": "เหตุการณ์ที่จะมาถึง",
   "Scheduled US releases that often move markets.": "การประกาศตัวเลขสหรัฐฯ ตามกำหนดการที่มักทำให้ตลาดเคลื่อนไหว",
   "tomorrow": "พรุ่งนี้",
@@ -2874,7 +2873,6 @@
   "Longs": "ลอง",
   "Stage {n}": "ขั้นที่ {n}",
   "Your Sets on this asset": "Sets ของคุณสำหรับสินทรัพย์นี้",
-  "Open the classic app": "เปิดแอปคลาสสิก",
   "That's your Navigator questions for today. It's back tomorrow.": "คุณใช้คำถามกับ Navigator ของวันนี้ครบแล้ว พรุ่งนี้ถามได้อีก",
   "The Navigator isn't reachable just now. Please try again in a minute.": "ยังติดต่อ Navigator ไม่ได้ในตอนนี้ โปรดลองอีกครั้งในอีกสักครู่",
   "The Navigator couldn't answer just now. Please try again.": "Navigator ตอบไม่ได้ในตอนนี้ โปรดลองอีกครั้ง",
@@ -2909,10 +2907,8 @@
   "Sonar couldn't be worked out just now.": "คำนวณ Sonar ไม่ได้ในตอนนี้",
   "Working out Sonar…": "กำลังคำนวณ Sonar…",
   "Each of your own Sets checked on this asset right now, the same answer Prism would give.": "Set แต่ละรายการของคุณที่ตรวจกับสินทรัพย์นี้ตอนนี้ คำตอบเดียวกับที่ Prism ให้",
-  "The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.": "ยังติดต่อบริการตรวจ Sets ไม่ได้ในตอนนี้ Sets ของคุณดูได้ใน Lattice ของแอปคลาสสิกด้วย",
   "Your Sets couldn't be checked just now. Please try again in a minute.": "ตรวจ Sets ของคุณไม่ได้ในตอนนี้ โปรดลองอีกครั้งในอีกสักครู่",
   "Checking your Sets… this can take up to a minute the first time.": "กำลังตรวจ Sets ของคุณ… ครั้งแรกอาจใช้เวลาถึงหนึ่งนาที",
-  "You haven't made any Sets yet. Build one in Lattice in the classic app.": "คุณยังไม่ได้สร้าง Set สร้างได้ใน Lattice ของแอปคลาสสิก",
   "Definite": "แน่นอน",
   "Undecided": "ยังไม่แน่ชัด",
   "more": "เพิ่มเติม",
@@ -3125,7 +3121,6 @@
   "Prism Scan": "Prism Scan",
   "Soundings": "Soundings",
   "Funnels": "ฟันเนล",
-  "This part of Lattice is still in the classic app while it moves across.": "ส่วนนี้ของ Lattice ยังอยู่ในแอปแบบคลาสสิกระหว่างย้ายมา",
   "Group": "Group",
   "Set": "Set",
   "➕ New Group": "➕ Group ใหม่",
@@ -3211,5 +3206,7 @@
   "Mark as done": "ทำเครื่องหมายว่าเสร็จแล้ว",
   "Start from past rises and falls, and look back at what came before them.": "เริ่มจากขาขึ้นและขาลงในอดีต แล้วมองย้อนว่ามีอะไรมาก่อน",
   "Soundings isn't reachable just now. Please try again in a minute.": "ไม่สามารถเชื่อมต่อ Soundings ได้ในขณะนี้ โปรดลองอีกครั้งในอีกสักครู่",
-  "plan limit orders spaced by the daily range": "วางแผนคำสั่งลิมิตเว้นระยะตามช่วงราคารายวัน"
+  "plan limit orders spaced by the daily range": "วางแผนคำสั่งลิมิตเว้นระยะตามช่วงราคารายวัน",
+  "You haven't made any Sets yet. Build one in Lattice › Signal Sets.": "คุณยังไม่ได้สร้าง Set สร้างได้ใน Lattice › Signal Sets",
+  "The service that checks Sets isn't reachable just now.": "ยังติดต่อบริการตรวจ Sets ไม่ได้ในตอนนี้"
 }

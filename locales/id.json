@@ -2772,7 +2772,6 @@
   "For equities": "Untuk saham",
   "What is pushing it": "Apa yang mendorongnya",
   "Green helps risk assets, red holds them back.": "Hijau membantu aset berisiko, merah menahannya.",
-  "Open Tides in the classic app": "Buka Tides di aplikasi klasik",
   "Events ahead": "Agenda mendatang",
   "Scheduled US releases that often move markets.": "Rilis AS terjadwal yang sering menggerakkan pasar.",
   "tomorrow": "besok",
@@ -2874,7 +2873,6 @@
   "Longs": "Long",
   "Stage {n}": "Tahap {n}",
   "Your Sets on this asset": "Set Anda pada aset ini",
-  "Open the classic app": "Buka aplikasi klasik",
   "That's your Navigator questions for today. It's back tomorrow.": "Kuota pertanyaan Navigator Anda hari ini sudah habis. Kembali besok.",
   "The Navigator isn't reachable just now. Please try again in a minute.": "Navigator sedang tidak dapat dijangkau. Coba lagi sebentar lagi.",
   "The Navigator couldn't answer just now. Please try again.": "Navigator tidak dapat menjawab saat ini. Silakan coba lagi.",
@@ -2909,10 +2907,8 @@
   "Sonar couldn't be worked out just now.": "Sonar tidak dapat dihitung saat ini.",
   "Working out Sonar…": "Menghitung Sonar…",
   "Each of your own Sets checked on this asset right now, the same answer Prism would give.": "Setiap Set Anda diperiksa pada aset ini sekarang, jawaban yang sama dengan Prism.",
-  "The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.": "Layanan pemeriksa Set sedang tidak dapat dijangkau. Set Anda juga ada di Lattice aplikasi klasik.",
   "Your Sets couldn't be checked just now. Please try again in a minute.": "Set Anda tidak dapat diperiksa saat ini. Coba lagi sebentar lagi.",
   "Checking your Sets… this can take up to a minute the first time.": "Memeriksa Set Anda… pertama kali bisa memakan waktu hingga satu menit.",
-  "You haven't made any Sets yet. Build one in Lattice in the classic app.": "Anda belum membuat Set. Buat di Lattice aplikasi klasik.",
   "Definite": "Pasti",
   "Undecided": "Belum pasti",
   "more": "selengkapnya",
@@ -3125,7 +3121,6 @@
   "Prism Scan": "Prism Scan",
   "Soundings": "Soundings",
   "Funnels": "Corong",
-  "This part of Lattice is still in the classic app while it moves across.": "Bagian Lattice ini masih di aplikasi klasik selama dipindahkan.",
   "Group": "Group",
   "Set": "Set",
   "➕ New Group": "➕ Group baru",
@@ -3211,5 +3206,7 @@
   "Mark as done": "Tandai selesai",
   "Start from past rises and falls, and look back at what came before them.": "Mulai dari kenaikan dan penurunan masa lalu, lalu lihat apa yang terjadi sebelumnya.",
   "Soundings isn't reachable just now. Please try again in a minute.": "Soundings sedang tidak dapat dijangkau. Coba lagi sebentar lagi.",
-  "plan limit orders spaced by the daily range": "rencanakan order limit berjarak sesuai rentang harian"
+  "plan limit orders spaced by the daily range": "rencanakan order limit berjarak sesuai rentang harian",
+  "You haven't made any Sets yet. Build one in Lattice › Signal Sets.": "Anda belum membuat Set. Buat di Lattice › Signal Sets.",
+  "The service that checks Sets isn't reachable just now.": "Layanan pemeriksa Set sedang tidak dapat dijangkau."
 }

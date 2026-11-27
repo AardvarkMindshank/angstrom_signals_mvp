@@ -2772,7 +2772,6 @@
   "For equities": "株式にとって",
   "What is pushing it": "押し動かしている要因",
   "Green helps risk assets, red holds them back.": "緑はリスク資産の追い風、赤は重しです。",
-  "Open Tides in the classic app": "クラシック版で Tides を開く",
   "Events ahead": "今後のイベント",
   "Scheduled US releases that often move markets.": "市場を動かしやすい米国の予定された発表。",
   "tomorrow": "明日",
@@ -2874,7 +2873,6 @@
   "Longs": "ロング",
   "Stage {n}": "第 {n} 段階",
   "Your Sets on this asset": "この銘柄でのあなたの Sets",
-  "Open the classic app": "クラシック版を開く",
   "That's your Navigator questions for today. It's back tomorrow.": "本日の Navigator への質問回数に達しました。明日またどうぞ。",
   "The Navigator isn't reachable just now. Please try again in a minute.": "現在 Navigator に接続できません。少し後にもう一度お試しください。",
   "The Navigator couldn't answer just now. Please try again.": "Navigator が今は回答できませんでした。もう一度お試しください。",
@@ -2909,10 +2907,8 @@
   "Sonar couldn't be worked out just now.": "今は Sonar を計算できませんでした。",
   "Working out Sonar…": "Sonar を計算中…",
   "Each of your own Sets checked on this asset right now, the same answer Prism would give.": "あなたの各 Set をこの銘柄で今チェックした結果。Prism と同じ答えです。",
-  "The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.": "Sets をチェックするサービスに現在接続できません。Sets はクラシック版の Lattice にもあります。",
   "Your Sets couldn't be checked just now. Please try again in a minute.": "今は Sets をチェックできませんでした。少し後にもう一度お試しください。",
   "Checking your Sets… this can take up to a minute the first time.": "Sets をチェック中…初回は 1 分ほどかかることがあります。",
-  "You haven't made any Sets yet. Build one in Lattice in the classic app.": "まだ Set を作っていません。クラシック版の Lattice で作成できます。",
   "Definite": "確定",
   "Undecided": "未確定",
   "more": "続き",
@@ -3125,7 +3121,6 @@
   "Prism Scan": "Prism Scan",
   "Soundings": "Soundings",
   "Funnels": "ファネル",
-  "This part of Lattice is still in the classic app while it moves across.": "Lattice のこの部分は移行中のため、まだクラシック版アプリにあります。",
   "Group": "Group",
   "Set": "Set",
   "➕ New Group": "➕ 新しい Group",
@@ -3211,5 +3206,7 @@
   "Mark as done": "完了にする",
   "Start from past rises and falls, and look back at what came before them.": "過去の上昇と下落から出発し、その前に何があったかを振り返ります。",
   "Soundings isn't reachable just now. Please try again in a minute.": "現在 Soundings に接続できません。少し後にもう一度お試しください。",
-  "plan limit orders spaced by the daily range": "1日の値幅で間隔をあけて指値注文を計画"
+  "plan limit orders spaced by the daily range": "1日の値幅で間隔をあけて指値注文を計画",
+  "You haven't made any Sets yet. Build one in Lattice › Signal Sets.": "まだ Set を作っていません。Lattice › Signal Sets で作成できます。",
+  "The service that checks Sets isn't reachable just now.": "Sets をチェックするサービスに現在接続できません。"
 }
