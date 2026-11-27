@@ -542,7 +542,7 @@ function System() {
             <SortTable list={e.lines} first="state" desc={false} rowKey={(r) => r.ticker} cols={[
               ["ticker", "Stock", (r) => r.ticker],
               ["next", "Next report", (r) => r.next_earnings || ""],
-              ["state", "State", (r) => r.state],
+              ["state", "State", (r) => ({ "never checked": "0", "no date known": "1" })[r.state] || `2${r.state}`, (r) => r.state],
               ["checked", "Checked", (r) => r.checked_ago, (r) => ago(r.checked_ago), true],
             ]} />
           </>
