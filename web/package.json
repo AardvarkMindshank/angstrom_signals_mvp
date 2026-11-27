@@ -1,13 +1,15 @@
 {
-  "name": "marketnavi-tradelog",
+  "name": "marketnavi-web",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
+    "words": "python3 scripts/words.py",
     "build": "vite build",
     "dev": "vite"
   },
   "dependencies": {
+    "@supabase/supabase-js": "2.45.4",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },

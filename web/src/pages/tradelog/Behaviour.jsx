@@ -1,6 +1,6 @@
 import React from "react";
-import { T } from "../env.js";
-import { money, pct } from "../format.js";
+import { T } from "../../lib/i18n.js";
+import { money, pct } from "../../lib/format.js";
 import { LABEL } from "./Edge.jsx";
 
 function text(h) {
@@ -21,6 +21,9 @@ function text(h) {
     case "streak_size":
       return [T("After a winning streak"), T("Sizes change by {p} after 3 wins in a row", { p: pct(h.grow_pct) }),
         T("The next trade after a streak won {a} of the time, against your usual {b} ({n} trades).", { a: pct(h.win_rate, 0, false), b: pct(h.usual_win_rate, 0, false), n: h.trades })];
+    case "size_after_loss":
+      return [T("Size after a loss"), h.times >= 1 ? T("Trades after a loss are {x} times the size", { x: h.times }) : T("Trades after a loss are smaller"),
+        T("After a loss, your next trade was on average {x} times the size of one after a win ({n} trades).", { x: h.times, n: h.trades })];
     case "leverage":
       return [T("Leverage"), T("Trades with leverage above 2x lost money"),
         T("{n} trades, {total} in total. Everything else together: {rest}.", { n: h.trades, total: money(h.total), rest: money(h.rest_total) })];

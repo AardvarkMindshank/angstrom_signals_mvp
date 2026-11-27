@@ -1,6 +1,6 @@
 import React from "react";
-import { T } from "../env.js";
-import { money, pct, tone, dayMonthYear } from "../format.js";
+import { T } from "../../lib/i18n.js";
+import { money, pct, tone, dayMonthYear } from "../../lib/format.js";
 
 export default function OpenNow({ d }) {
   const o = d.open;

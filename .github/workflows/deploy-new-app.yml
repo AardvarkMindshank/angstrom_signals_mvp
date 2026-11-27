@@ -1,0 +1,50 @@
+name: Deploy the new app (beta)
+# Builds web/ (the new React app) and copies it to marketnavi.ai/new/ on HostGator by FTP. The website deploy
+# (deploy-marketnavi.yml) keeps its own list of the files it uploaded and never touches /new/.
+# Secrets: SUPABASE_URL, SUPABASE_ANON_KEY (the public anon key; row rules guard the data), FTP_SERVER,
+# MARKETNAVI_FTP_USERNAME, MARKETNAVI_FTP_PASSWORD.
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", "locales/**", "i18n.py", ".github/workflows/deploy-new-app.yml"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Only build and list the changes, upload nothing"
+        type: boolean
+        default: false
+concurrency: deploy-new-app
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Words for each language
+        run: python web/scripts/words.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Build
+        working-directory: web
+        env:
+          VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then echo "::error::Add the SUPABASE_ANON_KEY secret first."; exit 1; fi
+          npm ci
+          npm run build
+      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.MARKETNAVI_FTP_USERNAME }}
+          password: ${{ secrets.MARKETNAVI_FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./web/dist/
+          server-dir: ./new/
+          dry-run: ${{ github.event.inputs.dry_run == 'true' }}
+          log-level: standard

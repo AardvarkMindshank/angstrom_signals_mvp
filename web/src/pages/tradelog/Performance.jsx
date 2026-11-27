@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { T } from "../env.js";
-import { money, pct, tone, monthYear, dayMonthYear, monthNames } from "../format.js";
+import { T } from "../../lib/i18n.js";
+import { money, pct, tone, monthYear, dayMonthYear, monthNames } from "../../lib/format.js";
 
 const W = 1000, H = 300, DH = 90;
 
@@ -61,16 +61,17 @@ function GrowthChart({ a }) {
 
 function MonthGrid({ a }) {
   const years = Object.keys(a.years);
+  const names = monthNames();
   return (
     <div className="scroll">
       <div className="grid-months">
         <span />
-        {monthNames.map((m) => <span key={m} className="h">{m}</span>)}
+        {names.map((m) => <span key={m} className="h">{m}</span>)}
         <span className="h" style={{ textAlign: "right" }}>{T("Year")}</span>
         {years.map((y) => (
           <React.Fragment key={y}>
             <span className="y">{y}</span>
-            {monthNames.map((m, i) => {
+            {names.map((m, i) => {
               const v = a.months[`${y}-${String(i + 1).padStart(2, "0")}`];
               if (v == null) return <span key={i} className="c" style={{ background: "var(--ang-hover)" }} />;
               const s = Math.min(Math.abs(v) / 25, 1);

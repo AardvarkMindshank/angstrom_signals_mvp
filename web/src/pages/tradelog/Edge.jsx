@@ -1,6 +1,6 @@
 import React from "react";
-import { T } from "../env.js";
-import { money, pct } from "../format.js";
+import { T } from "../../lib/i18n.js";
+import { money, pct } from "../../lib/format.js";
 
 export const DIM = () => ({ asset_class: T("Asset class"), direction: T("Direction"), leverage: T("Leverage"), held: T("Held for"),
   regime: T("Market at entry"), day: T("Day opened") });

@@ -94,3 +94,14 @@ def test_staking_rewards_are_not_trades():
     trips = [_t(1, 50), _t(2, -1, reward=True)]
     doc = ti.build(trips, {}, [], [], {}, {}, "own", "all", date(2026, 11, 26))
     assert doc["closed"]["trades"] == 1 and doc["rewards"]["count"] == 1
+
+
+def test_size_after_a_loss_is_found():
+    trips = []
+    for i in range(24):                              # one trade a day, each closed before the next opens
+        day = "2026-02-%02d" % (i + 1)
+        lost_before = i > 0 and (i - 1) % 2 == 0
+        trips.append(_t(i, -10 if i % 2 == 0 else 10, opened=day + "T09:00:00Z", closed=day + "T17:00:00Z",
+                        invested_usd=300.0 if lost_before else 100.0))
+    h = {x["key"]: x for x in ti.habits(trips)}
+    assert h["size_after_loss"]["times"] == 3.0 and h["size_after_loss"]["kind"] == "bad"

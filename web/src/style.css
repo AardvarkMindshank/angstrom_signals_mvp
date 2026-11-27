@@ -11,7 +11,7 @@
   --bad-bg: rgba(240,98,110,.16); --bad-ink: #ffb3ba; --note-bg: rgba(198,148,32,.18); --note-ink: #f2d38a;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; background: transparent; }
+html, body { margin: 0; background: var(--ang-page); min-height: 100%; }
 body { font-family: Inter, "Source Sans Pro", system-ui, sans-serif; color: var(--ang-text); font-size: 15px; line-height: 1.5; }
 h2 { margin: 0; font-family: Montserrat, Inter, sans-serif; font-size: 17px; font-weight: 700; }
 h3 { margin: 16px 0 6px; font-size: 15px; }
@@ -109,4 +109,61 @@ table.t .r { text-align: right; } table.t .b { font-weight: 600; } table.t .m { 
   padding: 6px 10px; font-size: 12.5px; box-shadow: 0 4px 14px rgba(6,26,50,.12); white-space: nowrap; }
 .axis { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--grey); margin-top: 4px; }
 .yaxis { display: flex; flex-direction: column; justify-content: space-between; font-size: 11.5px; color: var(--grey); text-align: right; width: 48px; height: 300px; }
-@media (max-width: 640px) { .edge-row .dim { width: 100%; } .abar { grid-template-columns: 90px 1fr 1fr 70px; } }
+
+/* ---- App shell (new app) ---- */
+a { color: inherit; }
+.boot { display: grid; place-items: center; min-height: 100vh; font-family: Montserrat, Inter, sans-serif; font-weight: 700; color: var(--ang-muted); }
+.shell { min-height: 100vh; display: flex; flex-direction: column; }
+.top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; padding: 10px 24px;
+  background: var(--ang-header, var(--ang-surface)); border-bottom: 1px solid var(--ang-border); }
+.brand { display: flex; align-items: center; gap: 9px; text-decoration: none; font-family: Montserrat, Inter, sans-serif; font-weight: 700; font-size: 17px; }
+.brand img { border-radius: 6px; }
+.beta { font-family: Inter, sans-serif; font-size: 11px; font-weight: 600; letter-spacing: .03em; padding: 2px 8px; border-radius: 999px;
+  background: var(--note-bg); color: var(--note-ink); }
+.pages { display: flex; gap: 4px; }
+.pages a { text-decoration: none; padding: 8px 12px; border-radius: 999px; font-size: 14px; font-weight: 600; color: var(--ang-muted); }
+.pages a.on { background: var(--ang-field); color: var(--ang-text); }
+.top .right { display: flex; gap: 8px; margin-left: auto; align-items: center; }
+.main { width: 100%; max-width: 1240px; margin: 0 auto; padding: 22px 24px 40px; }
+.ghost, .primary, .google, .danger-btn { cursor: pointer; border-radius: 999px; padding: 8px 16px; min-height: 36px; font-size: 13.5px; font-weight: 600;
+  text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.ghost { border: 1px solid var(--ang-border); background: var(--ang-surface); color: var(--ang-text); }
+.ghost:hover { background: var(--ang-hover); } .ghost.on { border-color: var(--acc); }
+.primary { border: 1px solid var(--acc); background: var(--acc); color: var(--ang-surface); }
+.primary:disabled, .ghost:disabled, .danger-btn:disabled { opacity: .5; cursor: default; }
+.danger { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--ang-border); display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.danger-btn { border: 1px solid var(--bad); background: transparent; color: var(--bad); }
+.m { color: var(--ang-muted); font-size: 13px; }
+.sub { font-size: 13px; color: var(--ang-muted); }
+.rowtitle { font-size: 12px; font-weight: 600; color: var(--ang-muted); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 8px; }
+/* Sign-in */
+.signin { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+.signbox { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
+.signbox .brand { justify-content: center; }
+.google { border: 1px solid var(--ang-border); background: var(--ang-surface); color: var(--ang-text); width: 100%; min-height: 44px; }
+.or { text-align: center; font-size: 12.5px; color: var(--ang-muted); }
+.back { text-align: center; font-size: 13px; color: var(--ang-muted); }
+/* Forms */
+.form { display: flex; flex-direction: column; gap: 12px; }
+.form label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: var(--ang-soft); }
+.form input[type=text], .form input[type=password], .form input[type=email], .form textarea, .conn input[type=text] {
+  font: inherit; font-weight: 400; font-size: 14px; color: var(--ang-text); background: var(--ang-field); border: 1px solid var(--ang-border);
+  border-radius: 10px; padding: 9px 11px; min-height: 40px; }
+.signbox .sub { text-align: center; margin: 0; }
+.form .primary { align-self: flex-start; }
+.signbox .form .primary { align-self: stretch; min-height: 44px; }
+label.check { flex-direction: row !important; align-items: center; gap: 8px !important; font-weight: 500 !important; font-size: 13.5px; display: flex; }
+.steps { margin: 10px 0; padding-left: 20px; font-size: 14px; display: flex; flex-direction: column; gap: 4px; }
+.conn { display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; border-bottom: 1px solid var(--ang-border); }
+/* Trade card */
+.tradecard .big { font-family: Montserrat, Inter, sans-serif; font-size: 22px; font-weight: 700; }
+.chips .chip { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 10px; background: var(--ang-field); color: var(--ang-soft); }
+.tradecard .chips { margin: 6px 0; flex-wrap: wrap; }
+.snap { display: grid; grid-template-columns: minmax(140px, 1.4fr) 1fr 1fr; gap: 6px 12px; font-size: 13.5px; margin: 6px 0 8px; }
+.snap .h { font-weight: 600; color: var(--ang-muted); font-size: 12px; } .snap .lbl { color: var(--ang-soft); }
+.dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: middle; }
+table.t.pick tbody tr:not(.detail) { cursor: pointer; } table.t.pick tbody tr:not(.detail):hover td { background: var(--ang-hover); }
+table.t tr.sel td { background: var(--ang-field); }
+table.t tr.detail > td { padding: 10px 0 16px; border-top: 0; white-space: normal; }
+table.t tr.detail .tradecard { min-width: 0; }
+@media (max-width: 640px) { .top { position: static; padding: 10px 16px; gap: 10px; } .main { padding: 16px 16px 32px; } .edge-row .dim { width: 100%; } .abar { grid-template-columns: 90px 1fr 1fr 70px; } }

@@ -79,7 +79,7 @@ def _js_files() -> list[str]:
     import glob
 
     own = [os.path.join(HERE, f) for f in os.listdir(HERE) if f.endswith(".js") and not f.endswith("_check.js")]
-    react = glob.glob(os.path.join(HERE, "tradelog_ui", "src", "**", "*.js*"), recursive=True)   # the React page
+    react = glob.glob(os.path.join(HERE, "web", "src", "**", "*.js*"), recursive=True)   # the new app (web/)
     return sorted(own + react)
 
 

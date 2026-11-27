@@ -251,6 +251,17 @@ def habits(own: list[dict]) -> list[dict]:
             out.append({"key": "streak_size", "kind": "neutral" if wr >= (s["win_rate"] or 0) - 5 else "bad",
                         "grow_pct": _r(grow * 100, 0), "win_rate": _r(wr, 0), "usual_win_rate": s["win_rate"],
                         "trades": len(streak_next)})
+    # 4b. Size after a loss, against after a win (only trades opened once the previous one had closed)
+    after_l, after_w = [], []
+    for prev, nxt in zip(trips, trips[1:]):
+        size, pc = _num(nxt.get("invested_usd")), _when(prev.get("closed_at"))
+        if size and pc and _when(nxt["opened_at"]) >= pc:
+            (after_l if res[id(prev)] < 0 else after_w).append(size)
+    if len(after_l) >= 5 and len(after_w) >= 5:
+        ratio = (sum(after_l) / len(after_l)) / (sum(after_w) / len(after_w))
+        if ratio >= 1.3 or ratio <= 0.77:
+            out.append({"key": "size_after_loss", "kind": "bad" if ratio >= 1.3 else "neutral", "times": _r(ratio, 1),
+                        "trades": len(after_l) + len(after_w), "after_loss": len(after_l), "after_win": len(after_w)})
     # 5. Leverage
     lev = [t for t in trips if (_num(t.get("leverage")) or 1) > 2]
     if len(lev) >= MIN_CELL:

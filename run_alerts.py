@@ -618,6 +618,14 @@ def run_background_checks() -> None:
     except Exception as exc:
         print(f"Trade Log skipped: {str(exc)[:200]}")
 
+    # Weekly reviews asked for in the new app (it holds no AI keys): written here, counts only in the log.
+    try:
+        import tradelog_reviews
+
+        print(f"Trade Log reviews: {tradelog_reviews.run_pending(supabase)}")
+    except Exception as exc:
+        print(f"Trade Log reviews skipped: {str(exc)[:200]}")
+
     print("Background alert check finished.")
 
 

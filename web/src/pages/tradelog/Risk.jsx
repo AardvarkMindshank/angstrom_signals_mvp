@@ -1,6 +1,6 @@
 import React from "react";
-import { T } from "../env.js";
-import { money, pct, dayMonthYear } from "../format.js";
+import { T } from "../../lib/i18n.js";
+import { money, pct, dayMonthYear } from "../../lib/format.js";
 
 const KIND = () => ({ stop_loss: [T("Stop loss"), "var(--bad)"], take_profit: [T("Take profit"), "var(--good)"],
   trailing_stop: [T("Trailing stop"), "#4da89f"], by_hand: [T("By hand"), "var(--grey)"] });
