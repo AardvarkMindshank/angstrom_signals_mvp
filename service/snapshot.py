@@ -87,12 +87,13 @@ def _asset_rows(db, settings: dict, crypto: dict, stock: dict) -> list[dict]:
                         _rows[key] = (stamp, fields)
         fields = fields or {}
         report, _ = ms.sentiment_from_row(row)
+        from score_colours import sentiment_shown       # stored 0..100, shown -100..+100
         closes = [float(x) for x in (frame["close"].tail(8).tolist() if frame is not None and not frame.empty else [])]
         out.append({"type": kind, "key": aid, "symbol": name, "logo": row.get("logo_url") or "",
                     "trend": _num(fields.get("trend")), "trend_parts": fields.get("trend_parts") or {},
                     "price": _num(fields.get("latest_price")), "change_1d": _num(fields.get("change_1d")),
                     "closes": closes[-6:] if kind == "Stock" else closes,
-                    "mood": _num((report or {}).get("score")),
+                    "mood": sentiment_shown((report or {}).get("score")),
                     "next_earnings": str(row.get("next_earnings") or "")[:10] if kind == "Stock" else ""})
     return out
 
@@ -207,7 +208,7 @@ def tides_card(db) -> dict | None:
 
 def moods(db, settings: dict) -> list[dict]:
     import market_store as ms
-    from score_colours import sentiment_category_score
+    from score_colours import sentiment_category_score, sentiment_shown
 
     def coverage(score):
         s = sentiment_category_score(score)
@@ -225,8 +226,12 @@ def moods(db, settings: dict) -> list[dict]:
     for key, label in specs:
         report, _ = ms.sentiment_from_row(stored.get(key))
         score = _num((report or {}).get("score"))
-        out.append({"key": key, "label": i18n.t(label), "score": score, "coverage": coverage(score) if score is not None else "",
-                    "summary": " ".join(str((report or {}).get("summary") or "").split()), "crowd": crowd.get(key) or {}})
+        voice = dict(crowd.get(key) or {})
+        if voice.get("alt_avg") is not None:
+            voice["alt_avg"] = sentiment_shown(voice["alt_avg"])
+        # Sentiment is stored 0..100 and shown -100..+100 (score_colours), as everywhere in the app.
+        out.append({"key": key, "label": i18n.t(label), "score": sentiment_shown(score), "coverage": coverage(score) if score is not None else "",
+                    "summary": " ".join(str((report or {}).get("summary") or "").split()), "crowd": voice})
     return out
 
 

@@ -3041,5 +3041,21 @@
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Chưa có: phễu tự lọc thị trường theo từng giai đoạn thành danh sách Ứng viên ngắn.",
   "Make one in the classic app ›": "Tạo trong ứng dụng cổ điển ›",
   "No Candidates right now.": "Hiện không có Ứng viên.",
-  "Markets": "Thị trường"
+  "Markets": "Thị trường",
+  "Signals": "Tín hiệu",
+  "The table service isn't reachable just now. Please try again in a minute.": "Hiện không kết nối được dịch vụ bảng. Vui lòng thử lại sau một phút.",
+  "The table couldn't load just now. Please try again.": "Hiện chưa tải được bảng. Vui lòng thử lại.",
+  "Columns": "Cột",
+  "You have no funnels in this market yet.": "Bạn chưa có phễu nào ở thị trường này.",
+  "No assets hold this stage right now.": "Hiện không có tài sản nào ở giai đoạn này.",
+  "This watchlist is empty. Add assets in ⚙️ Settings.": "Danh sách theo dõi này trống. Thêm tài sản trong ⚙️ Cài đặt.",
+  "Click a column title to sort. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover a reading for what it means, click it for the breakdown. Click a name to open the asset.": "Nhấn tiêu đề cột để sắp xếp. 📈 Trend, 🎯 Stretch và 🔊 Flow đều từ -100 đến +100 (dương nghĩa là tăng); chúng mô tả thị trường, không phải dự báo. Rê chuột vào chỉ số để xem ý nghĩa, nhấn để xem chi tiết. Nhấn tên để mở tài sản.",
+  "How many members watch this asset": "Số thành viên theo dõi tài sản này",
+  "Average daily range as a share of the price": "Biên độ trung bình mỗi ngày so với giá",
+  "Volume against its usual level": "Khối lượng so với mức thường lệ",
+  "{n} of {total} Sets say Yes": "{n}/{total} Sets trả lời Có",
+  "Open the comments": "Mở bình luận",
+  "Showing the largest {n} by market cap; {more} more hold this stage.": "Đang hiện {n} tài sản lớn nhất theo vốn hóa; còn {more} tài sản khác ở giai đoạn này.",
+  "Pick up to {n} Signal Groups and {n} Signal Sets. Both tables show the same columns.": "Chọn tối đa {n} Signal Groups và {n} Signal Sets. Cả hai bảng hiển thị cùng các cột.",
+  "The choices couldn't load just now.": "Hiện chưa tải được các lựa chọn."
 }

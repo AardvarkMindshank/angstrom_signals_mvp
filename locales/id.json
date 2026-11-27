@@ -3041,5 +3041,21 @@
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Belum ada: corong menyaring pasar secara bertahap dengan sendirinya menjadi daftar Kandidat yang pendek.",
   "Make one in the classic app ›": "Buat di aplikasi klasik ›",
   "No Candidates right now.": "Saat ini tidak ada Kandidat.",
-  "Markets": "Pasar"
+  "Markets": "Pasar",
+  "Signals": "Sinyal",
+  "The table service isn't reachable just now. Please try again in a minute.": "Layanan tabel sedang tidak dapat dijangkau. Coba lagi sebentar lagi.",
+  "The table couldn't load just now. Please try again.": "Tabel belum bisa dimuat. Silakan coba lagi.",
+  "Columns": "Kolom",
+  "You have no funnels in this market yet.": "Anda belum punya corong di pasar ini.",
+  "No assets hold this stage right now.": "Saat ini tidak ada aset di tahap ini.",
+  "This watchlist is empty. Add assets in ⚙️ Settings.": "Daftar pantauan ini kosong. Tambahkan aset di ⚙️ Pengaturan.",
+  "Click a column title to sort. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover a reading for what it means, click it for the breakdown. Click a name to open the asset.": "Klik judul kolom untuk mengurutkan. 📈 Trend, 🎯 Stretch, dan 🔊 Flow masing-masing dari -100 sampai +100 (positif berarti naik); menggambarkan pasar, bukan ramalan. Arahkan ke pembacaan untuk artinya, klik untuk rinciannya. Klik nama untuk membuka aset.",
+  "How many members watch this asset": "Berapa anggota yang memantau aset ini",
+  "Average daily range as a share of the price": "Rentang harian rata-rata sebagai bagian dari harga",
+  "Volume against its usual level": "Volume dibanding tingkat biasanya",
+  "{n} of {total} Sets say Yes": "{n} dari {total} Set menjawab Ya",
+  "Open the comments": "Buka komentar",
+  "Showing the largest {n} by market cap; {more} more hold this stage.": "Menampilkan {n} terbesar menurut kapitalisasi pasar; {more} lainnya ada di tahap ini.",
+  "Pick up to {n} Signal Groups and {n} Signal Sets. Both tables show the same columns.": "Pilih hingga {n} Signal Groups dan {n} Signal Sets. Kedua tabel menampilkan kolom yang sama.",
+  "The choices couldn't load just now.": "Pilihan belum bisa dimuat saat ini."
 }

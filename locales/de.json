@@ -3041,5 +3041,21 @@
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Noch keine: Ein Funnel grenzt den Markt selbstständig in Stufen auf eine kurze Liste von Kandidaten ein.",
   "Make one in the classic app ›": "In der klassischen App anlegen ›",
   "No Candidates right now.": "Derzeit keine Kandidaten.",
-  "Markets": "Märkte"
+  "Markets": "Märkte",
+  "Signals": "Signale",
+  "The table service isn't reachable just now. Please try again in a minute.": "Der Tabellendienst ist gerade nicht erreichbar. Bitte versuche es in einer Minute erneut.",
+  "The table couldn't load just now. Please try again.": "Die Tabelle konnte gerade nicht geladen werden. Bitte versuche es erneut.",
+  "Columns": "Spalten",
+  "You have no funnels in this market yet.": "Du hast in diesem Markt noch keine Funnels.",
+  "No assets hold this stage right now.": "Derzeit hält kein Asset diese Stufe.",
+  "This watchlist is empty. Add assets in ⚙️ Settings.": "Diese Watchlist ist leer. Füge Assets in ⚙️ Einstellungen hinzu.",
+  "Click a column title to sort. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover a reading for what it means, click it for the breakdown. Click a name to open the asset.": "Klicke auf einen Spaltentitel zum Sortieren. 📈 Trend, 🎯 Stretch und 🔊 Flow reichen von -100 bis +100 (positiv heißt aufwärts); sie beschreiben den Markt und sind keine Prognosen. Fahre über einen Wert für seine Bedeutung, klicke für die Aufschlüsselung. Klicke auf einen Namen, um das Asset zu öffnen.",
+  "How many members watch this asset": "Wie viele Mitglieder dieses Asset beobachten",
+  "Average daily range as a share of the price": "Durchschnittliche Tagesspanne im Verhältnis zum Preis",
+  "Volume against its usual level": "Volumen im Vergleich zum üblichen Niveau",
+  "{n} of {total} Sets say Yes": "{n} von {total} Sets sagen Ja",
+  "Open the comments": "Kommentare öffnen",
+  "Showing the largest {n} by market cap; {more} more hold this stage.": "Die {n} größten nach Marktkapitalisierung; {more} weitere halten diese Stufe.",
+  "Pick up to {n} Signal Groups and {n} Signal Sets. Both tables show the same columns.": "Wähle bis zu {n} Signal Groups und {n} Signal Sets. Beide Tabellen zeigen dieselben Spalten.",
+  "The choices couldn't load just now.": "Die Auswahl konnte gerade nicht geladen werden."
 }

@@ -3041,5 +3041,21 @@
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Henüz yok: huni piyasayı kendi başına aşamalar halinde kısa bir Aday listesine indirir.",
   "Make one in the classic app ›": "Klasik uygulamada oluştur ›",
   "No Candidates right now.": "Şu anda Aday yok.",
-  "Markets": "Piyasalar"
+  "Markets": "Piyasalar",
+  "Signals": "Sinyaller",
+  "The table service isn't reachable just now. Please try again in a minute.": "Tablo hizmetine şu anda ulaşılamıyor. Lütfen bir dakika sonra tekrar deneyin.",
+  "The table couldn't load just now. Please try again.": "Tablo şu anda yüklenemedi. Lütfen tekrar deneyin.",
+  "Columns": "Sütunlar",
+  "You have no funnels in this market yet.": "Bu piyasada henüz huniniz yok.",
+  "No assets hold this stage right now.": "Şu anda bu aşamada varlık yok.",
+  "This watchlist is empty. Add assets in ⚙️ Settings.": "Bu izleme listesi boş. ⚙️ Ayarlar'dan varlık ekleyin.",
+  "Click a column title to sort. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover a reading for what it means, click it for the breakdown. Click a name to open the asset.": "Sıralamak için bir sütun başlığına tıklayın. 📈 Trend, 🎯 Stretch ve 🔊 Flow -100 ile +100 arasındadır (pozitif yukarı demektir); piyasayı tanımlar, tahmin değildir. Anlamı için bir değerin üzerine gelin, ayrıntı için tıklayın. Varlığı açmak için bir ada tıklayın.",
+  "How many members watch this asset": "Bu varlığı izleyen üye sayısı",
+  "Average daily range as a share of the price": "Ortalama günlük aralığın fiyata oranı",
+  "Volume against its usual level": "Hacmin olağan seviyesine göre",
+  "{n} of {total} Sets say Yes": "{total} Set'ten {n} tanesi Evet diyor",
+  "Open the comments": "Yorumları aç",
+  "Showing the largest {n} by market cap; {more} more hold this stage.": "Piyasa değerine göre en büyük {n} gösteriliyor; {more} tane daha bu aşamada.",
+  "Pick up to {n} Signal Groups and {n} Signal Sets. Both tables show the same columns.": "En fazla {n} Signal Group ve {n} Signal Set seçin. İki tablo da aynı sütunları gösterir.",
+  "The choices couldn't load just now.": "Seçenekler şu anda yüklenemedi."
 }

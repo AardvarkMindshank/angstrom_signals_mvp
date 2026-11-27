@@ -3041,5 +3041,21 @@
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "まだありません：ファネルは市場を段階的に自動で絞り込み、短い候補リストにします。",
   "Make one in the classic app ›": "クラシック版で作成 ›",
   "No Candidates right now.": "現在、候補はありません。",
-  "Markets": "マーケット"
+  "Markets": "マーケット",
+  "Signals": "シグナル",
+  "The table service isn't reachable just now. Please try again in a minute.": "現在テーブルのサービスに接続できません。少し後にもう一度お試しください。",
+  "The table couldn't load just now. Please try again.": "現在テーブルを読み込めません。もう一度お試しください。",
+  "Columns": "列",
+  "You have no funnels in this market yet.": "この市場にはまだファネルがありません。",
+  "No assets hold this stage right now.": "現在この段階にある銘柄はありません。",
+  "This watchlist is empty. Add assets in ⚙️ Settings.": "このウォッチリストは空です。⚙️ 設定で銘柄を追加してください。",
+  "Click a column title to sort. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover a reading for what it means, click it for the breakdown. Click a name to open the asset.": "列見出しをクリックで並べ替え。📈 Trend、🎯 Stretch、🔊 Flow はいずれも -100〜+100（プラスは上向き）で、市場の描写であり予測ではありません。値にカーソルを合わせると意味、クリックで内訳を表示。名前をクリックで銘柄を開きます。",
+  "How many members watch this asset": "この銘柄をウォッチしているメンバー数",
+  "Average daily range as a share of the price": "価格に対する平均的な1日の値幅",
+  "Volume against its usual level": "通常の水準に対する出来高",
+  "{n} of {total} Sets say Yes": "{total} 個中 {n} 個の Sets が Yes",
+  "Open the comments": "コメントを開く",
+  "Showing the largest {n} by market cap; {more} more hold this stage.": "時価総額の大きい {n} 件を表示中。ほかに {more} 件がこの段階にあります。",
+  "Pick up to {n} Signal Groups and {n} Signal Sets. Both tables show the same columns.": "Signal Groups と Signal Sets をそれぞれ最大 {n} 個まで選べます。両方の表に同じ列が表示されます。",
+  "The choices couldn't load just now.": "現在選択肢を読み込めません。"
 }

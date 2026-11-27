@@ -3041,5 +3041,21 @@
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "ยังไม่มี: ฟันเนลจะคัดกรองตลาดทีละขั้นเองจนเหลือรายชื่อ Candidates สั้นๆ",
   "Make one in the classic app ›": "สร้างในแอปแบบคลาสสิก ›",
   "No Candidates right now.": "ตอนนี้ไม่มี Candidates",
-  "Markets": "ตลาด"
+  "Markets": "ตลาด",
+  "Signals": "สัญญาณ",
+  "The table service isn't reachable just now. Please try again in a minute.": "ไม่สามารถเชื่อมต่อบริการตารางได้ในขณะนี้ โปรดลองอีกครั้งในอีกสักครู่",
+  "The table couldn't load just now. Please try again.": "โหลดตารางไม่ได้ในขณะนี้ โปรดลองอีกครั้ง",
+  "Columns": "คอลัมน์",
+  "You have no funnels in this market yet.": "คุณยังไม่มีฟันเนลในตลาดนี้",
+  "No assets hold this stage right now.": "ตอนนี้ไม่มีสินทรัพย์อยู่ในขั้นนี้",
+  "This watchlist is empty. Add assets in ⚙️ Settings.": "วอทช์ลิสต์นี้ว่างอยู่ เพิ่มสินทรัพย์ใน ⚙️ การตั้งค่า",
+  "Click a column title to sort. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover a reading for what it means, click it for the breakdown. Click a name to open the asset.": "คลิกหัวคอลัมน์เพื่อเรียงลำดับ 📈 Trend, 🎯 Stretch และ 🔊 Flow มีค่า -100 ถึง +100 (บวกหมายถึงขาขึ้น) เป็นการอธิบายตลาด ไม่ใช่การพยากรณ์ ชี้ที่ค่าเพื่อดูความหมาย คลิกเพื่อดูรายละเอียด คลิกชื่อเพื่อเปิดสินทรัพย์",
+  "How many members watch this asset": "จำนวนสมาชิกที่ติดตามสินทรัพย์นี้",
+  "Average daily range as a share of the price": "ช่วงราคาเฉลี่ยต่อวันเทียบกับราคา",
+  "Volume against its usual level": "ปริมาณซื้อขายเทียบกับระดับปกติ",
+  "{n} of {total} Sets say Yes": "{n} จาก {total} Sets ตอบ Yes",
+  "Open the comments": "เปิดความเห็น",
+  "Showing the largest {n} by market cap; {more} more hold this stage.": "แสดง {n} อันดับแรกตามมูลค่าตลาด อีก {more} รายการอยู่ในขั้นนี้",
+  "Pick up to {n} Signal Groups and {n} Signal Sets. Both tables show the same columns.": "เลือก Signal Groups ได้สูงสุด {n} และ Signal Sets {n} ทั้งสองตารางแสดงคอลัมน์เดียวกัน",
+  "The choices couldn't load just now.": "โหลดตัวเลือกไม่ได้ในขณะนี้"
 }

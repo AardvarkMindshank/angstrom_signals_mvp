@@ -3041,5 +3041,21 @@
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Ninguno aún: un embudo reduce el mercado por etapas, por sí solo, a una lista corta de Candidatos.",
   "Make one in the classic app ›": "Crear uno en la app clásica ›",
   "No Candidates right now.": "No hay Candidatos ahora mismo.",
-  "Markets": "Mercados"
+  "Markets": "Mercados",
+  "Signals": "Señales",
+  "The table service isn't reachable just now. Please try again in a minute.": "El servicio de tablas no está disponible ahora. Inténtalo de nuevo en un minuto.",
+  "The table couldn't load just now. Please try again.": "La tabla no se pudo cargar. Inténtalo de nuevo.",
+  "Columns": "Columnas",
+  "You have no funnels in this market yet.": "Aún no tienes embudos en este mercado.",
+  "No assets hold this stage right now.": "Ningún activo está en esta etapa ahora mismo.",
+  "This watchlist is empty. Add assets in ⚙️ Settings.": "Esta lista está vacía. Añade activos en ⚙️ Ajustes.",
+  "Click a column title to sort. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover a reading for what it means, click it for the breakdown. Click a name to open the asset.": "Haz clic en el título de una columna para ordenar. 📈 Trend, 🎯 Stretch y 🔊 Flow van de -100 a +100 (positivo significa al alza); describen el mercado y no son pronósticos. Pasa el cursor por una lectura para ver qué significa y haz clic para el desglose. Haz clic en un nombre para abrir el activo.",
+  "How many members watch this asset": "Cuántos miembros siguen este activo",
+  "Average daily range as a share of the price": "Rango diario medio como parte del precio",
+  "Volume against its usual level": "Volumen frente a su nivel habitual",
+  "{n} of {total} Sets say Yes": "{n} de {total} Sets dicen Sí",
+  "Open the comments": "Abrir los comentarios",
+  "Showing the largest {n} by market cap; {more} more hold this stage.": "Mostrando los {n} mayores por capitalización; {more} más están en esta etapa.",
+  "Pick up to {n} Signal Groups and {n} Signal Sets. Both tables show the same columns.": "Elige hasta {n} Signal Groups y {n} Signal Sets. Ambas tablas muestran las mismas columnas.",
+  "The choices couldn't load just now.": "Las opciones no se pudieron cargar ahora."
 }

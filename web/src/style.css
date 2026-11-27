@@ -619,3 +619,51 @@ body.docked .top { gap: 12px; }
   .mktc:first-child { border-left: 0; padding-left: 0; }
   .ftiles { margin-left: 0; clip-path: none; } .ftile { border-left: 0; padding-left: 0; border-top: 1px solid var(--ang-border); padding-top: 12px; }
 }
+
+/* ---- ₿ 📈 Signals tables ---- */
+.sigs .ptitle { margin-right: auto; }
+.segl { border: 0; cursor: pointer; border-radius: 999px; padding: 6px 14px; min-height: 32px; font-size: 13px; font-weight: 600; text-decoration: none; color: var(--ang-muted); display: inline-flex; align-items: center; }
+.segl.on { background: var(--ang-raised); color: var(--ang-text); box-shadow: 0 1px 3px rgba(11,18,32,.12); }
+.tscroll { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; transition: opacity .15s; }
+table.t.sig { min-width: 980px; }
+table.t.sig th { white-space: nowrap; vertical-align: bottom; }
+table.t.sig th button { border: 0; background: none; padding: 0; font: inherit; color: inherit; cursor: pointer; white-space: nowrap; }
+table.t.sig th button:hover { color: var(--ang-text); }
+table.t.sig th.c, table.t.sig td.c { text-align: center; }
+table.t.sig td { white-space: nowrap; vertical-align: middle; }
+table.t.sig .sticky { position: sticky; left: 0; background: var(--ang-page); z-index: 1; }
+table.t.sig tbody tr:hover td { background: var(--ang-hover); }
+.num { font-variant-numeric: tabular-nums; }
+.aname { display: inline-flex; align-items: center; gap: 9px; }
+.aname a { text-decoration: none; } .aname a:hover b { text-decoration: underline; }
+.addw { min-height: 24px; min-width: 24px; padding: 0 4px; font-size: 13px; }
+.foldbtn { cursor: pointer; opacity: .55; }
+th.fold button, th.fold { color: var(--ang-soft); }
+.mbar { position: relative; display: inline-block; width: 48px; height: 6px; border-radius: 4px; background: var(--ang-field); vertical-align: middle; overflow: hidden; }
+.mbar i { position: absolute; top: 0; bottom: 0; background: var(--grey); }
+.mbar i.good { background: var(--good); } .mbar i.bad { background: var(--bad); }
+.rcell { display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
+.rcell:hover .rv { box-shadow: inset 0 0 0 1px var(--ang-border); }
+.glabel { font-size: 12px; }
+.ans { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-weight: 700; text-decoration: none; background: var(--ang-field); color: var(--ang-muted); }
+.ans.yes { background: var(--good-bg); color: var(--good-ink); } .ans.unknown { background: var(--note-bg); color: var(--note-ink); }
+.dots { display: inline-flex; gap: 3px; } .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--grey); }
+.dots i.good { background: var(--good); } .dots i.bad { background: var(--bad); } .dots i.none { background: var(--ang-field); box-shadow: inset 0 0 0 1px var(--ang-border); }
+.crowdc { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-size: 13px; }
+td.help { cursor: help; }
+.funnelbar { padding: 4px 0 6px; }
+.fpick { display: flex; flex-direction: column; }
+.frow { padding: 10px 0; border-top: 1px solid var(--ang-border); }
+.frow:first-child { border-top: 0; }
+.fhead { font-size: 14px; margin-bottom: 6px; }
+.fchips { flex-wrap: wrap; }
+.fchips button { font-variant-numeric: tabular-nums; }
+.fchips .clabel { font-weight: 500; opacity: .8; }
+.modal { background: var(--ang-page); border-radius: 18px; padding: 22px 24px; width: min(760px, 100%); max-height: 86vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(0,0,0,.3); }
+.choose { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.chklist { display: flex; flex-direction: column; gap: 8px; max-height: 46vh; overflow-y: auto; padding-right: 6px; }
+@media (max-width: 640px) { .choose { grid-template-columns: 1fr; } }
+.main:has(.sigs) { max-width: 1480px; }
+table.t.sig th.c { white-space: normal; min-width: 84px; max-width: 140px; line-height: 1.25; }
+table.t.sig th.c button { white-space: normal; text-align: center; }
+.ghost.icon.addw { padding: 0 4px; min-height: 24px; min-width: 24px; height: 24px; }

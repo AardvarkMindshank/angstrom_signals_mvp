@@ -6,6 +6,8 @@ because they need the Python engine or the AI keys. It runs the same code as the
     POST /sonar                     the Sonar strip for the candles the chart is showing
     GET  /chart/options?key=…       what the Pro chart can offer for one asset (indicators, Sonar markers, Sets)
     GET  /snapshot?lang=…&save=…    Quick Snapshot: Tides card, what changed, Trend extremes, moods, funnels, markets
+    GET  /signals?market=…          a Signals table: your watchlist or a funnel's assets, with every column
+    GET  /signals/columns           what the table's column chooser can offer
     POST /chart                     the Pro chart: the classic chart's data for one candle size, range and set of choices
     GET  /search?q=…                news, assets and the member's Logbook that mention a topic ("inflation", "ETF")
     GET  /ai                        the AIs the Navigator can use (for Settings)
@@ -207,6 +209,29 @@ def snapshot(lang: str = Query("en", max_length=8), save: bool = Query(False), w
         if hit is not None:
             return hit
     return _snap_cache.put((who.id, lang), snap.build(who.db, who.id, lang, save))
+
+
+# ---- ₿ 📈 the Signals tables ----------------------------------------------------------------------------------------------
+
+_signals_cache = Cache(60, 2000)
+
+
+@app.get("/signals")
+def signals(market: str = Query(..., pattern="^(crypto|equity)$"), lang: str = Query("en", max_length=8),
+            mode: str | None = Query(None, pattern="^(watchlist|funnel)$"), pick: str | None = Query(None, max_length=60),
+            stage: str | None = Query(None, max_length=30), fresh: bool = Query(False), who: Member = Depends(member)):
+    from service import signals as sig
+
+    key = (who.id, market, lang, mode, pick, stage)
+    hit = None if fresh else _signals_cache.get(key)
+    return hit if hit is not None else _signals_cache.put(key, sig.build(who.db, who.id, market, lang, mode, pick, stage))
+
+
+@app.get("/signals/columns")
+def signal_columns(lang: str = Query("en", max_length=8), who: Member = Depends(member)):
+    from service import signals as sig
+
+    return sig.column_options(who.db, who.id, lang)
 
 
 # ---- the Pro chart (the classic chart's data, built as the classic app builds it) --------------------------------------

@@ -240,3 +240,37 @@ def test_snapshot_endpoint_keeps_going_when_a_part_fails(monkeypatch):
     assert out["tides"] is None and out["errors"] == ["tides"]
     assert out["extremes"]["crypto"]["top"]["pick"] == "Crypto|a"
     assert "Crypto:a" in saved["score_visit"]
+
+
+# ---- ₿ 📈 Signals tables ---------------------------------------------------------------------------------------------
+
+def test_signals_table_for_the_watchlist(monkeypatch):
+    from service import signals as sig
+
+    seen = {}
+
+    def rows(db, kind, watch, specs, fview, own):
+        seen.update(kind=kind, watch=dict(watch), fview=fview)
+        return [{"key": f"{kind}|{k}", "clusters": {}, "cells": {}} for k in watch]
+    monkeypatch.setattr(sig, "rows_for", rows)
+    out = _client({"user_preferences": [{"settings": {}, "crypto_watchlist": {"bitcoin": "Bitcoin"}, "stock_watchlist": {"AAPL": "Apple"}}]}) \
+        .get("/signals?market=equity").json()
+    assert out["mode"] == "watchlist" and seen["kind"] == "Stock" and seen["watch"] == {"AAPL": "Apple"}
+    assert [c["cluster"] for c in out["columns"]] == ["trend", "stretch", "flow"]
+    assert out["flags"] == {"period": True, "extra": True} and "funnel" not in out
+
+
+def test_signals_funnel_view_uses_the_funnel_assets(monkeypatch):
+    from service import signals as sig
+
+    monkeypatch.setattr(sig, "funnel_view", lambda db, uid, m, s, p, st: {"funnels": [{"id": "f1"}], "picked": "f1", "stage": "candidate",
+                                                                         "choices": [], "assets": {"ripple": "XRP"}, "states": {}, "f": None,
+                                                                         "line": "", "health": None, "count": 1, "more": 0})
+    monkeypatch.setattr(sig, "rows_for", lambda db, kind, watch, specs, fview, own: [{"key": f"{kind}|{k}"} for k in watch])
+    out = _client({"user_preferences": [{"settings": {"crypto_table": "funnel"}, "crypto_watchlist": {}, "stock_watchlist": {}}]}) \
+        .get("/signals?market=crypto&fresh=true").json()
+    assert out["mode"] == "funnel" and out["rows"] == [{"key": "Crypto|ripple"}] and out["funnel"]["picked"] == "f1"
+
+
+def test_signals_rejects_an_unknown_market():
+    assert _client().get("/signals?market=bonds").status_code == 422

@@ -3041,5 +3041,21 @@
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Nenhum ainda: um funil filtra o mercado em etapas, sozinho, até uma lista curta de Candidatos.",
   "Make one in the classic app ›": "Criar um no app clássico ›",
   "No Candidates right now.": "Nenhum Candidato no momento.",
-  "Markets": "Mercados"
+  "Markets": "Mercados",
+  "Signals": "Sinais",
+  "The table service isn't reachable just now. Please try again in a minute.": "O serviço de tabelas não está acessível agora. Tente novamente em um minuto.",
+  "The table couldn't load just now. Please try again.": "A tabela não carregou agora. Tente novamente.",
+  "Columns": "Colunas",
+  "You have no funnels in this market yet.": "Você ainda não tem funis neste mercado.",
+  "No assets hold this stage right now.": "Nenhum ativo está nesta etapa no momento.",
+  "This watchlist is empty. Add assets in ⚙️ Settings.": "Esta watchlist está vazia. Adicione ativos em ⚙️ Configurações.",
+  "Click a column title to sort. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover a reading for what it means, click it for the breakdown. Click a name to open the asset.": "Clique no título de uma coluna para ordenar. 📈 Trend, 🎯 Stretch e 🔊 Flow vão de -100 a +100 (positivo significa alta); descrevem o mercado e não são previsões. Passe o mouse sobre uma leitura para ver o significado e clique para o detalhamento. Clique em um nome para abrir o ativo.",
+  "How many members watch this asset": "Quantos membros acompanham este ativo",
+  "Average daily range as a share of the price": "Amplitude diária média como parcela do preço",
+  "Volume against its usual level": "Volume em relação ao nível habitual",
+  "{n} of {total} Sets say Yes": "{n} de {total} Sets dizem Sim",
+  "Open the comments": "Abrir os comentários",
+  "Showing the largest {n} by market cap; {more} more hold this stage.": "Mostrando os {n} maiores por valor de mercado; mais {more} estão nesta etapa.",
+  "Pick up to {n} Signal Groups and {n} Signal Sets. Both tables show the same columns.": "Escolha até {n} Signal Groups e {n} Signal Sets. As duas tabelas mostram as mesmas colunas.",
+  "The choices couldn't load just now.": "As opções não carregaram agora."
 }

@@ -3041,5 +3041,21 @@
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Aucun pour l'instant : un entonnoir réduit le marché par étapes, tout seul, à une courte liste de Candidats.",
   "Make one in the classic app ›": "En créer un dans l'application classique ›",
   "No Candidates right now.": "Aucun Candidat pour l'instant.",
-  "Markets": "Marchés"
+  "Markets": "Marchés",
+  "Signals": "Signaux",
+  "The table service isn't reachable just now. Please try again in a minute.": "Le service des tableaux n'est pas joignable pour l'instant. Réessayez dans une minute.",
+  "The table couldn't load just now. Please try again.": "Le tableau n'a pas pu se charger. Veuillez réessayer.",
+  "Columns": "Colonnes",
+  "You have no funnels in this market yet.": "Vous n'avez pas encore d'entonnoir sur ce marché.",
+  "No assets hold this stage right now.": "Aucun actif n'en est à cette étape pour l'instant.",
+  "This watchlist is empty. Add assets in ⚙️ Settings.": "Cette liste est vide. Ajoutez des actifs dans ⚙️ Paramètres.",
+  "Click a column title to sort. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover a reading for what it means, click it for the breakdown. Click a name to open the asset.": "Cliquez sur un titre de colonne pour trier. 📈 Trend, 🎯 Stretch et 🔊 Flow vont de -100 à +100 (positif = haussier) ; ils décrivent le marché, ce ne sont pas des prévisions. Survolez une lecture pour sa signification, cliquez pour le détail. Cliquez sur un nom pour ouvrir l'actif.",
+  "How many members watch this asset": "Combien de membres suivent cet actif",
+  "Average daily range as a share of the price": "Amplitude quotidienne moyenne en part du prix",
+  "Volume against its usual level": "Volume par rapport à son niveau habituel",
+  "{n} of {total} Sets say Yes": "{n} Sets sur {total} disent Oui",
+  "Open the comments": "Ouvrir les commentaires",
+  "Showing the largest {n} by market cap; {more} more hold this stage.": "Affichage des {n} plus grands par capitalisation ; {more} autres en sont à cette étape.",
+  "Pick up to {n} Signal Groups and {n} Signal Sets. Both tables show the same columns.": "Choisissez jusqu'à {n} Signal Groups et {n} Signal Sets. Les deux tableaux affichent les mêmes colonnes.",
+  "The choices couldn't load just now.": "Les choix n'ont pas pu se charger pour l'instant."
 }

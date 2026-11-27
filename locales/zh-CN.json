@@ -3041,5 +3041,21 @@
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "还没有：漏斗会自动分阶段筛选市场，得出一份简短的候选名单。",
   "Make one in the classic app ›": "在经典版中创建 ›",
   "No Candidates right now.": "目前没有候选。",
-  "Markets": "市场"
+  "Markets": "市场",
+  "Signals": "信号",
+  "The table service isn't reachable just now. Please try again in a minute.": "暂时无法连接表格服务，请稍后再试。",
+  "The table couldn't load just now. Please try again.": "表格暂时无法加载，请重试。",
+  "Columns": "列",
+  "You have no funnels in this market yet.": "你在这个市场还没有漏斗。",
+  "No assets hold this stage right now.": "目前没有资产处于这个阶段。",
+  "This watchlist is empty. Add assets in ⚙️ Settings.": "这个自选列表是空的。请在 ⚙️ 设置中添加资产。",
+  "Click a column title to sort. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover a reading for what it means, click it for the breakdown. Click a name to open the asset.": "点击列标题排序。📈 Trend、🎯 Stretch 和 🔊 Flow 都从 -100 到 +100（正数表示向上）；它们描述市场，不是预测。悬停读数查看含义，点击查看分解。点击名称打开资产。",
+  "How many members watch this asset": "有多少会员关注这个资产",
+  "Average daily range as a share of the price": "平均日波幅占价格的比例",
+  "Volume against its usual level": "成交量相对通常水平",
+  "{n} of {total} Sets say Yes": "{total} 个 Sets 中有 {n} 个为 Yes",
+  "Open the comments": "打开评论",
+  "Showing the largest {n} by market cap; {more} more hold this stage.": "按市值显示最大的 {n} 个；另有 {more} 个处于这个阶段。",
+  "Pick up to {n} Signal Groups and {n} Signal Sets. Both tables show the same columns.": "最多选择 {n} 个 Signal Groups 和 {n} 个 Signal Sets。两个表格显示相同的列。",
+  "The choices couldn't load just now.": "选项暂时无法加载。"
 }
