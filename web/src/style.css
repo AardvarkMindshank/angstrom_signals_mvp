@@ -12,6 +12,8 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--ang-page); min-height: 100%; overflow-x: clip; }
+/* clear of a phone's notch and status bar when saved to the home screen (zero elsewhere) */
+body { padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left); }
 body { font-family: Inter, "Source Sans Pro", system-ui, sans-serif; color: var(--ang-text); font-size: 15px; line-height: 1.5; }
 h2 { margin: 0; font-family: Montserrat, Inter, sans-serif; font-size: 17px; font-weight: 700; }
 h3 { margin: 16px 0 6px; font-size: 15px; }
@@ -137,7 +139,7 @@ a { color: inherit; }
 .sub { font-size: 13px; color: var(--ang-muted); }
 .rowtitle { font-size: 12px; font-weight: 600; color: var(--ang-muted); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 8px; }
 /* Sign-in */
-.signin { min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; }
+.signin { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px; }   /* not a grid: Safari sized its column to the longest line, wider than the phone */
 .signbox { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 12px; }
 .signbox .brand { justify-content: center; }
 .logo-full { align-self: center; width: 240px; max-width: 70%; height: auto; margin: 4px 0 2px; }
@@ -1004,3 +1006,6 @@ a.btnlink:hover { background: var(--ang-hover); }
   .page { gap: 20px; }
 }
 @media (max-width: 640px) { .admai { flex-wrap: wrap; gap: 8px; } .admai select { width: 100%; } .admsignup { gap: 8px; } }
+/* iPhones zoom the page in when a text box under 16 px is tapped, and it stays zoomed (the sign-in page looked too
+   big and cut off): on touch screens every box uses 16 px. */
+@media (pointer: coarse) { input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea { font-size: 16px !important; } }

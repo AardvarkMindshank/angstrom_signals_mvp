@@ -1,0 +1,17 @@
+{
+  "name": "MarketNavi",
+  "short_name": "MarketNavi",
+  "description": "Navigate crypto and equity markets with AI-guided analysis and alerts, with a community alongside.",
+  "id": "/new/",
+  "start_url": "/new/?source=homescreen",
+  "scope": "/new/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {"src": "/new/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/new/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "/new/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
