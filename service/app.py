@@ -44,6 +44,9 @@ from pydantic import BaseModel, Field                                        # n
 
 app = FastAPI(title="MarketNavi data service", docs_url=None, redoc_url=None)
 ORIGINS = [o.strip() for o in (os.environ.get("ALLOWED_ORIGINS") or "https://marketnavi.ai").split(",") if o.strip()]
+# the same site with "www." in front is a different origin to a browser: allow both, or a member who typed
+# www.marketnavi.ai gets "not reachable" on every page that uses this service
+ORIGINS += [o.replace("://", "://www.", 1) for o in ORIGINS if "://www." not in o]
 app.add_middleware(CORSMiddleware, allow_origins=ORIGINS, allow_methods=["GET", "POST"],
                    allow_headers=["Authorization", "Content-Type"], max_age=3600)
 app.add_middleware(GZipMiddleware, minimum_size=2000)      # the Pro chart's data shrinks about six times

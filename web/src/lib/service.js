@@ -8,7 +8,19 @@ export class ServiceError extends Error {
   constructor(status, detail) { super(detail || String(status)); this.status = status; this.detail = detail || ""; }
 }
 
-export async function call(path, { method = "GET", body, timeout = 90000 } = {}) {
+// A call that can't reach the service at all (it is restarting after an update, say) is tried again once, a few
+// seconds later, before the page says it isn't reachable.
+export async function call(path, opts = {}) {
+  try { return await once(path, opts); } catch (e) {
+    // only when the request surely did nothing: no connection at all, or the service answered 502/503 (not up yet);
+    // never after a time-out, which may have saved something
+    if (!(e instanceof ServiceError) || !(e.detail === "unreachable" || e.status === 502 || e.status === 503)) throw e;
+    await new Promise((r) => setTimeout(r, 4000));
+    return once(path, opts);
+  }
+}
+
+async function once(path, { method = "GET", body, timeout = 90000 } = {}) {
   const { data } = await supabase.auth.getSession();
   const token = data && data.session ? data.session.access_token : "";
   const ctl = new AbortController();
@@ -21,7 +33,7 @@ export async function call(path, { method = "GET", body, timeout = 90000 } = {})
     return await r.json();
   } catch (e) {
     if (e instanceof ServiceError) throw e;
-    throw new ServiceError(0, "unreachable");
+    throw new ServiceError(0, ctl.signal.aborted ? "timeout" : "unreachable");
   } finally { clearTimeout(timer); }
 }
 
