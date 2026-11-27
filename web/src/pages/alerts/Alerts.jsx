@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Icon from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
 import { supabase, CLASSIC } from "../../lib/supabase.js";
 import { watchlists } from "../../lib/assets.js";
@@ -12,8 +13,8 @@ import { alertText } from "../asset/words.js";
 const OPEN = ["BULLISH_THRESHOLD", "BEARISH_THRESHOLD", "TREND_UP", "TREND_DOWN", "STRETCH_UP", "STRETCH_DOWN", "FLOW_UP", "FLOW_DOWN"];
 const HELD = OPEN.map((k) => k + "_HELD");
 const QUIET = ["invite_joined", "group_invite", "group_joined", "moderation_warning", "report_update"];
-const ICON = { TREND_UP: "📈", TREND_DOWN: "📉", STRETCH_UP: "🎯", STRETCH_DOWN: "🎯", FLOW_UP: "🔊", FLOW_DOWN: "🔊", BULLISH_THRESHOLD: "🌐", BEARISH_THRESHOLD: "🌐",
-  funnel: "🔻", study: "🔬", chart_share: "📤", prism: "🔍", group_invite: "👥", invite_joined: "👥", group_joined: "👥", moderation_warning: "⚠️", report_update: "🛡️" };
+const ICON = { TREND_UP: "trending-up", TREND_DOWN: "trending-down", STRETCH_UP: "target", STRETCH_DOWN: "target", FLOW_UP: "audio-lines", FLOW_DOWN: "audio-lines", BULLISH_THRESHOLD: "globe", BEARISH_THRESHOLD: "globe",
+  funnel: "funnel", study: "microscope", chart_share: "share", prism: "search", group_invite: "users", invite_joined: "users", group_joined: "users", moderation_warning: "triangle-exclamation-point", report_update: "shield" };
 
 export default function Alerts() {
   const [rows, setRows] = useState(null);
@@ -62,14 +63,14 @@ export default function Alerts() {
   return (
     <div className="page">
       <div className="bar">
-        <h1 className="ptitle" style={{ marginRight: "auto" }}>🔔 {T("Alerts")}{unread ? <span className="pcount">{unread}</span> : null}</h1>
+        <h1 className="ptitle" style={{ marginRight: "auto" }}><Icon n="bell" size={26} /> {T("Alerts")}{unread ? <span className="pcount">{unread}</span> : null}</h1>
         <div className="right">
-          <button type="button" className="ghost" disabled={busy || !unread} onClick={() => act("read")} title={T("Mark all as read")}>✅ {T("Mark all as read")}</button>
-          <button type="button" className="ghost" disabled={busy || !list.some((n) => isAlert(n) && n.is_read)} onClick={() => act("clear")} title={T("Clear read alerts")}>🧹 {T("Clear read alerts")}</button>
-          <button type="button" className="ghost" disabled={busy || !list.some(isAlert)} onClick={() => act("all")} title={T("Clear all alerts. Each one was already sent by email or in your digest.")}>🗑️ {T("Clear all")}</button>
+          <button type="button" className="ghost" disabled={busy || !unread} onClick={() => act("read")} title={T("Mark all as read")} aria-label={T("Mark all as read")}><Icon n="check-check" /></button>
+          <button type="button" className="ghost" disabled={busy || !list.some((n) => isAlert(n) && n.is_read)} onClick={() => act("clear")} title={T("Clear read alerts")} aria-label={T("Clear read alerts")}><Icon n="brush-cleaning" /></button>
+          <button type="button" className="ghost" disabled={busy || !list.some(isAlert)} onClick={() => act("all")} title={T("Clear all alerts. Each one was already sent by email or in your digest.")} aria-label={T("Clear all")}><Icon n="trash" /></button>
         </div>
       </div>
-      <p className="sub">{T("Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in")} <a className="linkish" href="#settings/alerts">⚙️ {T("Settings")}</a>.</p>
+      <p className="sub">{T("Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in")} <a className="linkish" href="#settings/alerts"><Icon n="settings" size={15} /> {T("Settings")}</a>.</p>
       {rows === null ? <div className="empty" style={{ height: 200 }}>{T("Loading…")}</div> : !list.length ? <p className="sub">{T("No alerts yet.")}</p> : (
         <ol className="alist">
           {list.map((n) => {
@@ -77,7 +78,7 @@ export default function Alerts() {
             const quiet = QUIET.includes(n.alert_type);
             const body = (
               <>
-                <span className="aicon" aria-hidden="true">{ICON[n.alert_type] || "🔔"}</span>
+                <span className="aicon" aria-hidden="true"><Icon n={ICON[n.alert_type] || "bell"} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="ahead"><b>{n.asset_name || T("Alert")}</b><span className="m">{stamp(n.created_at)}</span></div>
                   <div className="abody">{alertText(n.message)}</div>

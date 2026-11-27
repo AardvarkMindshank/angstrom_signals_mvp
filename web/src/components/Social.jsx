@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import Icon from "./Icon.jsx";
 import { T } from "../lib/i18n.js";
 import * as social from "../lib/social.js";
 import { watchlists, keyFor, universe } from "../lib/assets.js";
@@ -39,7 +40,7 @@ function Comments({ visible }) {
   }, []);
   const load = () => keys.length && social.stream(keys).then((r) => setRows(r.sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))));
   useEffect(() => { if (visible && keys.length) { load(); return social.realtime(load); } }, [visible, keys.join(",")]);
-  const label = (k) => (k === "Mood|crypto" ? T("Crypto market") : k === "Mood|stock" ? T("Stock market") : k === "Tides|macro" ? "🌊 Tides" : names[k] || k.split("|")[1]);
+  const label = (k) => (k === "Mood|crypto" ? T("Crypto market") : k === "Mood|stock" ? T("Stock market") : k === "Tides|macro" ? T("Tides") : names[k] || k.split("|")[1]);
   const shown = (rows || []).filter((r) => scope === "all" || (scope === "crypto" ? /^(Crypto|Mood\|crypto)/.test(r.asset_key) : /^(Stock|Mood\|stock)/.test(r.asset_key)));
   const act = async (fn) => { try { await fn(); } catch (e) { /* the row rules said no */ } load(); };
   return (
@@ -93,8 +94,8 @@ function Chat({ visible }) {
           <select value={to.kind === "group" ? `g${to.id}` : to.kind === "direct" ? "d" : "public"} aria-label={T("Who it's for")}
             onChange={(e) => { const v = e.target.value; setTo(v === "public" ? { kind: "public" } : v === "d" ? { kind: "direct", id: "", name: "" } : { kind: "group", id: v.slice(1) }); }}>
             <option value="public">{T("Everyone")}</option>
-            {groups.map((g) => <option key={g.id} value={`g${g.id}`}>👥 {g.name}</option>)}
-            <option value="d">🔒 {T("One person (private)")}</option>
+            {groups.map((g) => <option key={g.id} value={`g${g.id}`}>{g.name}</option>)}
+            <option value="d">{T("One person (private)")}</option>
           </select>
         </div>
         {to.kind === "direct" && !to.id && (
@@ -114,7 +115,7 @@ function Chat({ visible }) {
         <ol className="comments compact">
           {rows.map((n) => (
             <li key={n.id}>
-              <Note n={n} kind="chat" act={act} person={person} head={n.audience === "group" ? <span className="tag">👥 {n.group_name}</span> : n.audience === "direct" ? <span className="tag">🔒 {n.mine ? T("to {name}", { name: n.recipient_name || T("Member") }) : T("private")}</span> : null} />
+              <Note n={n} kind="chat" act={act} person={person} head={n.audience === "group" ? <span className="tag"><Icon n="users" size={13} /> {n.group_name}</span> : n.audience === "direct" ? <span className="tag"><Icon n="lock" size={13} /> {n.mine ? T("to {name}", { name: n.recipient_name || T("Member") }) : T("private")}</span> : null} />
               {n.replies.map((r) => <div key={r.id} className="reply"><Note n={r} kind="chat" act={act} person={person} /></div>)}
               <ReplyBox onSend={(t) => act(() => social.post(t, null, n.id))} />
             </li>
@@ -136,15 +137,15 @@ function Note({ n, kind, act, head, person }) {
         <div className="chead"><b>{n.author_name || T("Member")}</b>{head}<span className="m">{ago(n.created_at)}</span></div>
         <div className="cbody">{n.body}</div>
         <div className="cacts">
-          <button type="button" className={"linkish" + (v === 1 ? " on" : "")} onClick={() => act(() => thumb(v === 1 ? 0 : 1))} aria-label={T("Thumbs up")}>👍 {+n.thumbs_up || 0}</button>
-          <button type="button" className={"linkish" + (v === -1 ? " on" : "")} onClick={() => act(() => thumb(v === -1 ? 0 : -1))} aria-label={T("Thumbs down")}>👎 {+n.thumbs_down || 0}</button>
+          <button type="button" className={"linkish" + (v === 1 ? " on" : "")} onClick={() => act(() => thumb(v === 1 ? 0 : 1))} aria-label={T("Thumbs up")}><Icon n="thumbs-up" size={15} /> {+n.thumbs_up || 0}</button>
+          <button type="button" className={"linkish" + (v === -1 ? " on" : "")} onClick={() => act(() => thumb(v === -1 ? 0 : -1))} aria-label={T("Thumbs down")}><Icon n="thumbs-down" size={15} /> {+n.thumbs_down || 0}</button>
           {n.responded_score != null && kind === "comment" && <span className="m">{T("on a mood of {s}", { s: signed(n.responded_score) })}</span>}
           {n.mine && <button type="button" className="linkish" onClick={() => act(del)}>{T("Delete")}</button>}
           {person && !n.mine && n.author_id && (
             <>
               <button type="button" className={"linkish" + (person.fav(n.author_id) ? " on" : "")} aria-pressed={person.fav(n.author_id)} onClick={() => person.star(n.author_id)}
-                title={person.fav(n.author_id) ? T("Remove from favourites") : T("Add to favourites")}>{person.fav(n.author_id) ? "★" : "☆"}</button>
-              <button type="button" className="linkish" title={T("Block: hide their messages and stop private messages both ways")} onClick={() => person.block(n.author_id, n.author_name || "")}>🚫</button>
+                title={person.fav(n.author_id) ? T("Remove from favourites") : T("Add to favourites")}><Icon n="star" size={15} className={person.fav(n.author_id) ? "filled" : ""} /></button>
+              <button type="button" className="linkish" title={T("Block: hide their messages and stop private messages both ways")} onClick={() => person.block(n.author_id, n.author_name || "")}><Icon n="ban" size={15} /></button>
             </>
           )}
         </div>

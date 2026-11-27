@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { allWords } from "../lib/i18n.js";
+import { watchIcons } from "./Icon.jsx";
 
 // Hosts one of the classic app's interactive editors (web/src/generated/, copied from the classic app's Python files
 // by web/scripts/components.py) inside the new app. The editor is the same JavaScript the classic app runs: it draws
@@ -22,6 +23,7 @@ export default function ClassicComponent({ fn, css, data, onTrigger, className }
       document.head.appendChild(st);
     }
   }, [css]);
+  useEffect(() => watchIcons(box.current), []);   // its emoji become the app's icons, as it draws
   useEffect(() => {
     if (!box.current || !data) return;
     if (!comp.current) comp.current = { parentElement: box.current, setTriggerValue: (name, value) => trig.current && trig.current(name, value) };

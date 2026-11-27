@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Icon from "./Icon.jsx";
 import { T } from "../lib/i18n.js";
 import { universe, watchlists, match, brief, keyFor } from "../lib/assets.js";
 import { usd as price, pct, tone } from "../lib/format.js";
@@ -7,7 +8,7 @@ import { openNavigator } from "./Navigator.jsx";
 export const assetHref = (key, tab) => `#asset/${encodeURIComponent(key)}${tab ? "/" + tab : ""}`;
 const go = (href) => { window.location.hash = href.slice(1); };
 
-const PAGES = () => [{ href: "#signals/crypto", label: "₿ " + T("Crypto Signals"), words: "crypto signals table watchlist coins trend stretch flow funnel" }, { href: "#signals/equity", label: "📈 " + T("Equity Signals"), words: "equity stock signals table watchlist shares trend stretch flow funnel" }, { href: "#mood/crypto", label: "🪙 " + T("Market sentiment") + " · " + T("Crypto market"), words: "market sentiment mood crypto news headlines" }, { href: "#mood/stock", label: "📈 " + T("Market sentiment") + " · " + T("Stock market"), words: "market sentiment mood stocks equities news headlines" }, { href: "#logbook", label: "📓 " + T("Logbook"), words: "logbook daily video morning outlook passage plan podcast diary" }, { href: "#alerts", label: "🔔 " + T("Alerts"), words: "alerts notifications inbox bell" }, { href: "#tides", label: "🌊 " + T("Tides"), words: "tides macro tide sea wind currents rates dollar fed cpi jobs storm calendar" }, { href: "#snapshot", label: T("Quick Snapshot"), words: "quick snapshot home start today video briefing outlook passage plan tides funnels markets what changed" }, { href: "#lattice/groups", label: "🧩 " + T("Lattice") + " · " + T("Signal Groups"), words: "lattice signal groups editor build reading labels bullish score" }, { href: "#lattice/sets", label: "🧩 " + T("Lattice") + " · " + T("Signal Sets"), words: "lattice signal sets editor yes no decision study what followed" }, { href: "#tradelog", label: T("Trade Log"), words: "trade log trades journal etoro binance logbook review" }];
+const PAGES = () => [{ href: "#signals/crypto", icon: "bitcoin", label: T("Crypto Signals"), words: "crypto signals table watchlist coins trend stretch flow funnel" }, { href: "#signals/equity", icon: "trending-up", label: T("Equity Signals"), words: "equity stock signals table watchlist shares trend stretch flow funnel" }, { href: "#mood/crypto", icon: "coins", label: T("Market sentiment") + " · " + T("Crypto market"), words: "market sentiment mood crypto news headlines" }, { href: "#mood/stock", icon: "trending-up", label: T("Market sentiment") + " · " + T("Stock market"), words: "market sentiment mood stocks equities news headlines" }, { href: "#logbook", icon: "notebook", label: T("Logbook"), words: "logbook daily video morning outlook passage plan podcast diary" }, { href: "#alerts", icon: "bell", label: T("Alerts"), words: "alerts notifications inbox bell" }, { href: "#tides", icon: "waves-horizontal", label: T("Tides"), words: "tides macro tide sea wind currents rates dollar fed cpi jobs storm calendar" }, { href: "#snapshot", icon: "camera", label: T("Quick Snapshot"), words: "quick snapshot home start today video briefing outlook passage plan tides funnels markets what changed" }, { href: "#lattice/groups", icon: "puzzle", label: T("Lattice") + " · " + T("Signal Groups"), words: "lattice signal groups editor build reading labels bullish score" }, { href: "#lattice/sets", icon: "puzzle", label: T("Lattice") + " · " + T("Signal Sets"), words: "lattice signal sets editor yes no decision study what followed" }, { href: "#tradelog", icon: "book-open", label: T("Trade Log"), words: "trade log trades journal etoro binance logbook review" }];
 
 function Logo({ a, src, size = 36 }) {
   const [bad, setBad] = useState(false);
@@ -108,7 +109,7 @@ export default function Search() {
           {pages.length > 0 && <div className="shead">{T("Pages")}</div>}
           {pages.map((p, i) => (
             <a key={p.href} href={p.href} className={"srow" + (sel === shown.length + i ? " sel" : "")} onClick={(e) => { e.preventDefault(); pick(p.href); }}>
-              <span className="sname"><b>{p.label}</b></span>
+              <span className="sname"><b><Icon n={p.icon} size={16} /> {p.label}</b></span>
             </a>
           ))}
           {topic && (

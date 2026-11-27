@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Icon from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
 import { closes, note as loadNote, saveNote } from "../../lib/api.js";
 import { money, pct, price, tone, when, dayMonthYear } from "../../lib/format.js";
@@ -45,8 +46,8 @@ function Readings({ entry, exit }) {
   const reg = (r) => (r && r.regime ? regime[r.regime] || r.regime : "—");
   const fear = (r) => (r && r.fear && r.fear.value != null ? Number(r.fear.value).toFixed(1) : "—");
   const sent = (r, k) => (r && r[k] && r[k].value != null ? Math.round(r[k].value) : T("Not recorded then"));
-  const rows = [[T("Regime"), reg(entry), reg(exit)], ["📈 Trend", signed(entry && entry.trend), signed(exit && exit.trend)],
-    ["🎯 Stretch", signed(entry && entry.stretch), signed(exit && exit.stretch)], ["🔊 Flow", signed(entry && entry.flow), signed(exit && exit.flow)],
+  const rows = [[T("Regime"), reg(entry), reg(exit)], ["Trend", signed(entry && entry.trend), signed(exit && exit.trend)],
+    ["Stretch", signed(entry && entry.stretch), signed(exit && exit.stretch)], ["Flow", signed(entry && entry.flow), signed(exit && exit.flow)],
     [T("Fear index ({name})", { name: ((entry || exit || {}).fear || {}).name || "—" }), fear(entry), fear(exit)],
     [T("Asset sentiment"), sent(entry, "asset_sentiment"), sent(exit, "asset_sentiment")],
     [T("Market sentiment"), sent(entry, "market_sentiment"), sent(exit, "market_sentiment")]];
@@ -103,7 +104,7 @@ export default function TradeCard({ trip, onClose }) {
           <div className={"big " + tone(trip.net_result_usd)}>{money(trip.net_result_usd)}</div>
           <div className={tone(trip.net_result_usd)}>{pct(trip.result_pct, 1)} · {held.toFixed(1)} {T("days")}</div>
         </div>
-        <button type="button" className="ghost" onClick={onClose} aria-label={T("Close")}>✕</button>
+        <button type="button" className="ghost" onClick={onClose} aria-label={T("Close")}><Icon n="x" /></button>
       </div>
       <div className="mini">
         <div><div className="ml">{T("Average entry")}</div><div className="mv">{price(trip.entry_price)}</div></div>

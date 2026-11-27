@@ -9,9 +9,19 @@ from datetime import datetime, timezone
 import i18n
 
 
+# The new app draws no colour emoji (one line-icon set): the classic SVGs' labels lose theirs ("📏 Long rates" →
+# "Long rates"); the page shows each current's icon beside its card instead.
+_EMOJI = re.compile("(?:[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B50\u2B55\u231A-\u23FF]\uFE0F?(?:\u200D[\U0001F000-\U0001FAFF\u2600-\u27BF]\uFE0F?)*)[ \t]?")
+
+
 def _src(img_html: str) -> str:
-    m = re.search(r"src='(data:image/svg\+xml;base64,[^']+)'", img_html or "")
-    return m.group(1) if m else ""
+    import base64
+
+    m = re.search(r"src='data:image/svg\+xml;base64,([^']+)'", img_html or "")
+    if not m:
+        return ""
+    svg = base64.b64decode(m.group(1)).decode("utf-8", "replace")
+    return "data:image/svg+xml;base64," + base64.b64encode(_EMOJI.sub("", svg).encode("utf-8")).decode("ascii")
 
 
 def build(db, lang: str, range_key: str = "1Y") -> dict:

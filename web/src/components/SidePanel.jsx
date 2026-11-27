@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Icon from "./Icon.jsx";
 import { createPortal } from "react-dom";
 import { T } from "../lib/i18n.js";
 import NavigatorChat, { Sparkle } from "./Navigator.jsx";
@@ -52,7 +53,7 @@ export default function SidePanel({ onScreen }) {
                 <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill={pinned ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M9 3h6l-1 6 4 4H6l4-4zM12 13v8" /></svg>
               </button>
             )}
-            <button type="button" className="ghost icon" onClick={close} aria-label={T("Close")}>✕</button>
+            <button type="button" className="ghost icon" onClick={close} aria-label={T("Close")}><Icon n="x" /></button>
           </div>
           <div className="spbody">
             <div style={{ display: tab === "social" ? "block" : "none" }} className="spscroll"><Social visible={open && tab === "social"} /></div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Icon from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
 import { supabase } from "../../lib/supabase.js";
 import { dayMonthYear } from "../../lib/format.js";
@@ -32,11 +33,11 @@ export default function Logbook({ account }) {
   return (
     <div className="page">
       <div className="bar">
-        <h1 className="ptitle" style={{ marginRight: "auto" }}>📓 {T("Logbook")}</h1>
+        <h1 className="ptitle" style={{ marginRight: "auto" }}><Icon n="notebook" size={26} /> {T("Logbook")}</h1>
         <div className="daybar">
-          <button type="button" className="ghost icon" disabled={day <= oldest} onClick={() => setDay(shift(day, -1))} aria-label={T("The day before")} title={T("The day before")}>◀</button>
+          <button type="button" className="ghost icon" disabled={day <= oldest} onClick={() => setDay(shift(day, -1))} aria-label={T("The day before")} title={T("The day before")}><Icon n="chevron-left" /></button>
           <button type="button" className={"ghost" + (isToday ? " on" : "")} onClick={() => setDay(today())}>{T("Today")}</button>
-          <button type="button" className="ghost icon" disabled={isToday} onClick={() => setDay(shift(day, 1))} aria-label={T("The day after")} title={T("The day after")}>▶</button>
+          <button type="button" className="ghost icon" disabled={isToday} onClick={() => setDay(shift(day, 1))} aria-label={T("The day after")} title={T("The day after")}><Icon n="chevron-right" /></button>
           <input type="date" value={day} min={oldest} max={today()} onChange={(e) => e.target.value && setDay(e.target.value)} aria-label={T("Date")} />
         </div>
       </div>
@@ -46,7 +47,7 @@ export default function Logbook({ account }) {
         <Outlook day={day} />
         <Passage account={account} day={day} written={plans[day] ? <Rich text={plans[day]} /> : null} key={"p" + day} />
       </div>
-      {pro && <p className="sub">🎙️ {T("Listen in a podcast app:")} <a className="linkish" href="#settings/logbook">{T("get the feed links in ⚙️ Settings")} ›</a></p>}
+      {pro && <p className="sub"><Icon n="mic" size={16} /> {T("Listen in a podcast app:")} <a className="linkish" href="#settings/logbook">{T("get the feed links in ⚙️ Settings")} ›</a></p>}
     </div>
   );
 }

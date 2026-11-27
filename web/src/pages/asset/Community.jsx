@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Icon from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
 import { crowd, vote, comments, replies, postComment, deleteNote, voteNote, postReply, COMMENT_LIMIT } from "../../lib/assets.js";
 import { signed, tone } from "../../lib/format.js";
@@ -39,8 +40,8 @@ export default function Community({ row, score, votes, about }) {
         <p className="sub">{score == null ? (about || T("The news for this asset hasn't been scored yet.")) : T("MarketNavi's reading of the news: {mood} ({s}). Do you agree?", { mood: COVERAGE(score), s: signed(score) })}</p>
         {score != null && c && (
           <div className="bar">
-            <button type="button" className={"ghost" + (c.mine === 1 ? " on" : "")} aria-pressed={c.mine === 1} onClick={() => act(() => (votes ? votes.vote(c.mine === 1 ? 0 : 1) : vote(key, at, c.mine === 1 ? 0 : 1)))}>👍 {T("Agree")} · {c.up}</button>
-            <button type="button" className={"ghost" + (c.mine === -1 ? " on" : "")} aria-pressed={c.mine === -1} onClick={() => act(() => (votes ? votes.vote(c.mine === -1 ? 0 : -1) : vote(key, at, c.mine === -1 ? 0 : -1)))}>👎 {T("Disagree")} · {c.down}</button>
+            <button type="button" className={"ghost" + (c.mine === 1 ? " on" : "")} aria-pressed={c.mine === 1} onClick={() => act(() => (votes ? votes.vote(c.mine === 1 ? 0 : 1) : vote(key, at, c.mine === 1 ? 0 : 1)))}><Icon n="thumbs-up" size={16} /> {T("Agree")} · {c.up}</button>
+            <button type="button" className={"ghost" + (c.mine === -1 ? " on" : "")} aria-pressed={c.mine === -1} onClick={() => act(() => (votes ? votes.vote(c.mine === -1 ? 0 : -1) : vote(key, at, c.mine === -1 ? 0 : -1)))}><Icon n="thumbs-down" size={16} /> {T("Disagree")} · {c.down}</button>
           </div>
         )}
       </section>
@@ -82,8 +83,8 @@ function Note({ n, kind, act }) {
           {n.responded_score != null && kind === "comment" && <span className="m"> · {T("on a mood of {s}", { s: signed(n.responded_score) })}</span>}</div>
         <div>{n.body}</div>
         <div className="cacts">
-          <button type="button" className={"linkish" + (v === 1 ? " on" : "")} onClick={() => act(() => voteNote(n.id, kind, v === 1 ? 0 : 1))} aria-label={T("Thumbs up")}>👍 {+n.thumbs_up || 0}</button>
-          <button type="button" className={"linkish" + (v === -1 ? " on" : "")} onClick={() => act(() => voteNote(n.id, kind, v === -1 ? 0 : -1))} aria-label={T("Thumbs down")}>👎 {+n.thumbs_down || 0}</button>
+          <button type="button" className={"linkish" + (v === 1 ? " on" : "")} onClick={() => act(() => voteNote(n.id, kind, v === 1 ? 0 : 1))} aria-label={T("Thumbs up")}><Icon n="thumbs-up" size={15} /> {+n.thumbs_up || 0}</button>
+          <button type="button" className={"linkish" + (v === -1 ? " on" : "")} onClick={() => act(() => voteNote(n.id, kind, v === -1 ? 0 : -1))} aria-label={T("Thumbs down")}><Icon n="thumbs-down" size={15} /> {+n.thumbs_down || 0}</button>
           {n.mine && <button type="button" className="linkish" onClick={() => act(() => deleteNote(n.id, kind))}>{T("Delete")}</button>}
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import Icon, { Glyphs, Lead, plain } from "../../components/Icon.jsx";
 import { T, lang } from "../../lib/i18n.js";
 import { call } from "../../lib/service.js";
 import { saveSettings, saveWatchlist, preferences } from "../../lib/account.js";
@@ -91,7 +92,7 @@ export default function Signals({ market: wanted, account }) {
   return (
     <div className="page sigs">
       <div className="bar">
-        <h1 className="ptitle">{crypto ? "₿ " + T("Crypto Signals") : "📈 " + T("Equity Signals")}</h1>
+        <h1 className="ptitle"><Icon n={crypto ? "bitcoin" : "trending-up"} size={26} /> {crypto ? T("Crypto Signals") : T("Equity Signals")}</h1>
         <div className="right">
           {trades.crypto && trades.equity && (
             <div className="seg" role="tablist" aria-label={T("Market")}>
@@ -103,12 +104,12 @@ export default function Signals({ market: wanted, account }) {
       </div>
       <div className="bar">
         <div className="seg" role="radiogroup" aria-label={T("Show")}>
-          <button type="button" role="radio" aria-checked={mode === "watchlist"} className={mode === "watchlist" ? "on" : ""} onClick={() => setMode("watchlist")}>⭐ {T("My Watchlist")}</button>
-          <button type="button" role="radio" aria-checked={mode === "funnel"} className={mode === "funnel" ? "on" : ""} onClick={() => setMode("funnel")}>🔻 {T("Dynamic funnel")}</button>
+          <button type="button" role="radio" aria-checked={mode === "watchlist"} className={mode === "watchlist" ? "on" : ""} onClick={() => setMode("watchlist")}><Icon n="star" size={16} /> {T("My Watchlist")}</button>
+          <button type="button" role="radio" aria-checked={mode === "funnel"} className={mode === "funnel" ? "on" : ""} onClick={() => setMode("funnel")}><Icon n="funnel" size={16} /> {T("Dynamic funnel")}</button>
         </div>
         <div className="right">
           <button type="button" className="ghost" onClick={() => setChooser(true)} title={T("Choose which Signal Groups and Signal Sets the tables show")}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 4h18v16H3zM5 6v12h3V6zm5 0v12h4V6zm6 0v12h3V6z" /></svg>{T("Columns")}
+            <Icon n="columns-3" size={16} /> {T("Columns")}
           </button>
           <button type="button" className="ghost icon" onClick={() => setRound((n) => n + 1)} title={T("Refresh")} aria-label={T("Refresh")}>⟳</button>
         </div>
@@ -129,7 +130,7 @@ export default function Signals({ market: wanted, account }) {
                   <Th by="holders" title={T("How many members watch this asset")}>{T("Watching")}</Th>
                   {crypto && <Th by="rank">{T("Rank")}</Th>}
                   {groups.length > 0 && (fold.g ? <th className="fold"><button type="button" onClick={() => toggleFold("g")} title={T("Show the {name} columns", { name: "Signal Groups" })}>▸ {T("Groups")}</button></th>
-                    : groups.map((c, i) => <Th key={c.key} by={c.cluster || c.key} title={c.hint} cls={i === 0 ? "secfirst" : ""}>{i === 0 && <span className="foldbtn" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); toggleFold("g"); }} title={T("Fold the {name} columns", { name: "Signal Groups" })}>◂ </span>}{c.icon ? c.icon + " " : ""}{c.name}</Th>))}
+                    : groups.map((c, i) => <Th key={c.key} by={c.cluster || c.key} title={c.hint} cls={i === 0 ? "secfirst" : ""}>{i === 0 && <span className="foldbtn" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); toggleFold("g"); }} title={T("Fold the {name} columns", { name: "Signal Groups" })}>◂ </span>}{c.icon ? <><Glyphs text={c.icon} size={14} /> </> : ""}{c.name}</Th>))}
                   {sets.length > 0 && (fold.s ? <th className="fold"><button type="button" onClick={() => toggleFold("s")} title={T("Show the {name} columns", { name: "Signal Sets" })}>▸ {T("Sets")}</button></th>
                     : sets.map((c, i) => <Th key={c.key} by={c.key} title={c.hint} cls={"c" + (i === 0 ? " secfirst" : "")}>{i === 0 && <span className="foldbtn" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); toggleFold("s"); }} title={T("Fold the {name} columns", { name: "Signal Sets" })}>◂ </span>}{c.name}</Th>))}
                   <Th by="price" cls="r">{T("Price")}</Th>
@@ -153,8 +154,8 @@ export default function Signals({ market: wanted, account }) {
                         {!r.own && <button type="button" className="ghost icon addw" title={T("Add {symbol} to My Watchlist", { symbol: r.symbol })} aria-label={T("Add {symbol} to My Watchlist", { symbol: r.symbol })} onClick={() => add(r)}>＋</button>}</span>
                       {r.problem && <div className="m">{r.problem}</div>}
                     </td>
-                    {staged && <td title={r.stage ? r.stage.tip : ""} className="help">{r.stage ? r.stage.icon : "—"}</td>}
-                    <td>{r.holders ? `👥 ${r.holders}` : <span className="m">—</span>}</td>
+                    {staged && <td title={r.stage ? r.stage.tip : ""} className="help">{r.stage ? <Glyphs text={r.stage.icon} /> : "—"}</td>}
+                    <td>{r.holders ? <><Icon n="users" size={14} /> {r.holders}</> : <span className="m">—</span>}</td>
                     {crypto && <td>{r.rank ? `#${r.rank}` : <span className="m">—</span>}</td>}
                     {groups.length > 0 && (fold.g ? <td className="c" title={groups.map((g) => { const v = g.cluster ? (r.clusters[g.cluster] || {}).value : (r.cells[g.key] || {}).value; return `${g.name}: ${v == null ? "—" : signed(v)}`; }).join("\n")}>
                       <span className="dots">{groups.map((g) => { const v = g.cluster ? (r.clusters[g.cluster] || {}).value : (r.cells[g.key] || {}).value; return <i key={g.key} className={rtone(v) || (v == null ? "none" : "mid")} />; })}</span></td>
@@ -168,9 +169,9 @@ export default function Signals({ market: wanted, account }) {
                     {flags.extra && <td className={"r num " + pctTone(r.change_7d)}>{r.change_7d == null ? "—" : `${r.change_7d > 0 ? "+" : ""}${r.change_7d.toFixed(1)}%`}</td>}
                     {flags.period && <td className={"r num " + pctTone(r.change_30d)}>{r.change_30d == null ? "—" : `${r.change_30d > 0 ? "+" : ""}${r.change_30d.toFixed(1)}%`}</td>}
                     {flags.extra && <><td className="r num">{r.market_cap ? compact(r.market_cap) : "—"}</td><td className="r num">{r.atr_pct == null ? "—" : r.atr_pct.toFixed(2)}</td><td className="r num">{r.volume_ratio == null ? "—" : r.volume_ratio.toFixed(2)}</td></>}
-                    <td className="r">{r.mood == null ? <span className="m">—</span> : <a className={"rv " + rtone(r.mood)} href={assetHref(r.key, "news")} title={T("Headline sentiment for this asset, -100 to +100")}>📰 {signed(r.mood)}</a>}</td>
-                    <td><a className="crowdc" href={assetHref(r.key, "community")} title={T("Members who agree and disagree with this reading")}>👍 {r.crowd.up || 0} · 👎 {r.crowd.down || 0}{r.crowd.alt_count ? <span className={"rv " + rtone(r.crowd.alt_avg)} title={T("members' own score {s} ({n})", { s: signed(r.crowd.alt_avg), n: r.crowd.alt_count })}>{signed(r.crowd.alt_avg)}</span> : null}</a></td>
-                    {showComments && <td className="c">{r.comments ? <a href={assetHref(r.key, "community")} title={T("Open the comments")}>💬 {r.comments}</a> : ""}</td>}
+                    <td className="r">{r.mood == null ? <span className="m">—</span> : <a className={"rv " + rtone(r.mood)} href={assetHref(r.key, "news")} title={T("Headline sentiment for this asset, -100 to +100")}><Icon n="newspaper" size={14} /> {signed(r.mood)}</a>}</td>
+                    <td><a className="crowdc" href={assetHref(r.key, "community")} title={T("Members who agree and disagree with this reading")}><Icon n="thumbs-up" size={14} /> {r.crowd.up || 0} · <Icon n="thumbs-down" size={14} /> {r.crowd.down || 0}{r.crowd.alt_count ? <span className={"rv " + rtone(r.crowd.alt_avg)} title={T("members' own score {s} ({n})", { s: signed(r.crowd.alt_avg), n: r.crowd.alt_count })}>{signed(r.crowd.alt_avg)}</span> : null}</a></td>
+                    {showComments && <td className="c">{r.comments ? <a href={assetHref(r.key, "community")} title={T("Open the comments")}><Icon n="message-circle" size={14} /> {r.comments}</a> : ""}</td>}
                     <td className="r"><Spark values={r.closes} tone={pctTone(r.change_30d)} /></td>
                   </tr>
                 ))}
@@ -210,11 +211,11 @@ function FunnelBar({ f, onPick }) {
       <div className="fpick">
         {f.funnels.map((x) => (
           <div key={x.id} className={"frow" + (x.id === f.picked ? " on" : "")}>
-            <div className="fhead"><b>{x.dir_icon} {x.name}</b>{x.paused && <span className="m"> · ⏸️ {T("paused")}</span>}<span className="m"> · {x.checked}</span></div>
+            <div className="fhead"><b>{x.dir_icon} {x.name}</b>{x.paused && <span className="m"> · <Icon n="pause" size={14} /> {T("paused")}</span>}<span className="m"> · {x.checked}</span></div>
             <div className="chips fchips">
               {x.chips.map((c) => (
                 <button key={c.key} type="button" className={x.id === f.picked && f.stage === c.key ? "on" : ""} title={c.hover || c.label} onClick={() => onPick(x.id, c.key)}>
-                  {c.icon} {c.count}{c.new ? <span className="good"> ＋{c.new}</span> : null} <span className="clabel">{c.label}</span>
+                  <Glyphs text={c.icon} /> {c.count}{c.new ? <span className="good"> ＋{c.new}</span> : null} <span className="clabel">{c.label}</span>
                 </button>
               ))}
             </div>

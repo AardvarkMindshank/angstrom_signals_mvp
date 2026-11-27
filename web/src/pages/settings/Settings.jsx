@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Icon, { Lead, plain } from "../../components/Icon.jsx";
 import { T, lang } from "../../lib/i18n.js";
 import { applyTheme } from "../../lib/theme.js";
 import { supabase, SUPABASE_URL } from "../../lib/supabase.js";
@@ -153,7 +154,7 @@ function Display({ s, set }) {
     <>
       <Section title={T("Appearance")}>
         <Row title={T("Day or night")} help={T("Auto follows your device.")}>
-          <Seg label={T("Day or night")} value={mode} options={[["day", "☀️ " + T("Day")], ["night", "🌙 " + T("Night")], ["auto", "🌓 " + T("Auto")]]}
+          <Seg label={T("Day or night")} value={mode} options={[["day", <><Icon n="sun" size={16} /> {T("Day")}</>], ["night", <><Icon n="moon" size={16} /> {T("Night")}</>], ["auto", <><Icon n="sun-moon" size={16} /> {T("Auto")}</>]]}
             onChange={(v) => { applyTheme({ ...s, ui_mode: v }); set({ ui_mode: v }); }} />
         </Row>
       </Section>
@@ -263,47 +264,47 @@ function Alerts({ s, set, alerts, setAlert, account }) {
   return (
     <>
       <Section title={T("Reading alerts")} sub={T("An alert when a reading of an asset on your watchlists crosses a colour border you tick, once the new colour holds at the daily close.")}>
-        <Row title={"📈 " + T("Trend alerts")} wide={trendOn}>
+        <Row title={<><Icon n="trending-up" size={16} /> {T("Trend alerts")}</>} wide={trendOn}>
           <Switch label={T("Trend alerts")} on={trendOn} onChange={(v) => setAlert({ enabled: v })} />
         </Row>
         {trendOn && <Borders reading="trend" s={s} set={set} />}
-        <Row title={"🎯 " + T("Stretch alerts")} help={T("Off unless you switch it on. When switched on, the current colours are noted quietly; only new crossings alert.")}>
+        <Row title={<><Icon n="target" size={16} /> {T("Stretch alerts")}</>} help={T("Off unless you switch it on. When switched on, the current colours are noted quietly; only new crossings alert.")}>
           <Switch label={T("Stretch alerts")} on={stretchOn} onChange={(v) => set({ stretch_alert_on: v })} />
         </Row>
         {stretchOn && <Borders reading="stretch" s={s} set={set} />}
-        <Row title={"🔊 " + T("Flow alerts")}>
+        <Row title={<><Icon n="audio-lines" size={16} /> {T("Flow alerts")}</>}>
           <Switch label={T("Flow alerts")} on={flowOn} onChange={(v) => set({ flow_alert_on: v })} />
         </Row>
         {flowOn && <Borders reading="flow" s={s} set={set} />}
       </Section>
       <Section title={T("Other alerts")}>
         {"market_alerts_enabled" in a && (
-          <Row title={"🌐 " + T("Market sentiment alerts")} help={T("Alert when the crypto or stock market sentiment score crosses one of your lines. It covers the markets you have switched on. Market sentiment updates about every 12 hours.")}>
+          <Row title={<><Icon n="globe" size={16} /> {T("Market sentiment alerts")}</>} help={T("Alert when the crypto or stock market sentiment score crosses one of your lines. It covers the markets you have switched on. Market sentiment updates about every 12 hours.")}>
             <Switch label={T("Market sentiment alerts")} on={!!a.market_alerts_enabled} onChange={(v) => setAlert({ market_alerts_enabled: v })} />
           </Row>
         )}
         {a.market_alerts_enabled && (
-          <Row title={T("🌐 Market sentiment alert line (±)")} help={T("Positive alert at +{n} or above, negative at −{n} or below.", { n: line })}>
+          <Row title={<><Icon n="globe" size={16} /> {T("🌐 Market sentiment alert line (±)")}</>} help={T("Positive alert at +{n} or above, negative at −{n} or below.", { n: line })}>
             <input type="range" min="10" max="90" step="5" value={line} aria-label={T("🌐 Market sentiment alert line (±)")}
               onChange={(e) => { const L = +e.target.value; setAlert({ market_high_alert: 50 + L / 2, market_low_alert: 50 - L / 2 }); }} />
             <b className="rangev">±{line}</b>
           </Row>
         )}
-        <Row title={"🔻 " + T("Funnel alerts")} help={T("A note when assets newly become Candidates in one of your funnels.")}>
+        <Row title={<><Icon n="funnel" size={16} /> {T("Funnel alerts")}</>} help={T("A note when assets newly become Candidates in one of your funnels.")}>
           <Switch label={T("Funnel alerts")} on={s.funnel_alerts !== false} onChange={(v) => set({ funnel_alerts: v })} />
         </Row>
       </Section>
       <Section title={T("Emails")}>
-        <Row title={"⚡ " + T("Instant alerts")} help={T("One email as soon as a reading crosses a border you ticked, or market sentiment crosses your line.")}>
+        <Row title={<><Icon n="zap" size={16} /> {T("Instant alerts")}</>} help={T("One email as soon as a reading crosses a border you ticked, or market sentiment crosses your line.")}>
           <Switch label={T("Instant alerts")} on={a.instant_email !== false} onChange={(v) => setAlert({ instant_email: v })} />
         </Row>
-        <Row title={"📬 " + T("Daily alerts summary")} help={T("One email a day with everything that crossed your lines.")}>
+        <Row title={<><Icon n="mail" size={16} /> {T("Daily alerts summary")}</>} help={T("One email a day with everything that crossed your lines.")}>
           <Switch label={T("Daily alerts summary")} on={!!a.digest_enabled} onChange={(v) => setAlert(v && !a.digest_enabled ? { digest_enabled: true, last_digest_at: new Date().toISOString(), digest_tz: zone, digest_hour: a.digest_hour ?? 8 } : { digest_enabled: v })} />
         </Row>
         {a.digest_enabled && (
           <>
-            <Row title={"📋 " + T("Include watchlist summary")}><Switch label={T("Include watchlist summary")} on={a.digest_watchlist !== false} onChange={(v) => setAlert({ digest_watchlist: v })} /></Row>
-            <Row title={"🔻 " + T("Include funnels summary")}><Switch label={T("Include funnels summary")} on={s.digest_funnels !== false} onChange={(v) => set({ digest_funnels: v })} /></Row>
+            <Row title={<><Icon n="clipboard-list" size={16} /> {T("Include watchlist summary")}</>}><Switch label={T("Include watchlist summary")} on={a.digest_watchlist !== false} onChange={(v) => setAlert({ digest_watchlist: v })} /></Row>
+            <Row title={<><Icon n="funnel" size={16} /> {T("Include funnels summary")}</>}><Switch label={T("Include funnels summary")} on={s.digest_funnels !== false} onChange={(v) => set({ digest_funnels: v })} /></Row>
           </>
         )}
         <Row title={T("Your morning time")} help={T("Your daily summary email is sent at this time, and your Passage Plan is ready an hour before it.")}>
@@ -329,19 +330,19 @@ function Logbook({ s, set, account }) {
   const pro = ["pro", "elite"].includes(account.plan);
   return (
     <>
-      <Section title={"🎬 " + T("Daily video")}>
+      <Section title={<><Icon n="clapperboard" /> {T("Daily video")}</>}>
         <Row title={T("🎬 Play the daily video when I open the app")} help={T("Once a day, the first time you open the app after the new video is out. You can always watch it in 📸 Quick Snapshot or the 📓 Logbook.")}>
           <Switch label={T("Daily video")} on={s.daily_video_auto !== false} onChange={(v) => set({ daily_video_auto: v })} />
         </Row>
       </Section>
-      <Section title={"🧭 " + T("Your Passage Plan")} sub={pro ? T("Ready each day an hour before your morning time, which you set in Alerts & email.") : T("Written and spoken for your own watchlist and funnels each morning. Comes with Pro.")}>
+      <Section title={<><Icon n="compass" /> {T("Your Passage Plan")}</>} sub={pro ? T("Ready each day an hour before your morning time, which you set in Alerts & email.") : T("Written and spoken for your own watchlist and funnels each morning. Comes with Pro.")}>
         {pro && (
           <>
             <Row title={T("Email me when my Passage Plan is ready")} help={T("The daily summary email links it anyway.")}>
               <Switch label={T("Email me when my Passage Plan is ready")} on={!!brief.email} onChange={(v) => set({ briefing: { ...brief, email: v } })} />
             </Row>
             {m && Object.keys(m.voices).length > 0 && (
-              <Row title={"🧭 " + T("Passage Plan voice")}>
+              <Row title={<><Icon n="audio-lines" size={16} /> {T("Passage Plan voice")}</>}>
                 <select value={brief.voice || Object.keys(m.voices)[0]} onChange={(e) => set({ briefing: { ...brief, voice: e.target.value } })} aria-label={T("Passage Plan voice")}>
                   {Object.entries(m.voices).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
                 </select>
@@ -366,16 +367,16 @@ function Feeds({ brief, set }) {
     const fresh = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
     set({ briefing: { ...brief, token: fresh } });
   };
-  const rows = [["🧭 " + T("Your Passage Plan"), token ? url(`${token}/feed.xml`) : ""], ["🌍 " + T("Morning Outlook"), url("general/feed.xml")]];
+  const rows = [[<><Icon n="compass" size={16} /> {T("Your Passage Plan")}</>, "p", token ? url(`${token}/feed.xml`) : ""], [<><Icon n="globe" size={16} /> {T("Morning Outlook")}</>, "o", url("general/feed.xml")]];
   return (
-    <Section title={"🎙️ " + T("Listen in a podcast app")} sub={T("Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or Overcast, and each one downloads by itself. Your own feed is private: anyone with the link can listen, so keep it to yourself. Spotify can't take private feeds.")}>
-      {rows.map(([name, u]) => u && (
-        <Row key={name} title={name} help={<span className="feedurl">{u}</span>}>
-          <button type="button" className="ghost" onClick={() => copy(u)}>{copied === u ? "✓ " + T("Copied") : T("Copy link")}</button>
+    <Section title={<><Icon n="mic" /> {T("Listen in a podcast app")}</>} sub={T("Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or Overcast, and each one downloads by itself. Your own feed is private: anyone with the link can listen, so keep it to yourself. Spotify can't take private feeds.")}>
+      {rows.map(([name, key, u]) => u && (
+        <Row key={key} title={name} help={<span className="feedurl">{u}</span>}>
+          <button type="button" className="ghost" onClick={() => copy(u)}>{copied === u ? <><Icon n="check" size={16} /> {T("Copied")}</> : <><Icon n="copy" size={16} /> {T("Copy link")}</>}</button>
         </Row>
       ))}
-      <Row title={"🔄 " + T("Make a new private link")} help={T("The old link stops getting new plans.")}>
-        <button type="button" className="ghost bordered" onClick={renew} title={T("Make a new private link")} aria-label={T("Make a new private link")}>🔄</button>
+      <Row title={<><Icon n="refresh-cw" size={16} /> {T("Make a new private link")}</>} help={T("The old link stops getting new plans.")}>
+        <button type="button" className="ghost bordered" onClick={renew} title={T("Make a new private link")} aria-label={T("Make a new private link")}><Icon n="refresh-cw" /></button>
       </Row>
     </Section>
   );

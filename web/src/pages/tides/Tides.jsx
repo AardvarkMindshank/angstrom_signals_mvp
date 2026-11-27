@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Icon, { Arrow, Emo, Lead, plain } from "../../components/Icon.jsx";
 import { T, lang } from "../../lib/i18n.js";
 import { call } from "../../lib/service.js";
 import { supabase } from "../../lib/supabase.js";
@@ -23,13 +24,13 @@ export default function Tides({ account }) {
     return () => { live = false; };
   }, [range]);
   const pick = (r) => { setRange(r); saveSettings({ tides_range: r }).catch(() => {}); };
-  if (err) return <div className="page"><h1 className="ptitle">🌊 {T("Tides")}</h1><p className="note bad">{err}</p></div>;
-  if (!d) return <div className="page"><h1 className="ptitle">🌊 {T("Tides")}</h1><div className="empty" style={{ height: 300 }}>{T("Loading…")}</div></div>;
-  if (!d.ready) return <div className="page"><h1 className="ptitle">🌊 {T("Tides")}</h1><p className="sub">{T("Tides has not got enough data yet.")}</p></div>;
+  if (err) return <div className="page"><h1 className="ptitle"><Icon n="waves-horizontal" size={26} /> {T("Tides")}</h1><p className="note bad">{err}</p></div>;
+  if (!d) return <div className="page"><h1 className="ptitle"><Icon n="waves-horizontal" size={26} /> {T("Tides")}</h1><div className="empty" style={{ height: 300 }}>{T("Loading…")}</div></div>;
+  if (!d.ready) return <div className="page"><h1 className="ptitle"><Icon n="waves-horizontal" size={26} /> {T("Tides")}</h1><p className="sub">{T("Tides has not got enough data yet.")}</p></div>;
   const h = d.hero;
   return (
     <div className="page tidesp">
-      <h1 className="ptitle">🌊 {T("Tides")}</h1>
+      <h1 className="ptitle"><Icon n="waves-horizontal" size={26} /> {T("Tides")}</h1>
       <section className={"thero" + (h.dark ? " dark" : "")}>
         <img className="tsea" src={h.src} alt="" />
         <div className="tover">
@@ -39,15 +40,15 @@ export default function Tides({ account }) {
             {h.sea && <div className="tsub">{h.sea[0]} <span className="tplain">{h.sea[1]}</span></div>}
           </div>
           <div className="tchips">
-            {h.winds.map((w) => <span key={w.name} className={"tchip " + w.wind} title={w.tip}>{w.icon} {w.name}: {w.word}</span>)}
-            {h.warning && <span className="tchip warn" title={h.warning.tip}>{h.warning.flags} {T("Storm warning:")} {h.warning.short} {h.warning.when}</span>}
+            {h.winds.map((w) => <span key={w.name} className={"tchip " + w.wind} title={w.tip}><Emo e={w.icon} size={15} /> {plain(w.name)}: {w.word}</span>)}
+            {h.warning && <span className="tchip warn" title={h.warning.tip}><Flags f={h.warning.flags} /> {T("Storm warning:")} {h.warning.short} {h.warning.when}</span>}
           </div>
         </div>
       </section>
 
       <div className="tnoterow">
         <section className="tnote">
-          <div className="rowtitle">🧭 {T("Navigator")} · <span className="m">{T("today's note, facts only, written from the readings below")}</span></div>
+          <div className="rowtitle"><Icon n="compass" size={16} /> {T("Navigator")} · <span className="m">{T("today's note, facts only, written from the readings below")}</span></div>
           <ul>{d.note.map((l, i) => <li key={i}>{l}</li>)}</ul>
         </section>
         <Take since={d.since} score={d.tide_score} words={d.tide_words} />
@@ -55,12 +56,12 @@ export default function Tides({ account }) {
 
       {d.events.length > 0 && (
         <section className="card">
-          <h2>⚑ {T("Storm warnings: the macro calendar")}</h2>
+          <h2><Icon n="flag-triangle-right" /> {T("Storm warnings: the macro calendar")}</h2>
           <p className="sub">{T("(two pennants: major, one: notable, square flag: extreme)")}</p>
           <div className="tevents">
             {d.events.map((e, i) => (
               <div key={i} className={"tev " + e.state} title={e.tip}>
-                <div className="m">{e.flags} {e.icon}</div>
+                <div className="m"><Flags f={e.flags} /> <Emo e={e.icon} size={15} /></div>
                 <b>{e.name} · {e.ref}</b>
                 <div className="m">{e.day} · {e.when}</div>
               </div>
@@ -71,7 +72,7 @@ export default function Tides({ account }) {
 
       <section className="card">
         <div className="bar">
-          <h2 style={{ margin: 0 }}>〰️ {T("The waves: each current's pull, and the swell they make together")}</h2>
+          <h2 style={{ margin: 0 }}><Icon n="activity" /> {T("The waves: each current's pull, and the swell they make together")}</h2>
           <div className="chips right" role="group" aria-label={T("Time range")}>
             {d.ranges.map((r) => <button key={r} type="button" className={range === r ? "on" : ""} aria-pressed={range === r} onClick={() => pick(r)}>{r}</button>)}
           </div>
@@ -81,18 +82,18 @@ export default function Tides({ account }) {
       </section>
 
       <section className="card">
-        <h2>🧭 {T("The currents")}</h2>
+        <h2><Icon n="compass" /> {T("The currents")}</h2>
         {d.families.map((f) => (
           <div key={f.name} className="tfam">
-            <div className="rowtitle">{f.icon} {f.name} <span className="m">({f.meta})</span></div>
+            <div className="rowtitle"><Emo e={f.icon} /> {plain(f.name)} <span className="m">({f.meta})</span></div>
             <div className="tcur">
               {f.cards.map((c) => c.none ? (
-                <div key={c.name} className="tc mute" title={c.tip}><b>{c.icon} {c.name}</b><div className="m">{T("No data right now.")}</div></div>
+                <div key={c.name} className="tc mute" title={c.tip}><b><Emo e={c.icon} size={15} /> {plain(c.name)}</b><div className="m">{T("No data right now.")}</div></div>
               ) : (
                 <div key={c.name} className={"tc" + (c.voting ? "" : " mute")} title={c.tip}>
-                  <div className="tctop"><b>{c.icon} {c.name}</b><span className="num">{c.value}</span></div>
+                  <div className="tctop"><b><Emo e={c.icon} size={15} /> {plain(c.name)}</b><span className="num">{c.value}</span></div>
                   <div className="m">{c.band}</div>
-                  <div className={c.tone}>{c.arrow} {c.dir}</div>
+                  <div className={c.tone}><Arrow a={c.arrow} /> {c.dir}</div>
                   <div className="m">{c.change}{c.voting ? "" : T(" · not voting")}</div>
                   <Spark values={c.spark} good={c.positive_good} />
                 </div>
@@ -102,14 +103,22 @@ export default function Tides({ account }) {
         ))}
         {d.side.length > 0 && (
           <div className="tfam">
-            <div className="rowtitle">🔭 {T("Also on the horizon (shown, not voting)")}</div>
-            <div className="tcur">{d.side.map((s) => <div key={s.name} className="tc mute" title={s.tip}><b>{s.name}</b><div className="num">{s.val}</div><div className="m">{s.meta}</div></div>)}</div>
+            <div className="rowtitle"><Icon n="telescope" size={16} /> {T("Also on the horizon (shown, not voting)")}</div>
+            <div className="tcur">{d.side.map((s) => <div key={s.name} className="tc mute" title={s.tip}><b><Lead text={s.name} size={15} /></b><div className="num">{s.val}</div><div className="m">{s.meta}</div></div>)}</div>
           </div>
         )}
         <p className="sub" style={{ marginTop: 18 }}>{T("Readings from Yahoo Finance and FRED (St. Louis Fed), updated {stamp} UTC. Each current is scored against its own last 5 years; its pull is its 30-day move against the usual size of such a move. Macro conditions frame risk; they do not time trades, and a coin can rise on its own news while the tide goes out. Not advice.", { stamp: d.stamp })}</p>
       </section>
     </div>
   );
+}
+
+// The calendar's pennants (macro_calendar.pennants): one or two flags for notable and major, a square for extreme.
+function Flags({ f }) {
+  const s = String(f || "");
+  if (s.includes("🟥")) return <Icon n="square" size={15} className="flagx" />;
+  const n = (s.match(/🚩/gu) || []).length;
+  return <>{Array.from({ length: n }, (_, i) => <Icon key={i} n="flag" size={15} />)}</>;
 }
 
 function Spark({ values, good }) {
@@ -149,12 +158,12 @@ function Take({ since, score, words }) {
   };
   return (
     <section className="ttake">
-      <div className="rowtitle">👍 {T("Your take")} <span className="m">{T("on the Tide's current reading")}</span></div>
+      <div className="rowtitle"><Icon n="thumbs-up" size={16} /> {T("Your take")} <span className="m">{T("on the Tide's current reading")}</span></div>
       {!c ? <p className="sub">{T("Loading…")}</p> : (
         <>
           <div className="bar">
-            <button type="button" className={"ghost" + (c.mine === 1 ? " on" : "")} aria-pressed={c.mine === 1} onClick={() => vote(c.mine === 1 ? 0 : 1)}>👍 {T("Agree")} · {c.up}</button>
-            <button type="button" className={"ghost" + (c.mine === -1 ? " on" : "")} aria-pressed={c.mine === -1} onClick={() => vote(c.mine === -1 ? 0 : -1, alt)}>👎 {T("Disagree")} · {c.down}</button>
+            <button type="button" className={"ghost" + (c.mine === 1 ? " on" : "")} aria-pressed={c.mine === 1} onClick={() => vote(c.mine === 1 ? 0 : 1)}><Icon n="thumbs-up" size={16} /> {T("Agree")} · {c.up}</button>
+            <button type="button" className={"ghost" + (c.mine === -1 ? " on" : "")} aria-pressed={c.mine === -1} onClick={() => vote(c.mine === -1 ? 0 : -1, alt)}><Icon n="thumbs-down" size={16} /> {T("Disagree")} · {c.down}</button>
           </div>
           {c.mine === -1 && (
             <div className="psub" style={{ marginTop: 10 }}>

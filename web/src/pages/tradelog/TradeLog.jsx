@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Icon from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
 import { insights, connections, forgetInsights, rpc } from "../../lib/api.js";
 import { money, pct, tone, monthYear, stamp } from "../../lib/format.js";
@@ -74,7 +75,7 @@ export default function TradeLog({ account, view }) {
         const on = !manage && (scope === k || (conns.length === 1));
         return <button key={k} type="button" className={on ? "on" : ""} aria-current={on ? "page" : undefined} onClick={() => show(k)}>{l}</button>;
       })}
-      <a href="#tradelog/manage" className={"tabend" + (manage ? " on" : "")} aria-current={manage ? "page" : undefined} title={T("Add, rename or disconnect platforms")}>⚙️ {T("Manage")}</a>
+      <a href="#tradelog/manage" className={"tabend" + (manage ? " on" : "")} aria-current={manage ? "page" : undefined} title={T("Add, rename or disconnect platforms")}><Icon n="settings" size={16} /> {T("Manage")}</a>
     </nav>
   );
   if (manage) {

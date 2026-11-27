@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Icon, { Lead, watchIcons } from "../../../components/Icon.jsx";
 import { T, lang } from "../../../lib/i18n.js";
 import { call } from "../../../lib/service.js";
 import { supabase } from "../../../lib/supabase.js";
@@ -105,7 +106,8 @@ export default function Pro({ assetKey, who, title, account }) {
         if (!error && drawRec.current) { drawRec.current.items = items; drawRec.current.updated = new Date().toISOString(); }
         return !error;
       } };
-    return mount(host.current, data);
+    const stop = mount(host.current, data), unwatch = watchIcons(host.current);
+    return () => { unwatch(); if (stop) stop(); };
   }, [got, drawReady]);
 
   const set = (patch, store) => { setPick((p) => ({ ...p, ...patch })); if (store) saveSettings(store).catch(() => {}); };
@@ -151,7 +153,7 @@ export default function Pro({ assetKey, who, title, account }) {
       {opts && !opts.down && (
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 4, marginBottom: 6 }}>
           <div className="chips ind" role="group" aria-label={T("Indicators")}>
-            {inds.map(([k, l]) => <button key={k} type="button" className={has(k) ? "on" : ""} aria-pressed={has(k)} onClick={() => flip(k)}>{l}</button>)}
+            {inds.map(([k, l]) => <button key={k} type="button" className={has(k) ? "on" : ""} aria-pressed={has(k)} onClick={() => flip(k)}><Lead text={l} size={15} /></button>)}
           </div>
           <button type="button" className="linkish promorebtn" aria-expanded={more} onClick={() => setMore(!more)}>
             {more ? T("Fewer options") : T("More options")} {more ? "▴" : "▾"}
@@ -167,7 +169,7 @@ export default function Pro({ assetKey, who, title, account }) {
           {!crypto && <label className="ptog"><input type="checkbox" checked={pick.earnings} onChange={(e) => set({ earnings: e.target.checked }, { chart_earnings: e.target.checked })} />
             <span>{T("Show earnings report dates")}</span></label>}
           {has("cipher") && <label className="ptog"><input type="checkbox" checked={pick.dot_buildup} onChange={(e) => set({ dot_buildup: e.target.checked }, { chart_dot_buildup: e.target.checked })} />
-            <span>{"🔆 " + T("Dot build-up")}</span></label>}
+            <span>{T("Dot build-up")}</span></label>}
           {has("sonar_marks") && (
             <div className="psub">
               <span className="m">{T("🛰️ Markers shown")}</span>
@@ -175,7 +177,7 @@ export default function Pro({ assetKey, who, title, account }) {
                 {(opts.sonar_marks || []).map(([k, _l, words]) => {
                   const on = marks.includes(k);
                   return <button key={k} type="button" className={on ? "on" : ""} aria-pressed={on} title={words}
-                    onClick={() => { const next = on ? marks.filter((x) => x !== k) : [...marks, k]; set({ sonar_marks: next }, { chart_sonar_marks: next }); }}>{sw[k] || k}</button>;
+                    onClick={() => { const next = on ? marks.filter((x) => x !== k) : [...marks, k]; set({ sonar_marks: next }, { chart_sonar_marks: next }); }}><i className={"mk " + k} aria-hidden="true" />{sw[k] || k}</button>;
                 })}
               </div>
             </div>

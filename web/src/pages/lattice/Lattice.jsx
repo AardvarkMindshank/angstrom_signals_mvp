@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { T, lang } from "../../lib/i18n.js";
+import Icon, { Lead, plain } from "../../components/Icon.jsx";
+import { T, lang, noEmoji } from "../../lib/i18n.js";
 import { call } from "../../lib/service.js";
 import { supabase, CLASSIC } from "../../lib/supabase.js";
 import { watchlists } from "../../lib/assets.js";
@@ -14,23 +15,23 @@ import latticeSet, { css as setCss } from "../../generated/lattice_set.js";
 // ClassicComponent); every change is cleaned, checked and described by the data service (service/lattice.py), and
 // saving, renaming and deleting go through the same database functions as the classic app.
 const SECTIONS = [
-  ["groups", "🧱", () => T("Signal Groups"), () => T("Combine signals into one reading, with labels such as Bullish.")],
-  ["sets", "🌳", () => T("Signal Sets"), () => T("Connect Groups and signals into a Yes / No decision.")],
-  ["prism", "🔎", () => T("Prism Scan"), null],
-  ["funnels", "🔻", () => T("Funnels"), null],
-  ["soundings", "🧭", () => T("Soundings"), null],
+  ["groups", "blocks", () => T("Signal Groups"), () => T("Combine signals into one reading, with labels such as Bullish.")],
+  ["sets", "workflow", () => T("Signal Sets"), () => T("Connect Groups and signals into a Yes / No decision.")],
+  ["prism", "scan-search", () => T("Prism Scan"), null],
+  ["funnels", "funnel", () => T("Funnels"), null],
+  ["soundings", "compass", () => T("Soundings"), null],
 ];
 
 export default function Lattice({ section }) {
   const sec = SECTIONS.some((s) => s[0] === section) ? section : "groups";
   return (
     <div className="page latp">
-      <h1 className="ptitle">🧩 {T("Lattice")}</h1>
+      <h1 className="ptitle"><Icon n="puzzle" size={26} /> {T("Lattice")}</h1>
       <p className="sub">{T("Your market research workspace · preview: descriptive readings, not forecasts or advice")}</p>
       <div className="chips" role="tablist" aria-label={T("Lattice section")}>
         {SECTIONS.map(([k, icon, name, help]) => (
           <button key={k} type="button" role="tab" aria-selected={sec === k} className={sec === k ? "on" : ""} title={help ? help() : ""}
-            onClick={() => { window.location.hash = `lattice/${k}`; }}>{icon} {name()}</button>
+            onClick={() => { window.location.hash = `lattice/${k}`; }}><Icon n={icon} size={16} /> {name()}</button>
         ))}
       </div>
       {sec === "groups" || sec === "sets" ? <Editor key={sec} kind={sec === "groups" ? "group" : "set"} />
@@ -113,18 +114,18 @@ function Editor({ kind }) {
     <>
       {undo && (
         <div className="note latundo">
-          <span>🗑️ {T("Deleted {name}.", { name: undo.name })}</span>
+          <span><Icon n="trash" size={16} /> {T("Deleted {name}.", { name: undo.name })}</span>
           <button type="button" className="ghost" onClick={async () => {
             const { error } = await supabase.rpc("analysis_restore_config", { cfg: undo.id });
             if (error) setFlash(["warn", T("Could not undo: {why}", { why: error.message || "" })]);
             else { setUndo(null); await afterSave(undo.id, T("{name} is back.", { name: undo.name })); }
-          }}>↩️ {T("Undo")}</button>
+          }}><Icon n="undo-2" size={16} /> {T("Undo")}</button>
         </div>
       )}
       <div className="latstart">
         <label className="m" htmlFor={`lat-start-${kind}`}>{T("Start from")}</label>
         <select id={`lat-start-${kind}`} value={start} onChange={(e) => fresh(e.target.value)} disabled={!sources}>
-          {(sources || [["new", "…"]]).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          {(sources || [["new", "…"]]).map(([k, v]) => <option key={k} value={k}>{noEmoji(v)}</option>)}
         </select>
       </div>
       <p className="sub">{kind === "group"
@@ -138,9 +139,9 @@ function Editor({ kind }) {
         <div className="latgrid">
           <section className="card">
             <h2>{T("Checks")}</h2>
-            {checks.blocks.map((b, i) => <p key={"b" + i} className="note bad">⛔ {T("Can't save: {b}", { b })}</p>)}
-            {checks.warnings.map((w, i) => <p key={"w" + i} className="note warn">⚠️ {w}</p>)}
-            {!checks.blocks.length && !checks.warnings.length && <p className="note good">✅ {T("No problems found.")}</p>}
+            {checks.blocks.map((b, i) => <p key={"b" + i} className="note bad">{T("Can't save: {b}", { b })}</p>)}
+            {checks.warnings.map((w, i) => <p key={"w" + i} className="note warn">{plain(w)}</p>)}
+            {!checks.blocks.length && !checks.warnings.length && <p className="note good">{T("No problems found.")}</p>}
           </section>
           <section className="card">
             <h2>{kind === "group" ? T("What this Group returns") : T("What this Set returns")}</h2>
@@ -167,9 +168,9 @@ function Editor({ kind }) {
       {screen && (
         <div className="latacts">
           <button type="button" className="primary" disabled={busy || !screen.can_save} onClick={() => save(false)}
-            title={T("Saves version 1. It is private until you publish it.")}>💾 {kind === "group" ? T("Save as a new Group") : T("Save as a new Set")}</button>
+            title={T("Saves version 1. It is private until you publish it.")}><Icon n="save" size={16} /> {kind === "group" ? T("Save as a new Group") : T("Save as a new Set")}</button>
           {source && <button type="button" className="ghost bordered" disabled={busy || !screen.can_save} onClick={() => save(true)}
-            title={T("Saves a new version. Earlier versions stay as they were.")}>💾 {T("Save as version {v} of {name}", { v: (source.current_version || 0) + 1, name: source.name })}</button>}
+            title={T("Saves a new version. Earlier versions stay as they were.")}><Icon n="save" size={16} /> {T("Save as version {v} of {name}", { v: (source.current_version || 0) + 1, name: source.name })}</button>}
           {mine && <Rename kind={kind} source={source} word={word} onDone={(name) => afterSave(source.id, T("Renamed to “{name}”. It shows under the new name everywhere.", { name }))} />}
           {mine && <Delete kind={kind} source={source} word={word} onDone={() => { setUndo({ id: source.id, name: source.name }); loadSources(); open("new"); }} />}
         </div>
@@ -193,7 +194,7 @@ function Rename({ kind, source, word, onDone }) {
     const text = String(error.message || "");
     setMsg(text.includes("name_taken") ? T("You already have a {word} called {name}.", { word, name: clean }) : T("Refused: {why}", { why: text }));
   };
-  if (!openIt) return <button type="button" className="ghost bordered" onClick={() => { setName(source.name); setMsg(""); setOpen(true); }} title={T("Give {name} a new name.", { name: source.name })}>✏️ {T("Rename")}</button>;
+  if (!openIt) return <button type="button" className="ghost bordered" onClick={() => { setName(source.name); setMsg(""); setOpen(true); }} title={T("Give {name} a new name.", { name: source.name })} aria-label={T("Rename")}><Icon n="pencil" /></button>;
   return (
     <div className="latpop">
       <label className="m" htmlFor="lat-rename">{T("New name for this {word}", { word })}</label>
@@ -227,7 +228,7 @@ function Delete({ kind, source, word, onDone }) {
     } catch (e) { /* the column stays until it is chosen again */ }
     setState(null); onDone();
   };
-  if (!state) return <button type="button" className="danger-btn" onClick={ask} title={T("Remove {name} from your {word}s. You can undo it straight after.", { name: source.name, word })}>🗑️ {T("Delete this {word}", { word })}</button>;
+  if (!state) return <button type="button" className="ghost bordered icondanger" onClick={ask} title={T("Remove {name} from your {word}s. You can undo it straight after.", { name: source.name, word })} aria-label={T("Delete this {word}", { word })}><Icon n="trash" /></button>;
   return (
     <div className="latpop">
       {state.busy ? <p className="m">{T("Checking…")}</p> : state.ok ? (
@@ -266,7 +267,7 @@ function TryIt({ model }) {
   const name = (list.find((x) => x[0] === pick) || [])[1];
   return (
     <details className="card latdet">
-      <summary>▶️ {T("Try it on one asset (live)")}</summary>
+      <summary><Icon n="play" size={16} /> {T("Try it on one asset (live)")}</summary>
       <div className="bar" style={{ marginTop: 10 }}>
         <select value={pick} onChange={(e) => setPick(e.target.value)} aria-label={T("Asset")}>{list.map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
         <button type="button" className="primary" disabled={busy || !pick} onClick={go}>{busy ? T("Checking…") : T("Try it")}</button>
@@ -295,10 +296,10 @@ function Study({ source }) {
   const wait = T("Studies run in the background, usually within an hour; you can leave this page.");
   return (
     <section className="card" style={{ marginTop: 16 }}>
-      <h2>🔬 {T("What followed")} <span className="m">· {T("what happened after this Set turned Yes in the past")}</span></h2>
+      <h2><Icon n="microscope" /> {T("What followed")} <span className="m">· {T("what happened after this Set turned Yes in the past")}</span></h2>
       {s.state === "done" ? <StudyCard icon={s.icon} card={s.card} />
         : s.state === "no" ? <p className="sub">{T("Can't be studied: {why}", { why: s.why })}</p>
-        : s.state === "queued" || s.state === "running" ? <p className="note">⏳ {s.state === "running" ? T("The study of version {v} is being worked out.", { v: s.version }) : T("The study of version {v} is waiting its turn.", { v: s.version })} {wait}</p>
+        : s.state === "queued" || s.state === "running" ? <p className="note"><Icon n="hourglass" size={16} /> {s.state === "running" ? T("The study of version {v} is being worked out.", { v: s.version }) : T("The study of version {v} is waiting its turn.", { v: s.version })} {wait}</p>
         : s.state === "refused" ? <p className="sub">{T("Last try: {why}", { why: s.error || "" })}</p>
         : (
           <>
@@ -306,7 +307,7 @@ function Study({ source }) {
             {s.state === "error" && <p className="note bad">{s.why}</p>}
             <button type="button" className="primary" disabled={busy} onClick={() => load(true)}
               title={T("Checks what happened after this Set turned Yes on 25 major coins and 61 large US equities, Sep 2014 to Oct 2024, against comparable days.") + " " + wait}>
-              🔬 {T("Study this Set (version {v})", { v: s.version || source.current_version })}</button>
+              <Icon n="microscope" size={16} /> {T("Study this Set (version {v})", { v: s.version || source.current_version })}</button>
           </>
         )}
     </section>
@@ -327,12 +328,12 @@ function Table({ rows }) {
 function StudyCard({ icon, card }) {
   return (
     <details className="latdet" open>
-      <summary><b>{icon} {card.verdict || T("not studied on its own")}</b> <span className="m">{String(card.title || "").replace("What followed · ", "")}</span></summary>
+      <summary><b>{card.verdict || T("not studied on its own")}</b> <span className="m">{String(card.title || "").replace("What followed · ", "")}</span></summary>
       <ul>{(card.lines || []).map((l, i) => <li key={i}>{l}</li>)}</ul>
       {card.parts && <><div className="rowtitle">{T("Coins and equities")}</div><ul>{card.parts.map((p, i) => <li key={i}>{p.line}</li>)}{card.compare && <li>{card.compare}</li>}</ul>{card.parts_note && <p className="m">{card.parts_note}</p>}</>}
       {card.periods && <><div className="rowtitle">{T("By period")}</div><Table rows={card.periods} /></>}
       {card.assets && <><div className="rowtitle">{T("Asset by asset")} <span className="m">({T("a guide only")})</span></div><p className="m">{card.assets.line}</p><p className="m">{card.assets.note}</p><Table rows={card.assets.rows} /></>}
-      {card.history && <p className="m">🗂️ {card.history}</p>}
+      {card.history && <p className="m"><Icon n="folder" size={14} /> {card.history}</p>}
       {card.note && <p className="m">{card.note}</p>}
     </details>
   );
