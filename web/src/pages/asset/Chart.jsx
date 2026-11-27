@@ -1,17 +1,16 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { createChart, CrosshairMode } from "lightweight-charts";
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
+import { createChart, CrosshairMode, CandlestickSeries, HistogramSeries, LineSeries, createSeriesMarkers } from "lightweight-charts";
 import { T } from "../../lib/i18n.js";
-import { candles, drawings } from "../../lib/assets.js";
+import { candles } from "../../lib/assets.js";
 import { sonar as loadSonar } from "../../lib/service.js";
 import { usd, pct, dayMonthYear, tone } from "../../lib/format.js";
 
+const Pro = lazy(() => import("./pro/Pro.jsx"));      // loaded only when Pro is picked
 const RANGES = [["1M", 22, 31], ["3M", 66, 92], ["6M", 130, 183], ["1Y", 252, 365], ["2Y", 504, 730]];
 
 // Simple: the closing price as one clean line. Technical: candles with volume and the 50- and 200-candle averages, and
 // for crypto the 1-hour, 4-hour and weekly candles from Binance.
-export default function Chart({ row, meta, crypto, who }) {
-  const [drawn, setDrawn] = useState(null);
-  useEffect(() => { let live = true; if (who) drawings(who.kind, who.id).then((d) => live && setDrawn(d)); return () => { live = false; }; }, [who && who.id]);
+export default function Chart({ row, meta, crypto, who, assetKey, account, title }) {
   const [mode, setMode] = useState(() => { try { return localStorage.getItem("mn_chart_mode") || "simple"; } catch (e) { return "simple"; } });
   const pick = (m) => { setMode(m); try { localStorage.setItem("mn_chart_mode", m); } catch (e) { /* private window */ } };
   const bars = (row.prices || []).filter((b) => b && b.t && b.c != null);
@@ -21,11 +20,14 @@ export default function Chart({ row, meta, crypto, who }) {
         <div className="seg" role="group" aria-label={T("Chart style")}>
           <button type="button" className={mode === "simple" ? "on" : ""} aria-pressed={mode === "simple"} onClick={() => pick("simple")}>{T("Simple")}</button>
           <button type="button" className={mode === "technical" ? "on" : ""} aria-pressed={mode === "technical"} onClick={() => pick("technical")}>{T("Technical")}</button>
+          <button type="button" className={mode === "pro" ? "on" : ""} aria-pressed={mode === "pro"} onClick={() => pick("pro")} title={T("Every indicator, Sonar and its markers, chart shapes and the drawing tools")}>{T("Pro")}</button>
         </div>
-        <span className="m">{mode === "simple" ? T("The closing price each day.") : T("Candles with volume; add indicators on the right.")}</span>
+        <span className="m">{mode === "simple" ? T("The closing price each day.") : mode === "pro" ? T("Every indicator, Sonar and its markers, chart shapes and the drawing tools") : T("Candles with volume; add indicators on the right.")}</span>
       </div>
       {bars.length < 3 ? <div className="empty">{T("No price history yet.")}</div>
-        : mode === "simple" ? <Simple bars={bars} /> : <Technical bars={bars} pair={crypto && meta ? meta.pair : null} drawn={drawn} />}
+        : mode === "simple" ? <Simple bars={bars} />
+        : mode === "pro" && assetKey ? <Suspense fallback={<div className="empty" style={{ height: 520 }}>{T("Loading…")}</div>}><Pro assetKey={assetKey} who={who} title={title} account={account} /></Suspense>
+        : <Technical bars={bars} pair={crypto && meta ? meta.pair : null} />}
     </section>
   );
 }
@@ -124,16 +126,16 @@ function bollinger(rows, n = 20, k = 2) {
   return out;
 }
 
-const IND = () => [["ma", T("Moving averages")], ["bb", T("Bollinger bands")], ["rsi", "RSI"], ["macd", "MACD"], ["sonar", "Sonar"], ["draw", T("Your drawings")]];
+const IND = () => [["ma", T("Moving averages")], ["bb", T("Bollinger bands")], ["rsi", "RSI"], ["macd", "MACD"], ["sonar", "Sonar"]];
 
-function Technical({ bars, pair, drawn }) {
+function Technical({ bars, pair }) {
   const frames = pair ? [["1h", T("1 hour")], ["4h", T("4 hours")], ["1d", T("Daily")], ["1w", T("Weekly")]] : [["1d", T("Daily")], ["1w", T("Weekly")]];
   const [tf, setTf] = useState("1d");
   const [rows, setRows] = useState(null);
   const [err, setErr] = useState("");
   const [on, setOn] = useState(() => { try { return JSON.parse(localStorage.getItem("mn_chart_ind")) || { ma: true, draw: true }; } catch (e) { return { ma: true, draw: true }; } });
   const flip = (k) => setOn((o) => { const n = { ...o, [k]: !o[k] }; try { localStorage.setItem("mn_chart_ind", JSON.stringify(n)); } catch (e) { /* private window */ } return n; });
-  const box = useRef(null), rbox = useRef(null), mbox = useRef(null), sbox = useRef(null), canvas = useRef(null);
+  const box = useRef(null), rbox = useRef(null), mbox = useRef(null), sbox = useRef(null);
   const [son, setSon] = useState(null);
   useEffect(() => {
     let live = true; setSon(null);
@@ -159,12 +161,12 @@ function Technical({ bars, pair, drawn }) {
       timeScale: { borderColor: grid, timeVisible: tf === "1h" || tf === "4h" }, crosshair: { mode: CrosshairMode.Normal }, autoSize: true, ...(extra || {}) });
     const charts = [];
     const chart = createChart(box.current, base(420)); charts.push(chart);
-    const c = chart.addCandlestickSeries({ upColor: good, downColor: bad, borderVisible: false, wickUpColor: good, wickDownColor: bad });
+    const c = chart.addSeries(CandlestickSeries, { upColor: good, downColor: bad, borderVisible: false, wickUpColor: good, wickDownColor: bad });
     c.setData(rows);
-    const v = chart.addHistogramSeries({ priceFormat: { type: "volume" }, priceScaleId: "vol", color: grid });
+    const v = chart.addSeries(HistogramSeries, { priceFormat: { type: "volume" }, priceScaleId: "vol", color: grid });
     chart.priceScale("vol").applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
     v.setData(rows.map((r) => ({ time: r.time, value: r.volume || 0, color: r.close >= r.open ? "rgba(0,127,115,.28)" : "rgba(194,51,63,.28)" })));
-    const line = (ch, color, data, w = 2, style = 0) => { const sr = ch.addLineSeries({ color, lineWidth: w, lineStyle: style, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false }); sr.setData(data); return sr; };
+    const line = (ch, color, data, w = 2, style = 0) => { const sr = ch.addSeries(LineSeries, { color, lineWidth: w, lineStyle: style, priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false }); sr.setData(data); return sr; };
     if (on.ma) { line(chart, gold, sma(rows, 50)); line(chart, grey, sma(rows, 200)); }
     if (on.bb) { const b = bollinger(rows); const col = "rgba(41,98,255,.65)"; line(chart, col, b.map((x) => ({ time: x.time, value: x.up })), 1); line(chart, col, b.map((x) => ({ time: x.time, value: x.lo })), 1); line(chart, col, b.map((x) => ({ time: x.time, value: x.mid })), 1, 2); }
     if (on.rsi && rbox.current) {
@@ -176,59 +178,29 @@ function Technical({ bars, pair, drawn }) {
     if (on.macd && mbox.current) {
       const mc = createChart(mbox.current, base(130, { timeScale: { visible: false } })); charts.push(mc);
       const m = macd(rows);
-      const h = mc.addHistogramSeries({ priceLineVisible: false, lastValueVisible: false });
+      const h = mc.addSeries(HistogramSeries, { priceLineVisible: false, lastValueVisible: false });
       h.setData(m.map((x) => ({ time: x.time, value: x.hist, color: x.hist >= 0 ? "rgba(0,127,115,.5)" : "rgba(194,51,63,.5)" })));
       line(mc, "#2962ff", m.map((x) => ({ time: x.time, value: x.line })), 2); line(mc, "#ff9800", m.map((x) => ({ time: x.time, value: x.signal })), 2);
     }
     if (on.sonar && sbox.current && son && !son.error) {
       const sc = createChart(sbox.current, base(150, { timeScale: { visible: false } })); charts.push(sc);
       const pts = (k) => son.time.map((t, i) => (son[k][i] == null ? null : { time: t, value: son[k][i] })).filter(Boolean);
-      const mf = sc.addHistogramSeries({ priceLineVisible: false, lastValueVisible: false });
+      const mf = sc.addSeries(HistogramSeries, { priceLineVisible: false, lastValueVisible: false });
       mf.setData(pts("mf").map((x) => ({ ...x, color: x.value >= 0 ? "rgba(0,127,115,.35)" : "rgba(194,51,63,.35)" })));
       line(sc, "#7fd3f0", pts("wt1"), 2);
       const w2 = line(sc, "#2962ff", pts("wt2"), 2);
       w2.createPriceLine({ price: 53, color: bad, lineWidth: 1, lineStyle: 2, axisLabelVisible: false });
       w2.createPriceLine({ price: -53, color: good, lineWidth: 1, lineStyle: 2, axisLabelVisible: false });
-      w2.setMarkers(son.time.flatMap((t, i) => son.buy[i] ? [{ time: t, position: "belowBar", color: good, shape: "circle", size: 1.4 }]
+      createSeriesMarkers(w2, son.time.flatMap((t, i) => son.buy[i] ? [{ time: t, position: "belowBar", color: good, shape: "circle", size: 1.4 }]
         : son.sell[i] ? [{ time: t, position: "aboveBar", color: bad, shape: "circle", size: 1.4 }] : []));
     }
     // The lower charts follow the main chart's scrolling and zooming.
-    const later = () => requestAnimationFrame(() => requestAnimationFrame(paint));      // after the chart has laid itself out
-    const sync = (r) => { if (r) charts.slice(1).forEach((ch) => ch.timeScale().setVisibleLogicalRange(r)); later(); };
+    const sync = (r) => { if (r) charts.slice(1).forEach((ch) => ch.timeScale().setVisibleLogicalRange(r)); };
     chart.timeScale().subscribeVisibleLogicalRangeChange(sync);
     const shown = tf === "1w" ? 104 : 160;
     if (rows.length > shown) chart.timeScale().setVisibleLogicalRange({ from: rows.length - shown, to: rows.length + 2 });
-
-    // The member's own drawings, made in the classic app's chart, painted over the candles.
-    const times = rows.map((r) => r.time);
-    const X = (t) => {
-      let lo = 0, hi = times.length - 1;
-      const step = (times[1] - times[0]) || 86400;
-      if (t <= times[0]) lo = (t - times[0]) / step; else if (t >= times[hi]) lo = hi + (t - times[hi]) / ((times[hi] - times[hi - 1]) || step); else {
-        while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (times[mid] <= t) lo = mid; else hi = mid; }
-        lo = lo + (t - times[lo]) / ((times[lo + 1] - times[lo]) || 1);
-      }
-      // The chart turns whole candle positions into pixels; in between, step proportionally.
-      const ts = chart.timeScale(), i0 = Math.floor(lo), f = lo - i0;
-      const a = ts.logicalToCoordinate(i0), b = ts.logicalToCoordinate(i0 + 1);
-      return a == null || b == null ? null : a + (b - a) * f;
-    };
-    const Y = (p) => c.priceToCoordinate(p);
-    function paint() {
-      const cv = canvas.current; if (!cv || !box.current) return;
-      const w = box.current.clientWidth, hgt = 420, dpr = window.devicePixelRatio || 1;
-      cv.width = w * dpr; cv.height = hgt * dpr; cv.style.width = w + "px"; cv.style.height = hgt + "px";
-      const ctx = cv.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, hgt);
-      if (!on.draw) return;
-      const plotW = w - 64;
-      ctx.save(); ctx.beginPath(); ctx.rect(0, 0, plotW, hgt); ctx.clip();
-      (drawn || []).forEach((it) => drawOne(ctx, it, X, Y, plotW, hgt));
-      ctx.restore();
-    }
-    const ro = new ResizeObserver(later); ro.observe(box.current);
-    later(); const t1 = setTimeout(paint, 400);
-    return () => { clearTimeout(t1); ro.disconnect(); chart.timeScale().unsubscribeVisibleLogicalRangeChange(sync); charts.forEach((ch) => ch.remove()); };
-  }, [rows, on, drawn, son]);
+    return () => { chart.timeScale().unsubscribeVisibleLogicalRangeChange(sync); charts.forEach((ch) => ch.remove()); };
+  }, [rows, on, son]);
 
   return (
     <>
@@ -237,16 +209,13 @@ function Technical({ bars, pair, drawn }) {
           {frames.map(([k, l]) => <button key={k} type="button" className={tf === k ? "on" : ""} aria-pressed={tf === k} onClick={() => setTf(k)}>{l}</button>)}
         </div>
         <div className="chips right ind" role="group" aria-label={T("Indicators")}>
-          {IND().filter(([k]) => k !== "draw" || (drawn && drawn.length)).map(([k, l]) => <button key={k} type="button" className={on[k] ? "on" : ""} aria-pressed={!!on[k]} onClick={() => flip(k)}>{l}</button>)}
+          {IND().map(([k, l]) => <button key={k} type="button" className={on[k] ? "on" : ""} aria-pressed={!!on[k]} onClick={() => flip(k)}>{l}</button>)}
         </div>
       </div>
       {err && <p className="sub">{err}</p>}
       {!rows ? <div className="empty" style={{ height: 420 }}>{T("Loading…")}</div> : (
         <>
-          <div style={{ position: "relative", height: 420 }}>
-            <div ref={box} style={{ height: 420 }} />
-            <canvas ref={canvas} style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }} />
-          </div>
+          <div ref={box} style={{ height: 420 }} />
           {on.rsi && <><div className="sublabel">RSI (14)</div><div ref={rbox} style={{ height: 130 }} /></>}
           {on.macd && <><div className="sublabel">MACD (12, 26, 9)</div><div ref={mbox} style={{ height: 130 }} /></>}
           {on.sonar && <><div className="sublabel">{T("Sonar: the two waves, money flow, and big dots where the waves cross at an extreme")}</div>
@@ -256,37 +225,7 @@ function Technical({ bars, pair, drawn }) {
       <div className="legend" style={{ marginTop: 8 }}>
         {on.ma && <><span><i style={{ background: "var(--gold)" }} />{T("Average of 50 candles")}</span><span><i style={{ background: "var(--grey)" }} />{T("Average of 200 candles")}</span></>}
         {on.bb && <span><i style={{ background: "rgba(41,98,255,.65)" }} />{T("Bollinger bands (20, 2)")}</span>}
-        {on.draw && drawn && drawn.length > 0 && <span className="m">{T("Drawings are made and edited in the classic app's chart.")}</span>}
       </div>
     </>
   );
-}
-
-// Paint one saved drawing (the classic chart's format: {tool, pts: [{t, p}], color, width, text, mark}).
-function drawOne(ctx, it, X, Y, W, H) {
-  const P = (it.pts || []).map((q) => [X(q.t), Y(q.p)]);
-  if (!P.length || P.some(([x, y]) => x == null || y == null || !isFinite(x) || !isFinite(y))) return;
-  const colour = it.color || "#2962ff", width = it.width || 2;
-  ctx.strokeStyle = colour; ctx.fillStyle = colour; ctx.lineWidth = width; ctx.globalAlpha = 1;
-  const ln = (pts) => { ctx.beginPath(); pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke(); };
-  const two = P.length > 1;
-  switch (it.tool) {
-    case "pen": ln(P); break;
-    case "hl": ctx.globalAlpha = 0.35; ctx.lineWidth = Math.max(12, width * 5); ln(P); break;
-    case "trend": case "measure": if (two) ln(P.slice(0, 2)); break;
-    case "arrow": if (two) { ln(P.slice(0, 2)); const [[ax, ay], [bx, by]] = P, a = Math.atan2(by - ay, bx - ax), s = 8 + width * 2;
-      ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx - s * Math.cos(a - 0.4), by - s * Math.sin(a - 0.4)); ctx.lineTo(bx - s * Math.cos(a + 0.4), by - s * Math.sin(a + 0.4)); ctx.closePath(); ctx.fill(); } break;
-    case "ray": if (two) { const [[ax, ay], [bx, by]] = P, dx = bx - ax, dy = by - ay, k = dx || dy ? 4 * (W + H) / Math.hypot(dx, dy) : 0; ln([[ax, ay], [ax + dx * k, ay + dy * k]]); } break;
-    case "hline": ln([[0, P[0][1]], [W, P[0][1]]]); break;
-    case "vline": ln([[P[0][0], 0], [P[0][0], H]]); break;
-    case "channel": if (two) ln(P.slice(0, 2)); break;
-    case "box": case "position": if (two) { const [[ax, ay], [bx, by]] = P; ctx.globalAlpha = 0.14; ctx.fillRect(Math.min(ax, bx), Math.min(ay, by), Math.abs(bx - ax), Math.abs(by - ay)); ctx.globalAlpha = 1; ctx.strokeRect(Math.min(ax, bx), Math.min(ay, by), Math.abs(bx - ax), Math.abs(by - ay)); } break;
-    case "circle": if (two) { const [[ax, ay], [bx, by]] = P; ctx.beginPath(); ctx.ellipse((ax + bx) / 2, (ay + by) / 2, Math.max(2, Math.abs(bx - ax) / 2), Math.max(2, Math.abs(by - ay) / 2), 0, 0, Math.PI * 2); ctx.stroke(); } break;
-    case "marker": ctx.font = `bold ${12 + width * 4}px system-ui,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(it.mark || "✖", P[0][0], P[0][1]); ctx.textAlign = "start"; break;
-    case "text": { const px = 11 + width * 2; ctx.font = `${px}px system-ui,sans-serif`; ctx.textBaseline = "top"; String(it.text || "").split("\n").forEach((r, i) => ctx.fillText(r, P[0][0], P[0][1] + i * (px + 3))); break; }
-    case "fib": if (two) { const a = it.pts[0].p, b = it.pts[1].p, x0 = Math.min(P[0][0], P[1][0]);
-      [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1].forEach((r) => { const y = Y(b - (b - a) * r); if (y == null) return; ctx.lineWidth = r === 0.5 || r === 0.618 ? width + 0.5 : 1; ln([[x0, y], [W, y]]); ctx.font = "11px system-ui,sans-serif"; ctx.fillText(String(r), x0 + 3, y - 3); }); } break;
-    default: break;
-  }
-  ctx.globalAlpha = 1;
 }

@@ -120,3 +120,74 @@ def test_navigator_answers_and_counts(monkeypatch):
     for _ in range(4):
         c.post("/navigator", json={"question": "again"})
     assert c.post("/navigator", json={"question": "one more"}).status_code == 429
+
+
+# ---- the Pro chart ------------------------------------------------------------------------------------------------
+
+def _fake_candles(monkeypatch, error=None):
+    import numpy as np
+    import pandas as pd
+
+    from service import pro_chart
+
+    def load(kind, aid, interval, range_key, now=None, fetch=None):
+        if error:
+            return {"candles": None, "start": None, "session": None, "source": "", "error": error}
+        idx = pd.date_range(end=pd.Timestamp("2026-11-27", tz="UTC"), periods=300, freq="1D")
+        rng = np.random.default_rng(3)
+        close = 100 + rng.normal(0, 1, len(idx)).cumsum()
+        c = pd.DataFrame({"open": np.r_[close[0], close[:-1]], "close": close, "volume": rng.integers(1000, 5000, len(idx)).astype(float)}, index=idx)
+        c["high"] = c[["open", "close"]].max(axis=1) + 0.5
+        c["low"] = c[["open", "close"]].min(axis=1) - 0.5
+        c["forming"] = [False] * (len(idx) - 1) + [True]
+        return {"candles": c, "start": idx[-90], "session": None, "source": "Test candles", "error": None}
+
+    monkeypatch.setattr(pro_chart.chart_candles, "load_candles", load)
+    monkeypatch.setattr(pro_chart, "_events", lambda: [])
+    pro_chart._frames.clear()
+
+
+def test_chart_needs_a_sign_in():
+    c = TestClient(svc.app)
+    assert c.post("/chart", json={"key": "Crypto|bitcoin"}).status_code == 401
+    assert c.get("/chart/options?key=Crypto|bitcoin").status_code == 401
+
+
+def test_chart_builds_the_classic_payload(monkeypatch):
+    _fake_candles(monkeypatch)
+    out = _client().post("/chart", json={"key": "Crypto|bitcoin", "interval": "1D", "range": "3M",
+                                          "indicators": ["cipher", "sonar_marks", "rsi", "macd", "fvg"]}).json()
+    p = out["payload"]
+    assert len(p["times"]) == 300 and p["forming"] is True
+    titles = [x["title"] for x in p["panes"]]
+    assert titles[1] == "Sonar" and "Volume" in titles and "RSI (14)" in titles and "MACD" in titles
+    assert any(s["id"] == "mc_wt1" for s in p["series"]) and p["fvg"] is True
+    assert "lib" not in p                         # the new app bundles the chart library itself
+
+
+def test_chart_says_when_a_range_does_not_fit_the_candle_size(monkeypatch):
+    _fake_candles(monkeypatch)
+    out = _client().post("/chart", json={"key": "Crypto|bitcoin", "interval": "15m", "range": "All"}).json()
+    assert out["error"] and out["nearest"] in ("7D", "1M")
+
+
+def test_chart_passes_on_a_candle_error(monkeypatch):
+    _fake_candles(monkeypatch, error="No candles for this coin.")
+    out = _client().post("/chart", json={"key": "Stock|ZZZZ", "interval": "1h", "range": "1M"}).json()
+    assert out == {"error": "No candles for this coin."}
+
+
+def test_chart_rejects_unknown_assets():
+    assert _client().post("/chart", json={"key": "Bonds|x"}).status_code == 400
+
+
+def test_chart_options_list_what_the_chart_can_show(monkeypatch):
+    from service import pro_chart
+
+    monkeypatch.setattr(pro_chart, "set_options", lambda db, uid: {"p1": ("Oversold bounce (provided)", {})})
+    crypto = _client().get("/chart/options?key=Crypto|bitcoin").json()
+    stock = _client().get("/chart/options?key=Stock|AAPL").json()
+    assert "5m" in crypto["intervals"] and "1Mo" in crypto["intervals"]
+    assert any(k == "liq" for k, _ in crypto["indicators"]) and not any(k == "liq" for k, _ in stock["indicators"])
+    assert crypto["sets"] == [{"key": "p1", "name": "Oversold bounce (provided)"}]
+    assert crypto["sonar_default"] and len(crypto["sonar_marks"]) == 9

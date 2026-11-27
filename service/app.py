@@ -4,6 +4,8 @@ because they need the Python engine or the AI keys. It runs the same code as the
     GET  /health                    is it up
     GET  /asset/sets?key=…          the member's own Sets checked on one asset right now (Yes / No / Unknown + why)
     POST /sonar                     the Sonar strip for the candles the chart is showing
+    GET  /chart/options?key=…       what the Pro chart can offer for one asset (indicators, Sonar markers, Sets)
+    POST /chart                     the Pro chart: the classic chart's data for one candle size, range and set of choices
     GET  /search?q=…                news, assets and the member's Logbook that mention a topic ("inflation", "ETF")
     GET  /ai                        the AIs the Navigator can use (for Settings)
     POST /navigator                 the AI Navigator: a question, the conversation so far, what is on screen
@@ -30,12 +32,14 @@ if ROOT not in sys.path:
 
 from fastapi import Depends, FastAPI, Header, HTTPException, Query            # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware                           # noqa: E402
+from fastapi.middleware.gzip import GZipMiddleware                           # noqa: E402
 from pydantic import BaseModel, Field                                        # noqa: E402
 
 app = FastAPI(title="MarketNavi data service", docs_url=None, redoc_url=None)
 ORIGINS = [o.strip() for o in (os.environ.get("ALLOWED_ORIGINS") or "https://marketnavi.ai").split(",") if o.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=ORIGINS, allow_methods=["GET", "POST"],
                    allow_headers=["Authorization", "Content-Type"], max_age=3600)
+app.add_middleware(GZipMiddleware, minimum_size=2000)      # the Pro chart's data shrinks about six times
 
 
 # ---- who is asking -------------------------------------------------------------------------------------------------
@@ -184,6 +188,51 @@ def sonar(c: Candles, who: Member = Depends(member)):
     flags = lambda s: [bool(v) if not pd.isna(v) else False for v in s]                          # noqa: E731
     return {"time": c.time, "wt1": clean(mc["mc_wt1"]), "wt2": clean(mc["mc_wt2"]), "mf": clean(mc["mc_mf"]),
             "buy": flags(mc["mc_buy"]), "sell": flags(mc["mc_sell"]), "cross": [int(v or 0) for v in mc["mc_cross"]]}
+
+
+# ---- the Pro chart (the classic chart's data, built as the classic app builds it) --------------------------------------
+
+class ChartAsk(BaseModel):
+    key: str = Field(..., max_length=90)
+    interval: str = Field("1D", max_length=4)
+    range: str = Field("3M", max_length=4)
+    indicators: list[str] = Field(default_factory=list, max_length=20)
+    overlay: bool = False
+    sonar_marks: list[str] | None = Field(None, max_length=12)
+    dot_buildup: bool = False
+    earnings: bool = True
+    events: bool = True
+    band: str | None = Field(None, max_length=80)
+    band_no: bool = False
+    dark: bool = False
+    price_px: int = 460
+    lang: str = Field("en", max_length=8)
+    title: str = Field("", max_length=120)
+
+
+def _asset_type(key: str) -> tuple[str, str]:
+    kind, aid = _parse_key(key)
+    return ("Crypto" if kind == "crypto" else "Stock"), aid
+
+
+@app.get("/chart/options")
+def chart_options(key: str = Query(...), lang: str = Query("en", max_length=8), who: Member = Depends(member)):
+    from service import pro_chart as pro
+
+    asset_type, _ = _asset_type(key)
+    return pro.options(who.db, who.id, asset_type, lang)
+
+
+@app.post("/chart")
+def chart(ask: ChartAsk, who: Member = Depends(member)):
+    from service import pro_chart as pro
+
+    asset_type, aid = _asset_type(ask.key)
+    started = time.time()
+    out = pro.payload(who.db, who.id, asset_type, aid, ask, ask.lang, ask.title)
+    n = len(((out.get("payload") or {}).get("times")) or [])
+    print(f"chart: {ask.interval}/{ask.range} {n} candles in {time.time() - started:.1f}s", flush=True)
+    return out
 
 
 # ---- topic search across the news and the member's Logbook -------------------------------------------------------------

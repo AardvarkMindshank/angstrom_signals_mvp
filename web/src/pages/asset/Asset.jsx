@@ -109,7 +109,7 @@ export default function Asset({ assetKey, tab, account }) {
         {tabs.map(([k, l]) => <a key={k} href={assetHref(assetKey, k)} className={on === k ? "on" : ""} aria-current={on === k ? "page" : undefined}>{l}</a>)}
       </nav>
       <div>
-        {on === "chart" && <Chart row={row} meta={meta} crypto={crypto} who={who} />}
+        {on === "chart" && <Chart row={row} meta={meta} crypto={crypto} who={who} assetKey={assetKey} account={account} title={crypto ? name : `${name} (${symbol})`} />}
         {on === "readings" && <Readings f={f} hist={hist} />}
         {on === "news" && <News rep={rep} score={m} at={row.sentiment_updated_at} />}
         {(on === "derivatives" || on === "earnings") && <Derivatives row={row} crypto={crypto} who={who} />}
