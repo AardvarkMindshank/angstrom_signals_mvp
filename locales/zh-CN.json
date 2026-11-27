@@ -3166,5 +3166,7 @@
   "get the feed links in ⚙️ Settings": "在 ⚙️ 设置中获取订阅链接",
   "Ready each day an hour before your morning time, which you set in Alerts & email.": "每天在您的早间时间前一小时准备好，早间时间在“提醒与邮件”中设置。",
   "Disconnect {name}": "断开 {name}",
-  "Add, rename or disconnect platforms": "添加、重命名或断开平台"
+  "Add, rename or disconnect platforms": "添加、重命名或断开平台",
+  "Show this story on the strip above": "在上方的分布条上显示这篇报道",
+  "Click for why this score": "点击查看评分理由"
 }

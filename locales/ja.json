@@ -3166,5 +3166,7 @@
   "get the feed links in ⚙️ Settings": "フィードのリンクは ⚙️ 設定 にあります",
   "Ready each day an hour before your morning time, which you set in Alerts & email.": "毎日、朝の時刻の1時間前に用意されます。朝の時刻は「アラートとメール」で設定します。",
   "Disconnect {name}": "{name} の接続を解除",
-  "Add, rename or disconnect platforms": "プラットフォームの追加・名前変更・接続解除"
+  "Add, rename or disconnect platforms": "プラットフォームの追加・名前変更・接続解除",
+  "Show this story on the strip above": "この記事を上の帯に表示",
+  "Click for why this score": "クリックでこのスコアの理由"
 }

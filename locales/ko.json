@@ -3166,5 +3166,7 @@
   "get the feed links in ⚙️ Settings": "⚙️ 설정에서 피드 링크 받기",
   "Ready each day an hour before your morning time, which you set in Alerts & email.": "매일 아침 시간 1시간 전에 준비됩니다. 아침 시간은 알림 및 이메일에서 정합니다.",
   "Disconnect {name}": "{name} 연결 해제",
-  "Add, rename or disconnect platforms": "플랫폼 추가, 이름 변경 또는 연결 해제"
+  "Add, rename or disconnect platforms": "플랫폼 추가, 이름 변경 또는 연결 해제",
+  "Show this story on the strip above": "위 막대에서 이 기사 보기",
+  "Click for why this score": "클릭하면 이 점수의 이유"
 }
