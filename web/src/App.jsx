@@ -20,6 +20,7 @@ const Logbook = lazy(() => import("./pages/logbook/Logbook.jsx"));
 const Alerts = lazy(() => import("./pages/alerts/Alerts.jsx"));
 const Lattice = lazy(() => import("./pages/lattice/Lattice.jsx"));
 const Help = lazy(() => import("./pages/help/Help.jsx"));
+const Admin = lazy(() => import("./pages/admin/Admin.jsx"));
 
 // The new MarketNavi app (beta). One page so far, the Trade Log; each page moves across from the classic app in
 // turn, and the classic app keeps running until every page is here.
@@ -57,7 +58,10 @@ export default function App() {
       const [settings, plan] = await Promise.all([api.settings(user.id), api.plan(user.id)]);
       applyTheme(settings);
       await loadWords(pickLanguage(settings.language));
-      if (live) { setAccount({ user, settings, plan, zone: settings.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone }); setReady(true); }
+      // The admin role only shows the Admin link; the admin lists themselves are checked by the database.
+      let admin = false;
+      try { admin = (await api.rpc("is_admin")) === true; } catch (e) { /* no check function: not an admin */ }
+      if (live) { setAccount({ user, settings, plan, admin, zone: settings.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone }); setReady(true); }
     })();
     return () => { live = false; };
   }, [session && session.user && session.user.id, session === null]);
@@ -86,6 +90,7 @@ export default function App() {
             <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 4h6v6M20 4 10 14M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
           </a>
           <Bell on={page === "alerts"} />
+          {account && account.admin && <a className={"ghost icon" + (page === "admin" ? " on" : "")} href="#admin" title="Admin" aria-label="Admin" aria-current={page === "admin" ? "page" : undefined}><Icon n="shield" /></a>}
           <a className={"ghost icon" + (page === "help" ? " on" : "")} href="#help" title={T("Help and guides")} aria-label={T("Help and guides")} aria-current={page === "help" ? "page" : undefined}><Icon n="circle-question-mark" /></a>
           <a className={"ghost icon" + (page === "settings" ? " on" : "")} href="#settings" title={T("Settings")} aria-label={T("Settings")} aria-current={page === "settings" ? "page" : undefined}>
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
@@ -106,6 +111,7 @@ export default function App() {
         {page === "settings" && account && <Settings account={account} section={route[1]} />}
         {page === "lattice" && account && <Lattice section={route[1]} start={route[2]} />}
         {page === "help" && account && <Help topic={route[1]} account={account} />}
+        {page === "admin" && account && (account.admin ? <Admin section={route[1]} account={account} /> : <Snapshot account={account} />)}
         </Suspense>
       </main>
     </div>

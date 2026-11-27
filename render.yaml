@@ -21,5 +21,9 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: RESEND_API_KEY          # the admin page's welcome and barred emails (the same key the classic app uses)
+        sync: false
+      - key: RESEND_FROM
+        sync: false
       - key: ALLOWED_ORIGINS
         value: https://marketnavi.ai
