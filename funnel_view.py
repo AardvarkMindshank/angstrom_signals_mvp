@@ -192,7 +192,14 @@ def health(runs: list[dict | None], f: dict, now=None, states: dict | None = Non
         if r.get("status") == "failed":
             return t('⚠️ The last {stage_label} check failed: {r_get_error_or_120}', stage_label=stage['label'], r_get_error_or_120=(r.get('error') or '')[:120])
         step = pd.Timedelta(fr.FREQ.get(stage["timeframe"], "7D")) if stage["timeframe"] != "1W" else pd.Timedelta(days=7)
-        if now - pd.Timestamp(r["cutoff"]) > 2 * step + pd.Timedelta(hours=1):
+        # Late only when a close that was already the newest two candles (and an hour) ago is still unchecked. The
+        # closes follow the market's own calendar (funnel_runner.latest_close): an equity stage is not late over a
+        # weekend or a holiday such as Thanksgiving, when New York makes no new candles.
+        try:
+            due = fr.latest_close(stage["timeframe"], now - 2 * step - pd.Timedelta(hours=1), f.get("market") or "crypto")
+        except Exception:
+            due = now - 2 * step - pd.Timedelta(hours=1)
+        if pd.Timestamp(r["cutoff"]) < due:
             return t('⚠️ The {stage_label} stage has not been checked since {when_r_cutoff}.', stage_label=stage['label'], when_r_cutoff=_when(r['cutoff']))
     return None
 

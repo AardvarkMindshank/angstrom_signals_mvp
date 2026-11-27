@@ -58,6 +58,18 @@ def test_health_warns_on_failed_or_late_runs():
     assert reached and "has not been checked" in fv.health(late_second, F, now, states=reached)
 
 
+def test_an_equity_stage_is_not_late_over_a_holiday_or_weekend():
+    eq = {**ft.trend_funnel("long", "equity"), "id": "e", "stages_version": 1}
+    four = next(i for i, s in enumerate(eq["stages"]) if s["timeframe"] == "4h")
+    runs = [None] * len(eq["stages"])
+    runs[four] = {"cutoff": "2026-11-25T21:00:00+00:00", "status": "ok"}     # Wednesday's close, before Thanksgiving
+    assert fv.health(runs, eq, pd.Timestamp("2026-11-27 14:09", tz="UTC")) is None   # Friday, before the open
+    # Friday's session (a half day, closing 18:00 UTC) went unchecked: by Saturday that is late
+    assert "has not been checked" in fv.health(runs, eq, pd.Timestamp("2026-11-28 12:00", tz="UTC"))
+    runs[four] = {"cutoff": "2026-11-27T18:00:00+00:00", "status": "ok"}     # Friday's close checked
+    assert fv.health(runs, eq, pd.Timestamp("2026-11-29 12:00", tz="UTC")) is None   # quiet all weekend
+
+
 def test_the_hover_names_the_candle_source():
     _, hover, _ = fv.stage_cell(F, STATES["btc"], "BTCUSDT")
     assert hover.endswith("Candles: Binance spot (BTCUSDT).")
