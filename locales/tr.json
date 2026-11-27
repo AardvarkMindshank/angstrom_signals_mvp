@@ -3168,5 +3168,17 @@
   "Disconnect {name}": "{name} bağlantısını kes",
   "Add, rename or disconnect platforms": "Platform ekle, yeniden adlandır veya bağlantısını kes",
   "Show this story on the strip above": "Bu haberi yukarıdaki şeritte göster",
-  "Click for why this score": "Bu puanın nedeni için tıklayın"
+  "Click for why this score": "Bu puanın nedeni için tıklayın",
+  "Deleted “{name}”.": "“{name}” silindi.",
+  "Visualize History is still in the classic app while it moves across.": "Visualize History taşınırken hâlâ klasik uygulamada.",
+  "Prism isn't reachable just now. Please try again in a minute.": "Prism'e şu anda ulaşılamıyor. Lütfen bir dakika sonra tekrar deneyin.",
+  "Checking the scan's assets… this can take up to a minute.": "Taramanın varlıkları kontrol ediliyor… bir dakikayı bulabilir.",
+  "That didn't work just now. Please try again.": "Şu anda olmadı. Lütfen tekrar deneyin.",
+  "Add some in Settings ›": "Ayarlar'dan ekleyin ›",
+  "Saved.": "Kaydedildi.",
+  "Scan your Watchlist with a Set: now, at a past moment, or on a schedule with alerts.": "İzleme listenizi bir Set ile tarayın: şimdi, geçmiş bir anda ya da uyarılı bir programla.",
+  "Says Yes at": "Evet dediği değer",
+  "Alerts again after": "Yeniden uyarır",
+  "Alerts go": "Uyarılar gider",
+  "Past the line now": "Şu an çizginin ötesinde"
 }

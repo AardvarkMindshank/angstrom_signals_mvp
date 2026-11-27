@@ -804,3 +804,21 @@ button .ic, a .ic { vertical-align: -0.2em; }
 .mk.strength_candle { border-radius: 1px; transform: rotate(45deg) scale(.7); background: #eab308; }
 .icw { display: inline-flex; vertical-align: -0.15em; }
 .icw .ic { width: 1.05em; height: 1.05em; }
+
+/* 🔎 Prism board */
+.prismp .note { margin: 10px 0; }
+.prismbusy { opacity: .55; pointer-events: none; transition: opacity .2s; }
+.prismbuilt { margin: 12px 0 16px; }
+.classic.prismboard { margin-top: 8px; }
+/* the classic board in the flat look: plain outline buttons, gold for the chosen scan, the app's good/bad colours */
+.classic .lat.prism .ctl button { background: var(--ang-surface); color: var(--ang-soft); border: 1px solid var(--ang-border); border-radius: 10px; box-shadow: none; }
+.classic .lat.prism .ctl button:hover { background: var(--ang-field); color: var(--ang-text); }
+.classic .lat.prism .ctl button.del { background: var(--ang-surface); color: var(--ang-soft); border-color: var(--ang-border); }
+.classic .lat.prism .ctl button.del:hover, .classic .lat.prism .ctl button.del.arm { color: var(--bad); border-color: var(--bad); background: var(--ang-surface); }
+.classic .lat.prism .scan { border-color: var(--ang-border); background: var(--ang-surface); }
+.classic .lat.prism .scan.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.classic .lat.prism .scan.over, .classic .lat.prism .achip.grp { border-color: var(--gold); }
+.classic .lat.prism .y { color: var(--good); } .classic .lat.prism .n { color: var(--bad); }
+.classic .lat.prism .dot.yes { background: var(--good); } .classic .lat.prism .dot.no { background: var(--bad); }
+.classic .lat.prism .hseg button.on, .classic .lat.prism button.hist.on, .classic .lat.prism .pvf button.on { border-color: var(--ang-text); background: var(--ang-field); }
+.classic .lat.prism .chip.focus { outline-color: var(--gold); }

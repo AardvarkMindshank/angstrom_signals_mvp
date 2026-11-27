@@ -6,6 +6,7 @@ because they need the Python engine or the AI keys. It runs the same code as the
     POST /sonar                     the Sonar strip for the candles the chart is showing
     GET  /chart/options?key=…       what the Pro chart can offer for one asset (indicators, Sonar markers, Sets)
     GET  /snapshot?lang=…&save=…    Quick Snapshot: Tides card, what changed, Trend extremes, moods, funnels, markets
+    POST /prism/board, /prism/action   the Prism Scan board and each press on it
     GET  /lattice/…, POST /lattice/…  the Signal Group and Set editors: open, check, save, try, search, study
     GET  /tides?range=…             the Tides page: the sea drawing, the note, storm warnings, the waves and the currents
     GET  /signals?market=…          a Signals table: your watchlist or a funnel's assets, with every column
@@ -290,6 +291,34 @@ def lattice_action(kind: str, action: str, ask: LatticeAsk, who: Member = Depend
     if action == "delete-check" and kind in ("group", "set"):
         return lat.delete_check(who.db, who.id, kind, ask.source_id or "", lang)
     raise HTTPException(404, "Unknown action.")
+
+
+# ---- 🔎 Prism Scan: the scans board ---------------------------------------------------------------------------------
+
+class PrismBoardAsk(BaseModel):
+    results: dict | None = None
+    open_new: str | None = Field(None, max_length=60)
+    focus_set: str | None = Field(None, max_length=120)
+    lang: str = Field("en", max_length=8)
+
+
+class PrismAct(BaseModel):
+    action: dict
+    lang: str = Field("en", max_length=8)
+
+
+@app.post("/prism/board")
+def prism_board(ask: PrismBoardAsk, who: Member = Depends(member)):
+    from service import prism_page
+
+    return prism_page.board(who.db, who.id, ask.lang, ask.results, ask.open_new, ask.focus_set)
+
+
+@app.post("/prism/action")
+def prism_action(ask: PrismAct, who: Member = Depends(member)):
+    from service import prism_page
+
+    return prism_page.action(who.db, who.id, ask.lang, ask.action)
 
 
 # ---- 🌊 Tides ----------------------------------------------------------------------------------------------------------

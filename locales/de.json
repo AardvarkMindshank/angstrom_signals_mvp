@@ -3168,5 +3168,17 @@
   "Disconnect {name}": "{name} trennen",
   "Add, rename or disconnect platforms": "Plattformen hinzufügen, umbenennen oder trennen",
   "Show this story on the strip above": "Diesen Artikel auf dem Streifen oben zeigen",
-  "Click for why this score": "Klicken für den Grund dieser Bewertung"
+  "Click for why this score": "Klicken für den Grund dieser Bewertung",
+  "Deleted “{name}”.": "„{name}“ gelöscht.",
+  "Visualize History is still in the classic app while it moves across.": "Visualize History ist noch in der klassischen App, während es umzieht.",
+  "Prism isn't reachable just now. Please try again in a minute.": "Prism ist gerade nicht erreichbar. Bitte versuche es in einer Minute erneut.",
+  "Checking the scan's assets… this can take up to a minute.": "Die Assets des Scans werden geprüft… das kann bis zu einer Minute dauern.",
+  "That didn't work just now. Please try again.": "Das hat gerade nicht geklappt. Bitte versuche es erneut.",
+  "Add some in Settings ›": "In den Einstellungen hinzufügen ›",
+  "Saved.": "Gespeichert.",
+  "Scan your Watchlist with a Set: now, at a past moment, or on a schedule with alerts.": "Scanne deine Watchlist mit einem Set: jetzt, zu einem früheren Zeitpunkt oder nach Zeitplan mit Alarmen.",
+  "Says Yes at": "Sagt Ja bei",
+  "Alerts again after": "Alarmiert erneut nach",
+  "Alerts go": "Alarme gehen",
+  "Past the line now": "Jetzt über der Linie"
 }

@@ -101,7 +101,7 @@ export default function App() {
         {page === "asset" && account && <Asset key={route[1]} assetKey={route[1]} tab={route[2]} account={account} />}
         {page === "search" && account && <SearchPage key={route[1]} q={route[1] || ""} />}
         {page === "settings" && account && <Settings account={account} section={route[1]} />}
-        {page === "lattice" && account && <Lattice section={route[1]} />}
+        {page === "lattice" && account && <Lattice section={route[1]} start={route[2]} />}
         </Suspense>
       </main>
     </div>

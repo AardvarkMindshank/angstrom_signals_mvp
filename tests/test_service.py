@@ -366,3 +366,17 @@ def test_lattice_set_sources_and_unknown_actions():
     assert opened["model"] and c.post("/lattice/set/screen", json={"model": opened["model"]}).json()["description"]
     assert c.post("/lattice/set/nothing", json={}).status_code == 404
     assert c.get("/lattice/other/sources").status_code == 404
+
+
+def test_prism_board_and_its_actions():
+    prefs = [{"crypto_watchlist": {"bitcoin": "Bitcoin (BTC)"}, "stock_watchlist": {}, "settings": {}}]
+    c, db = _lat_client({"user_preferences": prefs, "prism_scans": []})
+    got = c.post("/prism/board", json={}).json()
+    assert got["ready"] and got["has_assets"] and got["board"]["library"]["sets"] and got["board"]["scans"] == []
+    key = got["board"]["library"]["sets"][0]["key"]
+    made = c.post("/prism/action", json={"action": {"op": "create", "set": key}}).json()
+    assert made["status"] == "ok" and made["open_new"] and db.calls[-1][0] == "prism_put_scan"
+    assert c.post("/prism/action", json={"action": {"op": "create", "set": "nope"}}).json()["status"] == "error"
+    assert c.post("/prism/action", json={"action": {"op": "pause", "scan": "missing"}}).json()["status"] == "error"
+    look = c.post("/prism/action", json={"action": {"op": "open_set", "set": key}}).json()
+    assert look["goto"].startswith("#lattice/sets/")

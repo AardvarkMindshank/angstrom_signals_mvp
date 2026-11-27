@@ -9,6 +9,7 @@ import { preferences, saveSettings } from "../../lib/account.js";
 import ClassicComponent from "../../components/ClassicComponent.jsx";
 import latticeGroup, { css as groupCss } from "../../generated/lattice_group.js";
 import latticeSet, { css as setCss } from "../../generated/lattice_set.js";
+import Prism from "./Prism.jsx";
 
 // 🧩 Lattice, the research workspace: Signal Groups (signals combined into one reading with labels) and Signal Sets
 // (Groups and signals connected into a Yes / No decision). The editors are the classic app's own (hosted by
@@ -22,7 +23,7 @@ const SECTIONS = [
   ["soundings", "compass", () => T("Soundings"), null],
 ];
 
-export default function Lattice({ section }) {
+export default function Lattice({ section, start }) {
   const sec = SECTIONS.some((s) => s[0] === section) ? section : "groups";
   return (
     <div className="page latp">
@@ -34,7 +35,8 @@ export default function Lattice({ section }) {
             onClick={() => { window.location.hash = `lattice/${k}`; }}><Icon n={icon} size={16} /> {name()}</button>
         ))}
       </div>
-      {sec === "groups" || sec === "sets" ? <Editor key={sec} kind={sec === "groups" ? "group" : "set"} />
+      {sec === "groups" || sec === "sets" ? <Editor key={sec + (start || "")} kind={sec === "groups" ? "group" : "set"} start={start} />
+        : sec === "prism" ? <Prism />
         : <section className="card" style={{ marginTop: 16 }}><p className="sub" style={{ margin: 0 }}>{T("This part of Lattice is still in the classic app while it moves across.")} <a className="linkish" href={CLASSIC} target="_blank" rel="noreferrer">{T("Open the classic app")} ↗</a></p></section>}
     </div>
   );
@@ -43,7 +45,7 @@ export default function Lattice({ section }) {
 let staticCache = null;
 const groupStatic = () => (staticCache = staticCache || call(`/lattice/group/static?lang=${lang}`).catch((e) => { staticCache = null; throw e; }));
 
-function Editor({ kind }) {
+function Editor({ kind, start: first }) {
   const word = kind === "group" ? T("Group") : T("Set");
   const [sources, setSources] = useState(null);
   const [start, setStart] = useState("new");
@@ -78,7 +80,7 @@ function Editor({ kind }) {
       await check(o.model);
     } catch (e) { setErr(T("Lattice isn't reachable just now. Please try again in a minute.")); }
   }, [kind, check]);
-  useEffect(() => { open("new"); }, [open]);
+  useEffect(() => { open(first || "new"); }, [open]);   // #lattice/sets/<start>: opened from Prism's Look inside
 
   const onTrigger = (name, value) => {
     if (name === "model") { try { check(JSON.parse(value)); } catch (e) { /* not JSON */ } }

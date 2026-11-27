@@ -3168,5 +3168,17 @@
   "Disconnect {name}": "{name} 연결 해제",
   "Add, rename or disconnect platforms": "플랫폼 추가, 이름 변경 또는 연결 해제",
   "Show this story on the strip above": "위 막대에서 이 기사 보기",
-  "Click for why this score": "클릭하면 이 점수의 이유"
+  "Click for why this score": "클릭하면 이 점수의 이유",
+  "Deleted “{name}”.": "“{name}” 삭제됨.",
+  "Visualize History is still in the classic app while it moves across.": "Visualize History는 옮겨 오는 동안 아직 클래식 앱에 있습니다.",
+  "Prism isn't reachable just now. Please try again in a minute.": "지금은 Prism에 연결할 수 없습니다. 잠시 후 다시 시도하세요.",
+  "Checking the scan's assets… this can take up to a minute.": "스캔의 자산을 확인하는 중… 최대 1분이 걸릴 수 있습니다.",
+  "That didn't work just now. Please try again.": "지금은 되지 않았습니다. 다시 시도하세요.",
+  "Add some in Settings ›": "설정에서 추가 ›",
+  "Saved.": "저장했습니다.",
+  "Scan your Watchlist with a Set: now, at a past moment, or on a schedule with alerts.": "Set으로 관심 목록을 스캔: 지금, 과거 시점, 또는 알림이 있는 일정으로.",
+  "Says Yes at": "예가 되는 값",
+  "Alerts again after": "다시 알림 조건",
+  "Alerts go": "알림 방식",
+  "Past the line now": "지금 선을 넘음"
 }

@@ -3168,5 +3168,17 @@
   "Disconnect {name}": "{name} の接続を解除",
   "Add, rename or disconnect platforms": "プラットフォームの追加・名前変更・接続解除",
   "Show this story on the strip above": "この記事を上の帯に表示",
-  "Click for why this score": "クリックでこのスコアの理由"
+  "Click for why this score": "クリックでこのスコアの理由",
+  "Deleted “{name}”.": "「{name}」を削除しました。",
+  "Visualize History is still in the classic app while it moves across.": "Visualize History は移行中のため、まだクラシック版アプリにあります。",
+  "Prism isn't reachable just now. Please try again in a minute.": "現在 Prism に接続できません。少し後にもう一度お試しください。",
+  "Checking the scan's assets… this can take up to a minute.": "スキャンの資産を確認中…最大1分ほどかかります。",
+  "That didn't work just now. Please try again.": "うまくいきませんでした。もう一度お試しください。",
+  "Add some in Settings ›": "設定で追加 ›",
+  "Saved.": "保存しました。",
+  "Scan your Watchlist with a Set: now, at a past moment, or on a schedule with alerts.": "Set でウォッチリストをスキャン：今すぐ、過去の時点、またはアラート付きのスケジュールで。",
+  "Says Yes at": "「はい」になる値",
+  "Alerts again after": "再アラートの条件",
+  "Alerts go": "アラートの送り先",
+  "Past the line now": "現在ラインを超過"
 }

@@ -6,7 +6,7 @@ name: Deploy the new app (beta)
 on:
   push:
     branches: [main]
-    paths: ["web/**", "locales/**", "i18n.py", "lattice_component.py", "macro_calendar.py", ".github/workflows/deploy-new-app.yml"]
+    paths: ["web/**", "locales/**", "i18n.py", "lattice_component.py", "prism_component.py", "macro_calendar.py", ".github/workflows/deploy-new-app.yml"]
   workflow_dispatch:
     inputs:
       dry_run:
