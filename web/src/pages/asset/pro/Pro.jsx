@@ -73,7 +73,12 @@ export default function Pro({ assetKey, who, title, account }) {
     const t = setTimeout(async () => {
       try {
         const dark = document.documentElement.classList.contains("night");
-        const out = await call("/chart", { method: "POST", timeout: 60000, body: { key: assetKey, ...ask, dark, price_px: px, lang, title: title || "" } });
+        const body = { key: assetKey, ...ask, dark, price_px: px, lang, title: title || "" };
+        // A cold chart takes a second or two; a request caught by the service restarting can hang, so give up after
+        // 25 seconds and ask once more before saying so.
+        let out;
+        try { out = await call("/chart", { method: "POST", timeout: 25000, body }); }
+        catch (e) { if (!live || e.status !== 0) throw e; out = await call("/chart", { method: "POST", timeout: 25000, body }); }
         if (!live) return;
         if (out.error) { setErr(out.error); setGot(null); if (out.nearest) setPick((p) => ({ ...p, range: out.nearest })); }
         else setGot(out);
