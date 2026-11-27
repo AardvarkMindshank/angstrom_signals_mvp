@@ -6,6 +6,7 @@ because they need the Python engine or the AI keys. It runs the same code as the
     POST /sonar                     the Sonar strip for the candles the chart is showing
     GET  /chart/options?key=…       what the Pro chart can offer for one asset (indicators, Sonar markers, Sets)
     GET  /snapshot?lang=…&save=…    Quick Snapshot: Tides card, what changed, Trend extremes, moods, funnels, markets
+    GET  /tides?range=…             the Tides page: the sea drawing, the note, storm warnings, the waves and the currents
     GET  /signals?market=…          a Signals table: your watchlist or a funnel's assets, with every column
     GET  /signals/columns           what the table's column chooser can offer
     POST /chart                     the Pro chart: the classic chart's data for one candle size, range and set of choices
@@ -111,6 +112,23 @@ class Cache:
         return value
 
 
+@app.on_event("startup")
+def _warm_up():
+    """Load the heavy calculation modules behind the scenes as soon as the service starts, so the first member to
+    open a table or a chart doesn't wait for Python to import them (25 Nov 2026: a cold table took 25 seconds)."""
+    def warm():
+        started = time.time()
+        for name in ("pandas", "scoring", "signals_view", "group_readings", "stored_readings", "signal_groups", "prism",
+                     "table_columns", "funnel_view", "funnel_runner", "market_store", "lw_chart", "chart_candles",
+                     "chart_indicators", "tides", "tides_view", "macro_calendar", "market_overview", "perspectives"):
+            try:
+                __import__(name)
+            except Exception as exc:
+                print(f"warm-up: {name} failed ({type(exc).__name__})", flush=True)
+        print(f"warm-up: modules loaded in {time.time() - started:.1f}s", flush=True)
+    threading.Thread(target=warm, daemon=True).start()
+
+
 @app.get("/health")
 def health():
     return {"ok": True, "at": datetime.now(timezone.utc).isoformat()}
@@ -209,6 +227,19 @@ def snapshot(lang: str = Query("en", max_length=8), save: bool = Query(False), w
         if hit is not None:
             return hit
     return _snap_cache.put((who.id, lang), snap.build(who.db, who.id, lang, save))
+
+
+# ---- 🌊 Tides ----------------------------------------------------------------------------------------------------------
+
+_tides_cache = Cache(300, 200)
+
+
+@app.get("/tides")
+def tides(lang: str = Query("en", max_length=8), range: str = Query("1Y", max_length=3), who: Member = Depends(member)):
+    from service import tides_page
+
+    hit = _tides_cache.get((lang, range))
+    return hit if hit is not None else _tides_cache.put((lang, range), tides_page.build(who.db, lang, range))
 
 
 # ---- ₿ 📈 the Signals tables ----------------------------------------------------------------------------------------------

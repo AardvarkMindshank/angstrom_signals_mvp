@@ -38,11 +38,14 @@ export default function Signals({ market: wanted, account }) {
   const [chooser, setChooser] = useState(false);
   const [round, setRound] = useState(0);
 
-  useEffect(() => { setView({}); setGot(null); }, [market]);
+  // The last table seen opens at once (kept in this browser), then the fresh one replaces it.
+  const memoKey = `mn_sig_${market}_${view.mode || ""}_${view.pick || ""}_${view.stage || ""}`;
+  useEffect(() => { setView({}); try { setGot(JSON.parse(localStorage.getItem(`mn_sig_${market}___`)) || null); } catch (e) { setGot(null); } }, [market]);
   useEffect(() => {
     let live = true; setBusy(true); setErr("");
+    if (view.mode) { try { const kept = JSON.parse(localStorage.getItem(memoKey)); if (kept) setGot(kept); } catch (e) { /* private window */ } }
     const q = new URLSearchParams({ market, lang, ...(view.mode ? { mode: view.mode } : {}), ...(view.pick ? { pick: view.pick } : {}), ...(view.stage ? { stage: view.stage } : {}), ...(round ? { fresh: "true" } : {}) });
-    call(`/signals?${q}`, { timeout: 60000 }).then((g) => { if (live) { setGot(g); setBusy(false); } })
+    call(`/signals?${q}`, { timeout: 60000 }).then((g) => { if (live) { setGot(g); setBusy(false); try { localStorage.setItem(memoKey, JSON.stringify(g)); } catch (e) { /* full or private */ } } })
       .catch((e) => { if (live) { setBusy(false); setErr(e.status === 0 ? T("The table service isn't reachable just now. Please try again in a minute.") : T("The table couldn't load just now. Please try again.")); } });
     return () => { live = false; };
   }, [market, view.mode, view.pick, view.stage, round]);

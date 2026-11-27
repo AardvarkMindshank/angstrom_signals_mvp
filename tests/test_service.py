@@ -274,3 +274,28 @@ def test_signals_funnel_view_uses_the_funnel_assets(monkeypatch):
 
 def test_signals_rejects_an_unknown_market():
     assert _client().get("/signals?market=bonds").status_code == 422
+
+
+# ---- 🌊 Tides ----------------------------------------------------------------------------------------------------------
+
+def test_tides_page_from_a_snapshot(monkeypatch):
+    import sys
+    sys.path.insert(0, "tests")
+    import tides as td
+    from test_tides import _raw
+
+    snap = td.snapshot(_raw(), btc_dominance=57.3, fear_greed=32)
+    monkeypatch.setattr(td, "latest", lambda db: snap)
+    svc._tides_cache.data.clear()
+    out = _client().get("/tides?range=6M").json()
+    assert out["ready"] and out["range"] == "6M" and out["hero"]["src"].startswith("data:image/svg+xml;base64,")
+    assert out["waves"].startswith("data:image/svg+xml") and [f["icon"] for f in out["families"]] == ["🏦", "🛡️", "🏗️", "🔄"]
+    assert out["note"] and out["since"]
+
+
+def test_tides_page_without_a_snapshot(monkeypatch):
+    import tides as td
+
+    monkeypatch.setattr(td, "latest", lambda db: None)
+    svc._tides_cache.data.clear()
+    assert _client().get("/tides").json() == {"ready": False}

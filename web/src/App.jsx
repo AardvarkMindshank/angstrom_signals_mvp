@@ -12,10 +12,11 @@ import Settings from "./pages/settings/Settings.jsx";
 import SearchPage from "./pages/SearchPage.jsx";
 import Snapshot from "./pages/snapshot/Snapshot.jsx";
 import Signals from "./pages/signals/Signals.jsx";
+import Tides from "./pages/tides/Tides.jsx";
 
 // The new MarketNavi app (beta). One page so far, the Trade Log; each page moves across from the classic app in
 // turn, and the classic app keeps running until every page is here.
-const PAGES = [["snapshot", () => T("Quick Snapshot")], ["signals", () => T("Signals")], ["tradelog", () => T("Trade Log")]];
+const PAGES = [["snapshot", () => T("Quick Snapshot")], ["signals", () => T("Signals")], ["tides", () => T("Tides")], ["tradelog", () => T("Trade Log")]];
 
 // The address after # picks the page: #tradelog, or #asset/<asset key>/<tab>.
 function readRoute() {
@@ -83,6 +84,7 @@ export default function App() {
       <main className="main">
         {page === "snapshot" && account && <Snapshot account={account} />}
         {page === "signals" && account && <Signals key={route[1] || "crypto"} market={route[1] || "crypto"} account={account} />}
+        {page === "tides" && account && <Tides account={account} />}
         {page === "tradelog" && account && <TradeLog account={account} />}
         {page === "asset" && account && <Asset key={route[1]} assetKey={route[1]} tab={route[2]} account={account} />}
         {page === "search" && account && <SearchPage key={route[1]} q={route[1] || ""} />}

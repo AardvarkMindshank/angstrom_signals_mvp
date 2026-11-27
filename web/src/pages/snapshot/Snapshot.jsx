@@ -19,7 +19,7 @@ const read = (k) => { try { return JSON.parse(sessionStorage.getItem(k)); } catc
 const keep = (k, v) => { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* private window */ } };
 
 export default function Snapshot({ account }) {
-  const [snap, setSnap] = useState(null);
+  const [snap, setSnap] = useState(() => { try { return JSON.parse(localStorage.getItem("mn_snap_last")); } catch (e) { return null; } });   // the last one seen, at once
   const [err, setErr] = useState("");
   useEffect(() => {
     let live = true;
@@ -31,6 +31,7 @@ export default function Snapshot({ account }) {
       if (first) { keep("mn_snap_saved", true); keep("mn_snap_changes", s.changes); }
       else { const c = read("mn_snap_changes"); if (c) s.changes = c; }
       setSnap(s);
+      try { localStorage.setItem("mn_snap_last", JSON.stringify(s)); } catch (e) { /* full or private */ }
     }).catch((e) => live && setErr(e.status === 0 ? T("Quick Snapshot isn't reachable just now. Please try again in a minute.") : T("Quick Snapshot couldn't load just now. Please try again.")));
     load();
     const timer = setInterval(() => { if (document.visibilityState === "visible") call(`/snapshot?lang=${lang}`).then((s) => { if (!live) return; const c = read("mn_snap_changes"); if (c) s.changes = c; setSnap(s); }).catch(() => {}); }, 5 * 60000);
@@ -187,7 +188,7 @@ function Tides({ card }) {
   const arrow = { in: "↗", out: "↘" }[card.label] || "↔";
   const tip = T("🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation), what it means for crypto and equity longs, and the next scheduled event. Click to open the Tides panel. A description, not a forecast.");
   return (
-    <a className={"tidecard " + card.label} href={CLASSIC} title={tip}>
+    <a className={"tidecard " + card.label} href="#tides" title={tip}>
       <div className="kick">🌊 {T("Tides")}</div>
       <div className="tidehead"><span className="tarrow">{arrow}</span><div><div className="tname">{card.name}</div><div className="m">{card.plain}{card.held ? ` · ${card.held}` : ""}</div></div></div>
       {card.tiles.length > 0 && <div className="ttiles">{card.tiles.map((x) => <div key={x.k}><div className="m">{x.k}</div><b>{x.v}</b><div className="m">{x.sub}</div></div>)}</div>}
