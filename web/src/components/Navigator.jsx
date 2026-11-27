@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Glyphs } from "./Icon.jsx";
 import { T, lang } from "../lib/i18n.js";
 import { ask } from "../lib/service.js";
 
@@ -81,12 +82,12 @@ export function Sparkle() {
 function inline(s) {
   const out = []; const re = /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`)/g; let last = 0, m, k = 0;
   while ((m = re.exec(s))) {
-    if (m.index > last) out.push(s.slice(last, m.index));
+    if (m.index > last) out.push(<Glyphs key={k++} text={s.slice(last, m.index)} />);
     const t = m[0];
-    out.push(t.startsWith("**") ? <b key={k++}>{t.slice(2, -2)}</b> : t.startsWith("`") ? <code key={k++}>{t.slice(1, -1)}</code> : <i key={k++}>{t.slice(1, -1)}</i>);
+    out.push(t.startsWith("**") ? <b key={k++}><Glyphs text={t.slice(2, -2)} /></b> : t.startsWith("`") ? <code key={k++}>{t.slice(1, -1)}</code> : <i key={k++}><Glyphs text={t.slice(1, -1)} /></i>);
     last = m.index + t.length;
   }
-  if (last < s.length) out.push(s.slice(last));
+  if (last < s.length) out.push(<Glyphs key={k++} text={s.slice(last)} />);
   return out;
 }
 export function Rich({ text }) {

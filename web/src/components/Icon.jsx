@@ -37,7 +37,7 @@ export const EMOJI = {
   "🔺": "triangle", "♦️": "diamond", "🔶": "diamond", "🩸": "droplet", "⏱": "timer", "⏱️": "timer", "🙈": "eye-off",
   "✋": "hand", "🖍️": "highlighter", "🧽": "eraser", "🔤": "type", "📝": "notebook-pen", "🗓️": "calendar-days",
   "💼": "briefcase", "🏠": "house", "🧪": "flask-conical", "📦": "package", "🎉": "party-popper", "❓": "circle-question-mark", "⏭": "skip-forward", "⏭️": "skip-forward",
-  "✔": "check", "📡": "radar", "🌡️": "thermometer", "🌡": "thermometer", "🎚️": "sliders-horizontal", "🎛️": "sliders-vertical", "⛵": "sailboat", "😨": "gauge", "😱": "gauge", "🛍️": "shopping-bag", "🛍": "shopping-bag", "🐟": "fish",
+  "✔": "check", "🌦️": "cloud-sun-rain", "🌦": "cloud-sun-rain", "🪨": "mountain", "🧭️": "compass", "🎣": "fish", "📡": "radar", "🌡️": "thermometer", "🌡": "thermometer", "🎚️": "sliders-horizontal", "🎛️": "sliders-vertical", "⛵": "sailboat", "😨": "gauge", "😱": "gauge", "🛍️": "shopping-bag", "🛍": "shopping-bag", "🐟": "fish",
   "🔷": "diamond", "〰️": "activity", "〰": "activity", "🏗️": "construction", "🚢": "ship", "🧊": "snowflake", "✔️": "check", "✖": "x", "✖️": "x", "➚": "arrow-up-right", "📶": "signal", "💹": "chart-line",
 };
 

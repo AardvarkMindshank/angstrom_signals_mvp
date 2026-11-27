@@ -222,8 +222,8 @@ function FunnelBar({ f, onPick }) {
           </div>
         ))}
       </div>
-      {f.line && <p className="m" style={{ margin: "6px 0 0" }}>{f.line}</p>}
-      {f.health && <p className="note bad">{f.health}</p>}
+      {f.line && <p className="m" style={{ margin: "6px 0 0" }}><Glyphs text={f.line} size={14} /></p>}
+      {f.health && <p className="note bad">{plain(f.health)}</p>}
     </div>
   );
 }

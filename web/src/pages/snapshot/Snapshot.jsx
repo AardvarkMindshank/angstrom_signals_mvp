@@ -5,7 +5,7 @@ import { SUPABASE_URL, CLASSIC } from "../../lib/supabase.js";
 import { saveSettings } from "../../lib/account.js";
 import { usd, signed, weekday } from "../../lib/format.js";
 import { assetHref, Logo } from "../../components/Search.jsx";
-import Icon, { Emo, Lead, plain } from "../../components/Icon.jsx";
+import Icon, { Arrow, Emo, Glyphs, Lead, plain } from "../../components/Icon.jsx";
 
 // 📸 Quick Snapshot: where a member starts the day. The daily video and the two spoken briefings, the Tides card, what
 // changed since the last visit, the two market moods, the highest and lowest Trend in your watchlist, your funnels and
@@ -199,7 +199,7 @@ function Tides({ card }) {
   return (
     <a className={"tidecard " + card.label} href="#tides" title={tip}>
       <div className="kick"><Icon n="waves-horizontal" size={16} /> {T("Tides")}</div>
-      <div className="tidehead"><span className="tarrow">{arrow}</span><div><div className="tname">{plain(card.name)}</div><div className="m">{card.plain}{card.held ? ` · ${card.held}` : ""}</div></div></div>
+      <div className="tidehead"><span className="tarrow"><Arrow a={arrow} size={26} /></span><div><div className="tname">{plain(card.name)}</div><div className="m">{card.plain}{card.held ? ` · ${card.held}` : ""}</div></div></div>
       {card.tiles.length > 0 && <div className="ttiles">{card.tiles.map((x) => <div key={x.k}><div className="m"><Lead text={x.k} size={14} /></div><b>{x.v}</b><div className="m">{x.sub}</div></div>)}</div>}
       {card.winds.map((w) => <div key={w.name} className="twind"><Emo e={w.icon} /> {plain(w.name)}: <b className={w.wind === "tailwind" ? "good" : w.wind === "headwind" ? "bad" : ""}>{w.word}</b>{w.drivers && <span className="m"> · {w.drivers}</span>}</div>)}
       {card.event && <div className="tevent"><span><Emo e={card.event.icon} /></span><span><b>{plain(card.event.name)}</b><span className="m"> · {card.event.when}</span></span></div>}
@@ -318,7 +318,7 @@ function Funnels({ tiles }) {
                 {f.gone.length > 0 && <span className="m" title={T("No longer Candidates since your last visit: {names}", { names: f.gone.join(", ") })}>－{T("{n} left", { n: f.gone.length })}</span>}
                 {!f.new.length && !f.gone.length && f.seen && <span className="m">{T("no change")}</span>}
               </div>
-              <div className="m" style={{ marginTop: 6 }}>{f.line}</div>
+              <div className="m" style={{ marginTop: 6 }}><Glyphs text={f.line} size={14} /></div>
               {open === f.id && f.candidate_keys.length > 0 && <div className="fcands">{f.candidate_keys.map((k, i) => <a key={k} className="tag" href={assetHref(k, "chart")}>{f.candidate_names[i]}</a>)}</div>}
             </div>
           ))}
