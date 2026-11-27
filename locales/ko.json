@@ -3083,5 +3083,8 @@
   "on the Tide's current reading": "현재 Tide 값에 대해",
   "Your own Tide score: −100 going out to +100 coming in": "내 Tide 점수: −100 썰물 ~ +100 밀물",
   "Your own Tide score": "내 Tide 점수",
-  "Add a short comment…": "짧은 댓글 추가…"
+  "Add a short comment…": "짧은 댓글 추가…",
+  "Market sentiment is shared by everyone and updated about every 12 hours.": "시장 심리는 모두에게 같으며 약 12시간마다 갱신됩니다.",
+  "This market's news hasn't been scored yet.": "이 시장의 뉴스는 아직 점수가 매겨지지 않았습니다.",
+  "Open {label} sentiment": "{label} 심리 열기"
 }

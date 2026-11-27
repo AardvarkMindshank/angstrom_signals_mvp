@@ -3083,5 +3083,8 @@
   "on the Tide's current reading": "sur la lecture actuelle de la Tide",
   "Your own Tide score: −100 going out to +100 coming in": "Votre propre score de Tide : −100 marée descendante à +100 marée montante",
   "Your own Tide score": "Votre propre score de Tide",
-  "Add a short comment…": "Ajouter un court commentaire…"
+  "Add a short comment…": "Ajouter un court commentaire…",
+  "Market sentiment is shared by everyone and updated about every 12 hours.": "Le sentiment du marché est le même pour tous et mis à jour environ toutes les 12 heures.",
+  "This market's news hasn't been scored yet.": "Les actualités de ce marché n'ont pas encore été notées.",
+  "Open {label} sentiment": "Ouvrir le sentiment {label}"
 }

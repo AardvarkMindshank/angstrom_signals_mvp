@@ -11,7 +11,8 @@ const ago = (iso) => {
 };
 
 // What members make of this asset's news mood: agree or disagree, short comments (kept 12 hours) and replies.
-export default function Community({ row, score }) {
+// `votes` (optional): {crowd(), vote(v)} for a take kept somewhere else, as the market moods are (market_mood_votes).
+export default function Community({ row, score, votes, about }) {
   const key = row.asset_key, at = row.sentiment_updated_at;
   const [c, setC] = useState(null);
   const [notes, setNotes] = useState(null);
@@ -19,7 +20,7 @@ export default function Community({ row, score }) {
   const [text, setText] = useState("");
   const [msg, setMsg] = useState("");
   const load = async () => {
-    const [cr, cs, rs] = await Promise.all([crowd(key), comments(key), replies()]);
+    const [cr, cs, rs] = await Promise.all([votes ? votes.crowd() : crowd(key), comments(key), replies()]);
     setC(cr);
     setNotes(cs.filter((n) => n.asset_key === key).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))));
     const by = {}; rs.forEach((r) => { (by[r.comment_id] = by[r.comment_id] || []).push(r); });
@@ -35,11 +36,11 @@ export default function Community({ row, score }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
       <section className="card">
         <h2>{T("Your take on the news mood")}</h2>
-        <p className="sub">{score == null ? T("The news for this asset hasn't been scored yet.") : T("MarketNavi's reading of the news: {mood} ({s}). Do you agree?", { mood: COVERAGE(score), s: signed(score) })}</p>
+        <p className="sub">{score == null ? (about || T("The news for this asset hasn't been scored yet.")) : T("MarketNavi's reading of the news: {mood} ({s}). Do you agree?", { mood: COVERAGE(score), s: signed(score) })}</p>
         {score != null && c && (
           <div className="bar">
-            <button type="button" className={"ghost" + (c.mine === 1 ? " on" : "")} aria-pressed={c.mine === 1} onClick={() => act(() => vote(key, at, c.mine === 1 ? 0 : 1))}>👍 {T("Agree")} · {c.up}</button>
-            <button type="button" className={"ghost" + (c.mine === -1 ? " on" : "")} aria-pressed={c.mine === -1} onClick={() => act(() => vote(key, at, c.mine === -1 ? 0 : -1))}>👎 {T("Disagree")} · {c.down}</button>
+            <button type="button" className={"ghost" + (c.mine === 1 ? " on" : "")} aria-pressed={c.mine === 1} onClick={() => act(() => (votes ? votes.vote(c.mine === 1 ? 0 : 1) : vote(key, at, c.mine === 1 ? 0 : 1)))}>👍 {T("Agree")} · {c.up}</button>
+            <button type="button" className={"ghost" + (c.mine === -1 ? " on" : "")} aria-pressed={c.mine === -1} onClick={() => act(() => (votes ? votes.vote(c.mine === -1 ? 0 : -1) : vote(key, at, c.mine === -1 ? 0 : -1)))}>👎 {T("Disagree")} · {c.down}</button>
           </div>
         )}
       </section>

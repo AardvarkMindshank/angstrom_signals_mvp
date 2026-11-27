@@ -250,14 +250,14 @@ function Change({ x }) {
 function Mood({ m }) {
   const c = m.crowd || {};
   return (
-    <section className="card mood">
+    <a className="card mood moodlink" href={`#mood/${m.key}`} title={T("Open {label} sentiment", { label: m.label })}>
       <div className="rowtitle">{m.label}</div>
       <div className="moodrow">
         <div className="moodfig"><div className={"big-num " + rtone(m.score)}>{m.score == null ? "—" : signed(m.score)}</div><div className={"m " + rtone(m.score)}>{m.score == null ? T("Not scored yet") : m.coverage}</div></div>
         {m.summary && <p className="moodtext">{m.summary}</p>}
       </div>
       {(c.up || c.down || c.alt_count) ? <div className="m" style={{ marginTop: 8 }} title={T("Members who agree and disagree with this reading")}>👍 {c.up || 0} · 👎 {c.down || 0}{c.alt_count ? ` · ${T("members' own score {s} ({n})", { s: signed(c.alt_avg), n: c.alt_count })}` : ""}</div> : null}
-    </section>
+    </a>
   );
 }
 

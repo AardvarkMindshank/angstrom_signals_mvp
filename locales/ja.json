@@ -3083,5 +3083,8 @@
   "on the Tide's current reading": "Tide の現在の読みについて",
   "Your own Tide score: −100 going out to +100 coming in": "あなた自身の Tide スコア：−100 引き潮〜+100 上げ潮",
   "Your own Tide score": "あなた自身の Tide スコア",
-  "Add a short comment…": "短いコメントを追加…"
+  "Add a short comment…": "短いコメントを追加…",
+  "Market sentiment is shared by everyone and updated about every 12 hours.": "市場センチメントは全員共通で、約12時間ごとに更新されます。",
+  "This market's news hasn't been scored yet.": "この市場のニュースはまだ採点されていません。",
+  "Open {label} sentiment": "{label}のセンチメントを開く"
 }

@@ -3083,5 +3083,8 @@
   "on the Tide's current reading": "关于 Tide 当前的读数",
   "Your own Tide score: −100 going out to +100 coming in": "你自己的 Tide 分数：−100 退潮到 +100 涨潮",
   "Your own Tide score": "你自己的 Tide 分数",
-  "Add a short comment…": "添加一条简短评论…"
+  "Add a short comment…": "添加一条简短评论…",
+  "Market sentiment is shared by everyone and updated about every 12 hours.": "市场情绪对所有人相同，大约每 12 小时更新一次。",
+  "This market's news hasn't been scored yet.": "这个市场的新闻还没有评分。",
+  "Open {label} sentiment": "打开{label}情绪"
 }

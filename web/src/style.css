@@ -699,3 +699,4 @@ table.t.sig th.c button { white-space: normal; text-align: center; }
 .tspark { display: block; width: 100%; height: 28px; margin-top: 4px; }
 @media (max-width: 860px) { .tnoterow { grid-template-columns: 1fr; gap: 22px; } .tchips { align-items: flex-start; } }
 @media (max-width: 640px) { .tbig { font-size: 24px; } .tevents, .tcur { margin-left: 0; clip-path: none; } .tev, .tc { border-left: 0; padding-left: 0; border-top: 1px solid var(--ang-border); padding-top: 10px; } }
+.moodlink { text-decoration: none; display: block; } .moodlink:hover .rowtitle { text-decoration: underline; }

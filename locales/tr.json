@@ -3083,5 +3083,8 @@
   "on the Tide's current reading": "Tide'ın şimdiki değeri hakkında",
   "Your own Tide score: −100 going out to +100 coming in": "Kendi Tide puanınız: −100 çekilen ile +100 yükselen",
   "Your own Tide score": "Kendi Tide puanınız",
-  "Add a short comment…": "Kısa bir yorum ekleyin…"
+  "Add a short comment…": "Kısa bir yorum ekleyin…",
+  "Market sentiment is shared by everyone and updated about every 12 hours.": "Piyasa duyarlılığı herkes için aynıdır ve yaklaşık 12 saatte bir güncellenir.",
+  "This market's news hasn't been scored yet.": "Bu piyasanın haberleri henüz puanlanmadı.",
+  "Open {label} sentiment": "{label} duyarlılığını aç"
 }

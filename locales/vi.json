@@ -3083,5 +3083,8 @@
   "on the Tide's current reading": "về chỉ số Tide hiện tại",
   "Your own Tide score: −100 going out to +100 coming in": "Điểm Tide của riêng bạn: −100 triều rút đến +100 triều lên",
   "Your own Tide score": "Điểm Tide của riêng bạn",
-  "Add a short comment…": "Thêm bình luận ngắn…"
+  "Add a short comment…": "Thêm bình luận ngắn…",
+  "Market sentiment is shared by everyone and updated about every 12 hours.": "Tâm lý thị trường giống nhau cho mọi người và cập nhật khoảng 12 giờ một lần.",
+  "This market's news hasn't been scored yet.": "Tin tức của thị trường này chưa được chấm điểm.",
+  "Open {label} sentiment": "Mở tâm lý {label}"
 }

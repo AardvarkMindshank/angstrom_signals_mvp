@@ -3083,5 +3083,8 @@
   "on the Tide's current reading": "ต่อค่า Tide ปัจจุบัน",
   "Your own Tide score: −100 going out to +100 coming in": "คะแนน Tide ของคุณเอง: −100 น้ำลง ถึง +100 น้ำขึ้น",
   "Your own Tide score": "คะแนน Tide ของคุณเอง",
-  "Add a short comment…": "เพิ่มความเห็นสั้นๆ…"
+  "Add a short comment…": "เพิ่มความเห็นสั้นๆ…",
+  "Market sentiment is shared by everyone and updated about every 12 hours.": "ความเชื่อมั่นของตลาดเหมือนกันสำหรับทุกคน และอัปเดตประมาณทุก 12 ชั่วโมง",
+  "This market's news hasn't been scored yet.": "ข่าวของตลาดนี้ยังไม่ได้ให้คะแนน",
+  "Open {label} sentiment": "เปิดความเชื่อมั่นของ {label}"
 }
