@@ -2698,5 +2698,7 @@
   "All platforms": "Tüm platformlar",
   "Your plan shows the last year. Pro and Elite show your whole history.": "Planınız son bir yılı gösterir. Pro ve Elite tüm geçmişinizi gösterir.",
   "Your closed trades, newest first. Pick a trade to see its chart, what MarketNavi read at entry and exit, and your note.": "Kapanan işlemleriniz, en yeniler önce. Grafiğini, MarketNavi'nin giriş ve çıkıştaki okumasını ve notunuzu görmek için bir işlem seçin.",
-  "Open the new Trade Log (beta)": "Yeni Trade Log'u aç (beta)"
+  "Open the new Trade Log (beta)": "Yeni Trade Log'u aç (beta)",
+  "By platform": "Platforma göre",
+  "Overnight credits: {v}": "Gecelik alacaklar: {v}"
 }

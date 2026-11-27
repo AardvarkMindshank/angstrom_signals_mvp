@@ -2698,5 +2698,7 @@
   "All platforms": "ทุกแพลตฟอร์ม",
   "Your plan shows the last year. Pro and Elite show your whole history.": "แผนของคุณแสดงข้อมูลปีล่าสุด Pro และ Elite แสดงประวัติทั้งหมดของคุณ",
   "Your closed trades, newest first. Pick a trade to see its chart, what MarketNavi read at entry and exit, and your note.": "เทรดที่ปิดแล้วของคุณ ล่าสุดอยู่ก่อน เลือกเทรดเพื่อดูกราฟ สิ่งที่ MarketNavi อ่านได้ตอนเข้าและออก และโน้ตของคุณ",
-  "Open the new Trade Log (beta)": "เปิด Trade Log ใหม่ (เบต้า)"
+  "Open the new Trade Log (beta)": "เปิด Trade Log ใหม่ (เบต้า)",
+  "By platform": "ตามแพลตฟอร์ม",
+  "Overnight credits: {v}": "เครดิตข้ามคืน: {v}"
 }

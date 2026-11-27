@@ -2698,5 +2698,7 @@
   "All platforms": "すべてのプラットフォーム",
   "Your plan shows the last year. Pro and Elite show your whole history.": "ご利用のプランでは直近 1 年を表示します。Pro と Elite では全履歴を表示します。",
   "Your closed trades, newest first. Pick a trade to see its chart, what MarketNavi read at entry and exit, and your note.": "決済済みのトレードを新しい順に表示します。トレードを選ぶと、チャート、エントリー時とエグジット時の MarketNavi の読み取り、メモが見られます。",
-  "Open the new Trade Log (beta)": "新しい Trade Log を開く（ベータ）"
+  "Open the new Trade Log (beta)": "新しい Trade Log を開く（ベータ）",
+  "By platform": "プラットフォーム別",
+  "Overnight credits: {v}": "オーバーナイトの受取：{v}"
 }

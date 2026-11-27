@@ -2698,5 +2698,7 @@
   "All platforms": "Tất cả nền tảng",
   "Your plan shows the last year. Pro and Elite show your whole history.": "Gói của bạn hiển thị năm gần nhất. Pro và Elite hiển thị toàn bộ lịch sử của bạn.",
   "Your closed trades, newest first. Pick a trade to see its chart, what MarketNavi read at entry and exit, and your note.": "Các giao dịch đã đóng của bạn, mới nhất trước. Chọn một giao dịch để xem biểu đồ, những gì MarketNavi đọc được lúc vào và ra lệnh, và ghi chú của bạn.",
-  "Open the new Trade Log (beta)": "Mở Trade Log mới (beta)"
+  "Open the new Trade Log (beta)": "Mở Trade Log mới (beta)",
+  "By platform": "Theo nền tảng",
+  "Overnight credits: {v}": "Tiền nhận qua đêm: {v}"
 }

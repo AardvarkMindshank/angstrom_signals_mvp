@@ -129,7 +129,7 @@ export default function TradeLog({ account }) {
           ))}
         </nav>
       )}
-      {d && tab === "perf" && <Performance d={d} whose={whose} />}
+      {d && tab === "perf" && <Performance d={d} whose={whose} names={label} />}
       {d && tab === "edge" && <Edge d={d} />}
       {d && tab === "risk" && <Risk d={d} />}
       {d && tab === "behav" && <><Behaviour d={d} /><Review account={account} classes={classes} /></>}
@@ -159,7 +159,7 @@ function Scorecard({ d }) {
   if (!a) return null;
   const b = a.bench || {};
   return (
-    <section className="tiles" aria-label={T("Scorecard")}>
+    <section className="tiles hero" aria-label={T("Scorecard")}>
       <Tile label={T("Total return")} value={pct(a.total_pct)} cls={tone(a.total_pct)} sub={T("since {when}", { when: monthYear(a.from) })}
         tip={T("eToro's own daily return for your whole account, chained together. Money paid in or taken out doesn't move it.")} />
       <Tile label={T("Yearly average")} value={pct(a.yearly_pct, 1)} cls={tone(a.yearly_pct)} sub={T("compounded")}
@@ -185,11 +185,11 @@ function ClosedRow({ d, whose }) {
   return (
     <section aria-label={title}>
       <div className="rowtitle">{title}</div>
-      <div className="tiles">
+      <div className="tiles closed">
         <Tile label={T("Result")} value={money(c.net)} cls={tone(c.net)} sub={T("{n} closed trades", { n: c.trades.toLocaleString() })} />
         <Tile label={T("Win rate")} value={pct(c.win_rate, 0, false)} sub={T("{w} wins, {l} losses", { w: c.wins.toLocaleString(), l: c.losses.toLocaleString() })} />
         <Tile label={T("Profit factor")} value={c.profit_factor == null ? "—" : c.profit_factor.toFixed(2)} sub={T("Gross wins divided by gross losses.")} />
-        <Tile label={T("Average trade")} value={money(c.average)} cls={tone(c.average)} sub={T("Fees: {v}", { v: money(c.fees, false) })} />
+        <Tile label={T("Average trade")} value={money(c.average)} cls={tone(c.average)} sub={c.fees < 0 ? T("Overnight credits: {v}", { v: money(-c.fees, false) }) : T("Fees: {v}", { v: money(c.fees, false) })} />
         {r && r.count > 0 && whose !== "copied" && (
           <Tile label={T("Staking rewards")} value={money(r.credited + r.result, false)} sub={T("{n} rewards and airdrops, not counted as trades", { n: r.count.toLocaleString() })}
             tip={T("eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.")} />

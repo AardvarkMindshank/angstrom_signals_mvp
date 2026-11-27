@@ -442,6 +442,21 @@ def _whose(trips: list[dict], whose: str) -> list[dict]:
     return trips if whose == "all" else [t for t in trips if bool(t.get("copied")) == (whose == "copied")]
 
 
+def platforms(trips: list[dict]) -> list[dict]:
+    """Each connection's closed trades side by side, when the trades come from more than one."""
+    by: dict = {}
+    for t in trips:
+        by.setdefault(t.get("connection_id"), []).append(t)
+    if len(by) < 2:
+        return []
+    out = []
+    for cid, ts in by.items():
+        s = closed_stats(ts)
+        out.append({"id": cid, "trades": s["trades"], "net": s["net"], "win_rate": s["win_rate"],
+                    "average": s["average"], "profit_factor": s["profit_factor"]})
+    return sorted(out, key=lambda x: -x["trades"])
+
+
 def build(trips: list[dict], snaps: dict, opened: list[dict], conns: list[dict], series: dict, regimes: dict,
           whose: str, period: str, today: date) -> dict:
     days = PERIODS[period]
@@ -465,6 +480,7 @@ def build(trips: list[dict], snaps: dict, opened: list[dict], conns: list[dict],
         "habits": habits(own),
         "allocation": allocation(series.get("allocation") or [], start),
         "open": open_now(_whose(opened, whose), conns, regimes),
+        "platforms": platforms(chosen),
         "rewards": {"count": len(rewards),
                     "credited": _r(sum(_num(t.get("invested_usd")) or 0 for t in rewards)),
                     "result": _r(sum(_num(t.get("net_result_usd")) or 0 for t in rewards))},

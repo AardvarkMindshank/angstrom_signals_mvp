@@ -1,6 +1,6 @@
 import React from "react";
 import { T } from "../../lib/i18n.js";
-import { money, pct } from "../../lib/format.js";
+import { money, pct, monthYear } from "../../lib/format.js";
 import { LABEL } from "./Edge.jsx";
 
 function text(h) {
@@ -63,14 +63,14 @@ export default function Behaviour({ d }) {
           <p className="sub">{T("Share of the account by asset at the end of each month, from eToro's allocation history (it keeps about three years). Grey is everything else; the lightest is cash.")}</p>
           <div className="alloc">
             {al.months.map((m) => (
-              <div key={m.month} title={`${m.month}: ` + m.parts.map((p) => `${p.name} ${pct(p.pct, 0, false)}`).join(", ") + `, ${T("cash")} ${pct(m.cash, 0, false)}`}>
+              <div key={m.month} title={`${monthYear(m.month + "-01")}: ` + m.parts.map((p) => `${p.name} ${pct(p.pct, 0, false)}`).join(", ") + `, ${T("cash")} ${pct(m.cash, 0, false)}`}>
                 <div style={{ height: m.cash + "%", background: "var(--ang-track)" }} />
                 <div style={{ height: m.other + "%", background: "#c9cfd8" }} />
                 {[...m.parts].reverse().map((p, i) => <div key={p.name} style={{ height: p.pct + "%", background: PALETTE[m.parts.length - 1 - i] }} />)}
               </div>
             ))}
           </div>
-          <div className="axis"><span>{al.months[0].month}</span><span>{al.months[al.months.length - 1].month}</span></div>
+          <div className="axis"><span>{monthYear(al.months[0].month + "-01")}</span><span>{monthYear(al.months[al.months.length - 1].month + "-01")}</span></div>
           <div className="keys">
             {al.names.map((n, i) => <span key={n}><i style={{ background: PALETTE[i] }} />{n}</span>)}
             <span><i style={{ background: "#c9cfd8" }} />{T("Other assets")}</span>

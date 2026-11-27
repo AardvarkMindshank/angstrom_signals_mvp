@@ -45,7 +45,7 @@ export default function Trades({ scope, whose, since, hideRewards }) {
         <div className="scroll">
           <table className="t pick">
             <thead><tr>
-              <th>{T("Closed")}</th><th>{T("Asset")}</th><th>{T("Direction")}</th><th className="r">{T("Held (days)")}</th><th className="r">{T("Result")}</th><th className="r">%</th><th className="r">R</th>
+              <th>{T("Closed")}</th><th>{T("Asset")}</th>{cls === null && <th>{T("Class")}</th>}<th>{T("Direction")}</th><th className="r">{T("Held (days)")}</th><th className="r">{T("Result")}</th><th className="r">%</th><th className="r">R</th>
               <th>{T("Ended by")}</th><th className="r">{T("Kept of best move")}</th><th>{T("Market at entry")}</th>
             </tr></thead>
             <tbody>
@@ -58,6 +58,7 @@ export default function Trades({ scope, whose, since, hideRewards }) {
                     onKeyDown={(e) => { if (e.key === "Enter") setOpen(open === r.id ? null : r.id); }}>
                     <td className="m">{dayMonthYear(r.closed_at)}</td>
                     <td className="b">{r.name || r.symbol}{r.copied ? <span className="m" style={{ fontWeight: 400 }}> · {T("Copied")}</span> : null}</td>
+                    {cls === null && <td className="m">{L[r.asset_class] || "—"}</td>}
                     <td>{r.direction === "short" ? T("Sell") : T("Buy")}</td>
                     <td className="r m">{held < 10 ? held.toFixed(1) : Math.round(held)}</td>
                     <td className={"r b " + (r.net_result_usd >= 0 ? "good" : "bad")}>{money(r.net_result_usd)}</td>
@@ -67,7 +68,7 @@ export default function Trades({ scope, whose, since, hideRewards }) {
                     <td className="r">{r.kept_pct == null ? "—" : Math.round(r.kept_pct) + "%"}</td>
                     <td>{s ? <span className={"pill " + s}>{st[s]}</span> : <span className="m">—</span>}</td>
                   </tr>
-                  {open === r.id && <tr className="detail"><td colSpan={10}><TradeCard trip={r} onClose={() => setOpen(null)} /></td></tr>}
+                  {open === r.id && <tr className="detail"><td colSpan={cls === null ? 11 : 10}><TradeCard trip={r} onClose={() => setOpen(null)} /></td></tr>}
                   </React.Fragment>
                 );
               })}

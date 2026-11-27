@@ -2698,5 +2698,7 @@
   "All platforms": "모든 플랫폼",
   "Your plan shows the last year. Pro and Elite show your whole history.": "현재 요금제는 최근 1년을 보여 줍니다. Pro와 Elite는 전체 기록을 보여 줍니다.",
   "Your closed trades, newest first. Pick a trade to see its chart, what MarketNavi read at entry and exit, and your note.": "청산된 거래를 최신순으로 보여 줍니다. 거래를 선택하면 차트, 진입과 청산 시점의 MarketNavi 판독, 메모를 볼 수 있습니다.",
-  "Open the new Trade Log (beta)": "새 Trade Log 열기(베타)"
+  "Open the new Trade Log (beta)": "새 Trade Log 열기(베타)",
+  "By platform": "플랫폼별",
+  "Overnight credits: {v}": "오버나이트 입금: {v}"
 }

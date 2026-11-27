@@ -2698,5 +2698,7 @@
   "All platforms": "所有平台",
   "Your plan shows the last year. Pro and Elite show your whole history.": "您的方案显示最近一年。Pro 和 Elite 显示您的全部历史。",
   "Your closed trades, newest first. Pick a trade to see its chart, what MarketNavi read at entry and exit, and your note.": "您已平仓的交易，最新的在前。选择一笔交易可查看其图表、MarketNavi 在开仓和平仓时的读数以及您的备注。",
-  "Open the new Trade Log (beta)": "打开新版 Trade Log（测试版）"
+  "Open the new Trade Log (beta)": "打开新版 Trade Log（测试版）",
+  "By platform": "按平台",
+  "Overnight credits: {v}": "隔夜贷记：{v}"
 }

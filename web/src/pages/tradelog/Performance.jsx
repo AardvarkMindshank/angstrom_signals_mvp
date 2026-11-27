@@ -108,7 +108,27 @@ function Compare({ c }) {
   );
 }
 
-export default function Performance({ d, whose }) {
+function Platforms({ rows, names }) {
+  return (
+    <section className="card">
+      <h2>{T("By platform")}</h2>
+      <p className="sub">{T("Closed trades in this period, side by side.")}</p>
+      <div className="scroll">
+        <table className="t" style={{ minWidth: 520 }}>
+          <thead><tr><th>{T("Platform")}</th><th className="r">{T("Trades")}</th><th className="r">{T("Win rate")}</th>
+            <th className="r">{T("Net result")}</th><th className="r">{T("Average trade")}</th><th className="r">{T("Profit factor")}</th></tr></thead>
+          <tbody>{rows.map((p) => (
+            <tr key={p.id}><td className="b">{names[p.id] || "—"}</td><td className="r">{p.trades.toLocaleString()}</td>
+              <td className="r">{pct(p.win_rate, 0, false)}</td><td className={"r b " + tone(p.net)}>{money(p.net)}</td>
+              <td className={"r " + tone(p.average)}>{money(p.average)}</td><td className="r">{p.profit_factor == null ? "—" : p.profit_factor.toFixed(2)}</td></tr>
+          ))}</tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+export default function Performance({ d, whose, names }) {
   const a = d.account;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -147,6 +167,7 @@ export default function Performance({ d, whose }) {
           <Compare c={d.compare} />
         </section>
       </div>
+      {(d.platforms || []).length > 1 && <Platforms rows={d.platforms} names={names || {}} />}
     </div>
   );
 }

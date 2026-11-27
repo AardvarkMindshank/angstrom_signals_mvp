@@ -2698,5 +2698,7 @@
   "All platforms": "Todas las plataformas",
   "Your plan shows the last year. Pro and Elite show your whole history.": "Tu plan muestra el último año. Pro y Elite muestran todo tu historial.",
   "Your closed trades, newest first. Pick a trade to see its chart, what MarketNavi read at entry and exit, and your note.": "Tus trades cerrados, los más recientes primero. Elige un trade para ver su gráfico, lo que MarketNavi leía a la entrada y a la salida, y tu nota.",
-  "Open the new Trade Log (beta)": "Abrir el nuevo Trade Log (beta)"
+  "Open the new Trade Log (beta)": "Abrir el nuevo Trade Log (beta)",
+  "By platform": "Por plataforma",
+  "Overnight credits: {v}": "Abonos nocturnos: {v}"
 }

@@ -2698,5 +2698,7 @@
   "All platforms": "Semua platform",
   "Your plan shows the last year. Pro and Elite show your whole history.": "Paket Anda menampilkan satu tahun terakhir. Pro dan Elite menampilkan seluruh riwayat Anda.",
   "Your closed trades, newest first. Pick a trade to see its chart, what MarketNavi read at entry and exit, and your note.": "Trade Anda yang sudah ditutup, terbaru lebih dulu. Pilih trade untuk melihat grafiknya, bacaan MarketNavi saat masuk dan keluar, serta catatan Anda.",
-  "Open the new Trade Log (beta)": "Buka Trade Log baru (beta)"
+  "Open the new Trade Log (beta)": "Buka Trade Log baru (beta)",
+  "By platform": "Per platform",
+  "Overnight credits: {v}": "Kredit menginap: {v}"
 }
