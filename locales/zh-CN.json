@@ -3039,7 +3039,6 @@
   "Highest": "最高",
   "Lowest": "最低",
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "还没有：漏斗会自动分阶段筛选市场，得出一份简短的候选名单。",
-  "Make one in the classic app ›": "在经典版中创建 ›",
   "No Candidates right now.": "目前没有候选。",
   "Markets": "市场",
   "Signals": "信号",
@@ -3181,5 +3180,11 @@
   "Alerts go": "提醒发送方式",
   "Past the line now": "当前越线",
   "Visualize History": "Visualize History",
-  "Older years are being filled in.": "正在补充更早的年份。"
+  "Older years are being filled in.": "正在补充更早的年份。",
+  "That funnel no longer exists.": "该漏斗已不存在。",
+  "Funnels aren't reachable just now. Please try again in a minute.": "暂时无法连接漏斗，请稍后再试。",
+  "Make one in Lattice ›": "在 Lattice 中创建 ›",
+  "can't be changed or deleted": "不能修改或删除",
+  "You already have an unchanged copy: {name}.": "您已有一个未修改的副本：{name}。",
+  "If you save:": "如果保存："
 }

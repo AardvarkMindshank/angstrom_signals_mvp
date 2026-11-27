@@ -13,6 +13,7 @@ sys.path.insert(0, ROOT)
 import i18n  # noqa: E402
 import lattice_component as lc  # noqa: E402
 import prism_component as pc  # noqa: E402
+import funnel_stages_component as fsc  # noqa: E402
 
 OUT = os.path.join(ROOT, "web", "src", "generated")
 os.makedirs(OUT, exist_ok=True)
@@ -29,4 +30,5 @@ def write(name: str, js: str, css: str, src: str) -> None:
 write("lattice_group", lc.JS, lc.CSS, "lattice_component.py (JS)")
 write("lattice_set", lc.SET_JS, lc.CSS, "lattice_component.py (SET_JS)")
 write("prism_board", pc.JS, pc.CSS, "prism_component.py (JS)")
+write("funnel_stages", fsc.JS, fsc.CSS, "funnel_stages_component.py (JS)")
 print("components written")

@@ -10,6 +10,7 @@ import ClassicComponent from "../../components/ClassicComponent.jsx";
 import latticeGroup, { css as groupCss } from "../../generated/lattice_group.js";
 import latticeSet, { css as setCss } from "../../generated/lattice_set.js";
 import Prism from "./Prism.jsx";
+import Funnels from "./Funnels.jsx";
 
 // 🧩 Lattice, the research workspace: Signal Groups (signals combined into one reading with labels) and Signal Sets
 // (Groups and signals connected into a Yes / No decision). The editors are the classic app's own (hosted by
@@ -37,6 +38,7 @@ export default function Lattice({ section, start }) {
       </div>
       {sec === "groups" || sec === "sets" ? <Editor key={sec + (start || "")} kind={sec === "groups" ? "group" : "set"} start={start} />
         : sec === "prism" ? <Prism />
+        : sec === "funnels" ? <Funnels />
         : <section className="card" style={{ marginTop: 16 }}><p className="sub" style={{ margin: 0 }}>{T("This part of Lattice is still in the classic app while it moves across.")} <a className="linkish" href={CLASSIC} target="_blank" rel="noreferrer">{T("Open the classic app")} ↗</a></p></section>}
     </div>
   );

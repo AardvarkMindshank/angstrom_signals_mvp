@@ -6,6 +6,7 @@ because they need the Python engine or the AI keys. It runs the same code as the
     POST /sonar                     the Sonar strip for the candles the chart is showing
     GET  /chart/options?key=…       what the Pro chart can offer for one asset (indicators, Sonar markers, Sets)
     GET  /snapshot?lang=…&save=…    Quick Snapshot: Tides card, what changed, Trend extremes, moods, funnels, markets
+    GET  /funnels/list, POST /funnels/…   the funnel editor: open, screen, apply, provided, save, delete
     POST /prism/board, /prism/action   the Prism Scan board and each press on it
     GET  /lattice/…, POST /lattice/…  the Signal Group and Set editors: open, check, save, try, search, study
     GET  /tides?range=…             the Tides page: the sea drawing, the note, storm warnings, the waves and the currents
@@ -343,6 +344,51 @@ def prism_action(ask: PrismAct, who: Member = Depends(member)):
     from service import prism_page
 
     return prism_page.action(who.db, who.id, ask.lang, ask.action)
+
+
+# ---- 🔻 The funnel editor -----------------------------------------------------------------------------------------------
+
+class FunnelAsk(BaseModel):
+    key: str | None = Field(None, max_length=80)
+    funnel: dict | None = None
+    saved: dict | None = None
+    scope: str = Field("", max_length=120)
+    action: dict | None = None
+    kind: str = Field("trend", max_length=10)
+    market: str = Field("crypto", max_length=10)
+    direction: str = Field("long", max_length=10)
+    id: str | None = Field(None, max_length=60)
+    lang: str = Field("en", max_length=8)
+
+
+@app.get("/funnels/list")
+def funnels_list(lang: str = Query("en", max_length=8), who: Member = Depends(member)):
+    from service import funnels_page as fp
+
+    return fp.listing(who.db, who.id, lang)
+
+
+@app.post("/funnels/{step}")
+def funnels_step(step: str, ask: FunnelAsk, who: Member = Depends(member)):
+    """open (your funnel as the working copy), screen (its board, checks and what a save changes), apply (one change),
+    provided (a provided funnel, read-only), save, delete."""
+    from service import funnels_page as fp
+
+    if step == "open":
+        return fp.open_funnel(who.db, who.id, ask.key or "", ask.lang)
+    if step in ("screen", "apply", "save") and not (ask.funnel and isinstance(ask.funnel.get("stages"), list)):
+        raise HTTPException(400, "A funnel is needed.")
+    if step == "screen":
+        return fp.screen(who.db, who.id, ask.funnel, ask.saved, ask.scope, ask.lang)
+    if step == "apply":
+        return fp.apply(who.db, who.id, ask.funnel, ask.action or {}, ask.lang)
+    if step == "provided":
+        return fp.provided(who.db, who.id, ask.kind, ask.market, ask.direction, ask.lang)
+    if step == "save":
+        return fp.save(who.db, who.id, ask.funnel, ask.lang)
+    if step == "delete":
+        return fp.delete(who.db, who.id, ask.id or "", ask.lang)
+    raise HTTPException(404, "Unknown step.")
 
 
 # ---- 🌊 Tides ----------------------------------------------------------------------------------------------------------

@@ -3039,7 +3039,6 @@
   "Highest": "Más alto",
   "Lowest": "Más bajo",
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Ninguno aún: un embudo reduce el mercado por etapas, por sí solo, a una lista corta de Candidatos.",
-  "Make one in the classic app ›": "Crear uno en la app clásica ›",
   "No Candidates right now.": "No hay Candidatos ahora mismo.",
   "Markets": "Mercados",
   "Signals": "Señales",
@@ -3181,5 +3180,11 @@
   "Alerts go": "Las alertas van",
   "Past the line now": "Pasado la línea ahora",
   "Visualize History": "Visualize History",
-  "Older years are being filled in.": "Se están completando los años anteriores."
+  "Older years are being filled in.": "Se están completando los años anteriores.",
+  "That funnel no longer exists.": "Ese embudo ya no existe.",
+  "Funnels aren't reachable just now. Please try again in a minute.": "Los embudos no están disponibles ahora. Inténtalo de nuevo en un minuto.",
+  "Make one in Lattice ›": "Crea uno en Lattice ›",
+  "can't be changed or deleted": "no se puede cambiar ni eliminar",
+  "You already have an unchanged copy: {name}.": "Ya tienes una copia sin cambios: {name}.",
+  "If you save:": "Si guardas:"
 }

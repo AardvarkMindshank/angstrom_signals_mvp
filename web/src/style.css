@@ -827,3 +827,18 @@ button .ic, a .ic { vertical-align: -0.2em; }
 .histbar label.m { display: inline-flex; gap: 8px; align-items: center; }
 .histbar select { min-height: 36px; border-radius: 10px; border: 1px solid var(--ang-border); background: var(--ang-field); color: var(--ang-text); padding: 6px 10px; font: inherit; }
 .histchart { margin: 8px 0; min-height: 40px; }
+
+/* 🔻 Funnel editor */
+.funrow { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0 12px; }
+.fungrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 24px; margin: 14px 0; }
+.funfield { display: flex; flex-direction: column; gap: 6px; }
+.funfield input[type=text] { min-height: 38px; border-radius: 10px; border: 1px solid var(--ang-border); background: var(--ang-field); color: var(--ang-text); padding: 6px 10px; font: inherit; }
+.funchecks { margin: 12px 0 4px; }
+.classic.funboard { margin: 8px 0; }
+.classic .lat.fun .stage { background: var(--ang-surface); border-color: var(--ang-border); }
+.classic .lat.fun .stage.sel { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+.classic .lat.fun .stage.over, .classic .lat.fun .addstage.over { border-color: var(--gold); background: rgba(198,148,32,.08); }
+.classic .lat.fun .pool { background: var(--ang-field); border-color: var(--ang-border); }
+.classic .lat.fun .pool input[type=checkbox] { accent-color: var(--gold); }
+.classic .lat.fun .spout { background: var(--good-bg); }
+@media (max-width: 760px) { .fungrid { grid-template-columns: 1fr; } }

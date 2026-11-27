@@ -3039,7 +3039,6 @@
   "Highest": "최고",
   "Lowest": "최저",
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "아직 없습니다: 퍼널은 시장을 단계별로 자동으로 좁혀 짧은 후보 목록을 만듭니다.",
-  "Make one in the classic app ›": "클래식 앱에서 만들기 ›",
   "No Candidates right now.": "현재 후보가 없습니다.",
   "Markets": "시장",
   "Signals": "시그널",
@@ -3181,5 +3180,11 @@
   "Alerts go": "알림 방식",
   "Past the line now": "지금 선을 넘음",
   "Visualize History": "Visualize History",
-  "Older years are being filled in.": "이전 연도를 채우는 중입니다."
+  "Older years are being filled in.": "이전 연도를 채우는 중입니다.",
+  "That funnel no longer exists.": "그 퍼널은 더 이상 없습니다.",
+  "Funnels aren't reachable just now. Please try again in a minute.": "지금은 퍼널에 연결할 수 없습니다. 잠시 후 다시 시도하세요.",
+  "Make one in Lattice ›": "Lattice에서 만들기 ›",
+  "can't be changed or deleted": "바꾸거나 삭제할 수 없음",
+  "You already have an unchanged copy: {name}.": "이미 바꾸지 않은 사본이 있습니다: {name}.",
+  "If you save:": "저장하면:"
 }

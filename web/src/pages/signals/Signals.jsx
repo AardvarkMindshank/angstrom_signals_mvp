@@ -205,7 +205,7 @@ function SetCell({ r, s }) {
 }
 
 function FunnelBar({ f, onPick }) {
-  if (!f.funnels.length) return <p className="sub">{T("You have no funnels in this market yet.")}</p>;
+  if (!f.funnels.length) return <p className="sub">{T("You have no funnels in this market yet.")} <a className="linkish" href="#lattice/funnels">{T("Make one in Lattice ›")}</a></p>;
   return (
     <div className="funnelbar">
       <div className="fpick">

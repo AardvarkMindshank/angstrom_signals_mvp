@@ -3039,7 +3039,6 @@
   "Highest": "Tertinggi",
   "Lowest": "Terendah",
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Belum ada: corong menyaring pasar secara bertahap dengan sendirinya menjadi daftar Kandidat yang pendek.",
-  "Make one in the classic app ›": "Buat di aplikasi klasik ›",
   "No Candidates right now.": "Saat ini tidak ada Kandidat.",
   "Markets": "Pasar",
   "Signals": "Sinyal",
@@ -3181,5 +3180,11 @@
   "Alerts go": "Peringatan dikirim",
   "Past the line now": "Melewati garis sekarang",
   "Visualize History": "Visualize History",
-  "Older years are being filled in.": "Tahun-tahun lama sedang dilengkapi."
+  "Older years are being filled in.": "Tahun-tahun lama sedang dilengkapi.",
+  "That funnel no longer exists.": "Corong itu sudah tidak ada.",
+  "Funnels aren't reachable just now. Please try again in a minute.": "Corong sedang tidak dapat dijangkau. Coba lagi sebentar lagi.",
+  "Make one in Lattice ›": "Buat di Lattice ›",
+  "can't be changed or deleted": "tidak dapat diubah atau dihapus",
+  "You already have an unchanged copy: {name}.": "Anda sudah punya salinan yang belum diubah: {name}.",
+  "If you save:": "Jika Anda menyimpan:"
 }

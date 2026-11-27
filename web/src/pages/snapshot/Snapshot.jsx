@@ -304,7 +304,7 @@ function Funnels({ tiles }) {
   return (
     <section className="card">
       <h2><Icon n="funnel" /> {T("🔻 Your funnels")}</h2>
-      {!tiles.length ? <p className="sub">{T("None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.")} <a className="linkish" href={CLASSIC}>{T("Make one in the classic app ›")}</a></p> : (
+      {!tiles.length ? <p className="sub">{T("None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.")} <a className="linkish" href="#lattice/funnels">{T("Make one in Lattice ›")}</a></p> : (
         <div className="ftiles">
           {tiles.map((f) => (
             <div key={f.id} className="ftile">

@@ -3039,7 +3039,6 @@
   "Highest": "Höchster",
   "Lowest": "Niedrigster",
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Noch keine: Ein Funnel grenzt den Markt selbstständig in Stufen auf eine kurze Liste von Kandidaten ein.",
-  "Make one in the classic app ›": "In der klassischen App anlegen ›",
   "No Candidates right now.": "Derzeit keine Kandidaten.",
   "Markets": "Märkte",
   "Signals": "Signale",
@@ -3181,5 +3180,11 @@
   "Alerts go": "Alarme gehen",
   "Past the line now": "Jetzt über der Linie",
   "Visualize History": "Visualize History",
-  "Older years are being filled in.": "Ältere Jahre werden ergänzt."
+  "Older years are being filled in.": "Ältere Jahre werden ergänzt.",
+  "That funnel no longer exists.": "Diesen Funnel gibt es nicht mehr.",
+  "Funnels aren't reachable just now. Please try again in a minute.": "Die Funnels sind gerade nicht erreichbar. Bitte versuche es in einer Minute erneut.",
+  "Make one in Lattice ›": "In Lattice einen erstellen ›",
+  "can't be changed or deleted": "kann nicht geändert oder gelöscht werden",
+  "You already have an unchanged copy: {name}.": "Du hast bereits eine unveränderte Kopie: {name}.",
+  "If you save:": "Wenn du speicherst:"
 }

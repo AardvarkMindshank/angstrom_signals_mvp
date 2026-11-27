@@ -3039,7 +3039,6 @@
   "Highest": "Plus haut",
   "Lowest": "Plus bas",
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Aucun pour l'instant : un entonnoir réduit le marché par étapes, tout seul, à une courte liste de Candidats.",
-  "Make one in the classic app ›": "En créer un dans l'application classique ›",
   "No Candidates right now.": "Aucun Candidat pour l'instant.",
   "Markets": "Marchés",
   "Signals": "Signaux",
@@ -3181,5 +3180,11 @@
   "Alerts go": "Les alertes vont",
   "Past the line now": "Au-delà de la ligne",
   "Visualize History": "Visualize History",
-  "Older years are being filled in.": "Les années plus anciennes sont en cours de remplissage."
+  "Older years are being filled in.": "Les années plus anciennes sont en cours de remplissage.",
+  "That funnel no longer exists.": "Cet entonnoir n'existe plus.",
+  "Funnels aren't reachable just now. Please try again in a minute.": "Les entonnoirs ne sont pas joignables pour l'instant. Réessayez dans une minute.",
+  "Make one in Lattice ›": "En créer un dans Lattice ›",
+  "can't be changed or deleted": "ne peut être ni modifié ni supprimé",
+  "You already have an unchanged copy: {name}.": "Vous avez déjà une copie non modifiée : {name}.",
+  "If you save:": "Si vous enregistrez :"
 }

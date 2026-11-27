@@ -3039,7 +3039,6 @@
   "Highest": "Cao nhất",
   "Lowest": "Thấp nhất",
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Chưa có: phễu tự lọc thị trường theo từng giai đoạn thành danh sách Ứng viên ngắn.",
-  "Make one in the classic app ›": "Tạo trong ứng dụng cổ điển ›",
   "No Candidates right now.": "Hiện không có Ứng viên.",
   "Markets": "Thị trường",
   "Signals": "Tín hiệu",
@@ -3181,5 +3180,11 @@
   "Alerts go": "Cảnh báo gửi",
   "Past the line now": "Đang vượt ngưỡng",
   "Visualize History": "Visualize History",
-  "Older years are being filled in.": "Các năm cũ hơn đang được bổ sung."
+  "Older years are being filled in.": "Các năm cũ hơn đang được bổ sung.",
+  "That funnel no longer exists.": "Phễu đó không còn nữa.",
+  "Funnels aren't reachable just now. Please try again in a minute.": "Hiện không kết nối được phễu. Vui lòng thử lại sau một phút.",
+  "Make one in Lattice ›": "Tạo một phễu trong Lattice ›",
+  "can't be changed or deleted": "không thể thay đổi hay xóa",
+  "You already have an unchanged copy: {name}.": "Bạn đã có một bản sao chưa thay đổi: {name}.",
+  "If you save:": "Nếu bạn lưu:"
 }

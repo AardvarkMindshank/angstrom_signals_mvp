@@ -3039,7 +3039,6 @@
   "Highest": "最高",
   "Lowest": "最低",
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "まだありません：ファネルは市場を段階的に自動で絞り込み、短い候補リストにします。",
-  "Make one in the classic app ›": "クラシック版で作成 ›",
   "No Candidates right now.": "現在、候補はありません。",
   "Markets": "マーケット",
   "Signals": "シグナル",
@@ -3181,5 +3180,11 @@
   "Alerts go": "アラートの送り先",
   "Past the line now": "現在ラインを超過",
   "Visualize History": "Visualize History",
-  "Older years are being filled in.": "過去の年を補完中です。"
+  "Older years are being filled in.": "過去の年を補完中です。",
+  "That funnel no longer exists.": "そのファネルはもうありません。",
+  "Funnels aren't reachable just now. Please try again in a minute.": "現在ファネルに接続できません。少し後にもう一度お試しください。",
+  "Make one in Lattice ›": "Lattice で作成 ›",
+  "can't be changed or deleted": "変更・削除不可",
+  "You already have an unchanged copy: {name}.": "変更していないコピーがすでにあります：{name}。",
+  "If you save:": "保存すると："
 }

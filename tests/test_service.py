@@ -387,3 +387,22 @@ def test_prism_history_needs_a_scan_and_says_so():
     assert c.post("/prism/history/start", json={"scan": "missing"}).json()["status"] == "error"
     assert c.post("/prism/history/chart", json={"scan": "missing"}).json()["status"] == "error"
     assert c.post("/prism/history/other", json={"scan": "x"}).status_code == 404
+
+
+def test_funnel_editor_steps():
+    c, db = _lat_client({"funnels": [], "user_preferences": [{"settings": {}}]})
+    lst = c.get("/funnels/list").json()
+    assert lst["own"] == [] and lst["provided"][0]["key"] == "new:trend"
+    prov = c.post("/funnels/provided", json={"kind": "trend", "market": "crypto", "direction": "long"}).json()
+    f = prov["funnel"]
+    assert prov["board"]["readonly"] and len(f["stages"]) >= 3
+    sc = c.post("/funnels/screen", json={"funnel": f, "saved": None, "scope": "x"}).json()
+    assert sc["reviewed"] and not sc["blocks"] and sc["changes"]
+    flipped = c.post("/funnels/apply", json={"funnel": f, "action": {"op": "direction", "direction": "short"}}).json()["funnel"]
+    assert flipped["direction"] == "short"
+    gone = c.post("/funnels/apply", json={"funnel": f, "action": {"op": "remove", "stage": 0}}).json()
+    assert gone["problem"] is None or "at least" in gone["problem"]
+    saved = c.post("/funnels/save", json={"funnel": f}).json()
+    assert saved["status"] == "ok" and db.calls[-1][0] == "funnel_save"
+    assert c.post("/funnels/screen", json={}).status_code == 400
+    assert c.post("/funnels/other", json={"funnel": f}).status_code == 404

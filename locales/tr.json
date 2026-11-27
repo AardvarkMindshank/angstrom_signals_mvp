@@ -3039,7 +3039,6 @@
   "Highest": "En yüksek",
   "Lowest": "En düşük",
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "Henüz yok: huni piyasayı kendi başına aşamalar halinde kısa bir Aday listesine indirir.",
-  "Make one in the classic app ›": "Klasik uygulamada oluştur ›",
   "No Candidates right now.": "Şu anda Aday yok.",
   "Markets": "Piyasalar",
   "Signals": "Sinyaller",
@@ -3181,5 +3180,11 @@
   "Alerts go": "Uyarılar gider",
   "Past the line now": "Şu an çizginin ötesinde",
   "Visualize History": "Visualize History",
-  "Older years are being filled in.": "Eski yıllar dolduruluyor."
+  "Older years are being filled in.": "Eski yıllar dolduruluyor.",
+  "That funnel no longer exists.": "Bu huni artık yok.",
+  "Funnels aren't reachable just now. Please try again in a minute.": "Hunilere şu anda ulaşılamıyor. Lütfen bir dakika sonra tekrar deneyin.",
+  "Make one in Lattice ›": "Lattice'te bir tane oluşturun ›",
+  "can't be changed or deleted": "değiştirilemez ya da silinemez",
+  "You already have an unchanged copy: {name}.": "Zaten değiştirilmemiş bir kopyanız var: {name}.",
+  "If you save:": "Kaydederseniz:"
 }

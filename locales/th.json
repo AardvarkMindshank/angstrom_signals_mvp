@@ -3039,7 +3039,6 @@
   "Highest": "สูงสุด",
   "Lowest": "ต่ำสุด",
   "None yet: a funnel narrows the market down in stages by itself, to a short list of Candidates.": "ยังไม่มี: ฟันเนลจะคัดกรองตลาดทีละขั้นเองจนเหลือรายชื่อ Candidates สั้นๆ",
-  "Make one in the classic app ›": "สร้างในแอปแบบคลาสสิก ›",
   "No Candidates right now.": "ตอนนี้ไม่มี Candidates",
   "Markets": "ตลาด",
   "Signals": "สัญญาณ",
@@ -3181,5 +3180,11 @@
   "Alerts go": "การแจ้งเตือนไปที่",
   "Past the line now": "เกินเส้นตอนนี้",
   "Visualize History": "Visualize History",
-  "Older years are being filled in.": "กำลังเติมข้อมูลปีที่เก่ากว่า"
+  "Older years are being filled in.": "กำลังเติมข้อมูลปีที่เก่ากว่า",
+  "That funnel no longer exists.": "ฟันเนลนั้นไม่มีอยู่แล้ว",
+  "Funnels aren't reachable just now. Please try again in a minute.": "ไม่สามารถเชื่อมต่อฟันเนลได้ในขณะนี้ โปรดลองอีกครั้งในอีกสักครู่",
+  "Make one in Lattice ›": "สร้างใน Lattice ›",
+  "can't be changed or deleted": "แก้ไขหรือลบไม่ได้",
+  "You already have an unchanged copy: {name}.": "คุณมีสำเนาที่ยังไม่ได้แก้ไขอยู่แล้ว: {name}",
+  "If you save:": "ถ้าคุณบันทึก:"
 }
