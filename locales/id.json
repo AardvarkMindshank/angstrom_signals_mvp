@@ -3170,7 +3170,6 @@
   "Show this story on the strip above": "Tampilkan berita ini di strip di atas",
   "Click for why this score": "Klik untuk alasan skor ini",
   "Deleted “{name}”.": "“{name}” dihapus.",
-  "Visualize History is still in the classic app while it moves across.": "Visualize History masih di aplikasi klasik selama dipindahkan.",
   "Prism isn't reachable just now. Please try again in a minute.": "Prism sedang tidak dapat dijangkau. Coba lagi sebentar lagi.",
   "Checking the scan's assets… this can take up to a minute.": "Memeriksa aset scan… bisa memakan waktu hingga satu menit.",
   "That didn't work just now. Please try again.": "Itu belum berhasil. Silakan coba lagi.",
@@ -3180,5 +3179,7 @@
   "Says Yes at": "Ya pada",
   "Alerts again after": "Memperingatkan lagi setelah",
   "Alerts go": "Peringatan dikirim",
-  "Past the line now": "Melewati garis sekarang"
+  "Past the line now": "Melewati garis sekarang",
+  "Visualize History": "Visualize History",
+  "Older years are being filled in.": "Tahun-tahun lama sedang dilengkapi."
 }

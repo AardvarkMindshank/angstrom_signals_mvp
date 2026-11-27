@@ -3170,7 +3170,6 @@
   "Show this story on the strip above": "在上方的分布条上显示这篇报道",
   "Click for why this score": "点击查看评分理由",
   "Deleted “{name}”.": "已删除“{name}”。",
-  "Visualize History is still in the classic app while it moves across.": "Visualize History 仍在经典版应用中，正在迁移过来。",
   "Prism isn't reachable just now. Please try again in a minute.": "暂时无法连接 Prism，请稍后再试。",
   "Checking the scan's assets… this can take up to a minute.": "正在检查该扫描的资产…最多可能需要一分钟。",
   "That didn't work just now. Please try again.": "暂时没有成功，请重试。",
@@ -3180,5 +3179,7 @@
   "Says Yes at": "在此值时为“是”",
   "Alerts again after": "再次提醒的条件",
   "Alerts go": "提醒发送方式",
-  "Past the line now": "当前越线"
+  "Past the line now": "当前越线",
+  "Visualize History": "Visualize History",
+  "Older years are being filled in.": "正在补充更早的年份。"
 }

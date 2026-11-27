@@ -3170,7 +3170,6 @@
   "Show this story on the strip above": "แสดงข่าวนี้บนแถบด้านบน",
   "Click for why this score": "คลิกเพื่อดูเหตุผลของคะแนนนี้",
   "Deleted “{name}”.": "ลบ “{name}” แล้ว",
-  "Visualize History is still in the classic app while it moves across.": "Visualize History ยังอยู่ในแอปแบบคลาสสิกระหว่างย้ายมา",
   "Prism isn't reachable just now. Please try again in a minute.": "ไม่สามารถเชื่อมต่อ Prism ได้ในขณะนี้ โปรดลองอีกครั้งในอีกสักครู่",
   "Checking the scan's assets… this can take up to a minute.": "กำลังตรวจสินทรัพย์ของการสแกน… อาจใช้เวลาถึงหนึ่งนาที",
   "That didn't work just now. Please try again.": "ยังทำไม่ได้ในขณะนี้ โปรดลองอีกครั้ง",
@@ -3180,5 +3179,7 @@
   "Says Yes at": "เป็น ใช่ ที่",
   "Alerts again after": "แจ้งเตือนอีกครั้งหลัง",
   "Alerts go": "การแจ้งเตือนไปที่",
-  "Past the line now": "เกินเส้นตอนนี้"
+  "Past the line now": "เกินเส้นตอนนี้",
+  "Visualize History": "Visualize History",
+  "Older years are being filled in.": "กำลังเติมข้อมูลปีที่เก่ากว่า"
 }

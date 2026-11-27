@@ -822,3 +822,8 @@ button .ic, a .ic { vertical-align: -0.2em; }
 .classic .lat.prism .dot.yes { background: var(--good); } .classic .lat.prism .dot.no { background: var(--bad); }
 .classic .lat.prism .hseg button.on, .classic .lat.prism button.hist.on, .classic .lat.prism .pvf button.on { border-color: var(--ang-text); background: var(--ang-field); }
 .classic .lat.prism .chip.focus { outline-color: var(--gold); }
+.hist { margin-top: 18px; }
+.histbar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin: 12px 0 8px; }
+.histbar label.m { display: inline-flex; gap: 8px; align-items: center; }
+.histbar select { min-height: 36px; border-radius: 10px; border: 1px solid var(--ang-border); background: var(--ang-field); color: var(--ang-text); padding: 6px 10px; font: inherit; }
+.histchart { margin: 8px 0; min-height: 40px; }

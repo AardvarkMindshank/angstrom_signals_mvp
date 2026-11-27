@@ -297,6 +297,7 @@ def lattice_action(kind: str, action: str, ask: LatticeAsk, who: Member = Depend
 
 class PrismBoardAsk(BaseModel):
     results: dict | None = None
+    history: str | None = Field(None, max_length=60)
     open_new: str | None = Field(None, max_length=60)
     focus_set: str | None = Field(None, max_length=120)
     lang: str = Field("en", max_length=8)
@@ -311,7 +312,30 @@ class PrismAct(BaseModel):
 def prism_board(ask: PrismBoardAsk, who: Member = Depends(member)):
     from service import prism_page
 
-    return prism_page.board(who.db, who.id, ask.lang, ask.results, ask.open_new, ask.focus_set)
+    return prism_page.board(who.db, who.id, ask.lang, ask.results, ask.open_new, ask.focus_set, ask.history)
+
+
+class PrismHistoryAsk(BaseModel):
+    scan: str = Field(..., max_length=60)
+    top: str | None = Field(None, max_length=120)
+    years: str = Field("1Y", max_length=4)
+    dark: bool = False
+    show_no: bool = False
+    lang: str = Field("en", max_length=8)
+
+
+@app.post("/prism/history/{step}")
+def prism_history(step: str, ask: PrismHistoryAsk, who: Member = Depends(member)):
+    """🕰️ Visualize History: start (each asset's last year), more (one step of older years), chart (the drawing)."""
+    from service import prism_page
+
+    if step == "start":
+        return prism_page.history_start(who.db, who.id, ask.scan, ask.lang)
+    if step == "more":
+        return prism_page.history_more(who.db, who.id, ask.scan, ask.lang)
+    if step == "chart":
+        return prism_page.history_chart(who.db, who.id, ask.scan, ask.top or "", ask.years, ask.dark, ask.show_no, ask.lang)
+    raise HTTPException(404, "Unknown step.")
 
 
 @app.post("/prism/action")

@@ -380,3 +380,10 @@ def test_prism_board_and_its_actions():
     assert c.post("/prism/action", json={"action": {"op": "pause", "scan": "missing"}}).json()["status"] == "error"
     look = c.post("/prism/action", json={"action": {"op": "open_set", "set": key}}).json()
     assert look["goto"].startswith("#lattice/sets/")
+
+
+def test_prism_history_needs_a_scan_and_says_so():
+    c, _ = _lat_client({"user_preferences": [{"crypto_watchlist": {"bitcoin": "Bitcoin"}, "stock_watchlist": {}, "settings": {}}], "prism_scans": []})
+    assert c.post("/prism/history/start", json={"scan": "missing"}).json()["status"] == "error"
+    assert c.post("/prism/history/chart", json={"scan": "missing"}).json()["status"] == "error"
+    assert c.post("/prism/history/other", json={"scan": "x"}).status_code == 404

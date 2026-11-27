@@ -3170,7 +3170,6 @@
   "Show this story on the strip above": "Mostrar esta notícia na faixa acima",
   "Click for why this score": "Clique para ver o porquê da pontuação",
   "Deleted “{name}”.": "“{name}” excluído.",
-  "Visualize History is still in the classic app while it moves across.": "O Visualize History ainda está no app clássico enquanto é migrado.",
   "Prism isn't reachable just now. Please try again in a minute.": "O Prism não está acessível agora. Tente novamente em um minuto.",
   "Checking the scan's assets… this can take up to a minute.": "Verificando os ativos do scan… pode levar até um minuto.",
   "That didn't work just now. Please try again.": "Não funcionou agora. Tente novamente.",
@@ -3180,5 +3179,7 @@
   "Says Yes at": "Diz Sim em",
   "Alerts again after": "Alerta de novo após",
   "Alerts go": "Alertas vão",
-  "Past the line now": "Além da linha agora"
+  "Past the line now": "Além da linha agora",
+  "Visualize History": "Visualize History",
+  "Older years are being filled in.": "Os anos anteriores estão sendo preenchidos."
 }
