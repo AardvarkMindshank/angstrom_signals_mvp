@@ -246,3 +246,4 @@ table.t td { border-top-color: var(--ang-border); }
 
 .tabs + div > .card:first-child, .tabs + div > :first-child > .card, .tabs + section.card { border-top: 0; padding-top: 6px; }
 .tradecard .form input[type=text], .tradecard .form textarea { background: var(--ang-page); }
+.tabs { scrollbar-width: none; overflow-y: hidden; } .tabs::-webkit-scrollbar { display: none; }
