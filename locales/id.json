@@ -2837,5 +2837,9 @@
   "mildly bullish coverage": "pemberitaan agak bullish",
   "mixed coverage": "pemberitaan campuran",
   "mildly bearish coverage": "pemberitaan agak bearish",
-  "bearish coverage": "pemberitaan bearish"
+  "bearish coverage": "pemberitaan bearish",
+  "Strong buying volume": "Volume beli kuat",
+  "Buying volume": "Volume beli",
+  "Selling volume": "Volume jual",
+  "Strong selling volume": "Volume jual kuat"
 }

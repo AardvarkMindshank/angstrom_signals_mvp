@@ -2837,5 +2837,9 @@
   "mildly bullish coverage": "tin tức hơi tích cực",
   "mixed coverage": "tin tức trái chiều",
   "mildly bearish coverage": "tin tức hơi tiêu cực",
-  "bearish coverage": "tin tức tiêu cực"
+  "bearish coverage": "tin tức tiêu cực",
+  "Strong buying volume": "Khối lượng mua mạnh",
+  "Buying volume": "Khối lượng mua",
+  "Selling volume": "Khối lượng bán",
+  "Strong selling volume": "Khối lượng bán mạnh"
 }

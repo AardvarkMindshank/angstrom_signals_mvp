@@ -2837,5 +2837,9 @@
   "mildly bullish coverage": "やや強気の報道",
   "mixed coverage": "強弱入り混じった報道",
   "mildly bearish coverage": "やや弱気の報道",
-  "bearish coverage": "弱気の報道"
+  "bearish coverage": "弱気の報道",
+  "Strong buying volume": "強い買い出来高",
+  "Buying volume": "買い出来高",
+  "Selling volume": "売り出来高",
+  "Strong selling volume": "強い売り出来高"
 }

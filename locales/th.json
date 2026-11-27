@@ -2837,5 +2837,9 @@
   "mildly bullish coverage": "ข่าวค่อนข้างเชิงบวก",
   "mixed coverage": "ข่าวผสมกัน",
   "mildly bearish coverage": "ข่าวค่อนข้างเชิงลบ",
-  "bearish coverage": "ข่าวเชิงลบ"
+  "bearish coverage": "ข่าวเชิงลบ",
+  "Strong buying volume": "แรงซื้อหนาแน่น",
+  "Buying volume": "แรงซื้อ",
+  "Selling volume": "แรงขาย",
+  "Strong selling volume": "แรงขายหนาแน่น"
 }

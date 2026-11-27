@@ -78,7 +78,7 @@ export default function Asset({ assetKey, tab, account }) {
           tip={T("How far the price has run from its usual range: near −100 very stretched down (oversold), near +100 very stretched up.")} />
         <Tile l={T("Flow")} v={signed(f.flow)} cls={tone(f.flow)} s={label((cl.flow || {}).label)} s2={arrow(delta("flow"))}
           tip={T("Whether volume is backing rises (+) or falls (−).")} />
-        <Tile l={T("News mood")} v={signed(m)} cls={tone(m)} s={rep.ok ? T("{n} articles", { n: rep.scored || (rep.headlines || []).length }) : T("Not scored yet")} />
+        <Tile l={T("News mood")} v={signed(m)} cls={m ? tone(m) : ""} s={rep.ok ? T("{n} articles", { n: rep.scored || (rep.headlines || []).length }) : T("Not scored yet")} />
         <Tile l={crypto ? T("Tide for crypto") : T("Tide for equities")} v={wind ? WIND()[wind] || wind : "—"} cls={wind === "headwind" ? "bad" : wind === "tailwind" ? "good" : ""}
           s={sea ? T("held {n} trading days", { n: sea.tide_held }) : ""} />
       </section>

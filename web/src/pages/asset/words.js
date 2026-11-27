@@ -8,6 +8,8 @@ export const READING_LABEL = () => ({
   "Volume strongly backing rises": T("Volume strongly backing rises"), "Volume backing rises": T("Volume backing rises"),
   "Volume neutral": T("Volume neutral"), "Volume backing falls": T("Volume backing falls"),
   "Volume strongly backing falls": T("Volume strongly backing falls"),
+  "Strong buying volume": T("Strong buying volume"), "Buying volume": T("Buying volume"), "Selling volume": T("Selling volume"),
+  "Strong selling volume": T("Strong selling volume"), "Not enough data": T("Not enough data"),
 });
 export const label = (l) => (l ? READING_LABEL()[l] || l : "");
 

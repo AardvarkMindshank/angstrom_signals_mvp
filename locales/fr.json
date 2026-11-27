@@ -2837,5 +2837,9 @@
   "mildly bullish coverage": "couverture légèrement haussière",
   "mixed coverage": "couverture mitigée",
   "mildly bearish coverage": "couverture légèrement baissière",
-  "bearish coverage": "couverture baissière"
+  "bearish coverage": "couverture baissière",
+  "Strong buying volume": "Fort volume acheteur",
+  "Buying volume": "Volume acheteur",
+  "Selling volume": "Volume vendeur",
+  "Strong selling volume": "Fort volume vendeur"
 }

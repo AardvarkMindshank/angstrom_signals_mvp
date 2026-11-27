@@ -2837,5 +2837,9 @@
   "mildly bullish coverage": "다소 강세 보도",
   "mixed coverage": "엇갈린 보도",
   "mildly bearish coverage": "다소 약세 보도",
-  "bearish coverage": "약세 보도"
+  "bearish coverage": "약세 보도",
+  "Strong buying volume": "강한 매수 거래량",
+  "Buying volume": "매수 거래량",
+  "Selling volume": "매도 거래량",
+  "Strong selling volume": "강한 매도 거래량"
 }

@@ -2837,5 +2837,9 @@
   "mildly bullish coverage": "hafif yükseliş yönlü haberler",
   "mixed coverage": "karışık haberler",
   "mildly bearish coverage": "hafif düşüş yönlü haberler",
-  "bearish coverage": "düşüş yönlü haberler"
+  "bearish coverage": "düşüş yönlü haberler",
+  "Strong buying volume": "Güçlü alım hacmi",
+  "Buying volume": "Alım hacmi",
+  "Selling volume": "Satış hacmi",
+  "Strong selling volume": "Güçlü satış hacmi"
 }

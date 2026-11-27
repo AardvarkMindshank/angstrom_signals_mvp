@@ -2837,5 +2837,9 @@
   "mildly bullish coverage": "报道略偏看涨",
   "mixed coverage": "报道好坏参半",
   "mildly bearish coverage": "报道略偏看跌",
-  "bearish coverage": "报道看跌"
+  "bearish coverage": "报道看跌",
+  "Strong buying volume": "强劲买盘成交量",
+  "Buying volume": "买盘成交量",
+  "Selling volume": "卖盘成交量",
+  "Strong selling volume": "强劲卖盘成交量"
 }
