@@ -144,7 +144,7 @@ function History({ scan, onClose }) {
   }, [view]);
   const asset = sum && view && sum.assets.find((a) => a.key === view.top);
   return (
-    <section className="card hist">
+    <section className="card vhist">
       <div className="bar">
         <h2 style={{ margin: 0 }}><Icon n="clock-arrow-up" /> {T("Visualize History")} <span className="m">· {sum ? sum.name : ""}</span></h2>
         <button type="button" className="ghost icon" onClick={onClose} aria-label={T("Close Visualize History")} title={T("Close Visualize History")}><Icon n="x" /></button>
