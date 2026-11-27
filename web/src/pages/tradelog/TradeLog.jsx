@@ -21,12 +21,12 @@ function remembered(key, fallback, allowed) {
 }
 function remember(key, value) { try { window.localStorage.setItem("tl2_" + key, value); } catch (e) { /* private window */ } }
 
-export default function TradeLog({ account }) {
+export default function TradeLog({ account, view }) {
   const plan = account.plan;
   const limited = !!HISTORY_DAYS[plan];
   const periods = limited ? ["1y"] : ["1y", "3y", "5y", "all"];
   const [conns, setConns] = useState(null);
-  const [manage, setManage] = useState(false);
+  const manage = view === "manage";        // its own page, #tradelog/manage, apart from every platform's numbers
   const [scope, setScope] = useState("all");
   const [tab, setTab] = useState(() => remembered("tab", "perf", TABS.map((x) => x[0])));
   const [whose, setWhose] = useState(() => remembered("whose", "own", ["own", "copied", "all"]));
@@ -37,6 +37,7 @@ export default function TradeLog({ account }) {
 
   const loadConns = () => connections().then(setConns).catch(() => setConns([]));
   useEffect(() => { loadConns(); }, []);
+  useEffect(() => { if (conns && scope !== "all" && !conns.some((c) => c.id === scope)) setScope("all"); }, [conns]);   // a platform just disconnected
 
   useEffect(() => {
     if (!conns || !conns.length) return;
@@ -64,6 +65,27 @@ export default function TradeLog({ account }) {
   if (!conns.length) return <div className="page"><Connect onDone={() => { forgetInsights(); loadConns(); }} /><Disclaimer /></div>;
 
   const label = names(conns);
+  // One row across the top: All platforms (with more than one), each platform A to Z, then ⚙️ Manage at the end.
+  const sorted = conns.slice().sort((a, b) => String(label[a.id]).localeCompare(String(label[b.id])));
+  const show = (k) => { setScope(k); if (manage) window.location.hash = "tradelog"; };
+  const platforms = (
+    <nav className="tabs" aria-label={T("Platforms")}>
+      {[...(conns.length > 1 ? [["all", T("All platforms")]] : []), ...sorted.map((c) => [c.id, label[c.id]])].map(([k, l]) => {
+        const on = !manage && (scope === k || (conns.length === 1));
+        return <button key={k} type="button" className={on ? "on" : ""} aria-current={on ? "page" : undefined} onClick={() => show(k)}>{l}</button>;
+      })}
+      <a href="#tradelog/manage" className={"tabend" + (manage ? " on" : "")} aria-current={manage ? "page" : undefined} title={T("Add, rename or disconnect platforms")}>⚙️ {T("Manage")}</a>
+    </nav>
+  );
+  if (manage) {
+    return (
+      <div className="page">
+        {platforms}
+        <Manage conns={conns} plan={plan} onChange={() => { forgetInsights(); loadConns(); }} />
+        <Disclaimer />
+      </div>
+    );
+  }
   const synced = conns.map((c) => c.last_sync_at).filter(Boolean).sort().pop();
   const refresh = async () => {
     try {
@@ -78,25 +100,15 @@ export default function TradeLog({ account }) {
 
   return (
     <div className="page">
+      {platforms}
       <div className="bar">
         <span className="meta">{synced ? T("Synced {when}", { when: stamp(synced) }) : T("Importing")}
           {doc ? " · " + T("Worked out {when}", { when: stamp(doc.computed_at) }) : ""}</span>
         <div className="right">
           {toast && <span className="m">{toast}</span>}
           <button type="button" className="ghost" onClick={refresh}>{T("Refresh")}</button>
-          <button type="button" className={"ghost" + (manage ? " on" : "")} aria-pressed={manage} onClick={() => setManage(!manage)}>{T("Manage")}</button>
         </div>
       </div>
-
-      {manage && <Manage conns={conns} plan={plan} onChange={() => { forgetInsights(); loadConns(); }} />}
-
-      {conns.length > 1 && (
-        <nav className="tabs" aria-label={T("Platforms")}>
-          {[["all", T("All platforms")], ...conns.map((c) => [c.id, label[c.id]])].map(([k, l]) => (
-            <button key={k} type="button" className={scope === k ? "on" : ""} aria-current={scope === k} onClick={() => setScope(k)}>{l}</button>
-          ))}
-        </nav>
-      )}
 
       <div className="bar">
         <div className="seg" role="group" aria-label={T("Whose trades")}>

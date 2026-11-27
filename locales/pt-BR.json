@@ -3164,5 +3164,7 @@
   "Logbook & podcasts": "Diário de bordo e podcasts",
   "Listen in a podcast app:": "Ouvir em um app de podcast:",
   "get the feed links in ⚙️ Settings": "pegue os links dos feeds em ⚙️ Configurações",
-  "Ready each day an hour before your morning time, which you set in Alerts & email.": "Fica pronto todo dia uma hora antes do seu horário da manhã, definido em Alertas e e-mail."
+  "Ready each day an hour before your morning time, which you set in Alerts & email.": "Fica pronto todo dia uma hora antes do seu horário da manhã, definido em Alertas e e-mail.",
+  "Disconnect {name}": "Desconectar {name}",
+  "Add, rename or disconnect platforms": "Adicionar, renomear ou desconectar plataformas"
 }

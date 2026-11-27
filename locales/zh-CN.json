@@ -3164,5 +3164,7 @@
   "Logbook & podcasts": "航海日志与播客",
   "Listen in a podcast app:": "在播客应用中收听：",
   "get the feed links in ⚙️ Settings": "在 ⚙️ 设置中获取订阅链接",
-  "Ready each day an hour before your morning time, which you set in Alerts & email.": "每天在您的早间时间前一小时准备好，早间时间在“提醒与邮件”中设置。"
+  "Ready each day an hour before your morning time, which you set in Alerts & email.": "每天在您的早间时间前一小时准备好，早间时间在“提醒与邮件”中设置。",
+  "Disconnect {name}": "断开 {name}",
+  "Add, rename or disconnect platforms": "添加、重命名或断开平台"
 }

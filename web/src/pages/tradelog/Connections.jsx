@@ -66,6 +66,7 @@ export function Manage({ conns, plan, onChange }) {
   const label = names(conns);
   const [edits, setEdits] = useState({});
   const [wipe, setWipe] = useState(false);
+  const [sure, setSure] = useState(null);         // Disconnect asks once more before it removes a platform
   const status = STATUS();
   const act = async (fn) => { try { await fn(); onChange && onChange(); } catch (e) { /* the row rules said no */ } };
   return (
@@ -73,7 +74,7 @@ export function Manage({ conns, plan, onChange }) {
       <section className="card">
         <h2>{T("Manage connections")}</h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 14, marginTop: 10 }}>
-          {conns.map((c) => (
+          {conns.slice().sort((a, b) => String(label[a.id]).localeCompare(String(label[b.id]))).map((c) => (
             <div key={c.id} className="conn">
               <div><b>{label[c.id]}</b> · <span className="m">{status[c.status] || status.new}</span>
                 {c.last_sync_at && <span className="m"> · {T("Synced {when}", { when: stamp(c.last_sync_at) })}</span>}
@@ -83,7 +84,10 @@ export function Manage({ conns, plan, onChange }) {
                 <input type="text" maxLength={30} value={edits[c.id] ?? label[c.id]} onChange={(e) => setEdits({ ...edits, [c.id]: e.target.value })} aria-label={T("Name for this platform's tab")} />
                 <button type="button" className="ghost" disabled={!(edits[c.id] || "").trim() || edits[c.id] === label[c.id]}
                   onClick={() => act(() => rpc("tradelog_rename_connection", { p_id: c.id, p_label: edits[c.id].trim() }))}>{T("Save name")}</button>
-                <button type="button" className="ghost" onClick={() => act(() => rpc("tradelog_delete_connection", { p_id: c.id }))}>{T("Disconnect")}</button>
+                {sure === c.id
+                  ? <><button type="button" className="danger-btn" onClick={() => { setSure(null); act(() => rpc("tradelog_delete_connection", { p_id: c.id })); }}>{T("Disconnect {name}", { name: label[c.id] })}</button>
+                    <button type="button" className="ghost" onClick={() => setSure(null)}>{T("Cancel")}</button></>
+                  : <button type="button" className="ghost" onClick={() => setSure(c.id)}>{T("Disconnect")}</button>}
               </div>
             </div>
           ))}

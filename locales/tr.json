@@ -3164,5 +3164,7 @@
   "Logbook & podcasts": "Seyir defteri ve podcast'ler",
   "Listen in a podcast app:": "Bir podcast uygulamasında dinle:",
   "get the feed links in ⚙️ Settings": "akış bağlantılarını ⚙️ Ayarlar'dan alın",
-  "Ready each day an hour before your morning time, which you set in Alerts & email.": "Her gün sabah saatinizden bir saat önce hazır olur; bu saati Uyarılar ve e-posta'da ayarlarsınız."
+  "Ready each day an hour before your morning time, which you set in Alerts & email.": "Her gün sabah saatinizden bir saat önce hazır olur; bu saati Uyarılar ve e-posta'da ayarlarsınız.",
+  "Disconnect {name}": "{name} bağlantısını kes",
+  "Add, rename or disconnect platforms": "Platform ekle, yeniden adlandır veya bağlantısını kes"
 }

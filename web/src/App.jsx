@@ -97,7 +97,7 @@ export default function App() {
         {page === "logbook" && account && <Logbook account={account} />}
         {page === "alerts" && account && <Alerts />}
         {page === "mood" && account && <Mood key={route[1] || "crypto"} market={route[1] || "crypto"} account={account} />}
-        {page === "tradelog" && account && <TradeLog account={account} />}
+        {page === "tradelog" && account && <TradeLog account={account} view={route[1]} />}
         {page === "asset" && account && <Asset key={route[1]} assetKey={route[1]} tab={route[2]} account={account} />}
         {page === "search" && account && <SearchPage key={route[1]} q={route[1] || ""} />}
         {page === "settings" && account && <Settings account={account} section={route[1]} />}

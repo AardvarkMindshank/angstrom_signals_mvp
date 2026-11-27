@@ -3164,5 +3164,7 @@
   "Logbook & podcasts": "สมุดบันทึกเดินเรือและพอดแคสต์",
   "Listen in a podcast app:": "ฟังในแอปพอดแคสต์:",
   "get the feed links in ⚙️ Settings": "รับลิงก์ฟีดได้ใน ⚙️ การตั้งค่า",
-  "Ready each day an hour before your morning time, which you set in Alerts & email.": "พร้อมทุกวันหนึ่งชั่วโมงก่อนเวลาเช้าของคุณ ซึ่งตั้งได้ในการแจ้งเตือนและอีเมล"
+  "Ready each day an hour before your morning time, which you set in Alerts & email.": "พร้อมทุกวันหนึ่งชั่วโมงก่อนเวลาเช้าของคุณ ซึ่งตั้งได้ในการแจ้งเตือนและอีเมล",
+  "Disconnect {name}": "ยกเลิกการเชื่อมต่อ {name}",
+  "Add, rename or disconnect platforms": "เพิ่ม เปลี่ยนชื่อ หรือยกเลิกการเชื่อมต่อแพลตฟอร์ม"
 }

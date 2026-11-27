@@ -763,3 +763,4 @@ html.night .classic .lat select option { color: #f3f4f6; background: #1f2937; }
 .logtop .readit.open > .linkish { align-self: flex-start; }
 .logtop .plantext { max-height: none; overflow-y: auto; }
 @media (max-width: 640px) { .logtop .readit.open, .logtop .plantext { flex: none; min-height: 0; } .logtop .readit.open .readtext, .logtop .plantext { max-height: 420px; } }
+.tabs .tabend { margin-left: auto; }

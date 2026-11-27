@@ -3164,5 +3164,7 @@
   "Logbook & podcasts": "Cuaderno de bitácora y pódcasts",
   "Listen in a podcast app:": "Escuchar en una app de pódcasts:",
   "get the feed links in ⚙️ Settings": "obtén los enlaces de los feeds en ⚙️ Ajustes",
-  "Ready each day an hour before your morning time, which you set in Alerts & email.": "Listo cada día una hora antes de tu hora de la mañana, que configuras en Alertas y correo."
+  "Ready each day an hour before your morning time, which you set in Alerts & email.": "Listo cada día una hora antes de tu hora de la mañana, que configuras en Alertas y correo.",
+  "Disconnect {name}": "Desconectar {name}",
+  "Add, rename or disconnect platforms": "Añadir, renombrar o desconectar plataformas"
 }
