@@ -32,3 +32,12 @@ with open(os.path.join(data, "calendar.json"), "w", encoding="utf-8") as fh:
     json.dump([{"kind": e["kind"], "at": e["at"].isoformat(), "tier": e["tier"], "reference": e["reference"]}
                for e in macro_calendar.events()], fh)
 print("calendar written")
+
+# Lists the Settings page needs, from the same places the classic app takes them.
+import briefing  # noqa: E402
+import digest  # noqa: E402
+
+with open(os.path.join(data, "meta.json"), "w", encoding="utf-8") as fh:
+    json.dump({"languages": [{k: x[k] for k in ("code", "name", "english", "flag")} for x in i18n.LANGUAGES if x.get("status") == "live"],
+               "zones": list(digest.COMMON_ZONES), "voices": briefing.VOICES}, fh, ensure_ascii=False)
+print("meta written")

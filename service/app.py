@@ -5,6 +5,7 @@ because they need the Python engine or the AI keys. It runs the same code as the
     GET  /asset/sets?key=…          the member's own Sets checked on one asset right now (Yes / No / Unknown + why)
     POST /sonar                     the Sonar strip for the candles the chart is showing
     GET  /search?q=…                news, assets and the member's Logbook that mention a topic ("inflation", "ETF")
+    GET  /ai                        the AIs the Navigator can use (for Settings)
     POST /navigator                 the AI Navigator: a question, the conversation so far, what is on screen
 
 Every call needs the member's own sign-in (their Supabase access token): the service reads the database as that
@@ -276,6 +277,15 @@ def search(q: str = Query(..., min_length=2, max_length=80), who: Member = Depen
 
 
 # ---- the AI Navigator ------------------------------------------------------------------------------------------------
+
+@app.get("/ai")
+def ai_choices(who: Member = Depends(member)):
+    """The AIs the Navigator can use here (those with a key on this service), for Settings."""
+    import ai_providers as ap
+
+    return {"providers": [{"id": p, "label": ap.label(p)} for p in ap.PROVIDERS if ap.available(p)],
+            "default": ap.USES["navigator"][1]}
+
 
 class Turn(BaseModel):
     role: str

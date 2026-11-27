@@ -1,0 +1,388 @@
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { T, lang } from "../../lib/i18n.js";
+import { applyTheme } from "../../lib/theme.js";
+import { supabase } from "../../lib/supabase.js";
+import * as acct from "../../lib/account.js";
+import { universe, match, keyFor, watchlists } from "../../lib/assets.js";
+import { call } from "../../lib/service.js";
+import { assetHref } from "../../components/Search.jsx";
+
+// ⚙️ Settings: one page, sections down the left, each choice saved the moment it changes. Everything is stored
+// where the classic app keeps it, so both apps stay in step.
+const SECTIONS = () => [
+  ["account", T("Account"), "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9a7 7 0 0 1 14 0"],
+  ["display", T("Display & language"), "M12 3v2m0 14v2M5 12H3m18 0h-2M6 6l1.5 1.5M16.5 16.5 18 18M6 18l1.5-1.5M16.5 7.5 18 6M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"],
+  ["markets", T("Markets & watchlists"), "M3 3v18h18M7 14l4-4 3 3 5-6"],
+  ["alerts", T("Alerts & email"), "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"],
+  ["ai", T("AI"), "M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"],
+  ["privacy", T("Chat & privacy"), "M5 11V8a7 7 0 0 1 14 0v3M4 11h16v10H4z"],
+  ["lattice", T("Lattice"), "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"],
+];
+
+export default function Settings({ account, section }) {
+  const [prefs, setPrefs] = useState(null);
+  const [alerts, setAlerts] = useState(undefined);
+  const [saved, setSaved] = useState("");
+  const timer = useRef(null);
+  useEffect(() => { acct.preferences().then(setPrefs).catch(() => setPrefs({ settings: {}, crypto: {}, equity: {} })); acct.alertPrefs().then(setAlerts); }, []);
+  const on = SECTIONS().some((s) => s[0] === section) ? section : "account";
+  const flash = (ok) => { setSaved(ok ? T("Saved") : T("That didn't save. Please try again.")); clearTimeout(timer.current); timer.current = setTimeout(() => setSaved(""), 2200); };
+  const set = async (updates) => {
+    setPrefs((p) => ({ ...p, settings: { ...p.settings, ...updates } }));
+    try { await acct.saveSettings(updates); flash(true); } catch (e) { flash(false); }
+  };
+  const setAlert = async (updates) => {
+    setAlerts((a) => ({ ...(a || {}), ...updates }));
+    try { await acct.saveAlertPrefs(updates); flash(true); } catch (e) { flash(false); }
+  };
+  if (!prefs) return <div className="empty">{T("Loading…")}</div>;
+  const s = prefs.settings;
+  const props = { s, set, alerts, setAlert, prefs, setPrefs, account, flash };
+  return (
+    <div className="settings">
+      <nav className="snav" aria-label={T("Settings")}>
+        <h1>{T("Settings")}</h1>
+        {SECTIONS().map(([k, l, d]) => (
+          <a key={k} href={`#settings/${k}`} className={on === k ? "on" : ""} aria-current={on === k ? "page" : undefined}>
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>{l}
+          </a>
+        ))}
+      </nav>
+      <div className="sbody">
+        {on === "account" && <Account {...props} />}
+        {on === "display" && <Display {...props} />}
+        {on === "markets" && <Markets {...props} />}
+        {on === "alerts" && <Alerts {...props} />}
+        {on === "ai" && <AI {...props} />}
+        {on === "privacy" && <Privacy {...props} />}
+        {on === "lattice" && <LatticeSet {...props} />}
+      </div>
+      <div className={"toast" + (saved ? " show" : "")} role="status" aria-live="polite">{saved}</div>
+    </div>
+  );
+}
+
+// ---- building blocks ---------------------------------------------------------------------------------------------
+
+function Row({ title, help, children, wide }) {
+  return (
+    <div className={"srow2" + (wide ? " wide" : "")}>
+      <div className="stext"><div className="stitle">{title}</div>{help && <div className="shelp">{help}</div>}</div>
+      <div className="sctl">{children}</div>
+    </div>
+  );
+}
+function Switch({ on, onChange, label }) {
+  return <button type="button" role="switch" aria-checked={!!on} aria-label={label} className={"switch" + (on ? " on" : "")} onClick={() => onChange(!on)}><span /></button>;
+}
+function Seg({ value, options, onChange, label }) {
+  return (
+    <div className="seg" role="radiogroup" aria-label={label}>
+      {options.map(([k, l]) => <button key={k} type="button" role="radio" aria-checked={value === k} className={value === k ? "on" : ""} onClick={() => onChange(k)}>{l}</button>)}
+    </div>
+  );
+}
+function Section({ title, sub, children }) {
+  return <section className="sgroup"><h2>{title}</h2>{sub && <p className="sub">{sub}</p>}<div className="srows">{children}</div></section>;
+}
+
+// ---- Account -------------------------------------------------------------------------------------------------------
+
+const PLAN_LABEL = () => ({ free: T("Free"), plus: "Plus", pro: "Pro", elite: "Elite" });
+
+function Account({ s, set, account, flash }) {
+  const [p, setP] = useState(null);
+  const [name, setName] = useState(""), [bio, setBio] = useState("");
+  const [busy, setBusy] = useState(false);
+  const file = useRef(null);
+  useEffect(() => { acct.profile().then((x) => { setP(x); setName(x.display_name || ""); setBio(x.bio || ""); }); }, []);
+  const save = async (e) => {
+    e.preventDefault(); setBusy(true);
+    try { await acct.saveProfile({ display_name: name.trim() || null, bio: bio.trim() || null }); setP({ ...p, display_name: name.trim(), bio: bio.trim() }); flash(true); } catch (err) { flash(false); }
+    setBusy(false);
+  };
+  const photo = async (f) => {
+    if (!f) return; setBusy(true);
+    try { const url = await acct.uploadAvatar(f); await acct.saveProfile({ avatar_url: url }); setP({ ...p, avatar_url: url }); flash(true); } catch (err) { flash(false); }
+    setBusy(false);
+  };
+  return (
+    <>
+      <Section title={T("Your profile")} sub={T("How other members see you in comments and chat.")}>
+        {p === null ? <p className="sub">{T("Loading…")}</p> : (
+          <form className="profile" onSubmit={save}>
+            <button type="button" className="avatar" onClick={() => file.current.click()} title={T("Change your photo")} aria-label={T("Change your photo")}>
+              {p.avatar_url ? <img src={p.avatar_url} alt="" /> : <span>{(name || account.user.email || "?").slice(0, 1).toUpperCase()}</span>}
+              <i>{T("Change")}</i>
+            </button>
+            <input ref={file} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => photo(e.target.files[0])} />
+            <div className="form" style={{ flex: 1, minWidth: 220 }}>
+              <label>{T("Display name")}<input type="text" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} /></label>
+              <label>{T("Short bio")}<textarea rows={2} maxLength={160} value={bio} onChange={(e) => setBio(e.target.value)} /></label>
+              <div><button type="submit" className="primary" disabled={busy}>{T("Save profile")}</button></div>
+            </div>
+          </form>
+        )}
+      </Section>
+      <Section title={T("Plan")}>
+        <Row title={T("Account level: {plan}", { plan: PLAN_LABEL()[account.plan] || account.plan })} help={T("Free during the beta.")}>
+          <a className="ghost" href="https://marketnavi.ai/pricing.html" target="_blank" rel="noopener noreferrer">{T("Upgrade")}</a>
+        </Row>
+        <Row title={T("Features not in my plan")} help={T("Hide keeps the screens simple: you only see what your plan includes. Grey out shows everything, with what your plan doesn't include greyed.")}>
+          <Seg label={T("Features not in my plan")} value={s.plan_display === "grey" ? "grey" : "hide"} options={[["hide", T("Hide")], ["grey", T("Grey out")]]} onChange={(v) => set({ plan_display: v })} />
+        </Row>
+      </Section>
+      <Section title={T("Sign-in")}>
+        <Row title={account.user.email} help={T("The email you sign in with.")}>
+          <button type="button" className="ghost" onClick={() => supabase.auth.signOut()}>{T("Log out")}</button>
+        </Row>
+      </Section>
+    </>
+  );
+}
+
+// ---- Display & language ----------------------------------------------------------------------------------------------
+
+function Display({ s, set }) {
+  const [m, setM] = useState(null);
+  useEffect(() => { acct.meta().then(setM); }, []);
+  const mode = s.ui_mode || "auto";
+  return (
+    <>
+      <Section title={T("Appearance")}>
+        <Row title={T("Day or night")} help={T("Auto follows your device.")}>
+          <Seg label={T("Day or night")} value={mode} options={[["day", "☀️ " + T("Day")], ["night", "🌙 " + T("Night")], ["auto", "🌓 " + T("Auto")]]}
+            onChange={(v) => { applyTheme({ ...s, ui_mode: v }); set({ ui_mode: v }); }} />
+        </Row>
+        <Row title={T("🎬 Play the daily video when I open the app")} help={T("Once a day, the first time you open the app after the new video is out. You can always watch it in 📸 Quick Snapshot or the 📓 Logbook.")}>
+          <Switch label={T("Daily video")} on={s.daily_video_auto !== false} onChange={(v) => set({ daily_video_auto: v })} />
+        </Row>
+      </Section>
+      <Section title={T("Language")} sub={T("The app follows your browser's language until you pick one here.")}>
+        <div className="langs">
+          {(m ? m.languages : []).map((l) => (
+            <button key={l.code} type="button" className={"lang" + (lang === l.code ? " on" : "")} aria-pressed={lang === l.code}
+              onClick={async () => { await set({ language: l.code }); window.location.reload(); }}>
+              <img src={`${import.meta.env.BASE_URL}flags/${l.flag}.svg`} alt="" width="28" height="21" />
+              <span><b>{l.name}</b><span className="m">{l.english}</span></span>
+            </button>
+          ))}
+        </div>
+      </Section>
+    </>
+  );
+}
+
+// ---- Markets & watchlists ---------------------------------------------------------------------------------------------
+
+function Markets({ s, set, prefs, setPrefs, flash }) {
+  const crypto = s.trade_crypto !== false, equity = s.trade_equities !== false;
+  const markets = crypto && equity ? "both" : crypto ? "crypto" : "equity";
+  return (
+    <>
+      <Section title={T("Markets you trade")}>
+        <Row title="" help={T("Which markets the app shows: tables, alerts and the daily summary.")}>
+          <Seg label={T("Markets you trade")} value={markets} options={[["crypto", T("Crypto")], ["equity", T("Equities")], ["both", T("Both")]]}
+            onChange={(v) => set({ trade_crypto: v !== "equity", trade_equities: v !== "crypto" })} />
+        </Row>
+      </Section>
+      <Watchlist kind="crypto" title={T("Crypto watchlist")} list={prefs.crypto} setList={(l) => setPrefs((p) => ({ ...p, crypto: l }))} flash={flash} />
+      <Watchlist kind="equity" title={T("Equity watchlist")} list={prefs.equity} setList={(l) => setPrefs((p) => ({ ...p, equity: l }))} flash={flash} />
+    </>
+  );
+}
+
+function Watchlist({ kind, title, list, setList, flash }) {
+  const [all, setAll] = useState([]);
+  const [q, setQ] = useState("");
+  useEffect(() => { universe().then((u) => setAll(u.filter((a) => a.kind === kind))).catch(() => {}); }, [kind]);
+  const ids = Object.keys(list || {});
+  const hits = useMemo(() => match(all, q, new Set(), 6).filter((a) => !ids.includes(a.id)), [all, q, ids.join(",")]);
+  const save = async (next) => { setList(next); try { await acct.saveWatchlist(kind, next); watchlists.reset(); flash(true); } catch (e) { flash(false); } };
+  const label = (id) => { const v = list[id]; return typeof v === "string" ? v : id; };
+  return (
+    <Section title={title} sub={T("The app's tables, alerts and daily summary follow these.")}>
+      <div className="wl">
+        {ids.map((id) => (
+          <span key={id} className="wlitem">
+            <a href={assetHref(keyFor(kind, id))}>{label(id)}</a>
+            <button type="button" aria-label={T("Remove from your watchlist")} title={T("Remove from your watchlist")} onClick={() => { const n = { ...list }; delete n[id]; save(n); }}>✕</button>
+          </span>
+        ))}
+        {!ids.length && <span className="m">{T("Nothing here yet.")}</span>}
+      </div>
+      <div className="wladd">
+        <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={kind === "crypto" ? T("Add a coin, e.g. Solana") : T("Add a company, e.g. Microsoft")} aria-label={T("Add to watchlist")} />
+        {q.trim() && (
+          <div className="wlhits">
+            {hits.map((a) => <button key={a.id} type="button" onClick={() => { save({ ...list, [a.id]: kind === "crypto" ? `${a.name} (${a.symbol})` : a.name }); setQ(""); }}><b>{a.symbol}</b> <span className="m">{a.name}</span> <span className="add">+ {T("Add")}</span></button>)}
+            {!hits.length && <span className="m" style={{ padding: "8px 12px" }}>{T("No match.")}</span>}
+          </div>
+        )}
+      </div>
+    </Section>
+  );
+}
+
+// ---- Alerts & email ------------------------------------------------------------------------------------------------
+
+const CROSS_ROWS = [["p50", "+50"], ["p20", "+20"], ["m20", "−20"], ["m50", "−50"]];
+const CROSS_WORDS = () => ({
+  up_p50: T("gets strongly bullish"), dn_p50: T("fades back from strongly bullish"), up_p20: T("turns bullish (leaves neutral)"),
+  dn_p20: T("falls back into neutral"), up_m20: T("rises back into neutral"), dn_m20: T("turns bearish (leaves neutral)"),
+  up_m50: T("fades back from strongly bearish"), dn_m50: T("gets strongly bearish"), flip_up: T("flips from bearish to bullish"), flip_dn: T("flips from bullish to bearish"),
+});
+const DEFAULTS = { trend: ["up_p20", "dn_m20", "up_p50", "dn_m50", "flip_up", "flip_dn"], stretch: ["up_p50", "dn_m50", "dn_p50", "up_m50"], flow: ["up_p20", "dn_m20", "flip_up", "flip_dn"] };
+
+function Borders({ reading, s, set }) {
+  const ticked = Array.isArray(s[`${reading}_crossings`]) ? s[`${reading}_crossings`] : DEFAULTS[reading];
+  const w = CROSS_WORDS();
+  const flip = (k) => set({ [`${reading}_crossings`]: ticked.includes(k) ? ticked.filter((x) => x !== k) : [...ticked, k] });
+  const chip = (k, arrow) => <button key={k} type="button" className={"xchip" + (ticked.includes(k) ? " on" : "")} aria-pressed={ticked.includes(k)} onClick={() => flip(k)}>{arrow} {w[k]}</button>;
+  return (
+    <div className="borders">
+      {CROSS_ROWS.map(([code, v]) => (
+        <div key={code} className="brow"><span className="bval">{v}</span>{chip(`up_${code}`, "▲")}{chip(`dn_${code}`, "▼")}</div>
+      ))}
+      <div className="brow"><span className="bval">⇅</span>{chip("flip_up", "⇧")}{chip("flip_dn", "⇩")}</div>
+      {!ticked.length && <p className="sub">{T("Nothing ticked: no alerts for this reading.")}</p>}
+    </div>
+  );
+}
+
+function Alerts({ s, set, alerts, setAlert, account }) {
+  const [m, setM] = useState(null);
+  useEffect(() => { acct.meta().then(setM); }, []);
+  if (alerts === undefined) return <p className="sub">{T("Loading…")}</p>;
+  const a = alerts || {};
+  const trendOn = a.enabled !== false, stretchOn = !!s.stretch_alert_on, flowOn = !!s.flow_alert_on;
+  const line = Math.round(((Number(a.market_high_alert) || 65) - 50) * 2);
+  const zone = a.digest_tz || Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const zones = m ? (m.zones.includes(zone) ? m.zones : [zone, ...m.zones]) : [zone];
+  const brief = s.briefing && typeof s.briefing === "object" ? s.briefing : {};
+  const pro = ["pro", "elite"].includes(account.plan);
+  return (
+    <>
+      <Section title={T("Reading alerts")} sub={T("An alert when a reading of an asset on your watchlists crosses a colour border you tick, once the new colour holds at the daily close.")}>
+        <Row title={"📈 " + T("Trend alerts")} wide={trendOn}>
+          <Switch label={T("Trend alerts")} on={trendOn} onChange={(v) => setAlert({ enabled: v })} />
+        </Row>
+        {trendOn && <Borders reading="trend" s={s} set={set} />}
+        <Row title={"🎯 " + T("Stretch alerts")} help={T("Off unless you switch it on. When switched on, the current colours are noted quietly; only new crossings alert.")}>
+          <Switch label={T("Stretch alerts")} on={stretchOn} onChange={(v) => set({ stretch_alert_on: v })} />
+        </Row>
+        {stretchOn && <Borders reading="stretch" s={s} set={set} />}
+        <Row title={"🔊 " + T("Flow alerts")}>
+          <Switch label={T("Flow alerts")} on={flowOn} onChange={(v) => set({ flow_alert_on: v })} />
+        </Row>
+        {flowOn && <Borders reading="flow" s={s} set={set} />}
+      </Section>
+      <Section title={T("Other alerts")}>
+        {"market_alerts_enabled" in a && (
+          <Row title={"🌐 " + T("Market sentiment alerts")} help={T("Alert when the crypto or stock market sentiment score crosses one of your lines. It covers the markets you have switched on. Market sentiment updates about every 12 hours.")}>
+            <Switch label={T("Market sentiment alerts")} on={!!a.market_alerts_enabled} onChange={(v) => setAlert({ market_alerts_enabled: v })} />
+          </Row>
+        )}
+        {a.market_alerts_enabled && (
+          <Row title={T("🌐 Market sentiment alert line (±)")} help={T("Positive alert at +{n} or above, negative at −{n} or below.", { n: line })}>
+            <input type="range" min="10" max="90" step="5" value={line} aria-label={T("🌐 Market sentiment alert line (±)")}
+              onChange={(e) => { const L = +e.target.value; setAlert({ market_high_alert: 50 + L / 2, market_low_alert: 50 - L / 2 }); }} />
+            <b className="rangev">±{line}</b>
+          </Row>
+        )}
+        <Row title={"🔻 " + T("Funnel alerts")} help={T("A note when assets newly become Candidates in one of your funnels.")}>
+          <Switch label={T("Funnel alerts")} on={s.funnel_alerts !== false} onChange={(v) => set({ funnel_alerts: v })} />
+        </Row>
+      </Section>
+      <Section title={T("Emails")}>
+        <Row title={"⚡ " + T("Instant alerts")} help={T("One email as soon as a reading crosses a border you ticked, or market sentiment crosses your line.")}>
+          <Switch label={T("Instant alerts")} on={a.instant_email !== false} onChange={(v) => setAlert({ instant_email: v })} />
+        </Row>
+        <Row title={"📬 " + T("Daily alerts summary")} help={T("One email a day with everything that crossed your lines.")}>
+          <Switch label={T("Daily alerts summary")} on={!!a.digest_enabled} onChange={(v) => setAlert(v && !a.digest_enabled ? { digest_enabled: true, last_digest_at: new Date().toISOString(), digest_tz: zone, digest_hour: a.digest_hour ?? 8 } : { digest_enabled: v })} />
+        </Row>
+        {a.digest_enabled && (
+          <>
+            <Row title={"📋 " + T("Include watchlist summary")}><Switch label={T("Include watchlist summary")} on={a.digest_watchlist !== false} onChange={(v) => setAlert({ digest_watchlist: v })} /></Row>
+            <Row title={"🔻 " + T("Include funnels summary")}><Switch label={T("Include funnels summary")} on={s.digest_funnels !== false} onChange={(v) => set({ digest_funnels: v })} /></Row>
+          </>
+        )}
+        <Row title={T("Your morning time")} help={T("Your daily summary email is sent at this time, and your Passage Plan is ready an hour before it.")}>
+          <select value={a.digest_hour ?? 8} onChange={(e) => setAlert({ digest_hour: +e.target.value, digest_tz: zone })} aria-label={T("Your morning time")}>
+            {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{String(h).padStart(2, "0")}:00</option>)}
+          </select>
+          <select value={zone} onChange={(e) => setAlert({ digest_tz: e.target.value })} aria-label={T("Time zone")}>
+            {zones.map((z) => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
+          </select>
+        </Row>
+        {pro && (
+          <>
+            <Row title={T("Email me when my Passage Plan is ready")} help={T("The daily summary email links it anyway.")}>
+              <Switch label={T("Email me when my Passage Plan is ready")} on={!!brief.email} onChange={(v) => set({ briefing: { ...brief, email: v } })} />
+            </Row>
+            {m && Object.keys(m.voices).length > 0 && (
+              <Row title={"🧭 " + T("Passage Plan voice")}>
+                <select value={brief.voice || Object.keys(m.voices)[0]} onChange={(e) => set({ briefing: { ...brief, voice: e.target.value } })} aria-label={T("Passage Plan voice")}>
+                  {Object.entries(m.voices).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </select>
+              </Row>
+            )}
+          </>
+        )}
+        {a.instant_email === false && !a.digest_enabled && <p className="sub">{T("Both are off, so alerts only appear in the dashboard.")}</p>}
+      </Section>
+    </>
+  );
+}
+
+// ---- AI ---------------------------------------------------------------------------------------------------------------
+
+function AI({ s, set }) {
+  const [got, setGot] = useState(null);
+  useEffect(() => { call("/ai").then(setGot).catch(() => setGot({ providers: [], default: "claude", down: true })); }, []);
+  const chosen = s.ai_navigator || (got && got.default);
+  return (
+    <Section title={T("AI Navigator")} sub={T("Which AI answers your questions in the Navigator. News summaries and sentiment scores use one AI for everyone, chosen by MarketNavi.")}>
+      {!got ? <p className="sub">{T("Loading…")}</p> : got.down ? <p className="sub">{T("The AI choices couldn't load just now.")}</p> : (
+        <Row title={T("Your Navigator AI")}>
+          <Seg label={T("Your Navigator AI")} value={chosen} options={got.providers.map((p) => [p.id, p.label])} onChange={(v) => set({ ai_navigator: v })} />
+        </Row>
+      )}
+    </Section>
+  );
+}
+
+// ---- Chat & privacy -------------------------------------------------------------------------------------------------
+
+function Privacy({ s, set }) {
+  const blocked = Array.isArray(s.blocked) ? s.blocked : [];
+  const names = s.blocked_names && typeof s.blocked_names === "object" ? s.blocked_names : {};
+  return (
+    <>
+      <Section title={T("Private messages")}>
+        <Row title={T("Who can message me privately")} help={T("In the chat, a message to one person is private between the two of you.")}>
+          <Seg label={T("Who can message me privately")} value={s.dm_from || "everyone"} options={[["everyone", T("Everyone")], ["favourites", T("Only my ⭐ favourites")], ["nobody", T("No one")]]} onChange={(v) => set({ dm_from: v })} />
+        </Row>
+      </Section>
+      <Section title={T("Blocked people")} sub={T("You don't see their chat messages, and neither of you can message the other privately.")}>
+        {!blocked.length ? <p className="sub">{T("No one blocked. Press 🚫 beside a name in the chat to block someone.")}</p> : blocked.map((id) => (
+          <Row key={id} title={names[id] || T("Member")}>
+            <button type="button" className="ghost" onClick={() => { const n = { ...names }; delete n[id]; set({ blocked: blocked.filter((b) => b !== id), blocked_names: n }); }}>{T("Unblock")}</button>
+          </Row>
+        ))}
+      </Section>
+    </>
+  );
+}
+
+// ---- Lattice -----------------------------------------------------------------------------------------------------------
+
+function LatticeSet({ s, set }) {
+  return (
+    <Section title={T("Lattice")}>
+      <Row title={T("Show provided starters and examples")} help={T("What MarketNavi provides (the starter Groups, the example Sets and the built-in alerts) sits in a folded “Provided by MarketNavi” section. Switch off to keep only your own. Hiding never changes anything.")}>
+        <Switch label={T("Show provided starters and examples")} on={s.show_provided !== false} onChange={(v) => set({ show_provided: v })} />
+      </Row>
+    </Section>
+  );
+}

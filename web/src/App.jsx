@@ -7,7 +7,8 @@ import SignIn from "./pages/SignIn.jsx";
 import TradeLog from "./pages/tradelog/TradeLog.jsx";
 import Asset from "./pages/asset/Asset.jsx";
 import Search from "./components/Search.jsx";
-import Navigator from "./components/Navigator.jsx";
+import SidePanel from "./components/SidePanel.jsx";
+import Settings from "./pages/settings/Settings.jsx";
 import SearchPage from "./pages/SearchPage.jsx";
 
 // The new MarketNavi app (beta). One page so far, the Trade Log; each page moves across from the classic app in
@@ -70,15 +71,18 @@ export default function App() {
           {PAGES.map(([k, label]) => <a key={k} href={`#${k}`} className={page === k ? "on" : ""} aria-current={page === k ? "page" : undefined}>{label()}</a>)}
         </nav>
         <div className="right">
-          <Navigator onScreen={page === "asset" ? `The person is looking at the asset page for ${route[1]} (${route[2] || "chart"} tab).` : page === "search" ? `The person searched for “${route[1]}”.` : `The person is on the ${page} page.`} />
+          <SidePanel onScreen={page === "asset" ? `The person is looking at the asset page for ${route[1]} (${route[2] || "chart"} tab).` : page === "search" ? `The person searched for “${route[1]}”.` : `The person is on the ${page} page.`} />
           <a className="ghost" href={CLASSIC} title={T("Everything not moved across yet is in the classic app.")}>{T("Classic app")}</a>
-          <button type="button" className="ghost" onClick={() => supabase.auth.signOut()} title={account && account.user.email}>{T("Log out")}</button>
+          <a className={"ghost icon" + (page === "settings" ? " on" : "")} href="#settings" title={T("Settings")} aria-label={T("Settings")} aria-current={page === "settings" ? "page" : undefined}>
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" /></svg>
+          </a>
         </div>
       </header>
       <main className="main">
         {page === "tradelog" && account && <TradeLog account={account} />}
         {page === "asset" && account && <Asset key={route[1]} assetKey={route[1]} tab={route[2]} account={account} />}
         {page === "search" && account && <SearchPage key={route[1]} q={route[1] || ""} />}
+        {page === "settings" && account && <Settings account={account} section={route[1]} />}
       </main>
     </div>
   );

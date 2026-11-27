@@ -1,26 +1,23 @@
 import React, { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
 import { T, lang } from "../lib/i18n.js";
 import { ask } from "../lib/service.js";
 
-// ✨ The AI Navigator, in a panel that slides in from the right. Ask about the app, a reading, an asset or an idea;
-// it can look things up in MarketNavi (readings, your Sets) but never trades or saves anything for you.
-// Opened from the top bar, or from anywhere with: window.dispatchEvent(new CustomEvent("mn-navigator", {detail}))
-// where detail may hold a question to ask straight away and what is on the screen.
+// ✨ The AI Navigator. Ask about the app, a reading, an asset or an idea; it can look things up in MarketNavi
+// (readings, your Sets) but never trades or saves anything for you. Opened from the top bar, or from anywhere with
+// openNavigator({question, onScreen}), which opens the side panel on its Navigator tab.
 const KEY = "mn_nav_chat";
 const load = () => { try { return JSON.parse(sessionStorage.getItem(KEY)) || []; } catch (e) { return []; } };
 const keep = (c) => { try { sessionStorage.setItem(KEY, JSON.stringify(c.slice(-30))); } catch (e) { /* private window */ } };
 
 export function openNavigator(detail) { window.dispatchEvent(new CustomEvent("mn-navigator", { detail: detail || {} })); }
 
-export default function Navigator({ onScreen }) {
-  const [open, setOpen] = useState(false);
+// The chat itself, shown in the side panel's Navigator tab. `ask` (from the panel) is a question to send now.
+export default function NavigatorChat({ onScreen, ask: incoming }) {
   const [chat, setChat] = useState(load);
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const end = useRef(null), box = useRef(null);
-  const screen = useRef("");
 
   const send = async (question, extra) => {
     const text = String(question || "").trim();
@@ -42,55 +39,41 @@ export default function Navigator({ onScreen }) {
     setBusy(false);
   };
 
-  useEffect(() => {
-    const f = (e) => { setOpen(true); const d = e.detail || {}; screen.current = d.onScreen || ""; if (d.question) send(d.question, d.onScreen); else setTimeout(() => box.current && box.current.focus(), 50); };
-    window.addEventListener("mn-navigator", f);
-    return () => window.removeEventListener("mn-navigator", f);
-  });
-  useEffect(() => { if (end.current) end.current.scrollIntoView({ block: "end" }); }, [chat, busy, open]);
-  useEffect(() => { const k = (e) => { if (e.key === "Escape") setOpen(false); }; window.addEventListener("keydown", k); return () => window.removeEventListener("keydown", k); }, []);
+  useEffect(() => { if (incoming && incoming.question) send(incoming.question, incoming.onScreen); else if (box.current) box.current.focus(); }, [incoming]);
+  useEffect(() => { if (end.current) end.current.scrollIntoView({ block: "end" }); }, [chat, busy]);
 
   return (
-    <>
-      <button type="button" className="navbtn" onClick={() => setOpen(!open)} aria-expanded={open} title={T("Ask the AI Navigator about the app, a reading, an asset or an idea.")}>
-        <Sparkle /><span>{T("Navigator")}</span>
-      </button>
-      {createPortal(<aside className={"navpanel" + (open ? " open" : "")} aria-label={T("AI Navigator")} aria-hidden={!open}>
-        <div className="navhead">
-          <Sparkle /><b>{T("AI Navigator")}</b>
-          <button type="button" className="ghost" onClick={() => { setChat([]); keep([]); setErr(""); }} disabled={!chat.length}>{T("New chat")}</button>
-          <button type="button" className="ghost" onClick={() => setOpen(false)} aria-label={T("Close")}>✕</button>
-        </div>
-        <div className="navbody">
-          {!chat.length && (
-            <div className="navhint">
-              <p>{T("Ask anything about MarketNavi: what a reading means, where to find something, or how to test an idea. It explains; no buy or sell calls.")}</p>
-              {[T("What does a Stretch of −40 mean?"), T("Why is the Tide going out?"), T("Which of my Sets say yes on this asset?")].map((s) => (
-                <button key={s} type="button" className="navsug" onClick={() => send(s)}>{s}</button>
-              ))}
-            </div>
-          )}
-          {chat.map((m, i) => (
-            <div key={i} className={"navmsg " + m.role}>
-              {m.role === "assistant" ? <Rich text={m.content} /> : m.content}
-              {(m.notes || []).map((n, j) => <div key={j} className="navnote">{n}</div>)}
-            </div>
-          ))}
-          {busy && <div className="navmsg assistant m">{T("Thinking…")}</div>}
-          {err && <div className="note bad">{err}</div>}
-          <div ref={end} />
-        </div>
-        <form className="navform" onSubmit={(e) => { e.preventDefault(); send(q); }}>
-          <textarea ref={box} rows={2} value={q} maxLength={4000} placeholder={T("Ask about the app, an asset, a Set or an idea…")} aria-label={T("Your question")}
-            onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(q); } }} />
-          <button type="submit" className="primary" disabled={busy || !q.trim()}>{T("Ask")}</button>
-        </form>
-      </aside>, document.body)}
-    </>
+    <div className="navchat">
+      <div className="navbody">
+        {!chat.length && (
+          <div className="navhint">
+            <p>{T("Ask anything about MarketNavi: what a reading means, where to find something, or how to test an idea. It explains; no buy or sell calls.")}</p>
+            {[T("What does a Stretch of −40 mean?"), T("Why is the Tide going out?"), T("Which of my Sets say yes on this asset?")].map((s) => (
+              <button key={s} type="button" className="navsug" onClick={() => send(s)}>{s}</button>
+            ))}
+          </div>
+        )}
+        {chat.map((m, i) => (
+          <div key={i} className={"navmsg " + m.role}>
+            {m.role === "assistant" ? <Rich text={m.content} /> : m.content}
+            {(m.notes || []).map((n, j) => <div key={j} className="navnote">{n}</div>)}
+          </div>
+        ))}
+        {busy && <div className="navmsg assistant m">{T("Thinking…")}</div>}
+        {err && <div className="note bad">{err}</div>}
+        <div ref={end} />
+      </div>
+      <form className="navform" onSubmit={(e) => { e.preventDefault(); send(q); }}>
+        {chat.length > 0 && <button type="button" className="ghost" onClick={() => { setChat([]); keep([]); setErr(""); }} title={T("New chat")} aria-label={T("New chat")}>＋</button>}
+        <textarea ref={box} rows={2} value={q} maxLength={4000} placeholder={T("Ask about the app, an asset, a Set or an idea…")} aria-label={T("Your question")}
+          onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(q); } }} />
+        <button type="submit" className="primary" disabled={busy || !q.trim()}>{T("Ask")}</button>
+      </form>
+    </div>
   );
 }
 
-function Sparkle() {
+export function Sparkle() {
   return <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z" /><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" /></svg>;
 }
 

@@ -48,17 +48,23 @@ function LiveSets({ assetKey }) {
   const [got, setGot] = useState(null);
   const [err, setErr] = useState("");
   const [open, setOpen] = useState(null);
+  const [round, setRound] = useState(0);
   useEffect(() => {
+    // The first check after the service wakes can stall, so one quiet retry before saying so; then a Try again button.
     let live = true; setGot(null); setErr("");
-    assetSets(assetKey).then((g) => live && setGot(g)).catch((e) => live && setErr(e.status === 0 ? "down" : "fail"));
+    const go = (n) => assetSets(assetKey).then((g) => live && setGot(g)).catch((e) => {
+      if (!live) return;
+      if (n < 1 && e.status !== 401 && e.status !== 403) go(n + 1); else setErr(e.status === 0 ? "down" : "fail");
+    });
+    go(0);
     return () => { live = false; };
-  }, [assetKey]);
+  }, [assetKey, round]);
   const ANSWER = { yes: T("Yes"), no: T("No"), unknown: T("Not known yet") };
   return (
     <section className="card">
       <h2>{T("Your Sets on this asset")}</h2>
       <p className="sub">{T("Each of your own Sets checked on this asset right now, the same answer Prism would give.")}</p>
-      {err ? <p className="sub">{err === "down" ? T("The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.") : T("Your Sets couldn't be checked just now. Please try again in a minute.")} <a className="linkish" href={CLASSIC}>{T("Open the classic app")} ›</a></p>
+      {err ? <p className="sub">{err === "down" ? T("The service that checks Sets isn't reachable just now. Your Sets are also in the classic app's Lattice.") : T("Your Sets couldn't be checked just now. Please try again in a minute.")} <button type="button" className="linkish" onClick={() => setRound(round + 1)}>{T("Try again")}</button> · <a className="linkish" href={CLASSIC}>{T("Open the classic app")} ›</a></p>
         : !got ? <p className="sub">{T("Checking your Sets… this can take up to a minute the first time.")}</p>
         : !got.sets.length ? <p className="sub">{T("You haven't made any Sets yet. Build one in Lattice in the classic app.")}</p> : (
           <ol className="fsteps">

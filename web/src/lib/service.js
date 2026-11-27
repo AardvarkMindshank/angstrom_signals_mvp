@@ -25,7 +25,7 @@ export async function call(path, { method = "GET", body, timeout = 90000 } = {})
   } finally { clearTimeout(timer); }
 }
 
-export const assetSets = (key) => call(`/asset/sets?key=${encodeURIComponent(key)}`);
+export const assetSets = (key) => call(`/asset/sets?key=${encodeURIComponent(key)}`, { timeout: 45000 });
 export const sonar = (rows) => call("/sonar", { method: "POST", body: { time: rows.map((r) => r.time), open: rows.map((r) => r.open),
   high: rows.map((r) => r.high), low: rows.map((r) => r.low), close: rows.map((r) => r.close), volume: rows.map((r) => r.volume || 0) } });
 export const search = (q) => call(`/search?q=${encodeURIComponent(q)}`);
