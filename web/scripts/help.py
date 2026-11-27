@@ -52,6 +52,36 @@ TABS = [  # (key, the classic tab's variable, title, icon)
 ]
 
 
+# Paragraphs of the classic texts that describe the classic layout, replaced for the new app (topic, block, paragraph):
+# the rest of each block stays the classic app's own words and translations.
+NEW_APP = {
+    ("lattice", 0, 0): mark("""**Lattice** is the research workspace, a page of its own in the bar at the top. Pick a part from its tabs:
+Signal Groups, Signal Sets, Prism Scan, Funnels and Soundings; hover a tab for what it does. Anything it draws on a
+chart (such as Visualize History) shows right there in Lattice. Like the rest of the app, it describes conditions;
+nothing in it is a forecast or advice."""),
+    ("sentiment", 0, 2): mark("""**Where it shows**
+- **Market sentiment – Crypto / Stocks** (from the Quick Snapshot or Search): the whole market, from headlines plus
+  public readings (central banks, the dollar and yields, Fear & Greed, market breadth and more).
+- The **News** tab of each asset's page: the headlines for that asset, newest first, each with its score and a
+  one-line summary, plus Positive and Negative paragraphs.
+- The **Sentiment** column in the tables."""),
+}
+
+
+def new_app(code: str, key: str, blocks: list) -> list:
+    """The classic blocks with NEW_APP's paragraphs swapped in (only when the paragraphs line up as expected)."""
+    out = list(blocks)
+    with i18n.using(code):
+        for (k, b, para), text in NEW_APP.items():
+            if k != key or b >= len(out):
+                continue
+            parts = out[b].strip().split("\n\n")
+            if para < len(parts):
+                parts[para] = i18n.t(text)
+                out[b] = "\n\n".join(parts)
+    return out
+
+
 def classic_blocks() -> dict:
     """{tab variable: [(text, kwargs-name or None)]}: the t("…") texts each classic help tab shows, in order."""
     tree = ast.parse(open(os.path.join(ROOT, "app.py"), encoding="utf-8").read())
@@ -122,7 +152,7 @@ def topics(code: str, blocks: dict) -> list:
                         texts.append(t(text, fam=fam))
                     elif kw is None:
                         texts.append(t(text))
-            out.append({"key": key, "title": t(title), "icon": icon, "blocks": texts})
+            out.append({"key": key, "title": t(title), "icon": icon, "blocks": new_app(code, key, texts)})
     return out
 
 
