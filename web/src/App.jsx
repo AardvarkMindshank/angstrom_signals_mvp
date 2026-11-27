@@ -10,15 +10,16 @@ import Search from "./components/Search.jsx";
 import SidePanel from "./components/SidePanel.jsx";
 import Settings from "./pages/settings/Settings.jsx";
 import SearchPage from "./pages/SearchPage.jsx";
+import Snapshot from "./pages/snapshot/Snapshot.jsx";
 
 // The new MarketNavi app (beta). One page so far, the Trade Log; each page moves across from the classic app in
 // turn, and the classic app keeps running until every page is here.
-const PAGES = [["tradelog", () => T("Trade Log")]];
+const PAGES = [["snapshot", () => T("Quick Snapshot")], ["tradelog", () => T("Trade Log")]];
 
 // The address after # picks the page: #tradelog, or #asset/<asset key>/<tab>.
 function readRoute() {
   const parts = window.location.hash.replace(/^#/, "").split("/").map((p) => { try { return decodeURIComponent(p); } catch (e) { return p; } });
-  return parts[0] ? parts : ["tradelog"];
+  return parts[0] ? parts : ["snapshot"];
 }
 
 export default function App() {
@@ -61,7 +62,7 @@ export default function App() {
   return (
     <div className="shell">
       <header className="top">
-        <a className="brand" href="#tradelog" aria-label="MarketNavi">
+        <a className="brand" href="#snapshot" aria-label="MarketNavi">
           <img src="/logo.png" alt="" width="28" height="28" />
           <span>MarketNavi</span>
           <span className="beta" title={T("The new MarketNavi app, being built page by page. The classic app keeps working meanwhile.")}>{T("New · beta")}</span>
@@ -79,6 +80,7 @@ export default function App() {
         </div>
       </header>
       <main className="main">
+        {page === "snapshot" && account && <Snapshot account={account} />}
         {page === "tradelog" && account && <TradeLog account={account} />}
         {page === "asset" && account && <Asset key={route[1]} assetKey={route[1]} tab={route[2]} account={account} />}
         {page === "search" && account && <SearchPage key={route[1]} q={route[1] || ""} />}

@@ -5,6 +5,7 @@ because they need the Python engine or the AI keys. It runs the same code as the
     GET  /asset/sets?key=…          the member's own Sets checked on one asset right now (Yes / No / Unknown + why)
     POST /sonar                     the Sonar strip for the candles the chart is showing
     GET  /chart/options?key=…       what the Pro chart can offer for one asset (indicators, Sonar markers, Sets)
+    GET  /snapshot?lang=…&save=…    Quick Snapshot: Tides card, what changed, Trend extremes, moods, funnels, markets
     POST /chart                     the Pro chart: the classic chart's data for one candle size, range and set of choices
     GET  /search?q=…                news, assets and the member's Logbook that mention a topic ("inflation", "ETF")
     GET  /ai                        the AIs the Navigator can use (for Settings)
@@ -188,6 +189,24 @@ def sonar(c: Candles, who: Member = Depends(member)):
     flags = lambda s: [bool(v) if not pd.isna(v) else False for v in s]                          # noqa: E731
     return {"time": c.time, "wt1": clean(mc["mc_wt1"]), "wt2": clean(mc["mc_wt2"]), "mf": clean(mc["mc_mf"]),
             "buy": flags(mc["mc_buy"]), "sell": flags(mc["mc_sell"]), "cross": [int(v or 0) for v in mc["mc_cross"]]}
+
+
+# ---- 📸 Quick Snapshot -----------------------------------------------------------------------------------------------
+
+_snap_cache = Cache(45, 2000)
+
+
+@app.get("/snapshot")
+def snapshot(lang: str = Query("en", max_length=8), save: bool = Query(False), who: Member = Depends(member)):
+    """Every part of Quick Snapshot. save=true (the first look of a browser session) keeps this visit's readings and
+    Candidates as the account's last visit, as the classic page does once a session."""
+    from service import snapshot as snap
+
+    if not save:
+        hit = _snap_cache.get((who.id, lang))
+        if hit is not None:
+            return hit
+    return _snap_cache.put((who.id, lang), snap.build(who.db, who.id, lang, save))
 
 
 # ---- the Pro chart (the classic chart's data, built as the classic app builds it) --------------------------------------

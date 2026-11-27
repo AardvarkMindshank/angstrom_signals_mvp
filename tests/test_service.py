@@ -191,3 +191,52 @@ def test_chart_options_list_what_the_chart_can_show(monkeypatch):
     assert any(k == "liq" for k, _ in crypto["indicators"]) and not any(k == "liq" for k, _ in stock["indicators"])
     assert crypto["sets"] == [{"key": "p1", "name": "Oversold bounce (provided)"}]
     assert crypto["sonar_default"] and len(crypto["sonar_marks"]) == 9
+
+
+# ---- 📸 Quick Snapshot ----------------------------------------------------------------------------------------------
+
+def _row(kind, key, trend, parts=None, **extra):
+    return {"type": kind, "key": key, "symbol": key.upper(), "logo": "", "trend": trend, "trend_parts": parts or {},
+            "price": 10.0, "change_1d": 1.0, "closes": [1, 2, 3], "mood": None, "next_earnings": "", **extra}
+
+
+def test_snapshot_what_changed_finds_crossings_and_moves():
+    from service import snapshot as snap
+
+    rows = [_row("Crypto", "xrp", -43.0, {"Price vs 50-day average": -20.0}), _row("Stock", "AAPL", 18.0),
+            _row("Crypto", "btc", 12.0)]
+    base = {"Crypto:xrp": {"trend": -12.0, "factors": {"Price vs 50-day average": -1.8}},
+            "Stock:AAPL": {"trend": 10.0, "factors": {}}, "Crypto:btc": {"trend": 11.0, "factors": {}}}
+    out = snap.what_changed(rows, base, {})
+    assert out["seen"] and [c["pick"] for c in out["crossings"]] == ["Crypto|xrp"]
+    assert "moved it most" in out["crossings"][0]["detail"]
+    assert [m["pick"] for m in out["moves"]] == ["Stock|AAPL"]          # BTC moved 1 point: too small to list
+    assert snap.what_changed(rows, {}, {}) == {"seen": False, "crossings": [], "moves": []}
+
+
+def test_snapshot_extremes_and_visit_record():
+    from service import snapshot as snap
+
+    rows = [_row("Crypto", "a", 30.0), _row("Crypto", "b", -5.0), _row("Stock", "X", 2.0), _row("Stock", "Y", None)]
+    x = snap.extremes(rows)
+    assert x["crypto"]["top"]["pick"] == "Crypto|a" and x["crypto"]["bottom"]["pick"] == "Crypto|b"
+    assert x["equity"]["bottom"] is None
+    v = snap.visit_snapshot(rows)
+    assert set(v) == {"Crypto:a", "Crypto:b", "Stock:X"} and v["Crypto:a"]["trend"] == 30.0
+
+
+def test_snapshot_endpoint_keeps_going_when_a_part_fails(monkeypatch):
+    from service import snapshot as snap
+
+    monkeypatch.setattr(snap, "_asset_rows", lambda db, s, c, k: [_row("Crypto", "a", 30.0)])
+    monkeypatch.setattr(snap, "tides_card", lambda db: (_ for _ in ()).throw(RuntimeError("down")))
+    monkeypatch.setattr(snap, "moods", lambda db, s: [])
+    monkeypatch.setattr(snap, "funnel_tiles", lambda db, uid, s: ([], {}))
+    monkeypatch.setattr(snap, "markets", lambda db, s: {"groups": [], "cards": []})
+    saved = {}
+    monkeypatch.setattr(snap, "_save_settings", lambda db, uid, u: saved.update(u))
+    out = _client({"user_preferences": [{"settings": {}, "crypto_watchlist": {"a": "A"}, "stock_watchlist": {}}]}) \
+        .get("/snapshot?save=true").json()
+    assert out["tides"] is None and out["errors"] == ["tides"]
+    assert out["extremes"]["crypto"]["top"]["pick"] == "Crypto|a"
+    assert "Crypto:a" in saved["score_visit"]

@@ -7,7 +7,7 @@ import { openNavigator } from "./Navigator.jsx";
 export const assetHref = (key, tab) => `#asset/${encodeURIComponent(key)}${tab ? "/" + tab : ""}`;
 const go = (href) => { window.location.hash = href.slice(1); };
 
-const PAGES = () => [{ href: "#tradelog", label: T("Trade Log"), words: "trade log trades journal etoro binance logbook review" }];
+const PAGES = () => [{ href: "#snapshot", label: T("Quick Snapshot"), words: "quick snapshot home start today video briefing outlook passage plan tides funnels markets what changed" }, { href: "#tradelog", label: T("Trade Log"), words: "trade log trades journal etoro binance logbook review" }];
 
 function Logo({ a, src, size = 36 }) {
   const [bad, setBad] = useState(false);
