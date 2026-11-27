@@ -8,7 +8,11 @@ const PALETTE = {
 };
 
 export function applyTheme(settings) {
-  const mode = (settings || {}).ui_mode || "auto";
+  // The last mode is remembered on this device, so the start-up screen already has the right colours (a phone in
+  // dark mode used to flash dark, then light, on every load).
+  let mode = (settings || {}).ui_mode;
+  try { if (mode) localStorage.setItem("mn_ui_mode", mode); else mode = localStorage.getItem("mn_ui_mode"); } catch (e) { /* private window */ }
+  mode = mode || "auto";
   const night = mode === "night" || (mode === "auto" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
   const p = PALETTE[night ? "night" : "day"];
   const root = document.documentElement;
