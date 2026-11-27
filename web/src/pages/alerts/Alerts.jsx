@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Icon from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
-import { supabase, CLASSIC } from "../../lib/supabase.js";
+import { supabase } from "../../lib/supabase.js";
 import { watchlists } from "../../lib/assets.js";
 import { stamp } from "../../lib/format.js";
 import { assetHref } from "../../components/Search.jsx";
@@ -82,7 +82,7 @@ export default function Alerts() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="ahead"><b>{n.asset_name || T("Alert")}</b><span className="m">{stamp(n.created_at)}</span></div>
                   <div className="abody">{alertText(n.message)}</div>
-                  {quiet && n.alert_type === "group_invite" && <a className="linkish" href={CLASSIC}>{T("Answer this invitation in the classic app ›")}</a>}
+                  {quiet && n.alert_type === "group_invite" && <Invite n={n} onDone={load} />}
                 </div>
               </>
             );
@@ -94,6 +94,34 @@ export default function Alerts() {
           })}
         </ol>
       )}
+    </div>
+  );
+}
+
+// 👥 A community invitation: Accept or Dismiss (respond_group_invite, as the classic app).
+function Invite({ n, onDone }) {
+  const [msg, setMsg] = useState("");
+  const [busy, setBusy] = useState(false);
+  const raw = String(n.asset_symbol || "");
+  const id = raw.startsWith("group:") ? parseInt(raw.slice(6), 10) : NaN;
+  if (!id) return null;
+  const answer = async (accept) => {
+    setBusy(true); setMsg("");
+    try {
+      const { data, error } = await supabase.rpc("respond_group_invite", { invite_id: id, accept });
+      const code = String(data || "").replace(/"/g, "").trim();
+      if (error || !["ok", "dismissed", "gone", "expired", "full"].includes(code)) setMsg(T("That invite could not be updated. Please try again."));
+      else if (code === "expired") setMsg(T("That invite has expired."));
+      else if (code === "full") setMsg(T("That community already has 50 members."));
+      else { onDone(); return; }
+    } catch (e) { setMsg(T("That invite could not be updated. Please try again.")); }
+    setBusy(false);
+  };
+  return (
+    <div className="bar" style={{ marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+      <button type="button" className="primary" disabled={busy} onClick={() => answer(true)}><Icon n="check" size={16} /> {T("Accept")}</button>
+      <button type="button" className="ghost bordered" disabled={busy} onClick={() => answer(false)}>{T("Dismiss")}</button>
+      {msg && <span className="m">{msg}</span>}
     </div>
   );
 }

@@ -3091,7 +3091,6 @@
   "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "Cảnh báo đến đây khi một tài sản trong danh sách theo dõi vượt một đường cảnh báo của bạn, tâm lý thị trường vượt ngưỡng, quét Prism tìm thấy kết quả, phễu có Ứng viên mới, hoặc nghiên cứu bạn bắt đầu hoàn tất. Chọn chúng trong",
   "No alerts yet.": "Chưa có cảnh báo.",
   "Alert": "Cảnh báo",
-  "Answer this invitation in the classic app ›": "Trả lời lời mời này trong ứng dụng cổ điển ›",
   "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "Video, Triển vọng buổi sáng và Passage Plan của bạn mỗi ngày, lưu trong hai tuần. Đang hiện {day}.",
   "Copy link": "Sao chép liên kết",
   "Checks": "Kiểm tra",
@@ -3186,5 +3185,6 @@
   "Make one in Lattice ›": "Tạo một phễu trong Lattice ›",
   "can't be changed or deleted": "không thể thay đổi hay xóa",
   "You already have an unchanged copy: {name}.": "Bạn đã có một bản sao chưa thay đổi: {name}.",
-  "If you save:": "Nếu bạn lưu:"
+  "If you save:": "Nếu bạn lưu:",
+  "That invite could not be updated. Please try again.": "Không thể cập nhật lời mời đó. Vui lòng thử lại."
 }

@@ -3091,7 +3091,6 @@
   "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "ウォッチリストの銘柄がアラートラインを越えたとき、市場センチメントがラインを越えたとき、Prism スキャンで一致が見つかったとき、ファネルに新しい候補が出たとき、開始した調査が終わったときに、ここにアラートが届きます。設定は",
   "No alerts yet.": "まだアラートはありません。",
   "Alert": "アラート",
-  "Answer this invitation in the classic app ›": "この招待にはクラシック版で回答 ›",
   "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "毎日の動画、モーニング・アウトルック、あなたの Passage Plan を2週間保管。{day} を表示中。",
   "Copy link": "リンクをコピー",
   "Checks": "チェック",
@@ -3186,5 +3185,6 @@
   "Make one in Lattice ›": "Lattice で作成 ›",
   "can't be changed or deleted": "変更・削除不可",
   "You already have an unchanged copy: {name}.": "変更していないコピーがすでにあります：{name}。",
-  "If you save:": "保存すると："
+  "If you save:": "保存すると：",
+  "That invite could not be updated. Please try again.": "その招待を更新できませんでした。もう一度お試しください。"
 }

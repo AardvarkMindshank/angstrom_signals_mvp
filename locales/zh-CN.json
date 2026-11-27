@@ -3091,7 +3091,6 @@
   "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "当自选资产越过你的提醒线、市场情绪越过其线、Prism 扫描找到匹配、漏斗出现新候选，或你启动的研究完成时，提醒会出现在这里。在此设置：",
   "No alerts yet.": "还没有提醒。",
   "Alert": "提醒",
-  "Answer this invitation in the classic app ›": "在经典版中回复此邀请 ›",
   "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "每天的视频、晨间展望和你的 Passage Plan，保留两周。正在显示 {day}。",
   "Copy link": "复制链接",
   "Checks": "检查",
@@ -3186,5 +3185,6 @@
   "Make one in Lattice ›": "在 Lattice 中创建 ›",
   "can't be changed or deleted": "不能修改或删除",
   "You already have an unchanged copy: {name}.": "您已有一个未修改的副本：{name}。",
-  "If you save:": "如果保存："
+  "If you save:": "如果保存：",
+  "That invite could not be updated. Please try again.": "无法更新该邀请，请重试。"
 }

@@ -3091,7 +3091,6 @@
   "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "관심 목록 자산이 알림선을 넘거나, 시장 심리가 기준선을 넘거나, Prism 스캔에서 일치 항목이 나오거나, 퍼널에 새 후보가 생기거나, 시작한 연구가 끝나면 여기에 알림이 옵니다. 선택은",
   "No alerts yet.": "아직 알림이 없습니다.",
   "Alert": "알림",
-  "Answer this invitation in the classic app ›": "이 초대는 클래식 앱에서 응답 ›",
   "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "매일의 영상, 모닝 아웃룩, 내 Passage Plan을 2주 동안 보관합니다. {day} 표시 중.",
   "Copy link": "링크 복사",
   "Checks": "점검",
@@ -3186,5 +3185,6 @@
   "Make one in Lattice ›": "Lattice에서 만들기 ›",
   "can't be changed or deleted": "바꾸거나 삭제할 수 없음",
   "You already have an unchanged copy: {name}.": "이미 바꾸지 않은 사본이 있습니다: {name}.",
-  "If you save:": "저장하면:"
+  "If you save:": "저장하면:",
+  "That invite could not be updated. Please try again.": "그 초대를 업데이트할 수 없습니다. 다시 시도하세요."
 }

@@ -3091,7 +3091,6 @@
   "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "Las alertas llegan aquí cuando un activo de tu lista cruza una de tus líneas de alerta, el sentimiento de un mercado cruza su línea, un escaneo de Prism encuentra una coincidencia, un embudo tiene nuevos Candidatos o termina un estudio que iniciaste. Elígelas en",
   "No alerts yet.": "Aún no hay alertas.",
   "Alert": "Alerta",
-  "Answer this invitation in the classic app ›": "Responder a esta invitación en la app clásica ›",
   "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "El vídeo, el Panorama matinal y tu Passage Plan de cada día, guardados dos semanas. Mostrando {day}.",
   "Copy link": "Copiar enlace",
   "Checks": "Comprobaciones",
@@ -3186,5 +3185,6 @@
   "Make one in Lattice ›": "Crea uno en Lattice ›",
   "can't be changed or deleted": "no se puede cambiar ni eliminar",
   "You already have an unchanged copy: {name}.": "Ya tienes una copia sin cambios: {name}.",
-  "If you save:": "Si guardas:"
+  "If you save:": "Si guardas:",
+  "That invite could not be updated. Please try again.": "No se pudo actualizar esa invitación. Inténtalo de nuevo."
 }

@@ -3091,7 +3091,6 @@
   "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "Peringatan muncul di sini saat aset di daftar pantauan melewati salah satu garis peringatan Anda, sentimen pasar melewati garisnya, pemindaian Prism menemukan kecocokan, corong punya Kandidat baru, atau studi yang Anda mulai selesai. Atur di",
   "No alerts yet.": "Belum ada peringatan.",
   "Alert": "Peringatan",
-  "Answer this invitation in the classic app ›": "Jawab undangan ini di aplikasi klasik ›",
   "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "Video, Prospek Pagi, dan Passage Plan Anda setiap hari, disimpan dua minggu. Menampilkan {day}.",
   "Copy link": "Salin tautan",
   "Checks": "Pemeriksaan",
@@ -3186,5 +3185,6 @@
   "Make one in Lattice ›": "Buat di Lattice ›",
   "can't be changed or deleted": "tidak dapat diubah atau dihapus",
   "You already have an unchanged copy: {name}.": "Anda sudah punya salinan yang belum diubah: {name}.",
-  "If you save:": "Jika Anda menyimpan:"
+  "If you save:": "Jika Anda menyimpan:",
+  "That invite could not be updated. Please try again.": "Undangan itu tidak bisa diperbarui. Silakan coba lagi."
 }
