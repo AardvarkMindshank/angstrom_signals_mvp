@@ -1,4 +1,4 @@
-import React, { Suspense, lazy, useEffect, useState } from "react";
+import React, { Suspense, lazy, startTransition, useEffect, useState } from "react";
 import { supabase, configured, CLASSIC } from "./lib/supabase.js";
 import { T, loadWords, pickLanguage } from "./lib/i18n.js";
 import { applyTheme } from "./lib/theme.js";
@@ -11,22 +11,24 @@ import Snapshot from "./pages/snapshot/Snapshot.jsx";
 import Nda, { Signed } from "./components/Nda.jsx";
 import { call } from "./lib/service.js";
 // Each page loads when first opened (the Quick Snapshot, the usual first page, comes with the app).
-const TradeLog = lazy(() => import("./pages/tradelog/TradeLog.jsx"));
-const Asset = lazy(() => import("./pages/asset/Asset.jsx"));
-const Settings = lazy(() => import("./pages/settings/Settings.jsx"));
-const SearchPage = lazy(() => import("./pages/SearchPage.jsx"));
-const Signals = lazy(() => import("./pages/signals/Signals.jsx"));
-const Tides = lazy(() => import("./pages/tides/Tides.jsx"));
-const Mood = lazy(() => import("./pages/mood/Mood.jsx"));
-const Logbook = lazy(() => import("./pages/logbook/Logbook.jsx"));
-const Alerts = lazy(() => import("./pages/alerts/Alerts.jsx"));
-const Lattice = lazy(() => import("./pages/lattice/Lattice.jsx"));
-const Help = lazy(() => import("./pages/help/Help.jsx"));
-const Admin = lazy(() => import("./pages/admin/Admin.jsx"));
+// Each page's code, fetched ahead once the app has opened (so moving between pages never waits on a download).
+const LOAD = {};
+const TradeLog = lazy(LOAD.TradeLog = () => import("./pages/tradelog/TradeLog.jsx"));
+const Asset = lazy(LOAD.Asset = () => import("./pages/asset/Asset.jsx"));
+const Settings = lazy(LOAD.Settings = () => import("./pages/settings/Settings.jsx"));
+const SearchPage = lazy(LOAD.SearchPage = () => import("./pages/SearchPage.jsx"));
+const Signals = lazy(LOAD.Signals = () => import("./pages/signals/Signals.jsx"));
+const Tides = lazy(LOAD.Tides = () => import("./pages/tides/Tides.jsx"));
+const Mood = lazy(LOAD.Mood = () => import("./pages/mood/Mood.jsx"));
+const Logbook = lazy(LOAD.Logbook = () => import("./pages/logbook/Logbook.jsx"));
+const Alerts = lazy(LOAD.Alerts = () => import("./pages/alerts/Alerts.jsx"));
+const Lattice = lazy(LOAD.Lattice = () => import("./pages/lattice/Lattice.jsx"));
+const Help = lazy(LOAD.Help = () => import("./pages/help/Help.jsx"));
+const Admin = lazy(LOAD.Admin = () => import("./pages/admin/Admin.jsx"));
 
 // The new MarketNavi app (beta). One page so far, the Trade Log; each page moves across from the classic app in
 // turn, and the classic app keeps running until every page is here.
-const PAGES = [["snapshot", () => T("Quick Snapshot")], ["signals", () => T("Signals")], ["tides", () => T("Tides")], ["lattice", () => T("Lattice")], ["logbook", () => T("Logbook")], ["tradelog", () => T("Trade Log")]];
+const PAGES = [["snapshot", () => T("Quick Snapshot"), "camera"], ["signals", () => T("Signals"), "activity"], ["tides", () => T("Tides"), "waves-horizontal"], ["lattice", () => T("Lattice"), "puzzle"], ["logbook", () => T("Logbook"), "notebook"], ["tradelog", () => T("Trade Log"), "book-open"]];
 
 // The address after # picks the page: #tradelog, or #asset/<asset key>/<tab>.
 function readRoute() {
@@ -70,7 +72,19 @@ export default function App() {
     return () => { live = false; };
   }, [session && session.user && session.user.id, session === null]);
 
-  useEffect(() => { const f = () => setRoute(readRoute()); window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f); }, []);
+  // A new page keeps the one on screen until its code is ready (no flash of "Loading…"), and opens at the top.
+  useEffect(() => {
+    const f = () => {
+      const next = readRoute();
+      startTransition(() => setRoute((cur) => { if (cur[0] !== next[0]) window.scrollTo(0, 0); return next; }));
+    };
+    window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f);
+  }, []);
+  useEffect(() => {
+    if (!account) return;
+    const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));
+    idle(() => Object.values(LOAD).forEach((load) => load().catch(() => {})));
+  }, [!!account]);
 
   if (!ready) return <div className="boot">{"MarketNavi"}</div>;
   if (!configured) return <div className="boot">{T("The new app isn't set up yet.")}</div>;
@@ -93,7 +107,7 @@ export default function App() {
         </a>
         <Search />
         <nav className="pages" aria-label={T("Pages")}>
-          {PAGES.map(([k, label]) => <a key={k} href={`#${k}`} className={page === k ? "on" : ""} aria-current={page === k ? "page" : undefined}>{label()}</a>)}
+          {PAGES.map(([k, label, icon]) => <a key={k} href={`#${k}`} className={page === k ? "on" : ""} aria-current={page === k ? "page" : undefined}><Icon n={icon} size={20} /><span>{label()}</span></a>)}
         </nav>
         <div className="right">
           <SidePanel onScreen={page === "asset" ? `The person is looking at the asset page for ${route[1]} (${route[2] || "chart"} tab).` : page === "search" ? `The person searched for “${route[1]}”.` : `The person is on the ${page} page.`} />
