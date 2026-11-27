@@ -1,5 +1,5 @@
 {
- "built_at": "2026-11-26T22:40:27.797317+00:00",
+ "built_at": "2026-11-27T04:31:07.474582+00:00",
  "rules": {
   "list": "S&P 500",
   "min_price": 5.0,
@@ -4965,49 +4965,49 @@
    "ticker": "FDXF",
    "name": "FedEx Freight",
    "sector": "Industrials",
-   "reason": "only 183 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 184 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "GEV",
    "name": "GE Vernova",
    "sector": "Industrials",
-   "reason": "only 974 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 975 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "HONA",
    "name": "Honeywell Aerospace",
    "sector": "Industrials",
-   "reason": "only 164 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 165 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "Q",
    "name": "Qnity Electronics",
    "sector": "Information Technology",
-   "reason": "only 395 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 396 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "RDDT",
    "name": "Reddit",
    "sector": "Communication Services",
-   "reason": "only 980 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 981 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "SNDK",
    "name": "Sandisk",
    "sector": "Information Technology",
-   "reason": "only 651 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 652 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "SOLV",
    "name": "Solventum",
    "sector": "Health Care",
-   "reason": "only 975 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 976 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "VYLR",
    "name": "Vylor",
    "sector": "Consumer Staples",
-   "reason": "only 56 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 57 days of history (the weekly stage needs about 3 years)"
   }
  ]
 }
