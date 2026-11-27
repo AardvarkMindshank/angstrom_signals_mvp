@@ -8,7 +8,7 @@ import Icon from "../../components/Icon.jsx";
 // admin database functions with the admin's own sign-in, and each of them checks the admin role itself, so nobody
 // else can read or change these lists even by opening #admin. The welcome and barred emails go through the data
 // service (service/admin_mail.py). The NDA tools, AI provider choice and page timings stay in the classic app.
-export const ADMIN_ICONS = ["users", "message-square-text", "flag", "ticket", "ban", "shield", "check", "x", "trash", "image", "mail", "user-plus", "chevron-up", "chevron-down"];
+export const ADMIN_ICONS = ["users", "message-square-text", "flag", "ticket", "ban", "shield", "check", "x", "trash", "image", "mail", "user-plus", "chevron-up", "chevron-down", "download", "eye"];
 
 const SECTIONS = [["members", "users", "Members"], ["feedback", "message-square-text", "Feedback"], ["reports", "flag", "Reported comments"], ["beta", "ticket", "Beta requests"], ["blacklist", "ban", "Blacklist"]];
 
@@ -62,7 +62,7 @@ export default function Admin({ section, account }) {
         {on === "members" && <Members when={when} />}
         {on === "feedback" && <Feedback when={when} />}
         {on === "reports" && <Reports when={when} />}
-        {on === "beta" && <Beta when={when} />}
+        {on === "beta" && <Beta when={when} nda={account && account.nda} />}
         {on === "blacklist" && <Blacklist when={when} />}
       </div>
     </div>
@@ -303,7 +303,31 @@ function Reports({ when }) {
 
 // 🎟️ Beta requests from the website form. Choose Approve or Decline on any rows, then Apply: nothing changes (and
 // no email goes) until Apply. Approving lets that email create an account and sends the welcome email.
-function Beta({ when }) {
+// The NDA column (nda.admin_cell): whether an approved tester has signed the current version.
+function ndaCell(r, nda) {
+  if (!nda || !nda.version) return ["—", "No NDA is set up yet.", ""];
+  if (r.account_admin) return ["Admin", "Admins don't sign the NDA.", ""];
+  if (r.status !== "approved") return ["—", "Asked to sign after approval.", ""];
+  const from = String(nda.applies_from || "").slice(0, 10);
+  if ((nda.exempt || []).includes(String(r.email || "").trim().toLowerCase()) || (from && r.created_at && String(r.created_at).slice(0, 10) < from))
+    return ["Not asked", `Not asked: on the exempt list, or joined before ${from} when version ${nda.version} began to apply.`, ""];
+  if (r.nda_version === nda.version && r.nda_signed_at) return [`Signed ${String(r.nda_signed_at).slice(0, 10)}`, `Signed version ${nda.version}.`, "good"];
+  if (r.nda_version) return ["Older version", `Signed version ${r.nda_version}; asked to sign ${nda.version} at next sign-in.`, "warn"];
+  if (!r.has_account) return ["No account yet", "Approved; signs when they first sign in.", "warn"];
+  return ["Waiting", "Has an account but has not signed yet; asked at every sign-in.", "warn"];
+}
+
+async function ndaCopy(id) {
+  const { data, error } = await supabase.rpc("admin_nda_copy", { p_id: Number(id) });
+  if (error || !data || !data.pdf) return false;
+  const bytes = Uint8Array.from(atob(data.pdf), (c) => c.charCodeAt(0));
+  const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+  const a = document.createElement("a"); a.href = url; a.download = `NDA-signed-${data.email || "tester"}-v${data.nda_version}.pdf`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
+  return true;
+}
+
+function Beta({ when, nda }) {
   const [list, load] = useRows("admin_beta_requests");
   const [open, setOpen] = useState(null);
   const [asking, setAsking] = useState(false);
@@ -370,6 +394,12 @@ function Beta({ when }) {
         <label className="admfind"><Icon n="user-plus" size={15} /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => e.key === "Enter" && approveEmail()} placeholder="Approve an email directly: name@example.com" aria-label="Email to approve" /></label>
         <button type="button" className="primary" disabled={busy || !email.trim()} onClick={approveEmail}>Approve email</button>
       </div>
+      {nda && nda.version && (
+        <div className="admsignup">
+          <span className="m">{nda.enforce ? `NDA version ${nda.version}: ${list.filter((r) => r.nda_version === nda.version && r.nda_signed_at).length} signed. Testers sign at their first sign-in after approval; a signed copy is emailed to them and to admins.` : `NDA version ${nda.version} is set up but switched off: testers are not asked to sign yet.`}</span>
+          <a className="ghost bordered btnlink" href="#ndapreview" title="See and try the signing page testers get. Nothing is recorded."><Icon n="eye" size={15} /> Preview the NDA page</a>
+        </div>
+      )}
       <Find value={q} set={setQ} place="Search names, emails, tools or reasons"><label className="ptog"><input type="checkbox" checked={decided} onChange={(e) => setDecided(e.target.checked)} /> <span>Show decided</span></label></Find>
       <Note note={note} />
       {count > 0 && <div className="admapply"><button type="button" className="primary" disabled={busy} onClick={apply}>{busy ? "Applying…" : `Apply ${count} decision${count === 1 ? "" : "s"}`}</button><button type="button" className="ghost" onClick={() => setPicks({})}>Clear</button></div>}
@@ -385,6 +415,8 @@ function Beta({ when }) {
           ["active", "Active", (r) => r.activity || ""],
           ["tools", "Tools", (r) => r.tools || "", (r) => <div className="admtext">{r.tools || "—"}</div>],
           ["why", "Why", (r) => r.why || "", (r) => <div className="admtext wide">{r.why || "—"}</div>],
+          ["nda", "NDA", (r) => ndaCell(r, nda)[0], (r) => { const [t, tip, tone] = ndaCell(r, nda); return (
+            <span className={"admstat " + tone} title={tip}>{t}{r.nda_id ? <button type="button" className="ghost icon sm" onClick={async () => { if (!(await ndaCopy(r.nda_id))) setNote(["bad", "The signed copy could not be read."]); }} title="Download the signed copy" aria-label="Download the signed copy"><Icon n="download" size={15} /></button> : null}</span>); }],
           ["status", "Status", (r) => r.status || "", (r) => <span className={"admstat " + r.status}>{STATUS[r.status] || r.status}{r.has_account ? <span className="m"> · has an account</span> : null}</span>],
         ]} extra={(r) => (
           <span className="admrow nowrap">

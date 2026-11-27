@@ -37,7 +37,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-from fastapi import Depends, FastAPI, Header, HTTPException, Query            # noqa: E402
+from fastapi import Depends, FastAPI, Header, HTTPException, Query, Request, Response           # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware                           # noqa: E402
 from fastapi.middleware.gzip import GZipMiddleware                           # noqa: E402
 from pydantic import BaseModel, Field                                        # noqa: E402
@@ -443,6 +443,42 @@ def admin_email(ask: AdminEmailAsk, who: Member = Depends(member)):
     from service import admin_mail
 
     return admin_mail.send(who.db, ask.kind, ask.address, ask.name)
+
+
+# ---- ✍️ Beta NDA -------------------------------------------------------------------------------------------------------
+
+class NdaSign(BaseModel):
+    full_name: str = Field("", max_length=120)
+    country: str = Field("", max_length=80)
+    agreed: bool = False
+    drawing: str = Field("", max_length=600_000)
+    preview: bool = False
+
+
+@app.get("/nda")
+def nda_info(who: Member = Depends(member)):
+    from service import nda_page
+
+    return nda_page.info(who.db, who.token)
+
+
+@app.get("/nda/pdf")
+def nda_pdf(who: Member = Depends(member)):
+    from service import nda_page
+
+    got = nda_page.pdf()
+    if not got:
+        raise HTTPException(404, "No NDA is set up.")
+    return Response(got[0], media_type="application/pdf", headers={"Content-Disposition": f'attachment; filename="{got[1]}"'})
+
+
+@app.post("/nda/sign")
+def nda_sign(ask: NdaSign, request: Request, who: Member = Depends(member)):
+    from service import nda_page
+
+    ip = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip() or (request.client.host if request.client else "")
+    agent = (request.headers.get("user-agent") or "")[:400]
+    return nda_page.sign(who.db, who.id, who.token, ask.full_name, ask.country, ask.agreed, ask.drawing, ask.preview, ip[:100], agent)
 
 
 # ---- 🌊 Tides ----------------------------------------------------------------------------------------------------------

@@ -934,3 +934,27 @@ button.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 8px; }
 .admtext { min-width: 140px; overflow-wrap: break-word; }
 .admtext.wide { min-width: 240px; }
 .admstep select { max-width: 240px; }
+
+/* ✍️ Beta NDA */
+.nda { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.nda h1 { display: flex; align-items: center; gap: 10px; font-family: Montserrat, Inter, sans-serif; font-size: 26px; letter-spacing: -.02em; margin: 6px 0 0; }
+.nda > button { align-self: flex-start; }
+.ndatext { max-height: 520px; overflow: auto; border: 1px solid var(--ang-border); border-radius: 14px; padding: 6px 22px 14px; background: var(--ang-surface); font-size: 14px; }
+.ndaform { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 18px; }
+.ndaform label { display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; font-weight: 500; }
+.ndaform input { font: inherit; font-weight: 400; padding: 10px 12px; border: 1px solid var(--ang-border); border-radius: 10px; background: var(--ang-field); color: var(--ang-text); }
+@media (max-width: 640px) { .ndaform { grid-template-columns: 1fr; } }
+.sigpad { display: flex; flex-direction: column; gap: 8px; max-width: 520px; }
+.sigpad canvas { width: 100%; height: 170px; border: 1px solid var(--ang-border); border-radius: 12px; background: #fff; touch-action: none; cursor: crosshair; }
+.sigpad .bar { display: flex; align-items: center; gap: 10px; }
+.ndabar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ndapreview, .ndadone { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border-radius: 12px; background: var(--ang-field); font-size: 13.5px; }
+.ndapreview > span, .ndadone > span { flex: 1 1 300px; }
+.ndadone { margin-bottom: 16px; background: var(--good-bg, var(--ang-field)); }
+.admstat.good { color: var(--good-ink); } .admstat.warn { color: #b45309; } .night .admstat.warn { color: #f0b46a; }
+.admstat .ghost.icon.sm { width: 26px; height: 26px; padding: 0; margin-left: 4px; vertical-align: middle; }
+a.btnlink { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--ang-border); color: var(--ang-text); font-size: 13.5px; font-weight: 500; }
+a.btnlink:hover { background: var(--ang-hover); }
+.md .mdh { font-family: Montserrat, Inter, sans-serif; letter-spacing: -.01em; margin: 18px 0 6px; line-height: 1.3; }
+.md h3.mdh { font-size: 18px; } .md h4.mdh { font-size: 16px; } .md h5.mdh, .md h6.mdh { font-size: 14.5px; }
+.nda .note { margin: 0; }

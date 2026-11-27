@@ -8,6 +8,8 @@ import Search from "./components/Search.jsx";
 import SidePanel from "./components/SidePanel.jsx";
 import Icon from "./components/Icon.jsx";
 import Snapshot from "./pages/snapshot/Snapshot.jsx";
+import Nda, { Signed } from "./components/Nda.jsx";
+import { call } from "./lib/service.js";
 // Each page loads when first opened (the Quick Snapshot, the usual first page, comes with the app).
 const TradeLog = lazy(() => import("./pages/tradelog/TradeLog.jsx"));
 const Asset = lazy(() => import("./pages/asset/Asset.jsx"));
@@ -37,6 +39,7 @@ export default function App() {
   const [account, setAccount] = useState(null);
   const [ready, setReady] = useState(false);
   const [route, setRoute] = useState(readRoute);
+  const [signed, setSigned] = useState(null);
   const page = route[0];
 
   useEffect(() => {
@@ -55,13 +58,14 @@ export default function App() {
       const user = session.user;
       // A barred account is signed out here too, as in the classic app.
       try { if (await api.rpc("account_barred")) { await supabase.auth.signOut(); return; } } catch (e) { /* no check function: carry on */ }
-      const [settings, plan] = await Promise.all([api.settings(user.id), api.plan(user.id)]);
+      // ✍️ Whether this tester still has to sign the beta NDA (checked on the data service, nda.py's own rules).
+      const [settings, plan, nda] = await Promise.all([api.settings(user.id), api.plan(user.id), call("/nda", { timeout: 45000 }).catch(() => null)]);
       applyTheme(settings);
       await loadWords(pickLanguage(settings.language));
       // The admin role only shows the Admin link; the admin lists themselves are checked by the database.
       let admin = false;
       try { admin = (await api.rpc("is_admin")) === true; } catch (e) { /* no check function: not an admin */ }
-      if (live) { setAccount({ user, settings, plan, admin, zone: settings.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone }); setReady(true); }
+      if (live) { setAccount({ user, settings, plan, admin, nda, zone: settings.timezone || Intl.DateTimeFormat().resolvedOptions().timeZone }); setReady(true); }
     })();
     return () => { live = false; };
   }, [session && session.user && session.user.id, session === null]);
@@ -71,6 +75,13 @@ export default function App() {
   if (!ready) return <div className="boot">{"MarketNavi"}</div>;
   if (!configured) return <div className="boot">{T("The new app isn't set up yet.")}</div>;
   if (!session) return <SignIn />;
+  if (account && account.nda && account.nda.needed && !signed) {
+    return <div className="shell"><header className="top"><a className="brand" href="#snapshot" aria-label="MarketNavi"><img src="/logo.png" alt="" width="28" height="28" /><span>MarketNavi</span></a></header>
+      <main className="main"><Nda info={account.nda} onDone={(copy) => { setSigned(copy); setAccount({ ...account, nda: { ...account.nda, needed: false } }); }} /></main></div>;
+  }
+  if (page === "ndapreview" && account && account.admin && account.nda && account.nda.title) {
+    return <div className="shell"><main className="main"><Nda info={account.nda} preview onClose={() => { window.location.hash = "admin/beta"; }} /></main></div>;
+  }
 
   return (
     <div className="shell">
@@ -98,6 +109,7 @@ export default function App() {
         </div>
       </header>
       <main className="main">
+        {signed && <Signed copy={signed} onClose={() => setSigned(null)} />}
         <Suspense fallback={<div className="page"><div className="empty" style={{ height: 300 }}>{T("Loading…")}</div></div>}>
         {page === "snapshot" && account && <Snapshot account={account} />}
         {page === "signals" && account && <Signals key={route[1] || "crypto"} market={route[1] || "crypto"} account={account} />}

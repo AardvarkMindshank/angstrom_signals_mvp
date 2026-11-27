@@ -2,7 +2,7 @@ import React from "react";
 import { Glyphs } from "./Icon.jsx";
 
 // A small Markdown reader for the help texts (the classic app's, written for Streamlit): paragraphs, "- " and "1. "
-// lists whose wrapped lines are indented, "| a | b |" tables, **bold**, *italic* and `code`. Emoji become the app's
+// lists whose wrapped lines are indented, # headings (two levels smaller, under the page's own), "| a | b |" tables, **bold**, *italic* and `code`. Emoji become the app's
 // icons (Glyphs). No HTML is taken from the text.
 function inline(s, key = 0) {
   const out = [];
@@ -28,6 +28,8 @@ export default function Markdown({ text }) {
     const line = raw.replace(/\s+$/, "");
     if (!line.trim()) { close(); continue; }
     const bullet = /^\s{0,3}[-*•]\s+(.*)/.exec(line), num = /^\s{0,3}(\d+)[.)]\s+(.*)/.exec(line), row = /^\s*\|(.*)\|\s*$/.exec(line);
+    const head = /^(#{1,6})\s+(.*)/.exec(line);
+    if (head) { close(); blocks.push({ kind: "h", level: head[1].length, text: head[2] }); continue; }
     if (row) {
       if (/^[\s|:-]+$/.test(row[1])) continue;                       // the |---|---| line
       if (!cur || cur.kind !== "table") { close(); cur = { kind: "table", rows: [] }; }
@@ -52,7 +54,8 @@ export default function Markdown({ text }) {
             <thead><tr>{b.rows[0].map((c, j) => <th key={j}>{inline(c)}</th>)}</tr></thead>
             <tbody>{b.rows.slice(1).map((r, j) => <tr key={j}>{r.map((c, k) => <td key={k}>{inline(c)}</td>)}</tr>)}</tbody>
           </table></div>
-        ) : <p key={i}>{inline(b.text)}</p>)}
+        ) : b.kind === "h" ? React.createElement(`h${Math.min(6, b.level + 2)}`, { key: i, className: "mdh" }, inline(b.text))
+        : <p key={i}>{inline(b.text)}</p>)}
     </div>
   );
 }
