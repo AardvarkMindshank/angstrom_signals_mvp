@@ -5,16 +5,25 @@ import { applyTheme } from "./lib/theme.js";
 import * as api from "./lib/api.js";
 import SignIn from "./pages/SignIn.jsx";
 import TradeLog from "./pages/tradelog/TradeLog.jsx";
+import Asset from "./pages/asset/Asset.jsx";
+import Search from "./components/Search.jsx";
 
 // The new MarketNavi app (beta). One page so far, the Trade Log; each page moves across from the classic app in
 // turn, and the classic app keeps running until every page is here.
 const PAGES = [["tradelog", () => T("Trade Log")]];
 
+// The address after # picks the page: #tradelog, or #asset/<asset key>/<tab>.
+function readRoute() {
+  const parts = window.location.hash.replace(/^#/, "").split("/").map((p) => { try { return decodeURIComponent(p); } catch (e) { return p; } });
+  return parts[0] ? parts : ["tradelog"];
+}
+
 export default function App() {
   const [session, setSession] = useState(undefined);
   const [account, setAccount] = useState(null);
   const [ready, setReady] = useState(false);
-  const [page, setPage] = useState(() => (window.location.hash.replace("#", "") || "tradelog"));
+  const [route, setRoute] = useState(readRoute);
+  const page = route[0];
 
   useEffect(() => {
     applyTheme({});
@@ -40,7 +49,7 @@ export default function App() {
     return () => { live = false; };
   }, [session && session.user && session.user.id, session === null]);
 
-  useEffect(() => { const f = () => setPage(window.location.hash.replace("#", "") || "tradelog"); window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f); }, []);
+  useEffect(() => { const f = () => setRoute(readRoute()); window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f); }, []);
 
   if (!ready) return <div className="boot">{"MarketNavi"}</div>;
   if (!configured) return <div className="boot">{T("The new app isn't set up yet.")}</div>;
@@ -54,6 +63,7 @@ export default function App() {
           <span>MarketNavi</span>
           <span className="beta" title={T("The new MarketNavi app, being built page by page. The classic app keeps working meanwhile.")}>{T("New · beta")}</span>
         </a>
+        <Search />
         <nav className="pages" aria-label={T("Pages")}>
           {PAGES.map(([k, label]) => <a key={k} href={`#${k}`} className={page === k ? "on" : ""} aria-current={page === k ? "page" : undefined}>{label()}</a>)}
         </nav>
@@ -64,6 +74,7 @@ export default function App() {
       </header>
       <main className="main">
         {page === "tradelog" && account && <TradeLog account={account} />}
+        {page === "asset" && account && <Asset key={route[1]} assetKey={route[1]} tab={route[2]} account={account} />}
       </main>
     </div>
   );

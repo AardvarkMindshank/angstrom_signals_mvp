@@ -22,3 +22,13 @@ for lang in i18n.LANGUAGES:
     with open(os.path.join(out, f"{lang['code']}.json"), "w", encoding="utf-8") as fh:
         json.dump(i18n.js_words(*sources, code=lang["code"]), fh, ensure_ascii=False)
 print(f"words for {len(i18n.LANGUAGES) - 1} languages")
+
+# The macro calendar (macro_calendar.py, the same dates Tides uses), for the asset page's "Events ahead".
+import macro_calendar  # noqa: E402
+
+data = os.path.join(ROOT, "web", "public", "data")
+os.makedirs(data, exist_ok=True)
+with open(os.path.join(data, "calendar.json"), "w", encoding="utf-8") as fh:
+    json.dump([{"kind": e["kind"], "at": e["at"].isoformat(), "tier": e["tier"], "reference": e["reference"]}
+               for e in macro_calendar.events()], fh)
+print("calendar written")

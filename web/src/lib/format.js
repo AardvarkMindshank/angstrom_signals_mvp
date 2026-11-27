@@ -36,3 +36,9 @@ export const dayMonth = (d) => (d ? dt("dm", { day: "numeric", month: "short" })
 export const stamp = (iso) => (iso ? dt("st", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(iso)) : "—");
 export const when = (iso) => (iso ? dt("wh", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso)) : "—");
 export const monthNames = () => Array.from({ length: 12 }, (_, i) => dt("mn", { month: "short" }).format(new Date(Date.UTC(2026, i, 15))));
+// Prices in dollars: more digits for small prices (a coin at $0.0042), fewer for large ones.
+export const usd = (v) => (v == null ? "—" : (v < 0 ? "−$" : "$") + fmt(Math.abs(v) >= 1000 ? "u0" : Math.abs(v) >= 1 ? "u2" : "u5",
+  Math.abs(v) >= 1000 ? { maximumFractionDigits: 0 } : Math.abs(v) >= 1 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { maximumSignificantDigits: 4 }).format(Math.abs(v)));
+export const compact = (v) => (v == null ? "—" : "$" + fmt("cp", { notation: "compact", maximumFractionDigits: 1 }).format(v));
+export const signed = (v) => (v == null ? "—" : (v > 0 ? "+" : v < 0 ? "−" : "") + nf0().format(Math.abs(Math.round(v))));
+export const weekday = (iso) => (iso ? dt("wd", { weekday: "short", day: "numeric", month: "short" }).format(new Date(iso)) : "—");
