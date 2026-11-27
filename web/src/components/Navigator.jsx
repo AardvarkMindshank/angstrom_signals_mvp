@@ -89,7 +89,7 @@ function inline(s) {
   if (last < s.length) out.push(s.slice(last));
   return out;
 }
-function Rich({ text }) {
+export function Rich({ text }) {
   const blocks = []; let list = null;
   String(text || "").split("\n").forEach((raw, i) => {
     const line = raw.trimEnd();

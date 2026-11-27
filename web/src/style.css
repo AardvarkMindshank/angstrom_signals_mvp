@@ -700,3 +700,25 @@ table.t.sig th.c button { white-space: normal; text-align: center; }
 @media (max-width: 860px) { .tnoterow { grid-template-columns: 1fr; gap: 22px; } .tchips { align-items: flex-start; } }
 @media (max-width: 640px) { .tbig { font-size: 24px; } .tevents, .tcur { margin-left: 0; clip-path: none; } .tev, .tc { border-left: 0; padding-left: 0; border-top: 1px solid var(--ang-border); padding-top: 10px; } }
 .moodlink { text-decoration: none; display: block; } .moodlink:hover .rowtitle { text-decoration: underline; }
+
+/* ---- 📓 Logbook and 🔔 Alerts ---- */
+.daybar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.daybar input[type=date] { font: inherit; font-size: 14px; color: var(--ang-text); background: var(--ang-field); border: 0; border-radius: 10px; padding: 7px 10px; }
+.plantext { font-size: 14px; line-height: 1.6; margin-top: 10px; max-height: 520px; overflow-y: auto; }
+.plantext p { margin: 0 0 8px; } .plantext ul, .plantext ol { margin: 0 0 8px; padding-left: 20px; }
+.feedurl { font-family: ui-monospace, Menlo, monospace; font-size: 12px; overflow-wrap: anywhere; }
+.bell { position: relative; }
+.bell .badge { position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 999px; background: var(--bad); color: #fff; font-size: 10.5px; font-weight: 700; display: grid; place-items: center; line-height: 1; }
+.pcount { display: inline-block; margin-left: 10px; font-size: 14px; vertical-align: middle; background: var(--bad); color: #fff; border-radius: 999px; padding: 2px 9px; font-family: Inter, sans-serif; }
+.alist { list-style: none; margin: 0; padding: 0; }
+.alist li { border-top: 1px solid var(--ang-border); }
+.alist li:first-child { border-top: 0; }
+.alist li.read { opacity: .62; }
+.arow { display: flex; gap: 14px; padding: 14px 4px; text-decoration: none; align-items: flex-start; cursor: pointer; }
+.arow:hover { background: var(--ang-hover); }
+.aicon { font-size: 20px; line-height: 1.2; flex: none; width: 26px; text-align: center; }
+.ahead { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.ahead .m { margin-left: auto; font-size: 12.5px; }
+.abody { font-size: 14px; color: var(--ang-soft); margin-top: 2px; line-height: 1.5; }
+@media (max-width: 640px) { .pages a { padding: 8px 8px; font-size: 13px; } }
+@media (max-width: 1360px) { .panelbtn span { display: none; } .top { gap: 14px; } .top .right { gap: 2px; } }

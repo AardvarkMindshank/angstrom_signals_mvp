@@ -3086,5 +3086,13 @@
   "Add a short comment…": "Thêm bình luận ngắn…",
   "Market sentiment is shared by everyone and updated about every 12 hours.": "Tâm lý thị trường giống nhau cho mọi người và cập nhật khoảng 12 giờ một lần.",
   "This market's news hasn't been scored yet.": "Tin tức của thị trường này chưa được chấm điểm.",
-  "Open {label} sentiment": "Mở tâm lý {label}"
+  "Open {label} sentiment": "Mở tâm lý {label}",
+  "{n} unread alerts": "{n} cảnh báo chưa đọc",
+  "Clear all": "Xóa tất cả",
+  "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "Cảnh báo đến đây khi một tài sản trong danh sách theo dõi vượt một đường cảnh báo của bạn, tâm lý thị trường vượt ngưỡng, quét Prism tìm thấy kết quả, phễu có Ứng viên mới, hoặc nghiên cứu bạn bắt đầu hoàn tất. Chọn chúng trong",
+  "No alerts yet.": "Chưa có cảnh báo.",
+  "Alert": "Cảnh báo",
+  "Answer this invitation in the classic app ›": "Trả lời lời mời này trong ứng dụng cổ điển ›",
+  "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "Video, Triển vọng buổi sáng và Passage Plan của bạn mỗi ngày, lưu trong hai tuần. Đang hiện {day}.",
+  "Copy link": "Sao chép liên kết"
 }

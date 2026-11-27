@@ -3086,5 +3086,13 @@
   "Add a short comment…": "添加一条简短评论…",
   "Market sentiment is shared by everyone and updated about every 12 hours.": "市场情绪对所有人相同，大约每 12 小时更新一次。",
   "This market's news hasn't been scored yet.": "这个市场的新闻还没有评分。",
-  "Open {label} sentiment": "打开{label}情绪"
+  "Open {label} sentiment": "打开{label}情绪",
+  "{n} unread alerts": "{n} 条未读提醒",
+  "Clear all": "全部清除",
+  "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "当自选资产越过你的提醒线、市场情绪越过其线、Prism 扫描找到匹配、漏斗出现新候选，或你启动的研究完成时，提醒会出现在这里。在此设置：",
+  "No alerts yet.": "还没有提醒。",
+  "Alert": "提醒",
+  "Answer this invitation in the classic app ›": "在经典版中回复此邀请 ›",
+  "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "每天的视频、晨间展望和你的 Passage Plan，保留两周。正在显示 {day}。",
+  "Copy link": "复制链接"
 }

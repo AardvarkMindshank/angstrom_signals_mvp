@@ -3086,5 +3086,13 @@
   "Add a short comment…": "Kurzen Kommentar hinzufügen…",
   "Market sentiment is shared by everyone and updated about every 12 hours.": "Die Marktstimmung ist für alle gleich und wird etwa alle 12 Stunden aktualisiert.",
   "This market's news hasn't been scored yet.": "Die Nachrichten dieses Markts wurden noch nicht bewertet.",
-  "Open {label} sentiment": "{label}-Stimmung öffnen"
+  "Open {label} sentiment": "{label}-Stimmung öffnen",
+  "{n} unread alerts": "{n} ungelesene Alarme",
+  "Clear all": "Alle löschen",
+  "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "Alarme kommen hier an, wenn ein Watchlist-Asset eine deiner Alarmlinien kreuzt, die Stimmung eines Markts ihre Linie kreuzt, ein Prism-Scan einen Treffer findet, ein Funnel neue Kandidaten hat oder eine gestartete Studie fertig ist. Wähle sie in",
+  "No alerts yet.": "Noch keine Alarme.",
+  "Alert": "Alarm",
+  "Answer this invitation in the classic app ›": "Diese Einladung in der klassischen App beantworten ›",
+  "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "Video, Morgenausblick und dein Passage Plan jedes Tages, zwei Wochen aufbewahrt. Gezeigt: {day}.",
+  "Copy link": "Link kopieren"
 }

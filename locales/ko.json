@@ -3086,5 +3086,13 @@
   "Add a short comment…": "짧은 댓글 추가…",
   "Market sentiment is shared by everyone and updated about every 12 hours.": "시장 심리는 모두에게 같으며 약 12시간마다 갱신됩니다.",
   "This market's news hasn't been scored yet.": "이 시장의 뉴스는 아직 점수가 매겨지지 않았습니다.",
-  "Open {label} sentiment": "{label} 심리 열기"
+  "Open {label} sentiment": "{label} 심리 열기",
+  "{n} unread alerts": "읽지 않은 알림 {n}개",
+  "Clear all": "모두 지우기",
+  "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "관심 목록 자산이 알림선을 넘거나, 시장 심리가 기준선을 넘거나, Prism 스캔에서 일치 항목이 나오거나, 퍼널에 새 후보가 생기거나, 시작한 연구가 끝나면 여기에 알림이 옵니다. 선택은",
+  "No alerts yet.": "아직 알림이 없습니다.",
+  "Alert": "알림",
+  "Answer this invitation in the classic app ›": "이 초대는 클래식 앱에서 응답 ›",
+  "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "매일의 영상, 모닝 아웃룩, 내 Passage Plan을 2주 동안 보관합니다. {day} 표시 중.",
+  "Copy link": "링크 복사"
 }

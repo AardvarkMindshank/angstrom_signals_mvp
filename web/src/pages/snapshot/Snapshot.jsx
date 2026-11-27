@@ -65,18 +65,18 @@ export default function Snapshot({ account }) {
 
 // ---- 🎬 the daily video, and the once-a-day pop-up ---------------------------------------------------------------
 
-function Video({ account }) {
+export function Video({ account, day: chosen }) {
   const [meta, setMeta] = useState(undefined);
   const [text, setText] = useState(null);
   const [pop, setPop] = useState(false);
   useEffect(() => { fresh("video/videos.json").then((r) => (r.ok ? r.json() : {})).then(setMeta).catch(() => setMeta({})); }, []);
-  const top = meta ? newest(meta) : null;
+  const top = meta ? (chosen ? (meta[chosen] && typeof meta[chosen] === "object" ? [chosen, meta[chosen]] : null) : newest(meta)) : null;
   const day = top ? top[0] : "", m = top ? top[1] : {};
   const urls = day ? { land: versioned(`video/${day}_land.mp4`, m.made_at), port: versioned(`video/${day}_port.mp4`, m.made_at),
     lp: versioned(`video/${day}_land.jpg`, m.made_at), pp: versioned(`video/${day}_port.jpg`, m.made_at) } : null;
   // Once a day, the first time the app opens after the new video is out (switch it off in ⚙️ Settings).
   useEffect(() => {
-    if (!day || navigator.webdriver) return;
+    if (!day || chosen || navigator.webdriver) return;
     const settings = (account && account.settings) || {};
     if (settings.daily_video_auto === false) return;
     let seen = ""; try { seen = localStorage.getItem("mn_dv_seen") || ""; } catch (e) { /* private window */ }
@@ -90,7 +90,7 @@ function Video({ account }) {
     <section className="media">
       <div className="mhead" title={tip}><b>🎬 {T("Daily video")}</b>{day && <span className="m">{T("{day} · {who} · {length}", { day: weekday(day), who: T(String(m.presenter || "")), length: clock(m.seconds) })}</span>}</div>
       {meta === undefined ? <div className="empty" style={{ aspectRatio: "16/9" }}>{T("Loading…")}</div>
-        : !urls ? <p className="sub">{T("The first video is on its way.")}</p> : (
+        : !urls ? <p className="sub">{chosen ? T("None for this day.") : T("The first video is on its way.")}</p> : (
           <>
             <div className="dv">
               <video className="land" controls playsInline preload="none" poster={urls.lp}><source src={urls.land} type="video/mp4" /></video>
@@ -137,19 +137,24 @@ function ReadIt({ text, load }) {
 
 const EDITION = () => ({ east: T("Asia & Europe edition"), west: T("Americas edition") });
 
-function Outlook() {
+export function Outlook({ day: chosen }) {
   const [meta, setMeta] = useState(undefined);
   const [text, setText] = useState(null);
+  const [edition, setEdition] = useState(null);
   useEffect(() => { fresh("general/episodes.json").then((r) => (r.ok ? r.json() : {})).then(setMeta).catch(() => setMeta({})); }, []);
-  const top = meta ? newest(meta) : null;
+  useEffect(() => { setText(null); setEdition(null); }, [chosen]);
+  const ofDay = chosen && meta ? Object.entries(meta).filter(([k, m]) => m && typeof m === "object" && k.slice(0, 10) === chosen)
+    .sort((a, b) => String(b[1].made_at || "").localeCompare(String(a[1].made_at || ""))) : [];
+  const top = meta ? (chosen ? (ofDay.find(([k]) => k === edition) || ofDay[0] || null) : newest(meta)) : null;
   const tip = T("The same for everyone, twice a day: the Asia & Europe edition just after the US close, and the Americas edition before the New York morning. You always get the newest, which is the one made for your morning. The main markets, the top five coins, the Tide and the week's events. A summary of the app's readings, not advice.");
   return (
     <section className="media">
       <div className="mhead" title={tip}><b>🌍 {T("Morning Outlook")}</b>
         {top && <span className="m">{T("{day} · {edition} · {length}", { day: weekday(top[0].slice(0, 10)), edition: EDITION()[top[0].slice(11)] || "", length: clock(top[1].seconds) })}</span>}</div>
-      {meta === undefined ? <p className="sub">{T("Loading…")}</p> : !top ? <p className="sub">{T("The first edition is on its way.")}</p> : (
+      {meta === undefined ? <p className="sub">{T("Loading…")}</p> : !top ? <p className="sub">{chosen ? T("None for this day.") : T("The first edition is on its way.")}</p> : (
         <>
-          <audio controls preload="none" src={versioned(`general/${top[0]}.mp3`, top[1].made_at)} />
+          {ofDay.length > 1 && <div className="seg" style={{ marginBottom: 8, width: "fit-content" }}>{ofDay.map(([k]) => <button key={k} type="button" className={top[0] === k ? "on" : ""} onClick={() => { setEdition(k); setText(null); }}>{EDITION()[k.slice(11)] || k.slice(11)}</button>)}</div>}
+          <audio key={top[0]} controls preload="none" src={versioned(`general/${top[0]}.mp3`, top[1].made_at)} />
           <ReadIt text={text} load={() => fresh(`general/${top[0]}.txt`).then((r) => (r.ok ? r.text() : "")).then(setText).catch(() => setText(""))} />
         </>
       )}
@@ -157,13 +162,15 @@ function Outlook() {
   );
 }
 
-function Passage({ account }) {
+export function Passage({ account, day: chosen, written }) {
   const pro = ["pro", "elite"].includes(account && account.plan);
   const b = ((account && account.settings) || {}).briefing || {};
   const [meta, setMeta] = useState(undefined);
   const [text, setText] = useState(null);
   useEffect(() => { if (pro && b.token) fresh(`${b.token}/episodes.json`).then((r) => (r.ok ? r.json() : {})).then(setMeta).catch(() => setMeta({})); else setMeta({}); }, []);
-  const top = meta ? newest(meta) : null;
+  useEffect(() => { setText(null); }, [chosen]);
+  const top = meta ? (chosen ? (Object.entries(meta).filter(([k, m]) => m && typeof m === "object" && k.slice(0, 10) === chosen)
+    .sort((a, b) => String(b[1].made_at || "").localeCompare(String(a[1].made_at || "")))[0] || null) : newest(meta)) : null;
   const tip = T("Today's AI Passage Plan for your own watchlist and funnels, read aloud: the same plan you can read in the 📓 Logbook. It is ready each day an hour before your daily summary's time; set the time, time zone and voice in 🔔 Notifications.");
   return (
     <section className="media">
@@ -171,10 +178,11 @@ function Passage({ account }) {
         {top && <span className="m">{T("{day} · {length}", { day: weekday(top[0].slice(0, 10)), length: clock(top[1].seconds) })}</span>}</div>
       {!pro ? <p className="sub">{T("Written and spoken for your own watchlist and funnels each morning. Comes with Pro.")}</p>
         : meta === undefined ? <p className="sub">{T("Loading…")}</p>
-        : !top ? <p className="sub">{T("Not made yet today. It is made ready each morning.")}</p> : (
+        : !top && !written ? <p className="sub">{chosen ? T("None for this day.") : T("Not made yet today. It is made ready each morning.")}</p> : (
           <>
-            <audio controls preload="none" src={versioned(`${b.token}/${top[0]}.mp3`, top[1].made_at)} />
-            <ReadIt text={text} load={() => fresh(`${b.token}/${top[0]}.txt`).then((r) => (r.ok ? r.text() : "")).then(setText).catch(() => setText(""))} />
+            {top && <audio key={top[0]} controls preload="none" src={versioned(`${b.token}/${top[0]}.mp3`, top[1].made_at)} />}
+            {written ? <div className="plantext">{written}</div>
+              : <ReadIt text={text} load={() => fresh(`${b.token}/${top[0]}.txt`).then((r) => (r.ok ? r.text() : "")).then(setText).catch(() => setText(""))} />}
           </>
         )}
     </section>

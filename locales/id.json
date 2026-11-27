@@ -3086,5 +3086,13 @@
   "Add a short comment…": "Tambahkan komentar singkat…",
   "Market sentiment is shared by everyone and updated about every 12 hours.": "Sentimen pasar sama untuk semua orang dan diperbarui sekitar setiap 12 jam.",
   "This market's news hasn't been scored yet.": "Berita pasar ini belum dinilai.",
-  "Open {label} sentiment": "Buka sentimen {label}"
+  "Open {label} sentiment": "Buka sentimen {label}",
+  "{n} unread alerts": "{n} peringatan belum dibaca",
+  "Clear all": "Hapus semua",
+  "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "Peringatan muncul di sini saat aset di daftar pantauan melewati salah satu garis peringatan Anda, sentimen pasar melewati garisnya, pemindaian Prism menemukan kecocokan, corong punya Kandidat baru, atau studi yang Anda mulai selesai. Atur di",
+  "No alerts yet.": "Belum ada peringatan.",
+  "Alert": "Peringatan",
+  "Answer this invitation in the classic app ›": "Jawab undangan ini di aplikasi klasik ›",
+  "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "Video, Prospek Pagi, dan Passage Plan Anda setiap hari, disimpan dua minggu. Menampilkan {day}.",
+  "Copy link": "Salin tautan"
 }

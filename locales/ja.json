@@ -3086,5 +3086,13 @@
   "Add a short comment…": "短いコメントを追加…",
   "Market sentiment is shared by everyone and updated about every 12 hours.": "市場センチメントは全員共通で、約12時間ごとに更新されます。",
   "This market's news hasn't been scored yet.": "この市場のニュースはまだ採点されていません。",
-  "Open {label} sentiment": "{label}のセンチメントを開く"
+  "Open {label} sentiment": "{label}のセンチメントを開く",
+  "{n} unread alerts": "未読のアラート {n} 件",
+  "Clear all": "すべて消去",
+  "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "ウォッチリストの銘柄がアラートラインを越えたとき、市場センチメントがラインを越えたとき、Prism スキャンで一致が見つかったとき、ファネルに新しい候補が出たとき、開始した調査が終わったときに、ここにアラートが届きます。設定は",
+  "No alerts yet.": "まだアラートはありません。",
+  "Alert": "アラート",
+  "Answer this invitation in the classic app ›": "この招待にはクラシック版で回答 ›",
+  "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "毎日の動画、モーニング・アウトルック、あなたの Passage Plan を2週間保管。{day} を表示中。",
+  "Copy link": "リンクをコピー"
 }

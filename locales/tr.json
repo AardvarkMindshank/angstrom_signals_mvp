@@ -3086,5 +3086,13 @@
   "Add a short comment…": "Kısa bir yorum ekleyin…",
   "Market sentiment is shared by everyone and updated about every 12 hours.": "Piyasa duyarlılığı herkes için aynıdır ve yaklaşık 12 saatte bir güncellenir.",
   "This market's news hasn't been scored yet.": "Bu piyasanın haberleri henüz puanlanmadı.",
-  "Open {label} sentiment": "{label} duyarlılığını aç"
+  "Open {label} sentiment": "{label} duyarlılığını aç",
+  "{n} unread alerts": "{n} okunmamış uyarı",
+  "Clear all": "Tümünü temizle",
+  "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "Uyarılar, izleme listenizdeki bir varlık uyarı çizgilerinizden birini geçtiğinde, bir piyasanın duyarlılığı çizgisini geçtiğinde, bir Prism taraması eşleşme bulduğunda, bir hunide yeni Adaylar olduğunda veya başlattığınız bir çalışma bittiğinde buraya gelir. Seçmek için",
+  "No alerts yet.": "Henüz uyarı yok.",
+  "Alert": "Uyarı",
+  "Answer this invitation in the classic app ›": "Bu daveti klasik uygulamada yanıtla ›",
+  "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "Her günün videosu, Sabah Görünümü ve Passage Plan'ınız iki hafta saklanır. Gösterilen: {day}.",
+  "Copy link": "Bağlantıyı kopyala"
 }

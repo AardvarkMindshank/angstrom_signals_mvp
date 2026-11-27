@@ -3086,5 +3086,13 @@
   "Add a short comment…": "เพิ่มความเห็นสั้นๆ…",
   "Market sentiment is shared by everyone and updated about every 12 hours.": "ความเชื่อมั่นของตลาดเหมือนกันสำหรับทุกคน และอัปเดตประมาณทุก 12 ชั่วโมง",
   "This market's news hasn't been scored yet.": "ข่าวของตลาดนี้ยังไม่ได้ให้คะแนน",
-  "Open {label} sentiment": "เปิดความเชื่อมั่นของ {label}"
+  "Open {label} sentiment": "เปิดความเชื่อมั่นของ {label}",
+  "{n} unread alerts": "การแจ้งเตือนที่ยังไม่อ่าน {n} รายการ",
+  "Clear all": "ล้างทั้งหมด",
+  "Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in": "การแจ้งเตือนจะมาที่นี่เมื่อสินทรัพย์ในวอทช์ลิสต์ข้ามเส้นแจ้งเตือนของคุณ ความเชื่อมั่นของตลาดข้ามเส้น การสแกน Prism พบรายการที่ตรง ฟันเนลมี Candidates ใหม่ หรือการศึกษาที่คุณเริ่มเสร็จสิ้น เลือกได้ใน",
+  "No alerts yet.": "ยังไม่มีการแจ้งเตือน",
+  "Alert": "การแจ้งเตือน",
+  "Answer this invitation in the classic app ›": "ตอบคำเชิญนี้ในแอปแบบคลาสสิก ›",
+  "Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.": "วิดีโอ มุมมองยามเช้า และ Passage Plan ของคุณในแต่ละวัน เก็บไว้สองสัปดาห์ กำลังแสดง {day}",
+  "Copy link": "คัดลอกลิงก์"
 }
