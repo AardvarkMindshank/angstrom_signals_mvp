@@ -127,8 +127,8 @@ export default function Signals({ market: wanted, account }) {
                 <tr>
                   <Th by="name" cls="sticky">{T("Asset")}</Th>
                   {staged && <Th by="stage">{T("Stage")}</Th>}
-                  <Th by="holders" title={T("How many members watch this asset")}>{T("Watching")}</Th>
-                  {crypto && <Th by="rank">{T("Rank")}</Th>}
+                  <Th by="holders" cls="phhide" title={T("How many members watch this asset")}>{T("Watching")}</Th>
+                  {crypto && <Th by="rank" cls="phhide">{T("Rank")}</Th>}
                   {groups.length > 0 && (fold.g ? <th className="fold"><button type="button" onClick={() => toggleFold("g")} title={T("Show the {name} columns", { name: "Signal Groups" })}>▸ {T("Groups")}</button></th>
                     : groups.map((c, i) => <Th key={c.key} by={c.cluster || c.key} title={c.hint} cls={i === 0 ? "secfirst" : ""}>{i === 0 && <span className="foldbtn" role="button" tabIndex={0} onClick={(e) => { e.stopPropagation(); toggleFold("g"); }} title={T("Fold the {name} columns", { name: "Signal Groups" })}>◂ </span>}{c.icon ? <><Glyphs text={c.icon} size={14} /> </> : ""}{c.name}</Th>))}
                   {sets.length > 0 && (fold.s ? <th className="fold"><button type="button" onClick={() => toggleFold("s")} title={T("Show the {name} columns", { name: "Signal Sets" })}>▸ {T("Sets")}</button></th>
@@ -155,8 +155,8 @@ export default function Signals({ market: wanted, account }) {
                       {r.problem && <div className="m">{r.problem}</div>}
                     </td>
                     {staged && <td title={r.stage ? r.stage.tip : ""} className="help">{r.stage ? <Glyphs text={r.stage.icon} /> : "—"}</td>}
-                    <td>{r.holders ? <><Icon n="users" size={14} /> {r.holders}</> : <span className="m">—</span>}</td>
-                    {crypto && <td>{r.rank ? `#${r.rank}` : <span className="m">—</span>}</td>}
+                    <td className="phhide">{r.holders ? <><Icon n="users" size={14} /> {r.holders}</> : <span className="m">—</span>}</td>
+                    {crypto && <td className="phhide">{r.rank ? `#${r.rank}` : <span className="m">—</span>}</td>}
                     {groups.length > 0 && (fold.g ? <td className="c" title={groups.map((g) => { const v = g.cluster ? (r.clusters[g.cluster] || {}).value : (r.cells[g.key] || {}).value; return `${g.name}: ${v == null ? "—" : signed(v)}`; }).join("\n")}>
                       <span className="dots">{groups.map((g) => { const v = g.cluster ? (r.clusters[g.cluster] || {}).value : (r.cells[g.key] || {}).value; return <i key={g.key} className={rtone(v) || (v == null ? "none" : "mid")} />; })}</span></td>
                       : groups.map((g) => <GroupCell key={g.key} r={r} g={g} />))}

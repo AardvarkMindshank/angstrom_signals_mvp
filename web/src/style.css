@@ -995,3 +995,8 @@ a.btnlink:hover { background: var(--ang-hover); }
   .admfind { flex: 1 1 100%; min-width: 0; } .admfind input { min-width: 0; width: 100%; }
   .admtiles .tile { min-width: 0; }
 }
+@media (max-width: 640px) {
+  table.t.sig .phhide { display: none; }               /* the readings come right after the name on a phone */
+  table.t.sig .sticky { box-shadow: 6px 0 8px -8px rgba(0,0,0,.35); }
+  .page { gap: 20px; }
+}
