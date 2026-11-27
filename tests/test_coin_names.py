@@ -7,6 +7,7 @@ def test_label_rules():
     assert cn.label("ripple", "XRP", "XRP", "XRP") == "XRP"
     assert cn.label("midnight-3", "Midnight", "Midnight", "NIGHT") == "Midnight (NIGHT)"
     assert cn.label("x", "Stacks (STX)", "", "") == "Stacks"                      # no ticker known: no bracket
+    assert cn.label("aave", "Aave", "Aave", "AAVE") == "Aave (AAVE)"
     assert cn._ticker_in("Stacks (STX)") == "STX"
 
 

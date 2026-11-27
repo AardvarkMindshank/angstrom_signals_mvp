@@ -33,6 +33,19 @@ def _fetch(ids: list[str]) -> None:
             for row in rows if isinstance(rows, list) else []:
                 if isinstance(row, dict) and row.get("id"):
                     _known[str(row["id"])] = (now, str(row.get("name") or "").strip(), str(row.get("symbol") or "").strip().upper())
+        # coins the market list leaves out (small or new ones): one at a time, a few per call
+        for cid in [c for c in part if c not in _known][:6]:
+            try:
+                r = requests.get(f"https://api.coingecko.com/api/v3/coins/{cid}",
+                                 params={"localization": "false", "tickers": "false", "market_data": "false",
+                                         "community_data": "false", "developer_data": "false"}, headers=_HEADERS, timeout=10)
+                row = r.json() if r.status_code == 200 else {}
+            except Exception:
+                row = {}
+            if isinstance(row, dict) and row.get("symbol"):
+                with _lock:
+                    _known[cid] = (now, str(row.get("name") or "").strip(), str(row["symbol"]).strip().upper())
+        with _lock:
             for cid in part:
                 if cid not in _known:
                     _tried[cid] = now
@@ -45,7 +58,7 @@ def _bare(saved: str) -> str:
 def label(coin_id: str, saved: str = "", name: str = "", ticker: str = "") -> str:
     name = (name or _bare(saved) or coin_id).strip()
     ticker = (ticker or "").strip().upper()
-    if not ticker or name.upper() == ticker or name.upper().replace(" ", "") == ticker:
+    if not ticker or name == ticker:                     # "XRP", not "XRP (XRP)"; but "Aave (AAVE)"
         return name
     return f"{name} ({ticker})"
 
