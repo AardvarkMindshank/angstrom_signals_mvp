@@ -926,7 +926,7 @@ button.sm { padding: 4px 10px; font-size: 12.5px; border-radius: 8px; }
 .admsignup { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; margin: 4px 0 10px; }
 .admapply { display: flex; gap: 10px; margin: 6px 0 12px; }
 .main:has(.admin) { max-width: 1560px; }
-.settings.admin { grid-template-columns: 200px minmax(0, 1fr); gap: 36px; }
+@media (min-width: 861px) { .settings.admin { grid-template-columns: 200px minmax(0, 1fr); gap: 36px; } }   /* phones: the sections on top, as Help and Settings */
 .admin .sbody { max-width: none; gap: 14px; }
 .admin .sbody > .sub, .admin .sbody > .note { margin: 0; }
 .admin .helph { margin: 0 0 4px; }
@@ -1003,3 +1003,4 @@ a.btnlink:hover { background: var(--ang-hover); }
   table.t.sig .sticky { box-shadow: 6px 0 8px -8px rgba(0,0,0,.35); }
   .page { gap: 20px; }
 }
+@media (max-width: 640px) { .admai { flex-wrap: wrap; gap: 8px; } .admai select { width: 100%; } .admsignup { gap: 8px; } }
