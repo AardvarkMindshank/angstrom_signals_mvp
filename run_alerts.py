@@ -409,6 +409,14 @@ def run_background_checks() -> None:
     except Exception as exc:
         print(f"Tides daily skipped: {str(exc)[:160]}")
     try:
+        # Earnings dates, market caps and logos for watched and funnel assets (market_extras.py): once looked up by the
+        # classic app's server while members browsed. Capped per run; never holds up the alert pass.
+        import market_extras
+
+        market_extras.refresh_due(supabase, price_catalog)
+    except Exception as exc:
+        print(f"Market extras skipped: {str(exc)[:160]}")
+    try:
         # Options max-pain snapshots (Bitcoin, Ethereum, watched and funnel equities): the history behind the max pain
         # signal. Collected only; never holds up the alert pass.
         from options_snapshots import refresh_due as refresh_options
