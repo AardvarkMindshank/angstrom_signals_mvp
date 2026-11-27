@@ -57,7 +57,10 @@ def _asset_rows(db, settings: dict, crypto: dict, stock: dict) -> list[dict]:
 
     wanted = []
     if settings.get("trade_crypto", True) is not False:
-        wanted += [("Crypto", k, v if isinstance(v, str) else k) for k, v in crypto.items()]
+        from service import coin_names
+
+        names = coin_names.labels(crypto)
+        wanted += [("Crypto", k, names.get(k, k)) for k in crypto]
     if settings.get("trade_equities", True) is not False:
         wanted += [("Stock", k, f"{v if isinstance(v, str) else k} ({k})") for k, v in stock.items()]
     shared = ms.load_shared_market(db, [ms.asset_market_key(kind, aid) for kind, aid, _ in wanted])

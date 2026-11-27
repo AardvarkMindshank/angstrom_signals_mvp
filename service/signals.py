@@ -211,11 +211,15 @@ def rows_for(db, kind: str, watch: dict, specs: list[dict], fview: dict | None, 
     subject = _subject(db)
     hour = datetime.now(timezone.utc).strftime("%Y-%m-%d %H")
     out = []
+    if kind == "Crypto":
+        from service import coin_names
+
+        coin_label = coin_names.labels(watch)
     for aid, name in watch.items():
         key = ms.asset_market_key(kind, aid)
         row = shared.get(key) or {}
         frame = ms.frame_from_row(row)
-        symbol = (name if isinstance(name, str) else aid) if kind == "Crypto" else f"{name if isinstance(name, str) else aid} ({aid})"
+        symbol = coin_label.get(aid, aid) if kind == "Crypto" else f"{name if isinstance(name, str) else aid} ({aid})"
         r = {"key": f"{kind}|{aid}", "id": aid, "symbol": symbol, "logo": row.get("logo_url") or "",
              "own": aid in own or str(aid).upper() in own, "cells": {}, "clusters": {}}
         if frame is not None and len(frame) >= 15:

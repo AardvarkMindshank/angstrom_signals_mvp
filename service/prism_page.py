@@ -23,7 +23,10 @@ def assets_of(db, uid: str) -> list[tuple[str, str, str]]:
     r = rows[0] if rows else {}
     crypto = r.get("crypto_watchlist") or {}
     stocks = r.get("stock_watchlist") or {}
-    return ([("crypto", k, str(v)) for k, v in dict(crypto).items()]
+    from service import coin_names
+
+    names = coin_names.labels(dict(crypto))
+    return ([("crypto", k, names.get(k, str(v))) for k, v in dict(crypto).items()]
             + [("equity", k, f"{v} ({k})") for k, v in dict(stocks).items()])
 
 
