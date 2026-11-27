@@ -1,22 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { T } from "../../lib/i18n.js";
-import { alerts, trades, funnelStatus } from "../../lib/assets.js";
+import { alerts, trades } from "../../lib/assets.js";
+import { alertText } from "./words.js";
 import { money, pct, tone, dayMonthYear, stamp } from "../../lib/format.js";
 
-// What the member has to do with this asset: alerts, funnels and trades.
+// What the member has to do with this asset: trades and alerts.
 export default function Activity({ assetKey, who }) {
-  const [al, setAl] = useState(null), [tr, setTr] = useState(null), [fu, setFu] = useState(null);
+  const [al, setAl] = useState(null), [tr, setTr] = useState(null);
   useEffect(() => {
     let live = true;
     alerts(who.id).then((x) => live && setAl(x));
     trades(assetKey).then((x) => live && setTr((x || []).filter((t) => !t.reward)));
-    funnelStatus(who.id).then((x) => live && setFu(x));
     return () => { live = false; };
   }, [assetKey]);
   const own = (tr || []).filter((t) => !t.copied);
   const net = own.reduce((a, t) => a + (t.net_result_usd || 0), 0);
   const wins = own.filter((t) => (t.net_result_usd || 0) > 0).length;
-  const STATUS = { pool: T("In the pool"), stage: T("Passing stage {n} of {m}"), flagged: T("Flagged"), candidate: T("Candidate") };
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 30 }}>
       <section className="card">
@@ -44,22 +43,10 @@ export default function Activity({ assetKey, who }) {
         <h2>{T("Your alerts")}</h2>
         {al === null ? <p className="sub">{T("Loading…")}</p> : !al.length ? <p className="sub">{T("No alerts for this asset yet.")}</p> : (
           <ol className="events">
-            {al.map((a) => <li key={a.id}><span className={"tier " + (/DOWN/.test(a.alert_type) ? "bad" : "good")} aria-hidden="true" /><b>{a.message}</b><span className="when">{stamp(a.created_at)}</span></li>)}
+            {al.map((a) => <li key={a.id}><span className={"tier " + (/DOWN/.test(a.alert_type) ? "bad" : "good")} aria-hidden="true" /><b>{alertText(a.message)}</b><span className="when">{stamp(a.created_at)}</span></li>)}
           </ol>
         )}
       </section>
-      {fu && fu.length > 0 && (
-        <section className="card">
-          <h2>{T("Your funnels")}</h2>
-          <ol className="events">
-            {fu.map((f) => (
-              <li key={f.funnel_id}><b>{f.name}</b>
-                <span className="m">{f.status === "stage" ? STATUS.stage.replace("{n}", f.depth).replace("{m}", f.stages || "?") + (f.stage ? ` · ${f.stage}` : "") : STATUS[f.status] || f.status}</span>
-                <span className="when">{T("checked {d}", { d: dayMonthYear(f.updated_at) })}</span></li>
-            ))}
-          </ol>
-        </section>
-      )}
     </div>
   );
 }

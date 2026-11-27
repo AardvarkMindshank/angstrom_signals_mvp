@@ -39,3 +39,22 @@ export const ALERT = () => ({
 
 export const COVERAGE = (score) => (score == null ? "" : score >= 35 ? T("bullish coverage") : score >= 10 ? T("mildly bullish coverage")
   : score > -10 ? T("mixed coverage") : score > -35 ? T("mildly bearish coverage") : T("bearish coverage"));
+
+// Alert texts are stored in English by the background job; the usual "Trend gets strongly bearish: −52 (Strong
+// downtrend), was Downtrend." shape is put back together in the member's language. Anything else shows as stored.
+const CROSS = () => ({
+  "gets strongly bullish": T("gets strongly bullish"), "fades back from strongly bullish": T("fades back from strongly bullish"),
+  "turns bullish (leaves neutral)": T("turns bullish (leaves neutral)"), "falls back into neutral": T("falls back into neutral"),
+  "rises back into neutral": T("rises back into neutral"), "turns bearish (leaves neutral)": T("turns bearish (leaves neutral)"),
+  "fades back from strongly bearish": T("fades back from strongly bearish"), "gets strongly bearish": T("gets strongly bearish"),
+  "flips from bearish to bullish": T("flips from bearish to bullish"), "flips from bullish to bearish": T("flips from bullish to bearish"),
+});
+const NAMES = () => ({ Trend: T("Trend"), Stretch: T("Stretch"), Flow: T("Flow") });
+export function alertText(msg) {
+  const m = /^(Trend|Stretch|Flow) (.+?): ([+\-−]?\d+) \((.+?)\), was (.+?)\.(\s+Readings describe conditions, not forecasts\.)?$/.exec(String(msg || "").trim());
+  if (!m || !CROSS()[m[2]]) return msg;
+  const words = READING_LABEL();
+  const find = (w) => words[w] || words[Object.keys(words).find((k) => k.toLowerCase() === w.toLowerCase())] || w;
+  return T("{name} {what}: {value} ({now}), was {before}.", { name: NAMES()[m[1]], what: CROSS()[m[2]], value: m[3], now: find(m[4]), before: find(m[5]).toLowerCase() })
+    + (m[6] ? " " + T("Readings describe conditions, not forecasts.") : "");
+}

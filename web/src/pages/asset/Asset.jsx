@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { T } from "../../lib/i18n.js";
-import { asset, universe, watchlists, readingsHistory, tide, parseKey } from "../../lib/assets.js";
+import { asset, universe, watchlists, readingsHistory, tide, parseKey, setWatched as saveWatch } from "../../lib/assets.js";
 import { usd, pct, signed, tone, dayMonthYear, stamp } from "../../lib/format.js";
 import { Logo, assetHref } from "../../components/Search.jsx";
 import { label, WIND, COVERAGE } from "./words.js";
@@ -10,6 +10,8 @@ import News from "./News.jsx";
 import Derivatives from "./Derivatives.jsx";
 import Conditions from "./Conditions.jsx";
 import Activity from "./Activity.jsx";
+import Community from "./Community.jsx";
+import Sets from "./Sets.jsx";
 
 // One page per asset: everything MarketNavi knows about it, reached from the search (and later from any table).
 export const mood = (s) => (s == null ? null : Math.round((Number(s) - 50) * 2));   // stored 0..100, shown −100..+100
@@ -21,6 +23,7 @@ export default function Asset({ assetKey, tab, account }) {
   const [hist, setHist] = useState([]);
   const [sea, setSea] = useState(null);
   const [watched, setWatched] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     let live = true;
@@ -52,10 +55,16 @@ export default function Asset({ assetKey, tab, account }) {
   const m = mood(row.sentiment_score);
   const rep = row.sentiment_report || {};
   const wind = sea ? sea[crypto ? "wind_crypto" : "wind_equity"] : null;
-  const tabs = [["chart", T("Chart")], ["readings", T("Readings")], ["news", T("News")],
-    [crypto ? "derivatives" : "earnings", crypto ? T("Derivatives") : T("Earnings")], ["conditions", T("Conditions")], ["activity", T("Your activity")]];
+  const tabs = [["chart", T("Chart")], ["readings", T("Readings")], ["sets", T("Sets & funnels")], ["news", T("News")],
+    [crypto ? "derivatives" : "earnings", crypto ? T("Derivatives") : T("Earnings")], ["conditions", T("Conditions")],
+    ["activity", T("Your activity")], ["community", T("Community")]];
   const on = tabs.some((x) => x[0] === tab) ? tab : "chart";
 
+  const toggle = async () => {
+    setBusy(true);
+    try { await saveWatch(who.kind, who.id, name, !watched); setWatched(!watched); } catch (e) { /* the row rules said no */ }
+    setBusy(false);
+  };
   const arrow = (d) => (d == null || Math.round(d) === 0 ? "" : (d > 0 ? "▲ " : "▼ ") + Math.abs(Math.round(d)) + " " + T("in a week"));
 
   return (
@@ -65,9 +74,15 @@ export default function Asset({ assetKey, tab, account }) {
         <div>
           <h1>{name} <span className="m">{symbol}</span></h1>
           <div className="m">{crypto ? T("Crypto") : T("Equity")}{meta && meta.pair ? ` · Binance ${meta.pair}` : ""}{meta && meta.sector ? ` · ${meta.sector}` : ""}
-            {row.market_rank ? ` · #${row.market_rank}` : ""}{watched ? <span className="onlist"> · {T("On your watchlist")}</span> : null}</div>
+            {row.market_rank ? ` · #${row.market_rank}` : ""} · {T("Prices updated {when}", { when: stamp(row.prices_updated_at) })}</div>
         </div>
-        <div className="right m">{T("Prices updated {when}", { when: stamp(row.prices_updated_at) })}</div>
+        <div className="right">
+          <button type="button" className={"watch" + (watched ? " on" : "")} aria-pressed={watched} disabled={busy}
+            title={watched ? T("Remove from your watchlist") : T("Add to your watchlist")} onClick={toggle}>
+            <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill={watched ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M6 3h12v18l-6-4-6 4z" /></svg>
+            {watched ? T("On your watchlist") : T("Add to watchlist")}
+          </button>
+        </div>
       </div>
 
       <section className="tiles hero" aria-label={T("Key figures")}>
@@ -94,12 +109,14 @@ export default function Asset({ assetKey, tab, account }) {
         {tabs.map(([k, l]) => <a key={k} href={assetHref(assetKey, k)} className={on === k ? "on" : ""} aria-current={on === k ? "page" : undefined}>{l}</a>)}
       </nav>
       <div>
-        {on === "chart" && <Chart row={row} meta={meta} crypto={crypto} />}
+        {on === "chart" && <Chart row={row} meta={meta} crypto={crypto} who={who} />}
         {on === "readings" && <Readings f={f} hist={hist} />}
         {on === "news" && <News rep={rep} score={m} at={row.sentiment_updated_at} />}
         {(on === "derivatives" || on === "earnings") && <Derivatives row={row} crypto={crypto} who={who} />}
         {on === "conditions" && <Conditions sea={sea} crypto={crypto} />}
         {on === "activity" && <Activity assetKey={assetKey} who={who} account={account} />}
+        {on === "sets" && <Sets who={who} />}
+        {on === "community" && <Community row={row} score={m} />}
       </div>
       <p className="sub" style={{ marginTop: 8 }}>{crypto ? T("Prices from Binance; derivatives from Coinalyze.") : T("Prices from Yahoo Finance.")} {T("Readings, news mood and Tides from MarketNavi, the same numbers as the rest of the app. Descriptive readings, not financial advice.")}</p>
     </div>
