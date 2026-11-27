@@ -3160,5 +3160,9 @@
   "The study of version {v} is being worked out.": "กำลังคำนวณการศึกษาเวอร์ชัน {v}",
   "The study of version {v} is waiting its turn.": "การศึกษาเวอร์ชัน {v} กำลังรอคิว",
   "Asset by asset": "รายสินทรัพย์",
-  "a guide only": "เป็นแนวทางเท่านั้น"
+  "a guide only": "เป็นแนวทางเท่านั้น",
+  "Logbook & podcasts": "สมุดบันทึกเดินเรือและพอดแคสต์",
+  "Listen in a podcast app:": "ฟังในแอปพอดแคสต์:",
+  "get the feed links in ⚙️ Settings": "รับลิงก์ฟีดได้ใน ⚙️ การตั้งค่า",
+  "Ready each day an hour before your morning time, which you set in Alerts & email.": "พร้อมทุกวันหนึ่งชั่วโมงก่อนเวลาเช้าของคุณ ซึ่งตั้งได้ในการแจ้งเตือนและอีเมล"
 }

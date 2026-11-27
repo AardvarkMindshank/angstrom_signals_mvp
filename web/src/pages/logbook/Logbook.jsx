@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { T } from "../../lib/i18n.js";
-import { supabase, SUPABASE_URL } from "../../lib/supabase.js";
-import { saveSettings } from "../../lib/account.js";
+import { supabase } from "../../lib/supabase.js";
 import { dayMonthYear } from "../../lib/format.js";
 import { Video, Outlook, Passage } from "../snapshot/Snapshot.jsx";
 import { Rich } from "../../components/Navigator.jsx";
@@ -42,39 +41,12 @@ export default function Logbook({ account }) {
         </div>
       </div>
       <p className="sub">{T("Each day's video, Morning Outlook and your Passage Plan, kept for two weeks. Showing {day}.", { day: dayMonthYear(day) })}</p>
-      <div className="snaptop">
+      <div className="snaptop logtop">
         <Video account={account} day={day} key={"v" + day} />
         <Outlook day={day} />
         <Passage account={account} day={day} written={plans[day] ? <Rich text={plans[day]} /> : null} key={"p" + day} />
       </div>
-      {pro && <Feeds account={account} />}
+      {pro && <p className="sub">🎙️ {T("Listen in a podcast app:")} <a className="linkish" href="#settings/logbook">{T("get the feed links in ⚙️ Settings")} ›</a></p>}
     </div>
-  );
-}
-
-function Feeds({ account }) {
-  const [token, setToken] = useState((((account && account.settings) || {}).briefing || {}).token || "");
-  const [copied, setCopied] = useState("");
-  const url = (path) => `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/briefings/${path}`;
-  const copy = (u) => { navigator.clipboard.writeText(u).then(() => { setCopied(u); setTimeout(() => setCopied(""), 1800); }).catch(() => {}); };
-  const renew = async () => {
-    const bytes = crypto.getRandomValues(new Uint8Array(18));
-    const fresh = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    const b = { ...((((account && account.settings) || {}).briefing) || {}), token: fresh };
-    try { await saveSettings({ briefing: b }); setToken(fresh); } catch (e) { /* stays as it was */ }
-  };
-  const rows = [["🧭 " + T("Your Passage Plan"), token ? url(`${token}/feed.xml`) : ""], ["🌍 " + T("Morning Outlook"), url("general/feed.xml")]];
-  return (
-    <section className="card">
-      <h2>🎙️ {T("Listen in a podcast app")}</h2>
-      <p className="sub">{T("Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or Overcast, and each one downloads by itself. Your own feed is private: anyone with the link can listen, so keep it to yourself. Spotify can't take private feeds.")}</p>
-      {rows.map(([name, u]) => u && (
-        <div key={name} className="srow2">
-          <div className="stext"><div className="stitle">{name}</div><div className="shelp feedurl">{u}</div></div>
-          <div className="sctl"><button type="button" className="ghost" onClick={() => copy(u)}>{copied === u ? "✓ " + T("Copied") : T("Copy link")}</button></div>
-        </div>
-      ))}
-      <button type="button" className="linkish" onClick={renew} title={T("The old link stops getting new plans.")}>🔄 {T("Make a new private link")}</button>
-    </section>
   );
 }

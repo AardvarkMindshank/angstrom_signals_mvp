@@ -754,3 +754,12 @@ html.night .classic .lat select option { color: #f3f4f6; background: #1f2937; }
 .lattbl th, .lattbl td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--ang-border); white-space: nowrap; }
 .lattbl th { color: var(--ang-muted); font-weight: 600; position: sticky; top: 0; background: var(--ang-surface); }
 @media (max-width: 760px) { .latgrid { grid-template-columns: 1fr; } }
+
+/* 📓 Logbook: an opened "Read it" box (and the written Passage Plan) fills its column to the same bottom line as the
+   others, so the three read side by side at one height; each scrolls inside. */
+.logtop .media { display: flex; flex-direction: column; }
+.logtop .readit.open, .logtop .plantext { flex: 1 1 0; min-height: 380px; display: flex; flex-direction: column; }
+.logtop .readit.open .readtext { flex: 1 1 0; min-height: 0; max-height: none; }
+.logtop .readit.open > .linkish { align-self: flex-start; }
+.logtop .plantext { max-height: none; overflow-y: auto; }
+@media (max-width: 640px) { .logtop .readit.open, .logtop .plantext { flex: none; min-height: 0; } .logtop .readit.open .readtext, .logtop .plantext { max-height: 420px; } }

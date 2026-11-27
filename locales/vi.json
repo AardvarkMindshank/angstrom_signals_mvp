@@ -3160,5 +3160,9 @@
   "The study of version {v} is being worked out.": "Nghiên cứu phiên bản {v} đang được tính.",
   "The study of version {v} is waiting its turn.": "Nghiên cứu phiên bản {v} đang chờ đến lượt.",
   "Asset by asset": "Từng tài sản",
-  "a guide only": "chỉ để tham khảo"
+  "a guide only": "chỉ để tham khảo",
+  "Logbook & podcasts": "Nhật ký hải trình & podcast",
+  "Listen in a podcast app:": "Nghe trong ứng dụng podcast:",
+  "get the feed links in ⚙️ Settings": "lấy liên kết nguồn cấp trong ⚙️ Cài đặt",
+  "Ready each day an hour before your morning time, which you set in Alerts & email.": "Sẵn sàng mỗi ngày một giờ trước giờ buổi sáng của bạn, đặt trong Cảnh báo & email."
 }

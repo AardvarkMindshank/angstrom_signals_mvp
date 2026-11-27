@@ -126,7 +126,7 @@ function VideoPop({ urls, onClose }) {
 function ReadIt({ text, load }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="readit">
+    <div className={"readit" + (open ? " open" : "")}>
       <button type="button" className="linkish" aria-expanded={open} onClick={() => { if (!open && text == null) load(); setOpen(!open); }}>📜 {T("Read it")} {open ? "▴" : "▾"}</button>
       {open && <div className="readtext">{text == null ? T("Loading…") : text || T("Not available.")}</div>}
     </div>

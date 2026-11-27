@@ -3160,5 +3160,9 @@
   "The study of version {v} is being worked out.": "버전 {v} 연구를 계산하는 중입니다.",
   "The study of version {v} is waiting its turn.": "버전 {v} 연구가 차례를 기다리고 있습니다.",
   "Asset by asset": "자산별",
-  "a guide only": "참고용"
+  "a guide only": "참고용",
+  "Logbook & podcasts": "로그북 및 팟캐스트",
+  "Listen in a podcast app:": "팟캐스트 앱에서 듣기:",
+  "get the feed links in ⚙️ Settings": "⚙️ 설정에서 피드 링크 받기",
+  "Ready each day an hour before your morning time, which you set in Alerts & email.": "매일 아침 시간 1시간 전에 준비됩니다. 아침 시간은 알림 및 이메일에서 정합니다."
 }

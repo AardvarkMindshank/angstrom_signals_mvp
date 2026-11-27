@@ -3160,5 +3160,9 @@
   "The study of version {v} is being worked out.": "Studi versi {v} sedang dihitung.",
   "The study of version {v} is waiting its turn.": "Studi versi {v} sedang menunggu giliran.",
   "Asset by asset": "Per aset",
-  "a guide only": "hanya panduan"
+  "a guide only": "hanya panduan",
+  "Logbook & podcasts": "Logbook & podcast",
+  "Listen in a podcast app:": "Dengarkan di aplikasi podcast:",
+  "get the feed links in ⚙️ Settings": "ambil tautan feed di ⚙️ Pengaturan",
+  "Ready each day an hour before your morning time, which you set in Alerts & email.": "Siap setiap hari satu jam sebelum waktu pagi Anda, yang diatur di Peringatan & email."
 }

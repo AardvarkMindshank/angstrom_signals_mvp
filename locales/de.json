@@ -3160,5 +3160,9 @@
   "The study of version {v} is being worked out.": "Die Studie zu Version {v} wird gerade berechnet.",
   "The study of version {v} is waiting its turn.": "Die Studie zu Version {v} wartet, bis sie dran ist.",
   "Asset by asset": "Asset für Asset",
-  "a guide only": "nur zur Orientierung"
+  "a guide only": "nur zur Orientierung",
+  "Logbook & podcasts": "Logbuch & Podcasts",
+  "Listen in a podcast app:": "In einer Podcast-App hören:",
+  "get the feed links in ⚙️ Settings": "die Feed-Links findest du in ⚙️ Einstellungen",
+  "Ready each day an hour before your morning time, which you set in Alerts & email.": "Jeden Tag eine Stunde vor deiner Morgenzeit fertig; die stellst du unter Alarme & E-Mail ein."
 }

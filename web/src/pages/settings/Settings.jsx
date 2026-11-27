@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { T, lang } from "../../lib/i18n.js";
 import { applyTheme } from "../../lib/theme.js";
-import { supabase } from "../../lib/supabase.js";
+import { supabase, SUPABASE_URL } from "../../lib/supabase.js";
 import * as acct from "../../lib/account.js";
 import { universe, match, keyFor, watchlists } from "../../lib/assets.js";
 import { call } from "../../lib/service.js";
@@ -14,6 +14,7 @@ const SECTIONS = () => [
   ["display", T("Display & language"), "M12 3v2m0 14v2M5 12H3m18 0h-2M6 6l1.5 1.5M16.5 16.5 18 18M6 18l1.5-1.5M16.5 7.5 18 6M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"],
   ["markets", T("Markets & watchlists"), "M3 3v18h18M7 14l4-4 3 3 5-6"],
   ["alerts", T("Alerts & email"), "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"],
+  ["logbook", T("Logbook & podcasts"), "M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6"],
   ["ai", T("AI"), "M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"],
   ["privacy", T("Chat & privacy"), "M5 11V8a7 7 0 0 1 14 0v3M4 11h16v10H4z"],
   ["lattice", T("Lattice"), "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"],
@@ -53,6 +54,7 @@ export default function Settings({ account, section }) {
         {on === "display" && <Display {...props} />}
         {on === "markets" && <Markets {...props} />}
         {on === "alerts" && <Alerts {...props} />}
+        {on === "logbook" && <Logbook {...props} />}
         {on === "ai" && <AI {...props} />}
         {on === "privacy" && <Privacy {...props} />}
         {on === "lattice" && <LatticeSet {...props} />}
@@ -153,9 +155,6 @@ function Display({ s, set }) {
         <Row title={T("Day or night")} help={T("Auto follows your device.")}>
           <Seg label={T("Day or night")} value={mode} options={[["day", "☀️ " + T("Day")], ["night", "🌙 " + T("Night")], ["auto", "🌓 " + T("Auto")]]}
             onChange={(v) => { applyTheme({ ...s, ui_mode: v }); set({ ui_mode: v }); }} />
-        </Row>
-        <Row title={T("🎬 Play the daily video when I open the app")} help={T("Once a day, the first time you open the app after the new video is out. You can always watch it in 📸 Quick Snapshot or the 📓 Logbook.")}>
-          <Switch label={T("Daily video")} on={s.daily_video_auto !== false} onChange={(v) => set({ daily_video_auto: v })} />
         </Row>
       </Section>
       <Section title={T("Language")} sub={T("The app follows your browser's language until you pick one here.")}>
@@ -315,6 +314,27 @@ function Alerts({ s, set, alerts, setAlert, account }) {
             {zones.map((z) => <option key={z} value={z}>{z.replace(/_/g, " ")}</option>)}
           </select>
         </Row>
+        {a.instant_email === false && !a.digest_enabled && <p className="sub">{T("Both are off, so alerts only appear in the dashboard.")}</p>}
+      </Section>
+    </>
+  );
+}
+
+// ---- 📓 Logbook & podcasts: the daily video, your Passage Plan, and the podcast feeds ------------------------------
+
+function Logbook({ s, set, account }) {
+  const [m, setM] = useState(null);
+  useEffect(() => { acct.meta().then(setM); }, []);
+  const brief = s.briefing && typeof s.briefing === "object" ? s.briefing : {};
+  const pro = ["pro", "elite"].includes(account.plan);
+  return (
+    <>
+      <Section title={"🎬 " + T("Daily video")}>
+        <Row title={T("🎬 Play the daily video when I open the app")} help={T("Once a day, the first time you open the app after the new video is out. You can always watch it in 📸 Quick Snapshot or the 📓 Logbook.")}>
+          <Switch label={T("Daily video")} on={s.daily_video_auto !== false} onChange={(v) => set({ daily_video_auto: v })} />
+        </Row>
+      </Section>
+      <Section title={"🧭 " + T("Your Passage Plan")} sub={pro ? T("Ready each day an hour before your morning time, which you set in Alerts & email.") : T("Written and spoken for your own watchlist and funnels each morning. Comes with Pro.")}>
         {pro && (
           <>
             <Row title={T("Email me when my Passage Plan is ready")} help={T("The daily summary email links it anyway.")}>
@@ -327,11 +347,37 @@ function Alerts({ s, set, alerts, setAlert, account }) {
                 </select>
               </Row>
             )}
+            <Row title={T("Your morning time")}><a className="linkish" href="#settings/alerts">{T("Alerts & email")} ›</a></Row>
           </>
         )}
-        {a.instant_email === false && !a.digest_enabled && <p className="sub">{T("Both are off, so alerts only appear in the dashboard.")}</p>}
       </Section>
+      {pro && <Feeds brief={brief} set={set} />}
     </>
+  );
+}
+
+function Feeds({ brief, set }) {
+  const [copied, setCopied] = useState("");
+  const token = brief.token || "";
+  const url = (path) => `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/briefings/${path}`;
+  const copy = (u) => { navigator.clipboard.writeText(u).then(() => { setCopied(u); setTimeout(() => setCopied(""), 1800); }).catch(() => {}); };
+  const renew = () => {
+    const bytes = crypto.getRandomValues(new Uint8Array(18));
+    const fresh = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    set({ briefing: { ...brief, token: fresh } });
+  };
+  const rows = [["🧭 " + T("Your Passage Plan"), token ? url(`${token}/feed.xml`) : ""], ["🌍 " + T("Morning Outlook"), url("general/feed.xml")]];
+  return (
+    <Section title={"🎙️ " + T("Listen in a podcast app")} sub={T("Add these feeds to Apple Podcasts (Library, then Follow a Show by URL), Pocket Casts or Overcast, and each one downloads by itself. Your own feed is private: anyone with the link can listen, so keep it to yourself. Spotify can't take private feeds.")}>
+      {rows.map(([name, u]) => u && (
+        <Row key={name} title={name} help={<span className="feedurl">{u}</span>}>
+          <button type="button" className="ghost" onClick={() => copy(u)}>{copied === u ? "✓ " + T("Copied") : T("Copy link")}</button>
+        </Row>
+      ))}
+      <Row title={"🔄 " + T("Make a new private link")} help={T("The old link stops getting new plans.")}>
+        <button type="button" className="ghost bordered" onClick={renew} title={T("Make a new private link")} aria-label={T("Make a new private link")}>🔄</button>
+      </Row>
+    </Section>
   );
 }
 
