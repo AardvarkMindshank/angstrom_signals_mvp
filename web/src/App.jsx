@@ -1,25 +1,27 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { supabase, configured, CLASSIC } from "./lib/supabase.js";
 import { T, loadWords, pickLanguage } from "./lib/i18n.js";
 import { applyTheme } from "./lib/theme.js";
 import * as api from "./lib/api.js";
 import SignIn from "./pages/SignIn.jsx";
-import TradeLog from "./pages/tradelog/TradeLog.jsx";
-import Asset from "./pages/asset/Asset.jsx";
 import Search from "./components/Search.jsx";
 import SidePanel from "./components/SidePanel.jsx";
-import Settings from "./pages/settings/Settings.jsx";
-import SearchPage from "./pages/SearchPage.jsx";
 import Snapshot from "./pages/snapshot/Snapshot.jsx";
-import Signals from "./pages/signals/Signals.jsx";
-import Tides from "./pages/tides/Tides.jsx";
-import Mood from "./pages/mood/Mood.jsx";
-import Logbook from "./pages/logbook/Logbook.jsx";
-import Alerts from "./pages/alerts/Alerts.jsx";
+// Each page loads when first opened (the Quick Snapshot, the usual first page, comes with the app).
+const TradeLog = lazy(() => import("./pages/tradelog/TradeLog.jsx"));
+const Asset = lazy(() => import("./pages/asset/Asset.jsx"));
+const Settings = lazy(() => import("./pages/settings/Settings.jsx"));
+const SearchPage = lazy(() => import("./pages/SearchPage.jsx"));
+const Signals = lazy(() => import("./pages/signals/Signals.jsx"));
+const Tides = lazy(() => import("./pages/tides/Tides.jsx"));
+const Mood = lazy(() => import("./pages/mood/Mood.jsx"));
+const Logbook = lazy(() => import("./pages/logbook/Logbook.jsx"));
+const Alerts = lazy(() => import("./pages/alerts/Alerts.jsx"));
+const Lattice = lazy(() => import("./pages/lattice/Lattice.jsx"));
 
 // The new MarketNavi app (beta). One page so far, the Trade Log; each page moves across from the classic app in
 // turn, and the classic app keeps running until every page is here.
-const PAGES = [["snapshot", () => T("Quick Snapshot")], ["signals", () => T("Signals")], ["tides", () => T("Tides")], ["logbook", () => T("Logbook")], ["tradelog", () => T("Trade Log")]];
+const PAGES = [["snapshot", () => T("Quick Snapshot")], ["signals", () => T("Signals")], ["tides", () => T("Tides")], ["lattice", () => T("Lattice")], ["logbook", () => T("Logbook")], ["tradelog", () => T("Trade Log")]];
 
 // The address after # picks the page: #tradelog, or #asset/<asset key>/<tab>.
 function readRoute() {
@@ -88,6 +90,7 @@ export default function App() {
         </div>
       </header>
       <main className="main">
+        <Suspense fallback={<div className="page"><div className="empty" style={{ height: 300 }}>{T("Loading…")}</div></div>}>
         {page === "snapshot" && account && <Snapshot account={account} />}
         {page === "signals" && account && <Signals key={route[1] || "crypto"} market={route[1] || "crypto"} account={account} />}
         {page === "tides" && account && <Tides account={account} />}
@@ -98,6 +101,8 @@ export default function App() {
         {page === "asset" && account && <Asset key={route[1]} assetKey={route[1]} tab={route[2]} account={account} />}
         {page === "search" && account && <SearchPage key={route[1]} q={route[1] || ""} />}
         {page === "settings" && account && <Settings account={account} section={route[1]} />}
+        {page === "lattice" && account && <Lattice section={route[1]} />}
+        </Suspense>
       </main>
     </div>
   );

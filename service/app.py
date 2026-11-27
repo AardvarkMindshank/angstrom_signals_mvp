@@ -6,6 +6,7 @@ because they need the Python engine or the AI keys. It runs the same code as the
     POST /sonar                     the Sonar strip for the candles the chart is showing
     GET  /chart/options?key=…       what the Pro chart can offer for one asset (indicators, Sonar markers, Sets)
     GET  /snapshot?lang=…&save=…    Quick Snapshot: Tides card, what changed, Trend extremes, moods, funnels, markets
+    GET  /lattice/…, POST /lattice/…  the Signal Group and Set editors: open, check, save, try, search, study
     GET  /tides?range=…             the Tides page: the sea drawing, the note, storm warnings, the waves and the currents
     GET  /signals?market=…          a Signals table: your watchlist or a funnel's assets, with every column
     GET  /signals/columns           what the table's column chooser can offer
@@ -227,6 +228,68 @@ def snapshot(lang: str = Query("en", max_length=8), save: bool = Query(False), w
         if hit is not None:
             return hit
     return _snap_cache.put((who.id, lang), snap.build(who.db, who.id, lang, save))
+
+
+# ---- 🧩 Lattice: the Group and Set editors ---------------------------------------------------------------------------
+
+class LatticeAsk(BaseModel):
+    model: dict | None = None
+    start: str | None = Field(None, max_length=80)
+    source_id: str | None = Field(None, max_length=60)
+    expected_version: int | None = None
+    kind: str | None = Field(None, max_length=10)
+    asset: str | None = Field(None, max_length=90)
+    raw: str | None = Field(None, max_length=400)
+    lang: str = Field("en", max_length=8)
+
+
+_lattice_static = Cache(600, 500)
+
+
+@app.get("/lattice/group/static")
+def lattice_group_static(lang: str = Query("en", max_length=8), who: Member = Depends(member)):
+    from service import lattice as lat
+
+    hit = _lattice_static.get((who.id, lang))
+    return hit if hit is not None else _lattice_static.put((who.id, lang), lat.group_static(who.db, who.id, lang))
+
+
+@app.get("/lattice/{kind}/sources")
+def lattice_sources(kind: str, lang: str = Query("en", max_length=8), who: Member = Depends(member)):
+    from service import lattice as lat
+
+    if kind not in ("group", "set"):
+        raise HTTPException(404, "Unknown editor.")
+    return lat.group_sources(who.db, who.id, lang) if kind == "group" else lat.set_sources(who.db, who.id, lang)
+
+
+@app.post("/lattice/{kind}/{action}")
+def lattice_action(kind: str, action: str, ask: LatticeAsk, who: Member = Depends(member)):
+    from service import lattice as lat
+
+    lang = ask.lang
+    if kind == "group" and action == "open":
+        return lat.group_open(who.db, who.id, ask.start or "new", lang)
+    if kind == "group" and action == "screen":
+        return lat.group_screen(ask.model, lang)
+    if kind == "group" and action == "save":
+        return lat.group_save(who.db, who.id, ask.model, ask.source_id, ask.expected_version, lang)
+    if kind == "group" and action == "try":
+        akind, aid = _parse_key(ask.asset or "")
+        return lat.group_try(who.db, ask.model, akind, aid, lang)
+    if kind == "set" and action == "open":
+        return lat.set_open(who.db, who.id, ask.start or "new", lang)
+    if kind == "set" and action == "screen":
+        return lat.set_screen(who.db, who.id, ask.model, lang)
+    if kind == "set" and action == "save":
+        return lat.set_save(who.db, who.id, ask.model, ask.source_id, ask.expected_version, lang)
+    if kind == "set" and action == "search":
+        return lat.set_search(ask.raw or "") or {}
+    if kind == "set" and action in ("study", "study-ask"):
+        return lat.study(who.db, who.id, ask.source_id or "", action == "study-ask", lang)
+    if action == "delete-check" and kind in ("group", "set"):
+        return lat.delete_check(who.db, who.id, kind, ask.source_id or "", lang)
+    raise HTTPException(404, "Unknown action.")
 
 
 # ---- 🌊 Tides ----------------------------------------------------------------------------------------------------------

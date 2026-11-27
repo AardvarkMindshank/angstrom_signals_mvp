@@ -299,3 +299,70 @@ def test_tides_page_without_a_snapshot(monkeypatch):
     monkeypatch.setattr(td, "latest", lambda db: None)
     svc._tides_cache.data.clear()
     assert _client().get("/tides").json() == {"ready": False}
+
+
+class _RPC:
+    def __init__(self, log, name, args):
+        self.log, self.name, self.args = log, name, args
+
+    def execute(self):
+        self.log.append((self.name, self.args))
+
+        class R:
+            pass
+        r = R()
+        r.data = "cfg-new" if self.name == "analysis_create_config" else 2
+        return r
+
+
+class _LatDB(_DB):
+    def __init__(self, tables):
+        super().__init__(tables)
+        self.calls = []
+
+    def rpc(self, name, args):
+        return _RPC(self.calls, name, args)
+
+
+def _lat_client(tables=None):
+    db = _LatDB(tables or {})
+    svc.app.dependency_overrides[svc.member] = lambda: svc.Member("u1", db, "tok")
+    return TestClient(svc.app), db
+
+
+def test_lattice_group_editor_opens_checks_and_saves():
+    c, db = _lat_client()
+    static = c.get("/lattice/group/static?lang=en").json()
+    assert static["catalogue"] and static["families"] and static["role_hints"]
+    sources = c.get("/lattice/group/sources").json()["sources"]
+    assert sources[0][0] == "new" and any(k.startswith("starter:") for k, _ in sources)
+    starter = next(k for k, _ in sources if k.startswith("starter:"))
+    opened = c.post("/lattice/group/open", json={"start": starter}).json()
+    assert opened["model"]["name"].endswith("(my copy)") and opened["source"] is None
+    screen = c.post("/lattice/group/screen", json={"model": opened["model"]}).json()
+    assert screen["can_save"] and screen["description"]
+    saved = c.post("/lattice/group/save", json={"model": opened["model"]}).json()
+    assert saved["ok"] and saved["id"] == "cfg-new" and db.calls[0][0] == "analysis_create_config"
+    empty = c.post("/lattice/group/save", json={"model": c.post("/lattice/group/open", json={"start": "new"}).json()["model"]}).json()
+    assert not empty["ok"] and len(db.calls) == 1          # an empty Group is refused before the database
+
+
+def test_lattice_refuses_a_second_group_with_the_same_name():
+    cfg = {"id": "g1", "kind": "group", "name": "Mine", "owner_id": "u1", "current_version": 1, "archived": False}
+    versions = [{"config_id": "g1", "version": 1, "body": {"name": "Mine"}}]
+    c, db = _lat_client({"analysis_configs": [cfg], "analysis_config_versions": versions})
+    sources = c.get("/lattice/group/sources").json()["sources"]
+    opened = c.post("/lattice/group/open", json={"start": next(k for k, _ in sources if k.startswith("starter:"))}).json()
+    model = dict(opened["model"], name="mine")
+    out = c.post("/lattice/group/save", json={"model": model}).json()
+    assert not out["ok"] and "already have" in out["message"] and not db.calls
+
+
+def test_lattice_set_sources_and_unknown_actions():
+    c, _ = _lat_client()
+    starts = c.get("/lattice/set/sources").json()["sources"]
+    assert starts[0][0] == "new" and len(starts) > 1
+    opened = c.post("/lattice/set/open", json={"start": starts[1][0]}).json()
+    assert opened["model"] and c.post("/lattice/set/screen", json={"model": opened["model"]}).json()["description"]
+    assert c.post("/lattice/set/nothing", json={}).status_code == 404
+    assert c.get("/lattice/other/sources").status_code == 404

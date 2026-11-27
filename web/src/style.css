@@ -722,3 +722,35 @@ table.t.sig th.c button { white-space: normal; text-align: center; }
 .abody { font-size: 14px; color: var(--ang-soft); margin-top: 2px; line-height: 1.5; }
 @media (max-width: 640px) { .pages a { padding: 8px 8px; font-size: 13px; } }
 @media (max-width: 1360px) { .panelbtn span { display: none; } .top { gap: 14px; } .top .right { gap: 2px; } }
+
+/* 🧩 Lattice: the classic editors in the flat look (their own CSS comes with them; these lines only align colours) */
+.latp .chips { margin: 4px 0 16px; flex-wrap: wrap; }
+.latstart { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 6px; }
+.latstart select, .latdet select, .latpop input { min-height: 36px; border-radius: 10px; border: 1px solid var(--ang-border); background: var(--ang-field); color: var(--ang-text); padding: 6px 10px; font: inherit; max-width: 100%; }
+.latstart select { min-width: min(420px, 100%); }
+.classic.latedit { margin: 10px 0 4px; }
+.classic .lat { font-family: inherit; color: var(--ang-text); }
+.classic .lat .col { background: var(--ang-surface); border-color: var(--ang-border); border-radius: 14px; }
+.classic .lat button { border-color: var(--ang-border); border-radius: 10px; }
+.classic .lat button.on, .classic .lat .chip .vars button.on, .classic .lat .chip .seg button.on { background: var(--ang-text); border-color: var(--ang-text); color: var(--ang-page); }
+.classic .lat .chip, .classic .lat .card, .classic .lat .rule { background: var(--ang-field); border-color: var(--ang-border); }
+.classic .lat input, .classic .lat select { background: var(--ang-field); border-color: var(--ang-border); }
+.classic .lat .lbl { background: rgba(198,148,32,.14); }
+.classic .lat .drop.over { border-color: var(--gold); background: rgba(198,148,32,.08); }
+html.night .classic .lat select option { color: #f3f4f6; background: #1f2937; }
+.latgrid { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; margin-top: 16px; }
+.latgrid .card { margin: 0; }
+.latgrid h2 { margin-top: 0; }
+.latret { margin: 0; padding-left: 18px; font-size: 14px; color: var(--ang-soft); line-height: 1.6; }
+.latacts { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; margin: 16px 0 8px; }
+.ghost.bordered { border-color: var(--ang-border); }
+.latpop { display: flex; flex-direction: column; gap: 8px; padding: 12px; border: 1px solid var(--ang-border); border-radius: 14px; background: var(--ang-surface); max-width: 420px; }
+.latundo { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.note.warn { color: var(--ang-soft); } .note.warn::before { background: var(--gold); }
+.latdet { margin-top: 16px; }
+.latdet > summary { cursor: pointer; font-weight: 600; }
+.latscroll { overflow: auto; max-height: 300px; margin: 6px 0 10px; }
+.lattbl { border-collapse: collapse; font-size: 13px; width: 100%; }
+.lattbl th, .lattbl td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--ang-border); white-space: nowrap; }
+.lattbl th { color: var(--ang-muted); font-weight: 600; position: sticky; top: 0; background: var(--ang-surface); }
+@media (max-width: 760px) { .latgrid { grid-template-columns: 1fr; } }

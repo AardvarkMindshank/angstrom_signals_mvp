@@ -30,3 +30,6 @@ export function T(text, values) {
   if (values) w = w.replace(/\{(\w+)\}/g, (m, k) => (k in values ? values[k] : m));
   return w;
 }
+
+// The whole word list, for the classic components the new app hosts (they read their words from data.tr).
+export const allWords = () => words;
