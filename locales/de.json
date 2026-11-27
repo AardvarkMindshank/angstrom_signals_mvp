@@ -3210,5 +3210,6 @@
   "Mark as not done": "Als nicht erledigt markieren",
   "Mark as done": "Als erledigt markieren",
   "Start from past rises and falls, and look back at what came before them.": "Von vergangenen Anstiegen und Rückgängen ausgehen und zurückblicken, was ihnen vorausging.",
-  "Soundings isn't reachable just now. Please try again in a minute.": "Soundings ist gerade nicht erreichbar. Bitte versuche es in einer Minute erneut."
+  "Soundings isn't reachable just now. Please try again in a minute.": "Soundings ist gerade nicht erreichbar. Bitte versuche es in einer Minute erneut.",
+  "plan limit orders spaced by the daily range": "Limit-Orders nach der Tagesspanne planen"
 }

@@ -3210,5 +3210,6 @@
   "Mark as not done": "완료 안 됨으로 표시",
   "Mark as done": "완료로 표시",
   "Start from past rises and falls, and look back at what came before them.": "과거의 상승과 하락에서 출발해 그 전에 무엇이 있었는지 돌아봅니다.",
-  "Soundings isn't reachable just now. Please try again in a minute.": "지금은 Soundings에 연결할 수 없습니다. 잠시 후 다시 시도하세요."
+  "Soundings isn't reachable just now. Please try again in a minute.": "지금은 Soundings에 연결할 수 없습니다. 잠시 후 다시 시도하세요.",
+  "plan limit orders spaced by the daily range": "일일 변동폭 간격으로 지정가 주문 계획"
 }

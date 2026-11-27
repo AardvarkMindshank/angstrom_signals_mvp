@@ -3210,5 +3210,6 @@
   "Mark as not done": "标记为未完成",
   "Mark as done": "标记为已完成",
   "Start from past rises and falls, and look back at what came before them.": "从过去的上涨和下跌出发，回看它们之前出现了什么。",
-  "Soundings isn't reachable just now. Please try again in a minute.": "暂时无法连接 Soundings，请稍后再试。"
+  "Soundings isn't reachable just now. Please try again in a minute.": "暂时无法连接 Soundings，请稍后再试。",
+  "plan limit orders spaced by the daily range": "按每日波幅规划限价单"
 }

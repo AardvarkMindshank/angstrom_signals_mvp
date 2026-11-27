@@ -249,3 +249,39 @@ def payload(db, owner_id: str, asset_type: str, aid: str, ask, lang: str, title:
                 note = bands.get("none") or ""
         data["skipped"] = layout.get("skipped") or []
         return {"payload": data, "note": note}
+
+
+def ladder(db, asset_type: str, aid: str, interval: str, range_key: str) -> dict:
+    """🪜 What the ladder helper needs (ladder_helper.py; the plan itself is worked out in the page): the latest daily
+    close and ATR 14, this asset's regime (the Market choice starts from it), and the last swing on the chart's candles
+    for a long and for a short (the Fibonacci orders are measured on it when no Fibonacci is drawn)."""
+    import ladder_helper as lh
+
+    daily = candles_with_indicators(db, asset_type, aid, "1D", "1Y")
+    if daily.get("error") or daily["frame"] is None or len(daily["frame"]) < 15:
+        return {"ok": False}
+    frame = daily["frame"]
+    try:
+        price, atr = float(frame["close"].iloc[-1]), float(frame["atr"].iloc[-1])
+    except (KeyError, TypeError, ValueError):
+        return {"ok": False}
+    if not (price > 0 and atr > 0):
+        return {"ok": False}
+    try:
+        import regime
+
+        label = (regime.latest_regime(frame) or {}).get("label")
+    except Exception:
+        label = None
+    chart = candles_with_indicators(db, asset_type, aid, interval, range_key) if interval != "1D" or range_key != "1Y" else daily
+    swings = {}
+    if not chart.get("error"):
+        for side in ("long", "short"):
+            try:
+                swings[side] = lh.last_swing(chart["frame"], side)
+            except Exception:
+                swings[side] = None
+    return {"ok": True, "price": price, "atr": atr, "regime": label,
+            "regime_words": {k: i18n.t(v) for k, v in lh.REGIME_WORDS.items()}, "swings": swings,
+            "styles": lh.STYLES, "stop_beyond": lh.STOP_BEYOND, "fib_sets": {str(k): v for k, v in lh.FIB_SETS.items()},
+            "fib_stop_beyond": lh.FIB_STOP_BEYOND}

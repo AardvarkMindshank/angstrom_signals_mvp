@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Icon, { Lead, watchIcons } from "../../../components/Icon.jsx";
+import Ladder from "./Ladder.jsx";
 import { T, lang } from "../../../lib/i18n.js";
 import { call } from "../../../lib/service.js";
 import { supabase } from "../../../lib/supabase.js";
@@ -46,6 +47,7 @@ export default function Pro({ assetKey, who, title, account }) {
   const host = useRef(null);
   const drawRec = useRef(null);
   const [drawReady, setDrawReady] = useState(0);
+  const [ladderLines, setLadderLines] = useState([]);       // 🪜 the ladder helper's lines, when "Show on chart" is on
 
   useEffect(() => { call(`/chart/options?key=${encodeURIComponent(assetKey)}&lang=${lang}`).then(setOpts).catch(() => setOpts({ down: true })); }, [assetKey]);
   useEffect(() => {
@@ -94,7 +96,7 @@ export default function Pro({ assetKey, who, title, account }) {
   // Draw it (again) when the data, the colours or the drawings change.
   useEffect(() => {
     if (!got || !got.payload || !host.current || !drawRec.current) return;
-    const data = { ...got.payload };
+    const data = { ...got.payload, price_lines: [...(got.payload.price_lines || []), ...ladderLines] };
     data.theme = { ...data.theme, bg: css("--ang-page") || data.theme.bg, ink: css("--ang-text") || data.theme.ink,
       muted: css("--ang-muted") || data.theme.muted, grid: css("--ang-border") || data.theme.grid };
     const rec = drawRec.current;
@@ -108,7 +110,7 @@ export default function Pro({ assetKey, who, title, account }) {
       } };
     const stop = mount(host.current, data), unwatch = watchIcons(host.current);
     return () => { unwatch(); if (stop) stop(); };
-  }, [got, drawReady]);
+  }, [got, drawReady, JSON.stringify(ladderLines)]);
 
   const set = (patch, store) => { setPick((p) => ({ ...p, ...patch })); if (store) saveSettings(store).catch(() => {}); };
   const has = (k) => pick.indicators.includes(k);
@@ -202,6 +204,7 @@ export default function Pro({ assetKey, who, title, account }) {
         {pxLive != null && <div className="proguide" style={{ top: pxLive }} />}
       </div>
       {got && <div className="prodrag" onPointerDown={drag} title={T("Drag to make the price chart taller or shorter")} role="separator" aria-orientation="horizontal" />}
+      {got && drawReady > 0 && <Ladder assetKey={assetKey} interval={pick.interval} range={pick.range} drawings={drawRec.current ? drawRec.current.items : []} onLines={setLadderLines} />}
     </div>
   );
 }

@@ -511,6 +511,16 @@ def chart(ask: ChartAsk, who: Member = Depends(member)):
     return out
 
 
+@app.get("/ladder")
+def ladder(key: str = Query(..., max_length=90), interval: str = Query("1D", max_length=4), range: str = Query("3M", max_length=4),
+           who: Member = Depends(member)):
+    """🪜 The ladder helper's numbers for one asset: latest daily close and ATR 14, regime, last swings."""
+    from service import pro_chart as pro
+
+    asset_type, aid = _asset_type(key)
+    return pro.ladder(who.db, asset_type, aid, interval, range)
+
+
 # ---- topic search across the news and the member's Logbook -------------------------------------------------------------
 
 _news = {"at": 0.0, "items": [], "lock": threading.Lock()}

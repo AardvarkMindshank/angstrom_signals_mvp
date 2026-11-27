@@ -419,3 +419,11 @@ def test_soundings_report_chart_and_open_as_set():
     card = next(g["cards"][0] for g in rep["targets"]["rise"]["groups"] if g["cards"])
     got = c.post("/soundings/set", json={"condition": card["condition"], "target": "rise", "lift": 1.5, "later": 1.2}).json()
     assert got["ok"] and got["model"]["name"].startswith("Soundings:")
+
+
+def test_ladder_answers_even_without_prices(monkeypatch):
+    from service import pro_chart
+
+    monkeypatch.setattr(pro_chart, "candles_with_indicators", lambda *a, **k: {"error": "offline"})
+    c, _ = _lat_client()
+    assert c.get("/ladder?key=Crypto|bitcoin").json() == {"ok": False}

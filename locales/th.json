@@ -3210,5 +3210,6 @@
   "Mark as not done": "ทำเครื่องหมายว่ายังไม่เสร็จ",
   "Mark as done": "ทำเครื่องหมายว่าเสร็จแล้ว",
   "Start from past rises and falls, and look back at what came before them.": "เริ่มจากขาขึ้นและขาลงในอดีต แล้วมองย้อนว่ามีอะไรมาก่อน",
-  "Soundings isn't reachable just now. Please try again in a minute.": "ไม่สามารถเชื่อมต่อ Soundings ได้ในขณะนี้ โปรดลองอีกครั้งในอีกสักครู่"
+  "Soundings isn't reachable just now. Please try again in a minute.": "ไม่สามารถเชื่อมต่อ Soundings ได้ในขณะนี้ โปรดลองอีกครั้งในอีกสักครู่",
+  "plan limit orders spaced by the daily range": "วางแผนคำสั่งลิมิตเว้นระยะตามช่วงราคารายวัน"
 }

@@ -879,3 +879,11 @@ button .ic, a .ic { vertical-align: -0.2em; }
 .sndcard .sndcond { font-weight: 600; font-size: 15px; }
 .sndcard .ghost { align-self: flex-start; margin-top: 6px; }
 .classic.sndchart { margin: 8px 0; }
+
+/* 🪜 Ladder helper */
+.ladder { margin-top: 14px; }
+.ladgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px 22px; margin: 12px 0; align-items: start; }
+.ladgrid input[type=number] { min-height: 36px; border-radius: 10px; border: 1px solid var(--ang-border); background: var(--ang-field); color: var(--ang-text); padding: 6px 10px; font: inherit; max-width: 200px; }
+.ladgrid input[type=range] { accent-color: var(--gold); }
+.lattbl.lad td, .lattbl.lad th { text-align: right; } .lattbl.lad td:first-child, .lattbl.lad th:first-child { text-align: left; }
+.lattbl.lad .ladstop td { color: var(--bad); }
