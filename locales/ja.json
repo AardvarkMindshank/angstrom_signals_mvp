@@ -1480,7 +1480,6 @@
   "Look inside: the Groups and signals this scan's Set is made of, and when it says Yes": "中身を見る: このスキャンの Set を構成する Groups とシグナル、そして「はい」になる条件",
   "Delete this scan": "このスキャンを削除",
   "Delete?": "削除しますか？",
-  "Press again to delete": "もう一度押すと削除します",
   "🔍 Inside this scan's Set": "🔍 このスキャンの Set の中身",
   "Past moment": "過去の時点",
   "Date (UTC)": "日付 (UTC)",
