@@ -117,8 +117,6 @@
   "Close pop-out tabs when I log out": "Fermer les onglets détachés à la déconnexion",
   "Resend returned status {response_status_code}": "Resend a renvoyé le statut {response_status_code}",
   "You are invited to MarketNavi": "Vous êtes invité sur MarketNavi",
-  "Your account is barred": "Votre compte est bloqué",
-  "Your MarketNavi account is barred": "Votre compte MarketNavi est bloqué",
   "Report needs a few words when the reason is Something else.": "Le signalement demande quelques mots quand le motif est Autre chose.",
   "Report could not find that comment. It may already have expired.": "Le signalement n'a pas trouvé ce commentaire. Il a peut-être déjà expiré.",
   "Report your own comment by deleting it.": "Pour signaler votre propre commentaire, supprimez-le.",
@@ -245,8 +243,6 @@
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "Changez la couleur des éléments de l'interface un par un. Glissez-déposez des couleurs pour les copier. Enregistrez et réinitialisez avec les icônes ci-dessus.",
   "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi vous aide à naviguer sur les marchés avec des analyses et des alertes guidées par l'IA, avec la communauté à vos côtés.",
   "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "L'accès se fait sur invitation pendant que nous construisons avec des traders expérimentés. Si vous n'y êtes pas encore, vous pouvez <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">demander une place</a>.",
-  "Your MarketNavi account is barred at this time.": "Votre compte MarketNavi est bloqué pour le moment.",
-  "You can email <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>.": "Vous pouvez écrire à <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>.",
   "Report could not be sent.": "Le signalement n'a pas pu être envoyé.",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "Le signalement n'a pas pu être enregistré. Exécutez le dernier supabase_rls.sql dans l'éditeur SQL de Supabase, puis réessayez.",
   "Market overview (status)": "Aperçu du marché (état)",
@@ -2674,7 +2670,6 @@
   "Classic app": "Application classique",
   "Log out": "Se déconnecter",
   "That email and password didn't match an account.": "Cet e-mail et ce mot de passe ne correspondent à aucun compte.",
-  "The new MarketNavi app (beta). Log in with your usual account.": "La nouvelle application MarketNavi (bêta). Connectez-vous avec votre compte habituel.",
   "Back to the classic app": "Retour à l'application classique",
   "Size after a loss": "Taille après une perte",
   "Trades after a loss are {x} times the size": "Les trades après une perte sont {x} fois plus gros",
@@ -3211,5 +3206,11 @@
   "**Lattice** is the research workspace, a page of its own in the bar at the top. Pick a part from its tabs:\nSignal Groups, Signal Sets, Prism Scan, Funnels and Soundings; hover a tab for what it does. Anything it draws on a\nchart (such as Visualize History) shows right there in Lattice. Like the rest of the app, it describes conditions;\nnothing in it is a forecast or advice.": "**Lattice** est l'espace de recherche, une page à part dans la barre du haut. Choisissez une partie dans ses onglets :\nSignal Groups, Signal Sets, Prism Scan, Entonnoirs et Soundings ; survolez un onglet pour voir ce qu'il fait. Ce qu'il\ntrace sur un graphique (comme Visualize History) s'affiche directement dans Lattice. Comme le reste de l'application, il\ndécrit des conditions ; rien n'y est une prévision ni un conseil.",
   "**Where it shows**\n- **Market sentiment – Crypto / Stocks** (from the Quick Snapshot or Search): the whole market, from headlines plus\n  public readings (central banks, the dollar and yields, Fear & Greed, market breadth and more).\n- The **News** tab of each asset's page: the headlines for that asset, newest first, each with its score and a\n  one-line summary, plus Positive and Negative paragraphs.\n- The **Sentiment** column in the tables.": "**Où il apparaît**\n- **Sentiment du marché – Crypto / Actions** (depuis le Résumé rapide ou la recherche) : le marché entier, à partir des\n  titres et de lectures publiques (banques centrales, dollar et rendements, Fear & Greed, ampleur du marché, etc.).\n- L'onglet **Actualités** de la page de chaque actif : les titres de cet actif, les plus récents d'abord, chacun avec son\n  score et un résumé d'une ligne, plus des paragraphes Positif et Négatif.\n- La colonne **Sentiment** des tableaux.",
   "Block {name}?": "Bloquer {name} ?",
-  "Block": "Bloquer"
+  "Block": "Bloquer",
+  "Account created for {email}. Open the email we've sent to confirm it (check junk mail too), and you're in.": "Compte créé pour {email}. Ouvrez l'e-mail que nous vous avons envoyé pour le confirmer (vérifiez aussi les indésirables), et c'est fait.",
+  "New to MarketNavi?": "Nouveau sur MarketNavi ?",
+  "Apply for the closed beta": "Demander l'accès à la bêta fermée",
+  "Welcome to MarketNavi": "Bienvenue sur MarketNavi",
+  "Choose a password for {email}, and you're in.": "Choisissez un mot de passe pour {email}, et c'est fait.",
+  "Skip: I'll use Google": "Passer : j'utiliserai Google"
 }

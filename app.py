@@ -10490,39 +10490,8 @@ def _email_report(reason: str, note: str, place: str, kind: str, row: dict, asse
 
 
 def _email_barred(address: str) -> tuple[bool, str]:
-    """Tell one address that the account is barred. The reason is empty when the send is accepted."""
-    api_key, sender, _inbox = _feedback_mail_settings()
-    inbox = _report_inbox()
-    if not api_key:
-        return False, "the Resend key is missing from the Streamlit secrets"
-    page, plain = render_email(
-        t("Your account is barred"),
-        [
-            t("Your MarketNavi account is barred at this time."),
-            t('You can email <a href="mailto:{html_escape_inbox_quote_}" style="color:#1d5fd1;">{html_escape_inbox}</a>.', html_escape_inbox_quote_=html.escape(inbox, quote=True), html_escape_inbox=html.escape(inbox)),
-        ],
-        tone="down",
-    )
-    payload = {
-        "from": sender,
-        "to": [address],
-        "subject": t("Your MarketNavi account is barred"),
-        "html": page,
-        "text": plain,
-    }
-    try:
-        response = requests.post(
-            "https://api.resend.com/emails",
-            json=payload,
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            timeout=15,
-        )
-    except Exception:
-        return False, t("Resend could not be reached")
-    if response.status_code < 300:
-        return True, ""
-    return False, _resend_reason(response)
-
+    """The barred note now goes from the background worker within about five minutes (beta_worker.send_barred_notes)."""
+    return True, ""
 
 def _reported_comment(place: str, kind: str, message_id: int) -> dict | None:
     """The stored comment a report points at. None when that row is gone."""
@@ -11027,31 +10996,9 @@ def admin_panel() -> None:
 
 
 def _email_beta_welcome(address: str, name: str) -> tuple[bool, str]:
-    """Tell an accepted person how to get in. The reason is empty when the send is accepted."""
-    api_key, sender, _inbox = _feedback_mail_settings()
-    if not api_key:
-        return False, "the Resend key is missing from the Streamlit secrets"
-    subject, page, plain = beta_emails.welcome_email(name, _app_url())
-    payload = {
-        "from": sender,
-        "to": [address],
-        "subject": subject,
-        "html": page,
-        "text": plain,
-    }
-    try:
-        response = requests.post(
-            "https://api.resend.com/emails",
-            json=payload,
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            timeout=15,
-        )
-    except Exception:
-        return False, t("Resend could not be reached")
-    if response.status_code < 300:
-        return True, ""
-    return False, _resend_reason(response)
-
+    """The welcome (with the person's own set-your-password link) now goes from the background worker within about
+    five minutes of the approval (beta_worker.send_welcome_links), whichever app approved them."""
+    return True, ""
 
 def _beta_call(function: str, arguments: dict) -> str:
     try:
@@ -11077,7 +11024,7 @@ def _beta_review(request_id: int, decision: str, email: str, name: str) -> None:
     if decision == "approved":
         sent, why = _email_beta_welcome(email, name)
         if sent:
-            _beta_note("ok", f"{email} is approved. The welcome email was sent.")
+            _beta_note("ok", f"{email} is approved. The welcome email, with their own link to set a password, goes out within about five minutes.")
         else:
             _beta_note("warn", f"{email} is approved. The welcome email was not sent: {why}. Tell them yourself.")
     else:
@@ -11099,7 +11046,7 @@ def _beta_add() -> None:
         return
     sent, why = _email_beta_welcome(clean, "")
     if sent:
-        _beta_note("ok", f"{clean} is approved. The welcome email was sent.")
+        _beta_note("ok", f"{clean} is approved. The welcome email, with their own link to set a password, goes out within about five minutes.")
     else:
         _beta_note("warn", f"{clean} is approved. The welcome email was not sent: {why}. Tell them yourself.")
     st.session_state["admin_beta_clear"] = True
@@ -11516,7 +11463,7 @@ def _blacklist_add() -> None:
         return
     sent, why = _email_barred(clean)
     if sent:
-        st.session_state["admin_blacklist_notice"] = f"ok\n{clean} is barred. The email was sent."
+        st.session_state["admin_blacklist_notice"] = f"ok\n{clean} is barred. The email goes out within about five minutes."
     else:
         st.session_state["admin_blacklist_notice"] = f"warn\n{clean} is barred. The email was not sent: {why}."
     st.session_state["admin_blacklist_clear"] = True

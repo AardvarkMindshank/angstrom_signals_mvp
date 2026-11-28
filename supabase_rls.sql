@@ -2737,6 +2737,7 @@ create table if not exists public.email_blacklist (
     created_at timestamptz not null default now(),
     created_by uuid
 );
+alter table public.email_blacklist add column if not exists notified_at timestamptz;     -- the worker's barred email
 
 alter table public.email_blacklist enable row level security;
 revoke all on public.email_blacklist from public;
@@ -2977,6 +2978,7 @@ create table if not exists public.beta_access (
     created_by uuid,
     request_id bigint
 );
+alter table public.beta_access add column if not exists welcomed_at timestamptz;        -- the worker's welcome email
 
 alter table public.beta_access enable row level security;
 revoke all on public.beta_access from public;
@@ -3044,7 +3046,7 @@ begin
     ) then
         return new;
     end if;
-    raise exception 'Angstrom Signals is in closed beta. Request access at angstromsignals.com.';
+    raise exception 'MarketNavi is in closed beta. Request access at marketnavi.ai/beta.html.';
 end;
 $$;
 

@@ -117,8 +117,6 @@
   "Close pop-out tabs when I log out": "ログアウト時にポップアウトのタブを閉じる",
   "Resend returned status {response_status_code}": "Resend がステータス {response_status_code} を返しました",
   "You are invited to MarketNavi": "MarketNavi への招待",
-  "Your account is barred": "アカウントが利用停止されています",
-  "Your MarketNavi account is barred": "MarketNavi のアカウントが利用停止されています",
   "Report needs a few words when the reason is Something else.": "理由が「その他」の場合は、報告に一言添えてください。",
   "Report could not find that comment. It may already have expired.": "そのコメントが見つかりませんでした。すでに期限切れかもしれません。",
   "Report your own comment by deleting it.": "自分のコメントは削除することで報告できます。",
@@ -245,8 +243,6 @@
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "UI要素ごとに色を変えられます。色をドラッグ＆ドロップしてコピーできます。上のアイコンで保存とリセットができます。",
   "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNaviは、AIガイドの分析とアラートで、コミュニティと一緒にマーケットを航海するお手伝いをします。",
   "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "経験豊富なトレーダーと開発を進めている間は招待制です。まだ参加していない場合は、<a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">参加を申請</a>できます。",
-  "Your MarketNavi account is barred at this time.": "あなたのMarketNaviアカウントは現在利用停止中です。",
-  "You can email <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>.": "<a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>までメールでお問い合わせください。",
   "Report could not be sent.": "報告を送信できませんでした。",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "報告を保存できませんでした。SupabaseのSQLエディターで最新のsupabase_rls.sqlを実行してから、もう一度お試しください。",
   "Market overview (status)": "市場概要（ステータス）",
@@ -2674,7 +2670,6 @@
   "Classic app": "クラシック版",
   "Log out": "ログアウト",
   "That email and password didn't match an account.": "このメールアドレスとパスワードに一致するアカウントがありません。",
-  "The new MarketNavi app (beta). Log in with your usual account.": "新しい MarketNavi アプリ（ベータ）。いつものアカウントでログインしてください。",
   "Back to the classic app": "クラシック版に戻る",
   "Size after a loss": "損失後のサイズ",
   "Trades after a loss are {x} times the size": "損失後のトレードは {x} 倍のサイズ",
@@ -3211,5 +3206,11 @@
   "**Lattice** is the research workspace, a page of its own in the bar at the top. Pick a part from its tabs:\nSignal Groups, Signal Sets, Prism Scan, Funnels and Soundings; hover a tab for what it does. Anything it draws on a\nchart (such as Visualize History) shows right there in Lattice. Like the rest of the app, it describes conditions;\nnothing in it is a forecast or advice.": "**Lattice** はリサーチワークスペースで、上部のバーにある独立したページです。タブから項目を選びます:\nSignal Groups、Signal Sets、Prism Scan、ファネル、Soundings。タブにカーソルを合わせると内容が表示されます。\nチャートに描くもの（Visualize History など）は Lattice の中にそのまま表示されます。アプリの他の部分と同じく、\n状況を説明するもので、予測や助言ではありません。",
   "**Where it shows**\n- **Market sentiment – Crypto / Stocks** (from the Quick Snapshot or Search): the whole market, from headlines plus\n  public readings (central banks, the dollar and yields, Fear & Greed, market breadth and more).\n- The **News** tab of each asset's page: the headlines for that asset, newest first, each with its score and a\n  one-line summary, plus Positive and Negative paragraphs.\n- The **Sentiment** column in the tables.": "**表示場所**\n- **市場センチメント – 暗号資産 / 株式**（クイックサマリーまたは検索から）:市場全体。見出しと公開指標\n  (中央銀行、ドルと利回り、Fear & Greed、市場の広がりなど)から算出します。\n- 各銘柄ページの **ニュース** タブ:その銘柄の見出しを新しい順に、スコアと1行の要約付きで表示し、\n  ポジティブとネガティブの段落を添えます。\n- 表の **センチメント** 列。",
   "Block {name}?": "{name} をブロックしますか？",
-  "Block": "ブロック"
+  "Block": "ブロック",
+  "Account created for {email}. Open the email we've sent to confirm it (check junk mail too), and you're in.": "{email} のアカウントを作成しました。確認のためにお送りしたメールを開いてください（迷惑メールもご確認ください）。それで完了です。",
+  "New to MarketNavi?": "MarketNavi は初めてですか？",
+  "Apply for the closed beta": "クローズドベータに申し込む",
+  "Welcome to MarketNavi": "MarketNavi へようこそ",
+  "Choose a password for {email}, and you're in.": "{email} のパスワードを設定すれば、すぐに使えます。",
+  "Skip: I'll use Google": "スキップ：Google を使う"
 }

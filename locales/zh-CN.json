@@ -117,8 +117,6 @@
   "Close pop-out tabs when I log out": "退出登录时关闭弹出的标签页",
   "Resend returned status {response_status_code}": "Resend 返回状态 {response_status_code}",
   "You are invited to MarketNavi": "你受邀加入 MarketNavi",
-  "Your account is barred": "你的账户已被禁用",
-  "Your MarketNavi account is barred": "你的 MarketNavi 账户已被禁用",
   "Report needs a few words when the reason is Something else.": "原因为“其他”时,举报需要写几句话。",
   "Report could not find that comment. It may already have expired.": "举报找不到该评论。它可能已经过期。",
   "Report your own comment by deleting it.": "如需举报自己的评论,请直接删除。",
@@ -245,8 +243,6 @@
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "逐个更改界面元素的颜色。拖放颜色即可复制。使用上方图标保存和重置。",
   "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi 借助 AI 引导的分析与提醒，帮助你驾驭市场，社区与你同行。",
   "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "在我们与资深交易者共同打造期间，仅限受邀使用。如果您还未加入，可以<a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">申请名额</a>。",
-  "Your MarketNavi account is barred at this time.": "您的 MarketNavi 账户目前已被禁用。",
-  "You can email <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>.": "您可以发送电子邮件至 <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>。",
   "Report could not be sent.": "无法发送举报。",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "无法保存举报。请在 Supabase SQL 编辑器中运行最新的 supabase_rls.sql，然后重试。",
   "Market overview (status)": "市场概览（状态）",
@@ -2674,7 +2670,6 @@
   "Classic app": "经典版应用",
   "Log out": "退出登录",
   "That email and password didn't match an account.": "该邮箱和密码与任何账户都不匹配。",
-  "The new MarketNavi app (beta). Log in with your usual account.": "全新的 MarketNavi 应用（测试版）。请使用您平常的账户登录。",
   "Back to the classic app": "返回经典版应用",
   "Size after a loss": "亏损后的仓位",
   "Trades after a loss are {x} times the size": "亏损后的交易规模是平时的 {x} 倍",
@@ -3211,5 +3206,11 @@
   "**Lattice** is the research workspace, a page of its own in the bar at the top. Pick a part from its tabs:\nSignal Groups, Signal Sets, Prism Scan, Funnels and Soundings; hover a tab for what it does. Anything it draws on a\nchart (such as Visualize History) shows right there in Lattice. Like the rest of the app, it describes conditions;\nnothing in it is a forecast or advice.": "**Lattice** 是研究工作区，在顶部栏中有自己的页面。从它的标签中选择一个部分：Signal Groups、Signal Sets、\nPrism Scan、漏斗和 Soundings；将鼠标悬停在标签上可查看其作用。它在图表上绘制的内容（如 Visualize History）\n会直接显示在 Lattice 中。与应用的其他部分一样，它描述状况；其中没有任何内容是预测或建议。",
   "**Where it shows**\n- **Market sentiment – Crypto / Stocks** (from the Quick Snapshot or Search): the whole market, from headlines plus\n  public readings (central banks, the dollar and yields, Fear & Greed, market breadth and more).\n- The **News** tab of each asset's page: the headlines for that asset, newest first, each with its score and a\n  one-line summary, plus Positive and Negative paragraphs.\n- The **Sentiment** column in the tables.": "**显示位置**\n- **市场情绪 – 加密货币 / 股票**（从快速摘要或搜索进入）：整个市场，基于新闻标题和公开读数\n  （央行、美元和收益率、Fear & Greed、市场广度等）。\n- 每个资产页面的**新闻**标签：该资产的新闻标题，最新的在前，每条附有得分和一行摘要，另有正面和负面段落。\n- 表格中的**情绪**列。",
   "Block {name}?": "屏蔽 {name}？",
-  "Block": "屏蔽"
+  "Block": "屏蔽",
+  "Account created for {email}. Open the email we've sent to confirm it (check junk mail too), and you're in.": "已为 {email} 创建账户。请打开我们发送的邮件进行确认（也请查看垃圾邮件），然后即可使用。",
+  "New to MarketNavi?": "第一次使用 MarketNavi？",
+  "Apply for the closed beta": "申请封闭测试",
+  "Welcome to MarketNavi": "欢迎使用 MarketNavi",
+  "Choose a password for {email}, and you're in.": "为 {email} 设置密码，即可开始使用。",
+  "Skip: I'll use Google": "跳过：我使用 Google"
 }

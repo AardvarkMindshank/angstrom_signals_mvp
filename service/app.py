@@ -433,20 +433,7 @@ def soundings_set(ask: SoundingSetAsk, who: Member = Depends(member)):
     return sp.as_set(ask.condition, ask.target, ask.lift, ask.later, ask.lang)
 
 
-# ---- 🛡️ Admin emails ----------------------------------------------------------------------------------------------------
-
-class AdminEmailAsk(BaseModel):
-    kind: str = Field(..., pattern="^(welcome|barred)$")
-    address: str = Field(..., max_length=254)
-    name: str = Field("", max_length=120)
-
-
-@app.post("/admin/email")
-def admin_email(ask: AdminEmailAsk, who: Member = Depends(member)):
-    from service import admin_mail
-
-    return admin_mail.send(who.db, ask.kind, ask.address, ask.name)
-
+# ---- 🛡️ Admin ---------------------------------------------------------------------------------------------------------
 
 @app.get("/admin/status")
 def admin_status(who: Member = Depends(member)):

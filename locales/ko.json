@@ -117,8 +117,6 @@
   "Close pop-out tabs when I log out": "로그아웃할 때 팝아웃 탭 닫기",
   "Resend returned status {response_status_code}": "Resend가 상태 {response_status_code}을(를) 반환했습니다",
   "You are invited to MarketNavi": "MarketNavi에 초대되었습니다",
-  "Your account is barred": "계정이 차단되었습니다",
-  "Your MarketNavi account is barred": "MarketNavi 계정이 차단되었습니다",
   "Report needs a few words when the reason is Something else.": "사유가 기타일 때는 신고에 몇 마디를 적어 주세요.",
   "Report could not find that comment. It may already have expired.": "그 댓글을 찾지 못했습니다. 이미 만료되었을 수 있습니다.",
   "Report your own comment by deleting it.": "내 댓글은 삭제하는 것으로 신고합니다.",
@@ -245,8 +243,6 @@
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "UI 요소별로 색을 바꿉니다. 색을 끌어다 놓아 복사하세요. 위 아이콘으로 저장하고 초기화합니다.",
   "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi는 AI 가이드 분석과 알림으로 커뮤니티와 함께 시장을 항해하도록 돕습니다.",
   "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "경험 많은 트레이더와 함께 만드는 동안은 초대제로 운영합니다. 아직 참여하지 않았다면 <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">자리를 요청</a>할 수 있습니다.",
-  "Your MarketNavi account is barred at this time.": "현재 MarketNavi 계정이 이용 정지 상태입니다.",
-  "You can email <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>.": "<a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>로 이메일을 보낼 수 있습니다.",
   "Report could not be sent.": "신고를 보내지 못했습니다.",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "신고를 저장하지 못했습니다. Supabase SQL 편집기에서 최신 supabase_rls.sql을 실행한 뒤 다시 시도하세요.",
   "Market overview (status)": "시장 개요(상태)",
@@ -2674,7 +2670,6 @@
   "Classic app": "클래식 앱",
   "Log out": "로그아웃",
   "That email and password didn't match an account.": "해당 이메일과 비밀번호에 맞는 계정이 없습니다.",
-  "The new MarketNavi app (beta). Log in with your usual account.": "새 MarketNavi 앱(베타)입니다. 평소 사용하는 계정으로 로그인하세요.",
   "Back to the classic app": "클래식 앱으로 돌아가기",
   "Size after a loss": "손실 후 규모",
   "Trades after a loss are {x} times the size": "손실 후 거래 규모가 {x}배",
@@ -3211,5 +3206,11 @@
   "**Lattice** is the research workspace, a page of its own in the bar at the top. Pick a part from its tabs:\nSignal Groups, Signal Sets, Prism Scan, Funnels and Soundings; hover a tab for what it does. Anything it draws on a\nchart (such as Visualize History) shows right there in Lattice. Like the rest of the app, it describes conditions;\nnothing in it is a forecast or advice.": "**Lattice**는 리서치 작업 공간으로, 위쪽 바에 있는 별도의 페이지입니다. 탭에서 항목을 고르세요:\nSignal Groups, Signal Sets, Prism Scan, 퍼널, Soundings. 탭에 마우스를 올리면 하는 일을 볼 수 있습니다. 차트에\n그리는 것(예: Visualize History)은 Lattice 안에 바로 표시됩니다. 앱의 다른 부분처럼 상황을 설명할 뿐이며,\n예측이나 조언이 아닙니다.",
   "**Where it shows**\n- **Market sentiment – Crypto / Stocks** (from the Quick Snapshot or Search): the whole market, from headlines plus\n  public readings (central banks, the dollar and yields, Fear & Greed, market breadth and more).\n- The **News** tab of each asset's page: the headlines for that asset, newest first, each with its score and a\n  one-line summary, plus Positive and Negative paragraphs.\n- The **Sentiment** column in the tables.": "**표시되는 곳**\n- **시장 심리 – 암호화폐 / 주식**(빠른 요약이나 검색에서): 시장 전체로, 헤드라인과 공개 지표\n  (중앙은행, 달러와 금리, Fear & Greed, 시장 폭 등)에서 산출합니다.\n- 각 자산 페이지의 **뉴스** 탭: 그 자산의 헤드라인을 최신순으로, 각각 점수와 한 줄 요약과 함께 보여 주며,\n  긍정과 부정 문단을 덧붙입니다.\n- 표의 **심리** 열.",
   "Block {name}?": "{name}님을 차단할까요?",
-  "Block": "차단"
+  "Block": "차단",
+  "Account created for {email}. Open the email we've sent to confirm it (check junk mail too), and you're in.": "{email} 계정을 만들었습니다. 확인을 위해 보내 드린 이메일을 열어 주세요(스팸함도 확인해 주세요). 그러면 바로 시작할 수 있습니다.",
+  "New to MarketNavi?": "MarketNavi가 처음이신가요?",
+  "Apply for the closed beta": "비공개 베타 신청하기",
+  "Welcome to MarketNavi": "MarketNavi에 오신 것을 환영합니다",
+  "Choose a password for {email}, and you're in.": "{email}의 비밀번호를 정하면 바로 시작할 수 있습니다.",
+  "Skip: I'll use Google": "건너뛰기: Google로 로그인"
 }

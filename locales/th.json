@@ -625,8 +625,6 @@
   "That community already has 50 members.": "ชุมชนนั้นมีสมาชิกครบ 50 คนแล้ว",
   "Resend returned status {response_status_code}": "Resend ตอบกลับด้วยสถานะ {response_status_code}",
   "You are invited to MarketNavi": "คุณได้รับเชิญเข้าร่วม MarketNavi",
-  "Your account is barred": "บัญชีของคุณถูกระงับ",
-  "Your MarketNavi account is barred": "บัญชี MarketNavi ของคุณถูกระงับ",
   "Report needs a few words when the reason is Something else.": "รายงานต้องมีคำอธิบายสั้นๆ เมื่อเลือกเหตุผลว่า “อื่นๆ”",
   "Report could not find that comment. It may already have expired.": "ไม่พบความเห็นนั้นสำหรับรายงาน อาจหมดอายุไปแล้ว",
   "Report your own comment by deleting it.": "รายงานความเห็นของคุณเองด้วยการลบความเห็นนั้น",
@@ -646,8 +644,6 @@
   "**📈 Trend · 🎯 Stretch · 🔊 Flow**": "**📈 Trend · 🎯 Stretch · 🔊 Flow**",
   "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi ช่วยให้คุณนำทางตลาดด้วยการวิเคราะห์และการแจ้งเตือนที่มี AI นำทาง พร้อมชุมชนเทรดเดอร์เคียงข้าง",
   "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "เปิดให้ใช้งานเฉพาะผู้ได้รับเชิญ ในช่วงที่เราพัฒนาร่วมกับเทรดเดอร์ผู้มีประสบการณ์ หากคุณยังไม่ได้เข้าร่วม คุณสามารถ <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ขอที่นั่ง</a> ได้",
-  "Your MarketNavi account is barred at this time.": "บัญชี MarketNavi ของคุณถูกระงับในขณะนี้",
-  "You can email <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>.": "คุณสามารถส่งอีเมลไปที่ <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>",
   "Report could not be sent.": "ส่งรายงานไม่ได้",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "บันทึกรายงานไม่ได้ ให้รัน supabase_rls.sql ล่าสุดใน SQL editor ของ Supabase แล้วลองอีกครั้ง",
   "Enter a valid email.": "กรอกอีเมลที่ถูกต้อง",
@@ -2674,7 +2670,6 @@
   "Classic app": "แอปคลาสสิก",
   "Log out": "ออกจากระบบ",
   "That email and password didn't match an account.": "อีเมลและรหัสผ่านนี้ไม่ตรงกับบัญชีใด",
-  "The new MarketNavi app (beta). Log in with your usual account.": "แอป MarketNavi ใหม่ (เบต้า) เข้าสู่ระบบด้วยบัญชีเดิมของคุณ",
   "Back to the classic app": "กลับไปที่แอปคลาสสิก",
   "Size after a loss": "ขนาดหลังขาดทุน",
   "Trades after a loss are {x} times the size": "เทรดหลังขาดทุนมีขนาด {x} เท่า",
@@ -3211,5 +3206,11 @@
   "**Lattice** is the research workspace, a page of its own in the bar at the top. Pick a part from its tabs:\nSignal Groups, Signal Sets, Prism Scan, Funnels and Soundings; hover a tab for what it does. Anything it draws on a\nchart (such as Visualize History) shows right there in Lattice. Like the rest of the app, it describes conditions;\nnothing in it is a forecast or advice.": "**Lattice** คือพื้นที่ทำงานวิจัย เป็นหน้าของตัวเองในแถบด้านบน เลือกส่วนจากแท็บ: Signal Groups,\nSignal Sets, Prism Scan, ฟันเนล และ Soundings วางเมาส์บนแท็บเพื่อดูว่าทำอะไร สิ่งที่มันวาดบนกราฟ\n(เช่น Visualize History) จะแสดงอยู่ใน Lattice เลย เช่นเดียวกับส่วนอื่นของแอป มันบรรยายสภาพ\nไม่มีสิ่งใดในนั้นเป็นการพยากรณ์หรือคำแนะนำ",
   "**Where it shows**\n- **Market sentiment – Crypto / Stocks** (from the Quick Snapshot or Search): the whole market, from headlines plus\n  public readings (central banks, the dollar and yields, Fear & Greed, market breadth and more).\n- The **News** tab of each asset's page: the headlines for that asset, newest first, each with its score and a\n  one-line summary, plus Positive and Negative paragraphs.\n- The **Sentiment** column in the tables.": "**แสดงที่ใด**\n- **อารมณ์ตลาด – คริปโต / หุ้น** (จากภาพรวมด่วนหรือการค้นหา): ทั้งตลาด จากหัวข้อข่าวร่วมกับค่าสาธารณะ\n  (ธนาคารกลาง ดอลลาร์และผลตอบแทนพันธบัตร Fear & Greed ความกว้างของตลาด และอื่นๆ)\n- แท็บ **ข่าว** ในหน้าของแต่ละสินทรัพย์: หัวข้อข่าวของสินทรัพย์นั้น ใหม่สุดก่อน แต่ละข่าวมีคะแนนและสรุปหนึ่งบรรทัด\n  พร้อมย่อหน้าด้านบวกและด้านลบ\n- คอลัมน์ **อารมณ์ตลาด** ในตาราง",
   "Block {name}?": "บล็อก {name} ไหม?",
-  "Block": "บล็อก"
+  "Block": "บล็อก",
+  "Account created for {email}. Open the email we've sent to confirm it (check junk mail too), and you're in.": "สร้างบัญชีสำหรับ {email} แล้ว เปิดอีเมลที่เราส่งไปเพื่อยืนยัน (ดูในโฟลเดอร์ขยะด้วย) แล้วเข้าใช้ได้เลย",
+  "New to MarketNavi?": "เพิ่งเคยใช้ MarketNavi?",
+  "Apply for the closed beta": "สมัครเบต้าแบบปิด",
+  "Welcome to MarketNavi": "ยินดีต้อนรับสู่ MarketNavi",
+  "Choose a password for {email}, and you're in.": "ตั้งรหัสผ่านสำหรับ {email} แล้วเข้าใช้ได้เลย",
+  "Skip: I'll use Google": "ข้าม: ฉันจะใช้ Google"
 }

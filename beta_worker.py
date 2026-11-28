@@ -1,4 +1,7 @@
-"""The part of the alert worker that emails beta applicants after an admin decides from the link in the request email."""
+"""The part of the alert worker that emails beta applicants and barred addresses, whichever app or email link the admin
+decided from: the welcome (with the person's own one-time "set your password" link), the decline, the barred note,
+and signed NDA copies. Each email is claimed before sending, so it goes once; a failed send is released and retried.
+Logs never carry addresses or names."""
 from __future__ import annotations
 
 import os
@@ -26,7 +29,7 @@ def _send_resend(to_email: str, subject: str, page: str, plain: str, attachments
         return False
     if response.status_code in (200, 201):
         return True
-    print(f"Beta email failed: HTTP {response.status_code} {' '.join((response.text or '').split())[:200]}")
+    print(f"Beta email failed: HTTP {response.status_code}")
     return False
 
 
@@ -40,7 +43,6 @@ def send_beta_decision_emails(supabase, send=None, now=None) -> int:
     if send is _send_resend and not (os.getenv("RESEND_API_KEY") or "").strip():
         return 0
     stamp = (now or datetime.now(timezone.utc)).isoformat()
-    app_url = (os.getenv("APP_URL") or "https://app.marketnavi.ai").strip()
     try:
         rows = (
             supabase.table("beta_requests")
@@ -76,9 +78,8 @@ def send_beta_decision_emails(supabase, send=None, now=None) -> int:
         if not claimed:
             continue
         if status == "approved":
-            subject, page, plain = beta_emails.welcome_email(row.get("name") or "", app_url)
-        else:
-            subject, page, plain = beta_emails.declined_email(row.get("name") or "")
+            continue                       # the welcome, with its own sign-in link, goes from send_welcome_links
+        subject, page, plain = beta_emails.declined_email(row.get("name") or "")
         ok = bool(address) and send(address, subject, page, plain)
         if ok:
             sent += 1
@@ -179,3 +180,105 @@ def _admin_emails(supabase) -> list[str]:
         except Exception:
             continue
     return out
+
+
+# Where a welcome link lands: the new app, which sees the one-time sign-in in the address and asks for a password.
+WELCOME_URL = (os.getenv("WELCOME_URL") or "https://marketnavi.ai/new/?welcome=1").strip()
+
+
+def welcome_link(supabase, address: str) -> str:
+    """A one-time sign-in link for an approved address: an invitation (it creates the account), or for an address that
+    already has an account (it signed in with Google, say) a sign-in link. Empty when neither can be made."""
+    for kind in ("invite", "magiclink"):
+        try:
+            got = supabase.auth.admin.generate_link({"type": kind, "email": address, "options": {"redirect_to": WELCOME_URL}})
+            props = getattr(got, "properties", None)
+            link = getattr(props, "action_link", "") if props is not None else ""
+            if link:
+                return str(link)
+        except Exception:
+            continue
+    return ""
+
+
+def send_welcome_links(supabase, send=None, link=None, now=None) -> int:
+    """Welcome each newly approved address (beta_access rows not yet welcomed), with its own sign-in link."""
+    from datetime import datetime, timezone
+
+    send = send or _send_resend
+    if send is _send_resend and not (os.getenv("RESEND_API_KEY") or "").strip():
+        return 0
+    link = link or welcome_link
+    stamp = (now or datetime.now(timezone.utc)).isoformat()
+    try:
+        rows = supabase.table("beta_access").select("email, request_id").is_("welcomed_at", "null").limit(25).execute().data or []
+    except Exception as exc:
+        if "welcomed_at" not in str(exc):
+            print(f"Welcome emails skipped: {str(exc)[:160]}")
+        return 0
+    sent = 0
+    for row in rows:
+        address = str(row.get("email") or "").strip().lower()
+        try:
+            claimed = (supabase.table("beta_access").update({"welcomed_at": stamp}).eq("email", address)
+                       .is_("welcomed_at", "null").execute().data)
+        except Exception:
+            continue
+        if not claimed:
+            continue
+        name = ""
+        if row.get("request_id"):
+            try:
+                got = supabase.table("beta_requests").select("name").eq("id", row["request_id"]).limit(1).execute().data or []
+                name = (got[0].get("name") if got else "") or ""
+            except Exception:
+                pass
+        subject, page, plain = beta_emails.welcome_email(name, WELCOME_URL, link=link(supabase, address))
+        if address and send(address, subject, page, plain):
+            sent += 1
+        else:
+            try:
+                supabase.table("beta_access").update({"welcomed_at": None}).eq("email", address).execute()
+            except Exception:
+                pass
+    if sent:
+        print(f"Welcome emails sent: {sent}")
+    return sent
+
+
+def send_barred_notes(supabase, send=None, now=None) -> int:
+    """Tell each newly barred address (email_blacklist rows not yet notified)."""
+    from datetime import datetime, timezone
+
+    send = send or _send_resend
+    if send is _send_resend and not (os.getenv("RESEND_API_KEY") or "").strip():
+        return 0
+    stamp = (now or datetime.now(timezone.utc)).isoformat()
+    try:
+        rows = supabase.table("email_blacklist").select("email").is_("notified_at", "null").limit(25).execute().data or []
+    except Exception as exc:
+        if "notified_at" not in str(exc):
+            print(f"Barred emails skipped: {str(exc)[:160]}")
+        return 0
+    inbox = (os.getenv("REPORT_TO") or "").strip() or "support@marketnavi.ai"
+    sent = 0
+    for row in rows:
+        address = str(row.get("email") or "").strip().lower()
+        try:
+            claimed = (supabase.table("email_blacklist").update({"notified_at": stamp}).eq("email", address)
+                       .is_("notified_at", "null").execute().data)
+        except Exception:
+            continue
+        if not claimed:
+            continue
+        subject, page, plain = beta_emails.barred_email(inbox)
+        if address and send(address, subject, page, plain):
+            sent += 1
+        else:
+            try:
+                supabase.table("email_blacklist").update({"notified_at": None}).eq("email", address).execute()
+            except Exception:
+                pass
+    if sent:
+        print(f"Barred emails sent: {sent}")
+    return sent

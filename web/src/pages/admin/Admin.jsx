@@ -6,8 +6,8 @@ import Icon, { Tile } from "../../components/Icon.jsx";
 // 🛡️ Admin: the classic admin panel's lists (Members, Feedback, Reported comments, Beta requests, Blacklist), shown
 // only to an account whose profile role is admin. English only, as in the classic app. Everything goes through the
 // admin database functions with the admin's own sign-in, and each of them checks the admin role itself, so nobody
-// else can read or change these lists even by opening #admin. The welcome and barred emails go through the data
-// service (service/admin_mail.py). The NDA tools, AI provider choice and page timings stay in the classic app.
+// else can read or change these lists even by opening #admin. The welcome and barred emails go from the background
+// worker (beta_worker.py). The NDA tools, AI provider choice and page timings stay in the classic app.
 export const ADMIN_ICONS = ["users", "message-square-text", "flag", "ticket", "ban", "shield", "check", "x", "trash", "image", "mail", "user-plus", "chevron-up", "chevron-down", "download", "eye", "server-cog", "external-link"];
 
 const SECTIONS = [["members", "users", "Members"], ["feedback", "message-square-text", "Feedback"], ["reports", "flag", "Reported comments"], ["beta", "ticket", "Beta requests"], ["blacklist", "ban", "Blacklist"], ["system", "server-cog", "System"]];
@@ -39,7 +39,6 @@ async function code(fn, args) {
   if (error) return "failed";
   return String(data || "").replace(/"/g, "").trim() || "failed";
 }
-const mail = (kind, address, name = "") => call("/admin/email", { method: "POST", body: { kind, address, name }, timeout: 30000 }).catch(() => ({ sent: false, why: "the data service could not be reached" }));
 const since = (v) => (v ? (Date.now() - new Date(v).getTime()) / 1000 : null);
 const validEmail = (s) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s);
 
@@ -346,10 +345,8 @@ function Beta({ when, nda }) {
     if (error) { setNote(["bad", FAILED]); return; }
     setOpen(v); setNote(["ok", v ? "Sign-up is open to everyone." : "Sign-up is closed: the closed beta is back."]);
   };
-  const welcome = async (address, name, lead) => {
-    const r = await mail("welcome", address, name);
-    return r.sent ? `${lead} The welcome email was sent.` : `${lead} The welcome email was not sent: ${r.why}. Tell them yourself.`;
-  };
+  // The welcome, with the person's own link to set a password, goes from the background worker (beta_worker.py).
+  const welcome = async (address, name, lead) => `${lead} The welcome email, with their own link to set a password, goes out within about five minutes.`;
   const approveEmail = async () => {
     const clean = email.trim().toLowerCase();
     if (!validEmail(clean)) { setNote(["bad", "Enter a valid email."]); return; }
@@ -445,9 +442,8 @@ function Blacklist({ when }) {
     setBusy(true);
     const c = await code("add_blacklist_email", { address: clean });
     if (c !== "ok") { setBusy(false); setNote(["bad", c === "forbidden" ? "This account cannot change the blacklist." : why(c)]); return; }
-    const r = await mail("barred", clean);
     setBusy(false); setEmail(""); load();
-    setNote(r.sent ? ["ok", `${clean} is barred. The email was sent.`] : ["bad", `${clean} is barred. The email was not sent: ${r.why}.`]);
+    setNote(["ok", `${clean} is barred. The email goes out within about five minutes.`]);
   };
   const remove = async (address) => {
     setRemoving("");

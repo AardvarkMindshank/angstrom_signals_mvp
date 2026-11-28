@@ -117,8 +117,6 @@
   "Close pop-out tabs when I log out": "Tutup tab terpisah saat saya keluar",
   "Resend returned status {response_status_code}": "Resend mengembalikan status {response_status_code}",
   "You are invited to MarketNavi": "Anda diundang ke MarketNavi",
-  "Your account is barred": "Akun Anda diblokir",
-  "Your MarketNavi account is barred": "Akun MarketNavi Anda diblokir",
   "Report needs a few words when the reason is Something else.": "Laporan perlu beberapa kata jika alasannya Hal lain.",
   "Report could not find that comment. It may already have expired.": "Laporan tidak menemukan komentar itu. Mungkin sudah kedaluwarsa.",
   "Report your own comment by deleting it.": "Untuk melaporkan komentar Anda sendiri, hapus saja.",
@@ -245,8 +243,6 @@
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "Ubah warna elemen UI satu per satu. Seret dan lepas warna untuk menyalinnya. Simpan dan atur ulang dengan ikon di atas.",
   "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi membantu Anda menavigasi pasar dengan analisis dan peringatan berpanduan AI, bersama komunitas.",
   "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "Saat ini hanya dengan undangan selagi kami membangunnya bersama trader berpengalaman. Jika Anda belum masuk, Anda bisa <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">meminta tempat</a>.",
-  "Your MarketNavi account is barred at this time.": "Akun MarketNavi Anda saat ini diblokir.",
-  "You can email <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>.": "Anda dapat mengirim email ke <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>.",
   "Report could not be sent.": "Laporan tidak dapat dikirim.",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "Laporan tidak dapat disimpan. Jalankan supabase_rls.sql terbaru di editor SQL Supabase, lalu coba lagi.",
   "Market overview (status)": "Ikhtisar pasar (status)",
@@ -2674,7 +2670,6 @@
   "Classic app": "Aplikasi klasik",
   "Log out": "Keluar",
   "That email and password didn't match an account.": "Email dan kata sandi itu tidak cocok dengan akun mana pun.",
-  "The new MarketNavi app (beta). Log in with your usual account.": "Aplikasi MarketNavi baru (beta). Masuk dengan akun Anda yang biasa.",
   "Back to the classic app": "Kembali ke aplikasi klasik",
   "Size after a loss": "Ukuran setelah rugi",
   "Trades after a loss are {x} times the size": "Trade setelah rugi berukuran {x} kali lipat",
@@ -3211,5 +3206,11 @@
   "**Lattice** is the research workspace, a page of its own in the bar at the top. Pick a part from its tabs:\nSignal Groups, Signal Sets, Prism Scan, Funnels and Soundings; hover a tab for what it does. Anything it draws on a\nchart (such as Visualize History) shows right there in Lattice. Like the rest of the app, it describes conditions;\nnothing in it is a forecast or advice.": "**Lattice** adalah ruang riset, halaman tersendiri di bilah atas. Pilih bagian dari tabnya: Signal Groups,\nSignal Sets, Prism Scan, Corong, dan Soundings; arahkan kursor ke tab untuk melihat fungsinya. Apa pun yang digambarnya\ndi grafik (seperti Visualize History) tampil langsung di Lattice. Seperti bagian lain aplikasi, ini menggambarkan\nkondisi; tidak ada isinya yang merupakan prakiraan atau saran.",
   "**Where it shows**\n- **Market sentiment – Crypto / Stocks** (from the Quick Snapshot or Search): the whole market, from headlines plus\n  public readings (central banks, the dollar and yields, Fear & Greed, market breadth and more).\n- The **News** tab of each asset's page: the headlines for that asset, newest first, each with its score and a\n  one-line summary, plus Positive and Negative paragraphs.\n- The **Sentiment** column in the tables.": "**Di mana ditampilkan**\n- **Sentimen pasar – Kripto / Saham** (dari Ringkasan Cepat atau pencarian): seluruh pasar, dari judul berita plus\n  bacaan publik (bank sentral, dolar dan imbal hasil, Fear & Greed, luas pasar, dan lainnya).\n- Tab **Berita** di halaman setiap aset: judul berita tentang aset itu, terbaru lebih dulu, masing-masing dengan skor\n  dan ringkasan satu baris, plus paragraf Positif dan Negatif.\n- Kolom **Sentimen** di tabel.",
   "Block {name}?": "Blokir {name}?",
-  "Block": "Blokir"
+  "Block": "Blokir",
+  "Account created for {email}. Open the email we've sent to confirm it (check junk mail too), and you're in.": "Akun untuk {email} sudah dibuat. Buka email yang kami kirim untuk mengonfirmasinya (periksa juga folder spam), lalu Anda bisa masuk.",
+  "New to MarketNavi?": "Baru di MarketNavi?",
+  "Apply for the closed beta": "Daftar beta tertutup",
+  "Welcome to MarketNavi": "Selamat datang di MarketNavi",
+  "Choose a password for {email}, and you're in.": "Pilih kata sandi untuk {email}, lalu Anda bisa masuk.",
+  "Skip: I'll use Google": "Lewati: saya pakai Google"
 }

@@ -57,35 +57,44 @@ class Query:
 
 
 class Db:
-    def __init__(self, rows):
-        self.rows = rows
+    def __init__(self, rows, table="beta_requests"):
+        self.rows, self.name = rows, table
 
     def table(self, name):
-        assert name == "beta_requests"
+        assert name == self.name
         return Query(self, name)
 
 
-def test_only_email_decisions_are_sent_and_only_once():
+def test_only_declines_go_from_decisions_and_only_once():
     db = Db([
         {"id": 1, "name": "May", "email": "may@x.test", "status": "approved", "decided_via": "email", "notified_at": None},
         {"id": 2, "name": "Bob", "email": "bob@x.test", "status": "declined", "decided_via": "email", "notified_at": None},
         {"id": 3, "name": "Dash", "email": "d@x.test", "status": "approved", "decided_via": "dashboard", "notified_at": None},
-        {"id": 4, "name": "Done", "email": "e@x.test", "status": "approved", "decided_via": "email", "notified_at": "2026-01-01"},
         {"id": 5, "name": "Wait", "email": "w@x.test", "status": "pending", "decided_via": None, "notified_at": None},
     ])
     sent = []
     count = run_alerts.send_beta_decision_emails(db, send=lambda to, subject, page, plain: sent.append((to, subject)) or True)
-    assert count == 2
-    assert sorted(to for to, _ in sent) == ["bob@x.test", "may@x.test"]
-    assert any("You are in" in subject for _to, subject in sent)
-    assert any("beta request" in subject for _to, subject in sent)
-    again = run_alerts.send_beta_decision_emails(db, send=lambda *a: sent.append(a) or True)
-    assert again == 0 and len(sent) == 2
+    assert count == 1 and sent[0][0] == "bob@x.test" and "beta request" in sent[0][1]
+    assert db.rows[0]["notified_at"] is not None          # the approval is claimed; its welcome goes from the access list
+    assert run_alerts.send_beta_decision_emails(db, send=lambda *a: sent.append(a) or True) == 0 and len(sent) == 1
 
 
-def test_failed_send_is_released_for_the_next_run():
-    db = Db([{"id": 1, "name": "May", "email": "may@x.test", "status": "approved", "decided_via": "email", "notified_at": None}])
-    assert run_alerts.send_beta_decision_emails(db, send=lambda *a: False) == 0
-    assert db.rows[0]["notified_at"] is None
-    assert run_alerts.send_beta_decision_emails(db, send=lambda *a: True) == 1
-    assert db.rows[0]["notified_at"] is not None
+def test_welcome_carries_the_link_and_goes_once():
+    db = Db([{"email": "may@x.test", "request_id": None, "welcomed_at": None},
+             {"email": "old@x.test", "request_id": None, "welcomed_at": "2026-01-01"}], table="beta_access")
+    sent = []
+    n = run_alerts.send_welcome_links(db, send=lambda to, subject, page, plain: sent.append((to, page)) or True,
+                                      link=lambda _db, address: f"https://auth.example/verify?for={address}")
+    assert n == 1 and sent[0][0] == "may@x.test" and "https://auth.example/verify?for=may@x.test" in sent[0][1]
+    assert "Set your password" in sent[0][1]
+    assert run_alerts.send_welcome_links(db, send=lambda *a: True, link=lambda *a: "x") == 0
+
+
+def test_failed_welcome_is_released_and_barred_note_goes_once():
+    db = Db([{"email": "may@x.test", "request_id": None, "welcomed_at": None}], table="beta_access")
+    assert run_alerts.send_welcome_links(db, send=lambda *a: False, link=lambda *a: "") == 0
+    assert db.rows[0]["welcomed_at"] is None
+    bars = Db([{"email": "spam@x.test", "notified_at": None}], table="email_blacklist")
+    got = []
+    assert run_alerts.send_barred_notes(bars, send=lambda to, subject, *a: got.append(subject) or True) == 1
+    assert "barred" in got[0] and run_alerts.send_barred_notes(bars, send=lambda *a: True) == 0

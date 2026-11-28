@@ -117,8 +117,6 @@
   "Close pop-out tabs when I log out": "Đóng các tab tách rời khi tôi đăng xuất",
   "Resend returned status {response_status_code}": "Resend trả về trạng thái {response_status_code}",
   "You are invited to MarketNavi": "Bạn được mời tham gia MarketNavi",
-  "Your account is barred": "Tài khoản của bạn bị chặn",
-  "Your MarketNavi account is barred": "Tài khoản MarketNavi của bạn bị chặn",
   "Report needs a few words when the reason is Something else.": "Báo cáo cần vài chữ khi lý do là Khác.",
   "Report could not find that comment. It may already have expired.": "Báo cáo không tìm thấy bình luận đó. Có thể nó đã hết hạn.",
   "Report your own comment by deleting it.": "Để báo cáo bình luận của chính bạn, hãy xóa nó.",
@@ -245,8 +243,6 @@
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "Đổi màu từng thành phần giao diện. Kéo và thả màu để sao chép. Lưu và đặt lại bằng các biểu tượng phía trên.",
   "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi giúp bạn định hướng thị trường với phân tích và cảnh báo do AI dẫn dắt, cùng cộng đồng bên cạnh.",
   "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "Hiện chỉ dành cho người được mời trong khi chúng tôi xây dựng cùng các trader giàu kinh nghiệm. Nếu bạn chưa tham gia, bạn có thể <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">xin một suất</a>.",
-  "Your MarketNavi account is barred at this time.": "Tài khoản MarketNavi của bạn hiện đang bị chặn.",
-  "You can email <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>.": "Bạn có thể gửi email đến <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>.",
   "Report could not be sent.": "Không gửi được báo cáo.",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "Không lưu được báo cáo. Hãy chạy supabase_rls.sql mới nhất trong trình soạn SQL của Supabase, rồi thử lại.",
   "Market overview (status)": "Tổng quan thị trường (trạng thái)",
@@ -2674,7 +2670,6 @@
   "Classic app": "Ứng dụng cổ điển",
   "Log out": "Đăng xuất",
   "That email and password didn't match an account.": "Email và mật khẩu này không khớp với tài khoản nào.",
-  "The new MarketNavi app (beta). Log in with your usual account.": "Ứng dụng MarketNavi mới (beta). Đăng nhập bằng tài khoản quen thuộc của bạn.",
   "Back to the classic app": "Quay lại ứng dụng cổ điển",
   "Size after a loss": "Quy mô sau khi lỗ",
   "Trades after a loss are {x} times the size": "Giao dịch sau khi lỗ lớn gấp {x} lần",
@@ -3211,5 +3206,11 @@
   "**Lattice** is the research workspace, a page of its own in the bar at the top. Pick a part from its tabs:\nSignal Groups, Signal Sets, Prism Scan, Funnels and Soundings; hover a tab for what it does. Anything it draws on a\nchart (such as Visualize History) shows right there in Lattice. Like the rest of the app, it describes conditions;\nnothing in it is a forecast or advice.": "**Lattice** là không gian nghiên cứu, một trang riêng trên thanh ở trên cùng. Chọn một phần trong các thẻ của nó:\nSignal Groups, Signal Sets, Prism Scan, Phễu và Soundings; rê chuột lên một thẻ để xem thẻ đó làm gì. Những gì nó vẽ\ntrên biểu đồ (như Visualize History) hiện ngay trong Lattice. Như phần còn lại của ứng dụng, nó mô tả tình trạng;\nkhông có gì trong đó là dự báo hay lời khuyên.",
   "**Where it shows**\n- **Market sentiment – Crypto / Stocks** (from the Quick Snapshot or Search): the whole market, from headlines plus\n  public readings (central banks, the dollar and yields, Fear & Greed, market breadth and more).\n- The **News** tab of each asset's page: the headlines for that asset, newest first, each with its score and a\n  one-line summary, plus Positive and Negative paragraphs.\n- The **Sentiment** column in the tables.": "**Nơi hiển thị**\n- **Cảm xúc thị trường – Crypto / Cổ phiếu** (từ Tóm tắt nhanh hoặc ô tìm kiếm): toàn thị trường, từ tiêu đề cùng các\n  chỉ số công khai (ngân hàng trung ương, đồng đô la và lợi suất, Fear & Greed, độ rộng thị trường và hơn thế).\n- Thẻ **Tin tức** trên trang của mỗi tài sản: các tiêu đề về tài sản đó, mới nhất trước, mỗi tiêu đề có điểm và tóm tắt\n  một dòng, cùng các đoạn Tích cực và Tiêu cực.\n- Cột **Cảm xúc** trong bảng.",
   "Block {name}?": "Chặn {name}?",
-  "Block": "Chặn"
+  "Block": "Chặn",
+  "Account created for {email}. Open the email we've sent to confirm it (check junk mail too), and you're in.": "Đã tạo tài khoản cho {email}. Hãy mở email chúng tôi đã gửi để xác nhận (kiểm tra cả thư rác), vậy là xong.",
+  "New to MarketNavi?": "Mới dùng MarketNavi?",
+  "Apply for the closed beta": "Đăng ký bản beta kín",
+  "Welcome to MarketNavi": "Chào mừng đến với MarketNavi",
+  "Choose a password for {email}, and you're in.": "Chọn mật khẩu cho {email}, vậy là xong.",
+  "Skip: I'll use Google": "Bỏ qua: tôi sẽ dùng Google"
 }

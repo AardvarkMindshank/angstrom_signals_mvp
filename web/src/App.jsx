@@ -1,9 +1,9 @@
 import React, { Suspense, lazy, startTransition, useEffect, useState } from "react";
-import { supabase, configured, CLASSIC } from "./lib/supabase.js";
+import { supabase, configured, CLASSIC, arrival, arrived } from "./lib/supabase.js";
 import { T, loadWords, pickLanguage } from "./lib/i18n.js";
 import { applyTheme } from "./lib/theme.js";
 import * as api from "./lib/api.js";
-import SignIn from "./pages/SignIn.jsx";
+import SignIn, { SetPassword } from "./pages/SignIn.jsx";
 import Search from "./components/Search.jsx";
 import SidePanel from "./components/SidePanel.jsx";
 import Icon, { TONE } from "./components/Icon.jsx";
@@ -42,12 +42,14 @@ export default function App() {
   const [ready, setReady] = useState(false);
   const [route, setRoute] = useState(readRoute);
   const [signed, setSigned] = useState(null);
+  // 🔑 Arrived from a welcome or Forgot password link: choose a password first.
+  const [needPassword, setNeedPassword] = useState(() => !!(arrival && arrival.access_token && ["invite", "recovery", "magiclink"].includes(arrival.type)));
   const page = route[0];
 
   useEffect(() => {
     applyTheme({});
     if (!configured) { setSession(null); return; }
-    supabase.auth.getSession().then(({ data }) => setSession(data.session || null));
+    arrived.then(() => supabase.auth.getSession()).then(({ data }) => setSession(data.session || null));
     const { data } = supabase.auth.onAuthStateChange((_event, s) => setSession(s || null));
     return () => data.subscription.unsubscribe();
   }, []);
@@ -100,6 +102,7 @@ export default function App() {
   if (!ready) return <div className="boot">{"MarketNavi"}</div>;
   if (!configured) return <div className="boot">{T("The new app isn't set up yet.")}</div>;
   if (!session) return <SignIn />;
+  if (needPassword) return <SetPassword type={arrival.type} email={session.user.email || ""} onDone={() => setNeedPassword(false)} />;
   if (account && account.nda && account.nda.needed && !signed) {
     return <div className="shell"><header className="top"><a className="brand" href="#snapshot" aria-label="MarketNavi"><img src="/logo.png" alt="" width="28" height="28" /><span>MarketNavi</span></a></header>
       <main className="main"><Nda info={account.nda} onDone={(copy) => { setSigned(copy); setAccount({ ...account, nda: { ...account.nda, needed: false } }); }} /></main></div>;

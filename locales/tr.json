@@ -117,8 +117,6 @@
   "Close pop-out tabs when I log out": "Çıkış yaptığımda ayrılan sekmeleri kapat",
   "Resend returned status {response_status_code}": "Resend {response_status_code} durumunu döndürdü",
   "You are invited to MarketNavi": "MarketNavi'a davet edildiniz",
-  "Your account is barred": "Hesabınız engellendi",
-  "Your MarketNavi account is barred": "MarketNavi hesabınız engellendi",
   "Report needs a few words when the reason is Something else.": "Neden Başka bir şey olduğunda şikâyete birkaç sözcük eklenmeli.",
   "Report could not find that comment. It may already have expired.": "Şikâyet bu yorumu bulamadı. Süresi dolmuş olabilir.",
   "Report your own comment by deleting it.": "Kendi yorumunuzu şikâyet etmek için silin.",
@@ -245,8 +243,6 @@
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "Arayüz öğelerinin rengini tek tek değiştirin. Kopyalamak için renkleri sürükleyip bırakın. Yukarıdaki simgelerle kaydedin ve sıfırlayın.",
   "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi, yapay zekâ rehberliğinde analiz ve uyarılarla piyasalarda yolunu bulmana yardım eder, topluluk yanında.",
   "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "Deneyimli trader'larla geliştirirken yalnızca davetle kullanılabilir. Henüz katılmadıysanız <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">yer isteyebilirsiniz</a>.",
-  "Your MarketNavi account is barred at this time.": "MarketNavi hesabınız şu anda engellenmiş durumda.",
-  "You can email <a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a>.": "<a href=\"mailto:{html_escape_inbox_quote_}\" style=\"color:#1d5fd1;\">{html_escape_inbox}</a> adresine e-posta gönderebilirsiniz.",
   "Report could not be sent.": "Bildirim gönderilemedi.",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "Bildirim kaydedilemedi. Supabase SQL düzenleyicisinde en son supabase_rls.sql dosyasını çalıştırın, sonra yeniden deneyin.",
   "Market overview (status)": "Piyasa genel görünümü (durum)",
@@ -2674,7 +2670,6 @@
   "Classic app": "Klasik uygulama",
   "Log out": "Çıkış yap",
   "That email and password didn't match an account.": "Bu e-posta ve şifre hiçbir hesapla eşleşmedi.",
-  "The new MarketNavi app (beta). Log in with your usual account.": "Yeni MarketNavi uygulaması (beta). Her zamanki hesabınızla giriş yapın.",
   "Back to the classic app": "Klasik uygulamaya dön",
   "Size after a loss": "Kayıptan sonraki büyüklük",
   "Trades after a loss are {x} times the size": "Kayıptan sonraki işlemler {x} kat büyük",
@@ -3211,5 +3206,11 @@
   "**Lattice** is the research workspace, a page of its own in the bar at the top. Pick a part from its tabs:\nSignal Groups, Signal Sets, Prism Scan, Funnels and Soundings; hover a tab for what it does. Anything it draws on a\nchart (such as Visualize History) shows right there in Lattice. Like the rest of the app, it describes conditions;\nnothing in it is a forecast or advice.": "**Lattice**, üstteki çubukta kendi sayfası olan araştırma alanıdır. Sekmelerinden bir bölüm seçin:\nSignal Groups, Signal Sets, Prism Scan, Huniler ve Soundings; ne yaptığını görmek için bir sekmenin üzerine gelin.\nBir grafikte çizdiği her şey (örneğin Visualize History) doğrudan Lattice içinde görünür. Uygulamanın geri kalanı gibi\nkoşulları tarif eder; içindeki hiçbir şey tahmin ya da tavsiye değildir.",
   "**Where it shows**\n- **Market sentiment – Crypto / Stocks** (from the Quick Snapshot or Search): the whole market, from headlines plus\n  public readings (central banks, the dollar and yields, Fear & Greed, market breadth and more).\n- The **News** tab of each asset's page: the headlines for that asset, newest first, each with its score and a\n  one-line summary, plus Positive and Negative paragraphs.\n- The **Sentiment** column in the tables.": "**Nerede görünür**\n- **Piyasa duyarlılığı – Kripto / Hisseler** (Hızlı Özet'ten ya da aramadan): tüm piyasa, manşetlerden ve kamuya açık\n  okumalardan (merkez bankaları, dolar ve getiriler, Fear & Greed, piyasa genişliği ve daha fazlası).\n- Her varlığın sayfasındaki **Haberler** sekmesi: o varlığa ait manşetler, en yeniler önce, her biri puanı ve tek\n  satırlık özetiyle, ayrıca Olumlu ve Olumsuz paragrafları.\n- Tablolardaki **Duyarlılık** sütunu.",
   "Block {name}?": "{name} engellensin mi?",
-  "Block": "Engelle"
+  "Block": "Engelle",
+  "Account created for {email}. Open the email we've sent to confirm it (check junk mail too), and you're in.": "{email} için hesap oluşturuldu. Onaylamak için gönderdiğimiz e-postayı açın (gereksiz klasörüne de bakın), hepsi bu.",
+  "New to MarketNavi?": "MarketNavi'de yeni misiniz?",
+  "Apply for the closed beta": "Kapalı betaya başvurun",
+  "Welcome to MarketNavi": "MarketNavi'ye hoş geldiniz",
+  "Choose a password for {email}, and you're in.": "{email} için bir şifre seçin, hepsi bu.",
+  "Skip: I'll use Google": "Atla: Google kullanacağım"
 }

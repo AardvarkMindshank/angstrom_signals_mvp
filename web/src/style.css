@@ -1076,3 +1076,8 @@ button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent)
 .lat [data-k=other] .ic { color: var(--t-gold) !important; }
 .lat [data-k=sentiment] .ic { color: var(--t-orange) !important; }
 .lat [data-k=positioning] .ic { color: var(--t-lime) !important; }
+.signbox .forgot { align-self: center; font-size: 13.5px; color: var(--ang-soft); }
+.signbox .signfoot { text-align: center; font-size: 14px; color: var(--ang-soft); padding-top: 4px; border-top: 1px solid var(--ang-border); margin-top: 4px; padding-top: 14px; }
+.signbox .signfoot .linkish { font-weight: 600; color: var(--ang-text); }
+.signbox .signh { text-align: center; margin: 0; font-family: Montserrat, Inter, sans-serif; font-size: 22px; }
+.signbox button.back { align-self: center; }
