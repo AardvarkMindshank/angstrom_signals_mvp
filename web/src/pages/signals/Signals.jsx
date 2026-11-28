@@ -117,7 +117,7 @@ export default function Signals({ market: wanted, account }) {
       {got && got.funnel && <FunnelBar f={got.funnel} onPick={setPick} />}
       {err && <p className="note bad">{err}</p>}
       {!got && busy && <div className="empty" style={{ height: 300 }}>{T("Loading…")}</div>}
-      {got && !rows.length && <p className="sub">{mode === "funnel" ? (got.funnel && !got.funnel.funnels.length ? T("You have no funnels in this market yet.") : T("No assets hold this stage right now.")) : T("This watchlist is empty. Add assets in ⚙️ Settings.")}</p>}
+      {got && !rows.length && !(mode === "funnel" && got.funnel && !got.funnel.funnels.length) && <p className="sub">{mode === "funnel" ? T("No assets hold this stage right now.") : T("This watchlist is empty. Add assets in ⚙️ Settings.")}</p>}
       {got && rows.length > 0 && (
         <>
           <p className="sub">{T("Click a column title to sort. 📈 Trend, 🎯 Stretch and 🔊 Flow each run from -100 to +100 (positive means up); they describe the market and are not forecasts. Hover a reading for what it means, click it for the breakdown. Click a name to open the asset.")}</p>
