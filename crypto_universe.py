@@ -346,3 +346,17 @@ def main(argv: list[str]) -> int:
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))
+
+
+def coin_label(name: str, symbol: str) -> str:
+    """How a coin is stored on a watchlist and shown everywhere: "Name (TICKER)", e.g. "Solana (SOL)", "Aave (AAVE)";
+    just "XRP" when the name is exactly the ticker. The same rule as coinLabel in the new app (web/src/lib/assets.js)."""
+    import re
+
+    n = re.sub(r"\s*\([^()]*\)\s*$", "", str(name or "")).strip()
+    s = str(symbol or "").strip().upper()
+    if not s:
+        return n
+    if not n or n == s:
+        return s
+    return f"{n} ({s})"

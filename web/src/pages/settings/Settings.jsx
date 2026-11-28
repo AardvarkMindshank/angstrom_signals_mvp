@@ -4,7 +4,7 @@ import { T, lang } from "../../lib/i18n.js";
 import { applyTheme } from "../../lib/theme.js";
 import { supabase, SUPABASE_URL } from "../../lib/supabase.js";
 import * as acct from "../../lib/account.js";
-import { universe, match, keyFor, watchlists } from "../../lib/assets.js";
+import { universe, match, keyFor, watchlists, coinLabel } from "../../lib/assets.js";
 import { call } from "../../lib/service.js";
 import { assetHref } from "../../components/Search.jsx";
 
@@ -215,7 +215,7 @@ function Watchlist({ kind, title, list, setList, flash }) {
         <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={kind === "crypto" ? T("Add a coin, e.g. Solana") : T("Add a company, e.g. Microsoft")} aria-label={T("Add to watchlist")} />
         {q.trim() && (
           <div className="wlhits">
-            {hits.map((a) => <button key={a.id} type="button" onClick={() => { save({ ...list, [a.id]: kind === "crypto" ? `${a.name} (${a.symbol})` : a.name }); setQ(""); }}><b>{a.symbol}</b> <span className="m">{a.name}</span> <span className="add">+ {T("Add")}</span></button>)}
+            {hits.map((a) => <button key={a.id} type="button" onClick={() => { save({ ...list, [a.id]: kind === "crypto" ? coinLabel(a.name, a.symbol) : a.name }); setQ(""); }}><b>{a.symbol}</b> <span className="m">{a.name}</span> <span className="add">+ {T("Add")}</span></button>)}
             {!hits.length && <span className="m" style={{ padding: "8px 12px" }}>{T("No match.")}</span>}
           </div>
         )}

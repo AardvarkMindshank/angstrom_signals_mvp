@@ -3,7 +3,7 @@ import Icon, { Glyphs, Lead, plain } from "../../components/Icon.jsx";
 import { T, lang } from "../../lib/i18n.js";
 import { call } from "../../lib/service.js";
 import { saveSettings, saveWatchlist, preferences } from "../../lib/account.js";
-import { watchlists } from "../../lib/assets.js";
+import { watchlists, watchName } from "../../lib/assets.js";
 import { usd, signed, compact } from "../../lib/format.js";
 import { assetHref, Logo } from "../../components/Search.jsx";
 
@@ -86,7 +86,7 @@ export default function Signals({ market: wanted, account }) {
     </th>
   );
   const add = async (r) => {
-    try { const p = await preferences(); const kind = crypto ? "crypto" : "equity"; const list = { ...(crypto ? p.crypto : p.equity), [r.id]: r.symbol.replace(/ \(.*\)$/, "") }; await saveWatchlist(kind, list); watchlists.reset(); setRound((n) => n + 1); } catch (e) { /* stays as it was */ }
+    try { const p = await preferences(); const kind = crypto ? "crypto" : "equity"; const list = { ...(crypto ? p.crypto : p.equity), [r.id]: await watchName(kind, r.id, r.symbol) }; await saveWatchlist(kind, list); watchlists.reset(); setRound((n) => n + 1); } catch (e) { /* stays as it was */ }
   };
 
   return (

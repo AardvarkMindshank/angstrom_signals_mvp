@@ -417,6 +417,16 @@ def run_background_checks() -> None:
     except Exception as exc:
         print(f"Market extras skipped: {str(exc)[:160]}")
     try:
+        # Crypto watchlist names in the one stored form, "Name (TICKER)" (watchlist_names.py), hourly.
+        from datetime import datetime as _dt, timezone as _tz
+
+        if _dt.now(_tz.utc).minute < 5:
+            import watchlist_names
+
+            watchlist_names.tidy(supabase)
+    except Exception as exc:
+        print(f"Watchlist names skipped: {str(exc)[:160]}")
+    try:
         # Options max-pain snapshots (Bitcoin, Ethereum, watched and funnel equities): the history behind the max pain
         # signal. Collected only; never holds up the alert pass.
         from options_snapshots import refresh_due as refresh_options

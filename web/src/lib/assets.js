@@ -156,6 +156,27 @@ export const calendar = once(async () => {
   try { const r = await fetch(import.meta.env.BASE_URL + "data/calendar.json"); return r.ok ? await r.json() : []; } catch (e) { return []; }
 });
 
+// ---- how a watchlist entry is named -------------------------------------------------------------------------------
+// Every coin is stored as "Name (TICKER)", e.g. "Solana (SOL)", "Aave (AAVE)"; just "XRP" when the name is exactly the
+// ticker. The same rule as crypto_universe.coin_label in Python (the classic app and the worker use that one).
+export function coinLabel(name, symbol) {
+  const n = String(name || "").replace(/\s*\([^()]*\)\s*$/, "").trim();
+  const s = String(symbol || "").trim().toUpperCase();
+  if (!s) return n;
+  if (!n || n === s) return s;
+  return `${n} (${s})`;
+}
+
+// The name to store for an asset being added: from the search list (name and ticker), else what the page had.
+export async function watchName(kind, id, fallback) {
+  if (kind !== "crypto") return String(fallback || id).replace(/\s*\([^()]*\)\s*$/, "").trim() || id;
+  try {
+    const row = (await universe()).find((a) => a.kind === "crypto" && a.id === id);
+    if (row) return coinLabel(row.name, row.symbol);
+  } catch (e) { /* the list isn't to hand: the page's own name */ }
+  return String(fallback || id);
+}
+
 // ---- the watchlist button -----------------------------------------------------------------------------------------
 // The classic app keeps each watchlist as {id: name} on the account's preferences row; this changes one entry.
 export async function setWatched(kind, id, name, on) {
@@ -163,7 +184,7 @@ export async function setWatched(kind, id, name, on) {
   const col = kind === "crypto" ? "crypto_watchlist" : "stock_watchlist";
   const rows = must(await supabase.from("user_preferences").select(col).eq("user_id", u.user.id).limit(1)) || [];
   const list = { ...((rows[0] && rows[0][col]) || {}) };
-  if (on) list[id] = name; else delete list[id];
+  if (on) list[id] = await watchName(kind, id, name); else delete list[id];
   must(await supabase.from("user_preferences").update({ [col]: list }).eq("user_id", u.user.id));
   watchlists.reset();
   return list;

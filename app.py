@@ -6497,8 +6497,8 @@ def load_user_preferences():
         "solana": "Solana (SOL)",
         "cardano": "Cardano (ADA)",
         "ripple": "XRP",
-        "polkadot": "Dot",
-        "sui": "Sui",
+        "polkadot": "Polkadot (DOT)",
+        "sui": "Sui (SUI)",
     }
     default_stock = {
         "AAPL": "Apple",
@@ -9345,7 +9345,9 @@ def _add_from_funnel(kind: str, asset_id: str) -> None:
     if kind == "Crypto":
         symbol = str(info.get("symbol") or "").upper()
         name = str(info.get("name") or asset_id)
-        label = f"{name} ({symbol})" if symbol and symbol not in name.upper() else name
+        from crypto_universe import coin_label
+
+        label = coin_label(name, symbol)
         if asset_id in CRYPTO_WATCHLIST:
             st.toast(t('{label} is already on My Watchlist.', label=label))
             return
@@ -9418,7 +9420,9 @@ with tracked_expander("⭐ " + t("Watchlists"), "watchlists", sidebar=True):
             if st.button(t("Add Crypto"), disabled=crypto_choice is None):
                 cid = crypto_choice["id"]
                 symbol = crypto_choice["symbol"]
-                label = f"{crypto_choice['name']} ({symbol})" if symbol and symbol not in crypto_choice["name"].upper() else crypto_choice["name"]
+                from crypto_universe import coin_label
+
+                label = coin_label(crypto_choice["name"], symbol)
                 ticker = crypto_ticker(cid)
                 alias = (ticker or "").lower()
                 fresh = bool(cid) and cid not in CRYPTO_WATCHLIST

@@ -41,7 +41,9 @@ export default function Search() {
   const hits = useMemo(() => match(list, q, watched), [list, q, watched]);
   const watchRows = useMemo(() => [...watched].map((k) => byKey[k] || (() => {
     const [kind, id] = k.split("|"); const name = (kind === "Crypto" ? watch.crypto : watch.equity)[id];
-    return { key: k, kind: kind === "Crypto" ? "crypto" : "equity", id, symbol: id.toUpperCase(), name: typeof name === "string" ? name : id };
+    // not in the search list (a small coin): the ticker and name as stored, "Name (TICKER)"
+    const saved = typeof name === "string" ? name : id, m = /^(.*?)\s*\(([^()]+)\)\s*$/.exec(saved);
+    return { key: k, kind: kind === "Crypto" ? "crypto" : "equity", id, symbol: m ? m[2] : kind === "Crypto" ? saved : id.toUpperCase(), name: m ? m[1] : saved };
   })()), [watched, byKey, watch]);
   const pages = useMemo(() => { const w = q.trim().toLowerCase(); return w.length < 2 ? [] : PAGES().filter((p) => p.words.includes(w) || p.label.toLowerCase().includes(w)); }, [q]);
   const shown = q.trim() ? hits : watchRows.slice(0, 12);
