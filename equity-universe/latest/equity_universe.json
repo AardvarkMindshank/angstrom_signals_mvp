@@ -1,5 +1,5 @@
 {
- "built_at": "2026-11-27T22:40:35.632914+00:00",
+ "built_at": "2026-11-28T04:13:55.882240+00:00",
  "rules": {
   "list": "S&P 500",
   "min_price": 5.0,
@@ -1054,7 +1054,7 @@
    "name": "Cigna",
    "sector": "Health Care",
    "price": 272.12,
-   "volume_usd": 483463124,
+   "volume_usd": 483457410,
    "market_cap": null,
    "next_earnings": "2027-02-04",
    "rank": 105
@@ -1434,7 +1434,7 @@
    "name": "Dell Technologies",
    "sector": "Information Technology",
    "price": 316.96,
-   "volume_usd": 2963750489,
+   "volume_usd": 2963752549,
    "market_cap": null,
    "next_earnings": "2027-02-25",
    "rank": 143
@@ -2623,7 +2623,7 @@
    "ticker": "JKHY",
    "name": "Jack Henry & Associates",
    "sector": "Financials",
-   "price": 182.035,
+   "price": 182.04,
    "volume_usd": 135988002,
    "market_cap": null,
    "next_earnings": "2027-02-02",
@@ -2634,7 +2634,7 @@
    "name": "Jacobs Solutions",
    "sector": "Industrials",
    "price": 146.57,
-   "volume_usd": 136631762,
+   "volume_usd": 136634034,
    "market_cap": null,
    "next_earnings": "2027-02-02",
    "rank": 263
@@ -4744,7 +4744,7 @@
    "name": "Wabtec",
    "sector": "Industrials",
    "price": 296.15,
-   "volume_usd": 272564818,
+   "volume_usd": 272571185,
    "market_cap": null,
    "next_earnings": "2027-02-10",
    "rank": 474
@@ -4965,49 +4965,49 @@
    "ticker": "FDXF",
    "name": "FedEx Freight",
    "sector": "Industrials",
-   "reason": "only 184 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 185 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "GEV",
    "name": "GE Vernova",
    "sector": "Industrials",
-   "reason": "only 975 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 976 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "HONA",
    "name": "Honeywell Aerospace",
    "sector": "Industrials",
-   "reason": "only 165 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 166 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "Q",
    "name": "Qnity Electronics",
    "sector": "Information Technology",
-   "reason": "only 396 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 397 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "RDDT",
    "name": "Reddit",
    "sector": "Communication Services",
-   "reason": "only 981 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 982 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "SNDK",
    "name": "Sandisk",
    "sector": "Information Technology",
-   "reason": "only 652 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 653 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "SOLV",
    "name": "Solventum",
    "sector": "Health Care",
-   "reason": "only 976 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 977 days of history (the weekly stage needs about 3 years)"
   },
   {
    "ticker": "VYLR",
    "name": "Vylor",
    "sector": "Consumer Staples",
-   "reason": "only 57 days of history (the weekly stage needs about 3 years)"
+   "reason": "only 58 days of history (the weekly stage needs about 3 years)"
   }
  ]
 }
