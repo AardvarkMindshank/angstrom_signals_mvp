@@ -3252,5 +3252,14 @@
   "Test on its way: it arrives within about five minutes.": "テストを送信中です。5分ほどで届きます。",
   "Notifications on this device": "このデバイスの通知",
   "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "アラートをベルに加えて、スマホやパソコンの通知でも受け取れます。使うデバイスごとにオンにしてください。",
-  "Your social score: 5 points a comment, 1 a reply, and 100 for each friend you invite who joins.": "あなたのソーシャルスコア：コメント1件で5ポイント、返信で1ポイント、招待した友達が参加すると100ポイント。"
+  "Your social score: 5 points a comment, 1 a reply, and 100 for each friend you invite who joins.": "あなたのソーシャルスコア：コメント1件で5ポイント、返信で1ポイント、招待した友達が参加すると100ポイント。",
+  "General": "一般",
+  "Support": "サポート",
+  "Terms of use": "利用規約",
+  "Not financial advice": "投資助言ではありません",
+  "Refund policy": "返金ポリシー",
+  "Terms and policies": "規約とポリシー",
+  "The comments and the chat are for reacting to the markets and the readings in MarketNavi.": "コメントとチャットは、市場とMarketNaviの指標について意見を交わすための場です。",
+  "Use the flag beside a comment that breaks these rules. Only the MarketNavi team sees reports. A comment that breaks the rules can be removed and its writer warned, and an account that keeps breaking them can be closed.": "ルールに反するコメントは横の旗アイコンで報告してください。報告はMarketNaviチームだけが確認します。違反したコメントは削除され投稿者に警告が出ることがあり、違反を繰り返すアカウントは閉鎖されることがあります。",
+  "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "MarketNaviを利用すると、利用規約と上記のソーシャルポリシーに同意したことになります。全文は当社ウェブサイトに英語で掲載しています。"
 }

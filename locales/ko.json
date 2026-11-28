@@ -3252,5 +3252,14 @@
   "Test on its way: it arrives within about five minutes.": "테스트 전송 중: 약 5분 안에 도착합니다.",
   "Notifications on this device": "이 기기의 알림",
   "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "알림을 종 아이콘뿐 아니라 휴대폰이나 컴퓨터 알림으로도 받습니다. 사용하는 기기마다 켜 주세요.",
-  "Your social score: 5 points a comment, 1 a reply, and 100 for each friend you invite who joins.": "내 소셜 점수: 댓글 1개에 5점, 답글에 1점, 초대한 친구가 가입하면 100점."
+  "Your social score: 5 points a comment, 1 a reply, and 100 for each friend you invite who joins.": "내 소셜 점수: 댓글 1개에 5점, 답글에 1점, 초대한 친구가 가입하면 100점.",
+  "General": "일반",
+  "Support": "지원",
+  "Terms of use": "이용약관",
+  "Not financial advice": "금융 자문이 아닙니다",
+  "Refund policy": "환불 정책",
+  "Terms and policies": "약관 및 정책",
+  "The comments and the chat are for reacting to the markets and the readings in MarketNavi.": "댓글과 채팅은 시장과 MarketNavi의 지표에 반응하기 위한 공간입니다.",
+  "Use the flag beside a comment that breaks these rules. Only the MarketNavi team sees reports. A comment that breaks the rules can be removed and its writer warned, and an account that keeps breaking them can be closed.": "규칙을 어긴 댓글은 옆의 깃발 아이콘으로 신고하세요. 신고는 MarketNavi 팀만 봅니다. 규칙을 어긴 댓글은 삭제되고 작성자에게 경고가 갈 수 있으며, 계속 어기는 계정은 폐쇄될 수 있습니다.",
+  "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "MarketNavi를 사용하면 이용약관과 위의 소셜 정책에 동의하는 것입니다. 전체 내용은 웹사이트에 영어로 있습니다."
 }

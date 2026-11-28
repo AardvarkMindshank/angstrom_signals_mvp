@@ -96,6 +96,9 @@ export default function SignIn() {
             </div>
           </>
         )}
+        <div className="signlegal">
+          <a href="https://marketnavi.ai/terms.html" target="_blank" rel="noopener noreferrer">{T("Terms of use")}</a> · <a href="https://marketnavi.ai/privacy.html" target="_blank" rel="noopener noreferrer">{T("Privacy")}</a>
+        </div>
         <a className="back" href={CLASSIC}>{T("Back to the classic app")}</a>
       </div>
     </div>
