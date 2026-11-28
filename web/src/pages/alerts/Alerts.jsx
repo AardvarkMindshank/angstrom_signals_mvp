@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Icon from "../../components/Icon.jsx";
+import Icon, { Tile } from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
 import { supabase } from "../../lib/supabase.js";
 import { watchlists } from "../../lib/assets.js";
@@ -63,7 +63,7 @@ export default function Alerts() {
   return (
     <div className="page">
       <div className="bar">
-        <h1 className="ptitle" style={{ marginRight: "auto" }}><Icon n="bell" size={26} /> {T("Alerts")}{unread ? <span className="pcount">{unread}</span> : null}</h1>
+        <h1 className="ptitle" style={{ marginRight: "auto" }}><Tile n="bell" size={22} /> {T("Alerts")}{unread ? <span className="pcount">{unread}</span> : null}</h1>
         <div className="right">
           <button type="button" className="ghost" disabled={busy || !unread} onClick={() => act("read")} title={T("Mark all as read")} aria-label={T("Mark all as read")}><Icon n="check-check" /></button>
           <button type="button" className="ghost" disabled={busy || !list.some((n) => isAlert(n) && n.is_read)} onClick={() => act("clear")} title={T("Clear read alerts")} aria-label={T("Clear read alerts")}><Icon n="brush-cleaning" /></button>

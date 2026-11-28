@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import Icon, { Lead, plain } from "../../components/Icon.jsx";
+import Icon, { Lead, plain, Tile } from "../../components/Icon.jsx";
 import { T, lang } from "../../lib/i18n.js";
 import { applyTheme } from "../../lib/theme.js";
 import { supabase, SUPABASE_URL } from "../../lib/supabase.js";
@@ -11,14 +11,14 @@ import { assetHref } from "../../components/Search.jsx";
 // ⚙️ Settings: one page, sections down the left, each choice saved the moment it changes. Everything is stored
 // where the classic app keeps it, so both apps stay in step.
 const SECTIONS = () => [
-  ["account", T("Account"), "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9a7 7 0 0 1 14 0"],
-  ["display", T("Display & language"), "M12 3v2m0 14v2M5 12H3m18 0h-2M6 6l1.5 1.5M16.5 16.5 18 18M6 18l1.5-1.5M16.5 7.5 18 6M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"],
-  ["markets", T("Markets & watchlists"), "M3 3v18h18M7 14l4-4 3 3 5-6"],
-  ["alerts", T("Alerts & email"), "M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21a2 2 0 0 0 4 0"],
-  ["logbook", T("Logbook & podcasts"), "M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3zM5 17a3 3 0 0 1 3-3h11M9 8h6"],
-  ["ai", T("AI"), "M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"],
-  ["privacy", T("Chat & privacy"), "M5 11V8a7 7 0 0 1 14 0v3M4 11h16v10H4z"],
-  ["lattice", T("Lattice"), "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"],
+  ["account", T("Account"), "user"],
+  ["display", T("Display & language"), "sun-moon"],
+  ["markets", T("Markets & watchlists"), "chart-candlestick"],
+  ["alerts", T("Alerts & email"), "bell"],
+  ["logbook", T("Logbook & podcasts"), "notebook"],
+  ["ai", T("AI"), "sparkles"],
+  ["privacy", T("Chat & privacy"), "lock"],
+  ["lattice", T("Lattice"), "puzzle"],
 ];
 
 export default function Settings({ account, section }) {
@@ -46,7 +46,7 @@ export default function Settings({ account, section }) {
         <h1>{T("Settings")}</h1>
         {SECTIONS().map(([k, l, d]) => (
           <a key={k} href={`#settings/${k}`} className={on === k ? "on" : ""} aria-current={on === k ? "page" : undefined}>
-            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d} /></svg>{l}
+            <Tile n={d} size={17} />{l}
           </a>
         ))}
       </nav>

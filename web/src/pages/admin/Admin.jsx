@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase.js";
 import { call } from "../../lib/service.js";
-import Icon from "../../components/Icon.jsx";
+import Icon, { Tile } from "../../components/Icon.jsx";
 
 // 🛡️ Admin: the classic admin panel's lists (Members, Feedback, Reported comments, Beta requests, Blacklist), shown
 // only to an account whose profile role is admin. English only, as in the classic app. Everything goes through the
@@ -55,10 +55,10 @@ export default function Admin({ section, account }) {
     <div className="settings admin">
       <nav className="snav" aria-label="Admin">
         <h1>Admin</h1>
-        {SECTIONS.map(([k, ic, l]) => <a key={k} href={`#admin/${k}`} className={on === k ? "on" : ""} aria-current={on === k ? "page" : undefined}><Icon n={ic} /> {l}</a>)}
+        {SECTIONS.map(([k, ic, l]) => <a key={k} href={`#admin/${k}`} className={on === k ? "on" : ""} aria-current={on === k ? "page" : undefined}><Tile n={ic} size={17} /> {l}</a>)}
       </nav>
       <div className="sbody">
-        <h2 className="helph"><Icon n={cur[1]} /> {cur[2]}</h2>
+        <h2 className="helph"><Tile n={cur[1]} size={18} /> {cur[2]}</h2>
         {on === "members" && <Members when={when} />}
         {on === "feedback" && <Feedback when={when} />}
         {on === "reports" && <Reports when={when} />}

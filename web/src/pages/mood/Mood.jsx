@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Icon from "../../components/Icon.jsx";
+import Icon, { Tile } from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
 import { supabase } from "../../lib/supabase.js";
 import News from "../asset/News.jsx";
@@ -38,7 +38,7 @@ export default function Mood({ market: wanted, account }) {
   return (
     <div className="page">
       <div className="bar">
-        <h1 className="ptitle" style={{ marginRight: "auto" }}><Icon n={market === "crypto" ? "coins" : "trending-up"} size={26} /> {T("Market sentiment")}</h1>
+        <h1 className="ptitle" style={{ marginRight: "auto" }}><Tile n={market === "crypto" ? "coins" : "trending-up"} size={22} /> {T("Market sentiment")}</h1>
         {trades.crypto && trades.stock && (
           <div className="seg" role="tablist" aria-label={T("Market")}>
             <a role="tab" aria-selected={market === "crypto"} className={"segl" + (market === "crypto" ? " on" : "")} href="#mood/crypto">{T("Crypto market")}</a>

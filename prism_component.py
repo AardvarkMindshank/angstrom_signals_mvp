@@ -414,7 +414,7 @@ export default function(component) {
       resume: '<path d="M7 4.5v15l12-7.5z" fill="currentColor" stroke="none"/>',
       inside: '<circle cx="11" cy="11" r="6"/><path d="M20 20l-4.5-4.5"/>',
       copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
-      del: '<path d="M6 6l12 12M18 6L6 18"/>',
+      del: '<path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>',
       chev: '<path d="M9 6l6 6-6 6"/>',
       timer: '<path d="M6 3h12M6 21h12M7 3c0 5 10 5 10 9s-10 4-10 9M17 3c0 5-10 5-10 9"/>',
     };

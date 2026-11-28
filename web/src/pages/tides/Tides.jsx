@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Icon, { Arrow, Emo, Lead, plain } from "../../components/Icon.jsx";
+import Icon, { Arrow, Emo, Lead, plain, Tile } from "../../components/Icon.jsx";
 import { T, lang } from "../../lib/i18n.js";
 import { call } from "../../lib/service.js";
 import { supabase } from "../../lib/supabase.js";
@@ -24,13 +24,13 @@ export default function Tides({ account }) {
     return () => { live = false; };
   }, [range]);
   const pick = (r) => { setRange(r); saveSettings({ tides_range: r }).catch(() => {}); };
-  if (err) return <div className="page"><h1 className="ptitle"><Icon n="waves-horizontal" size={26} /> {T("Tides")}</h1><p className="note bad">{err}</p></div>;
-  if (!d) return <div className="page"><h1 className="ptitle"><Icon n="waves-horizontal" size={26} /> {T("Tides")}</h1><div className="empty" style={{ height: 300 }}>{T("Loading…")}</div></div>;
-  if (!d.ready) return <div className="page"><h1 className="ptitle"><Icon n="waves-horizontal" size={26} /> {T("Tides")}</h1><p className="sub">{T("Tides has not got enough data yet.")}</p></div>;
+  if (err) return <div className="page"><h1 className="ptitle"><Tile n="waves-horizontal" size={22} /> {T("Tides")}</h1><p className="note bad">{err}</p></div>;
+  if (!d) return <div className="page"><h1 className="ptitle"><Tile n="waves-horizontal" size={22} /> {T("Tides")}</h1><div className="empty" style={{ height: 300 }}>{T("Loading…")}</div></div>;
+  if (!d.ready) return <div className="page"><h1 className="ptitle"><Tile n="waves-horizontal" size={22} /> {T("Tides")}</h1><p className="sub">{T("Tides has not got enough data yet.")}</p></div>;
   const h = d.hero;
   return (
     <div className="page tidesp">
-      <h1 className="ptitle"><Icon n="waves-horizontal" size={26} /> {T("Tides")}</h1>
+      <h1 className="ptitle"><Tile n="waves-horizontal" size={22} /> {T("Tides")}</h1>
       <section className={"thero" + (h.dark ? " dark" : "")}>
         <img className="tsea" src={h.src} alt="" />
         <div className="tover">

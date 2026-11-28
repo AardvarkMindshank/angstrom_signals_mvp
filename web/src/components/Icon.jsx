@@ -2,18 +2,39 @@ import React from "react";
 import PATHS from "../generated/icons.js";
 import { EMOJI_RE, noEmoji } from "../lib/i18n.js";
 
-// The app's one icon set: Lucide line icons (web/scripts/icons.py copies the ones used), drawn in the text colour at
-// one stroke weight. No colour emoji in the interface: colour only where it means something (good, bad, selected).
-// <Icon n="trash" /> · <Icon n="bell" size={16} title="Alerts" />
-export default function Icon({ n, size = 18, title, className, style }) {
+// The app's one icon set: Lucide line icons (web/scripts/icons.py copies the ones used), at one stroke weight.
+// Colour by meaning (the TONE list): each icon that stands for something has one colour, the same everywhere; tool
+// icons (close, edit, delete, chevrons...) have none and stay grey. style.css decides where the colour shows: always
+// in headings, menus and content, but not on small tool buttons, and on a tab or chip only when it is selected.
+// <Icon n="trash" /> · <Icon n="bell" size={16} title="Alerts" /> · <Tile n="waves-horizontal" /> (a tinted square)
+const T7 = {
+  gold: "camera sparkles scan-search compass star sailboat medal lightbulb bot brain zap coins sun party-popper bell key crown",
+  teal: "waves-horizontal anchor ship fish droplet wind cloud cloud-fog cloud-lightning cloud-rain cloud-sun cloud-sun-rain tornado snowflake tree-palm shell globe radar satellite thermometer mountain moon sun-moon",
+  green: "trending-up circle-check check-check thumbs-up arrow-up-right dollar-sign",
+  red: "trending-down flag flag-triangle-right ban octagon-x thumbs-down arrow-down-right flame",
+  orange: "notebook notebook-pen book-open file-text scroll-text clipboard-list receipt briefcase rocket triangle-exclamation-point hourglass timer calendar calendar-days gauge fuel factory",
+  blue: "activity chart-column chart-line chart-candlestick signal bitcoin landmark table layers columns-3 newspaper message-circle message-square-text mail users user user-plus map map-pin link audio-lines mic radio clapperboard ticket",
+  purple: "puzzle funnel blocks workflow shapes microscope telescope flask-conical target sliders-horizontal sliders-vertical group diamond",
+  slate: "settings shield lock server-cog",
+};
+export const TONE = Object.fromEntries(Object.entries(T7).flatMap(([t, names]) => names.split(" ").map((n) => [n, t])));
+
+export default function Icon({ n, size = 18, title, className, style, tone }) {
   const d = PATHS[n];
   if (!d) return null;
+  const t = tone === false ? undefined : tone || TONE[n];
   return (
     <svg className={"ic" + (className ? " " + className : "")} width={size} height={size} viewBox="0 0 24 24" fill="none"
-      stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={style}
+      stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={style} data-tone={t}
       role={title ? "img" : undefined} aria-hidden={title ? undefined : true}
       dangerouslySetInnerHTML={{ __html: (title ? `<title>${title.replace(/</g, "&lt;")}</title>` : "") + d }} />
   );
+}
+
+// The icon in a soft square of its own colour (page titles, the Help, Settings and Admin menus, first steps).
+export function Tile({ n, size = 20, box, tone, className }) {
+  const t = tone || TONE[n] || "slate";
+  return <span className={"itile" + (className ? " " + className : "")} data-tone={t} style={{ width: box || size + 18, height: box || size + 18 }}><Icon n={n} size={size} tone={t} /></span>;
 }
 
 // The emoji the data service and the shared readings still send (Tides currents, families, signal icons), as icons.
@@ -68,7 +89,7 @@ function svgFor(e) {
   if (!n || !PATHS[n]) return null;
   const span = document.createElement("span");
   span.className = "icw";
-  span.innerHTML = `<svg class="ic" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[n]}</svg>${/\s$/.test(e) ? " " : ""}`;
+  span.innerHTML = `<svg class="ic"${TONE[n] ? ` data-tone="${TONE[n]}"` : ""} width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PATHS[n]}</svg>${/\s$/.test(e) ? " " : ""}`;
   return span;
 }
 export function iconify(root) {

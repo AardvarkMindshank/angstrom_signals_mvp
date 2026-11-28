@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import Icon, { Lead, plain } from "../../components/Icon.jsx";
+import Icon, { Lead, plain, Tile } from "../../components/Icon.jsx";
 import { T, lang, noEmoji } from "../../lib/i18n.js";
 import { call } from "../../lib/service.js";
 import { supabase } from "../../lib/supabase.js";
@@ -29,7 +29,7 @@ export default function Lattice({ section, start }) {
   const sec = SECTIONS.some((s) => s[0] === section) ? section : "groups";
   return (
     <div className="page latp">
-      <h1 className="ptitle"><Icon n="puzzle" size={26} /> {T("Lattice")}</h1>
+      <h1 className="ptitle"><Tile n="puzzle" size={22} /> {T("Lattice")}</h1>
       <p className="sub">{T("Your market research workspace · preview: descriptive readings, not forecasts or advice")}</p>
       <div className="chips" role="tablist" aria-label={T("Lattice section")}>
         {SECTIONS.map(([k, icon, name, help]) => (

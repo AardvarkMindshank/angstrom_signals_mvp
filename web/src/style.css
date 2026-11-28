@@ -1009,3 +1009,39 @@ a.btnlink:hover { background: var(--ang-hover); }
 /* iPhones zoom the page in when a text box under 16 px is tapped, and it stays zoomed (the sign-in page looked too
    big and cut off): on touch screens every box uses 16 px. */
 @media (pointer: coarse) { input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea { font-size: 16px !important; } }
+
+/* 🎨 Icon colours by meaning (components/Icon.jsx TONE): one colour per meaning, a little lighter at night. */
+:root { --t-gold: #c69420; --t-teal: #0f93a8; --t-green: #0f8a5f; --t-red: #d0384a; --t-orange: #dd6b20; --t-blue: #2f6fd0; --t-purple: #7c4ddb; --t-slate: #5b6b82;
+  --strip: #3f6fae; --strip-hover: #355f97; --strip-del: #c8414e; --strip-del-hover: #b23441; }
+.night { --t-gold: #e3b341; --t-teal: #35c3d6; --t-green: #3ccf8e; --t-red: #f26b7a; --t-orange: #f59a4a; --t-blue: #78a6ff; --t-purple: #ad8cff; --t-slate: #9aa9bf;
+  --strip: #4f82c4; --strip-hover: #5b8ed0; --strip-del: #d4505c; --strip-del-hover: #de5f6b; }
+[data-tone=gold] { --tc: var(--t-gold); } [data-tone=teal] { --tc: var(--t-teal); } [data-tone=green] { --tc: var(--t-green); }
+[data-tone=red] { --tc: var(--t-red); } [data-tone=orange] { --tc: var(--t-orange); } [data-tone=blue] { --tc: var(--t-blue); }
+[data-tone=purple] { --tc: var(--t-purple); } [data-tone=slate] { --tc: var(--t-slate); }
+.ic[data-tone] { color: var(--tc); }
+/* tool buttons stay grey; a tab, chip or menu entry shows its colour only when it is the selected one */
+button .ic[data-tone], .ghost.icon .ic[data-tone], header.top .right .ic[data-tone] { color: inherit; }
+button.on .ic[data-tone], button[aria-selected=true] .ic[data-tone], button[aria-checked=true] .ic[data-tone], button[aria-pressed=true] .ic[data-tone] { color: var(--tc); }
+.itile { display: inline-grid; place-items: center; flex: none; border-radius: 28%; background: color-mix(in srgb, var(--tc) 14%, transparent); vertical-align: middle; }
+.night .itile { background: color-mix(in srgb, var(--tc) 18%, transparent); }
+.itile .ic { color: var(--tc); }
+.ptitle { display: flex; align-items: center; gap: 12px; }
+.ptitle .itile { margin-right: 2px; }
+.snav a .itile { width: 30px !important; height: 30px !important; }
+.snav a .itile .ic, .snav a.on .itile .ic { color: var(--tc); width: 17px; height: 17px; }
+.helph { display: flex; align-items: center; gap: 12px; }
+
+/* the bottom tab bar: grey, the current page in its own colour */
+.pages a .ic[data-tone] { color: inherit; }
+.pages a.on .ic[data-tone] { color: var(--tc); }
+@media (max-width: 1023px) { .pages a.on { box-shadow: inset 0 2px 0 var(--pc, var(--gold)); } .pages a.on svg { color: var(--pc, var(--gold)); } }
+
+/* the Prism and funnel button strip: flat blue, white icons, Play and Pause filled, a matching red delete */
+.classic .lat.prism .ctl button, .classic .lat.fun .stage .ctl button { background: var(--strip); color: #fff; border: 1px solid var(--strip); border-radius: 10px; box-shadow: none; }
+.classic .lat.prism .ctl button:hover, .classic .lat.fun .stage .ctl button:hover { background: var(--strip-hover); border-color: var(--strip-hover); color: #fff; }
+.classic .lat.prism .ctl button.on, .classic .lat.prism .ctl button.hist.on { background: var(--strip-hover); box-shadow: inset 0 0 0 2px rgba(255,255,255,.55); color: #fff; }
+.classic .lat.prism .ctl button.del, .classic .lat.fun .stage .ctl button.del { background: var(--strip-del); border-color: var(--strip-del); color: #fff; }
+.classic .lat.prism .ctl button.del:hover, .classic .lat.prism .ctl button.del.arm, .classic .lat.fun .stage .ctl button.del:hover { background: var(--strip-del-hover); border-color: var(--strip-del-hover); color: #fff; }
+.classic .lat.prism .ctl button .ic, .classic .lat.fun .stage .ctl button .ic { color: #fff; }
+.gsteps li a { display: inline-flex; align-items: center; gap: 8px; }
+.gsteps li.done .itile { opacity: .55; }

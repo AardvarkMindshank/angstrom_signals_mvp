@@ -5,7 +5,7 @@ import { SUPABASE_URL, CLASSIC } from "../../lib/supabase.js";
 import { saveSettings } from "../../lib/account.js";
 import { usd, signed, weekday } from "../../lib/format.js";
 import { assetHref, Logo } from "../../components/Search.jsx";
-import Icon, { Arrow, Emo, Glyphs, Lead, plain } from "../../components/Icon.jsx";
+import Icon, { Arrow, Emo, Glyphs, Lead, plain, Tile } from "../../components/Icon.jsx";
 import GettingStarted from "../../components/GettingStarted.jsx";
 
 // 📸 Quick Snapshot: where a member starts the day. The daily video and the two spoken briefings, the Tides card, what
@@ -42,7 +42,7 @@ export default function Snapshot({ account }) {
 
   return (
     <div className="page qsnap">
-      <h1 className="ptitle">{T("Quick Snapshot")}</h1>
+      <h1 className="ptitle"><Tile n="camera" size={22} /> {T("Quick Snapshot")}</h1>
       <GettingStarted account={account} />
       <div className="snaptop">
         <Video account={account} />

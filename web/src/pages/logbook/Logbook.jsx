@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import Icon from "../../components/Icon.jsx";
+import Icon, { Tile } from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
 import { supabase } from "../../lib/supabase.js";
 import { dayMonthYear } from "../../lib/format.js";
@@ -33,7 +33,7 @@ export default function Logbook({ account }) {
   return (
     <div className="page">
       <div className="bar">
-        <h1 className="ptitle" style={{ marginRight: "auto" }}><Icon n="notebook" size={26} /> {T("Logbook")}</h1>
+        <h1 className="ptitle" style={{ marginRight: "auto" }}><Tile n="notebook" size={22} /> {T("Logbook")}</h1>
         <div className="daybar">
           <button type="button" className="ghost icon" disabled={day <= oldest} onClick={() => setDay(shift(day, -1))} aria-label={T("The day before")} title={T("The day before")}><Icon n="chevron-left" /></button>
           <button type="button" className={"ghost" + (isToday ? " on" : "")} onClick={() => setDay(today())}>{T("Today")}</button>

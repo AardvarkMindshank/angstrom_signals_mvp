@@ -3,7 +3,7 @@ import { T } from "../lib/i18n.js";
 import { supabase } from "../lib/supabase.js";
 import { saveSettings } from "../lib/account.js";
 import { watchlists } from "../lib/assets.js";
-import Icon from "./Icon.jsx";
+import Icon, { Tile } from "./Icon.jsx";
 
 // 🚀 Getting started: five first steps on Quick Snapshot for new members (the classic app's checklist, onboarding.py,
 // with the same saved progress: settings.onboarding). Two tick themselves (3 or more watchlist assets, a saved Prism
@@ -60,7 +60,7 @@ export default function GettingStarted({ account }) {
               title={r.auto ? T("This ticks itself.") : r.done ? T("Mark as not done") : T("Mark as done")}>
               <Icon n={r.done ? "circle-check" : "circle"} size={20} />
             </button>
-            <a href={r.href} title={r.hint}><Icon n={r.icon} size={15} /> {r.title}</a>
+            <a href={r.href} title={r.hint}><Tile n={r.icon} size={15} /> {r.title}</a>
           </li>
         ))}
       </ol>

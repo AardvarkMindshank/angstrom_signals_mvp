@@ -6,7 +6,7 @@ import * as api from "./lib/api.js";
 import SignIn from "./pages/SignIn.jsx";
 import Search from "./components/Search.jsx";
 import SidePanel from "./components/SidePanel.jsx";
-import Icon from "./components/Icon.jsx";
+import Icon, { TONE } from "./components/Icon.jsx";
 import Snapshot from "./pages/snapshot/Snapshot.jsx";
 import Nda, { Signed } from "./components/Nda.jsx";
 import { call } from "./lib/service.js";
@@ -107,7 +107,7 @@ export default function App() {
         </a>
         <Search />
         <nav className="pages" aria-label={T("Pages")}>
-          {PAGES.map(([k, label, icon]) => <a key={k} href={`#${k}`} className={page === k ? "on" : ""} aria-current={page === k ? "page" : undefined}><Icon n={icon} size={20} /><span>{label()}</span></a>)}
+          {PAGES.map(([k, label, icon]) => <a key={k} href={`#${k}`} className={page === k ? "on" : ""} aria-current={page === k ? "page" : undefined} style={{ "--pc": `var(--t-${TONE[icon] || "gold"})` }}><Icon n={icon} size={20} /><span>{label()}</span></a>)}
         </nav>
         <div className="right">
           <SidePanel onScreen={page === "asset" ? `The person is looking at the asset page for ${route[1]} (${route[2] || "chart"} tab).` : page === "search" ? `The person searched for “${route[1]}”.` : `The person is on the ${page} page.`} />

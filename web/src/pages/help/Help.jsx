@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { T, lang, noEmoji } from "../../lib/i18n.js";
-import Icon from "../../components/Icon.jsx";
+import Icon, { Tile } from "../../components/Icon.jsx";
 import Markdown from "../../components/Markdown.jsx";
 import { showAgain } from "../../components/GettingStarted.jsx";
 
@@ -26,12 +26,12 @@ export default function Help({ topic, account }) {
         <h1>{T("Help and guides")}</h1>
         {all.map((x) => (
           <a key={x.key} href={`#help/${x.key}`} className={on === x.key ? "on" : ""} aria-current={on === x.key ? "page" : undefined}>
-            <Icon n={x.icon} /> {noEmoji(x.title)}
+            <Tile n={x.icon} size={17} /> {noEmoji(x.title)}
           </a>
         ))}
       </nav>
       <div className="sbody">
-        <h2 className="helph"><Icon n={cur.icon} /> {noEmoji(cur.title)}</h2>
+        <h2 className="helph"><Tile n={cur.icon} size={18} /> {noEmoji(cur.title)}</h2>
         {on === "videos" ? <Videos series={d.videos} play={setVideo} />
           : cur.blocks.map((b, i) => <Markdown key={i} text={b} />)}
         {on === "start" && (

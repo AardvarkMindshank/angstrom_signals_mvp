@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import Icon, { Glyphs, Lead, plain } from "../../components/Icon.jsx";
+import Icon, { Glyphs, Lead, plain, Tile } from "../../components/Icon.jsx";
 import { T, lang } from "../../lib/i18n.js";
 import { call } from "../../lib/service.js";
 import { saveSettings, saveWatchlist, preferences } from "../../lib/account.js";
@@ -92,7 +92,7 @@ export default function Signals({ market: wanted, account }) {
   return (
     <div className="page sigs">
       <div className="bar">
-        <h1 className="ptitle"><Icon n={crypto ? "bitcoin" : "trending-up"} size={26} /> {crypto ? T("Crypto Signals") : T("Equity Signals")}</h1>
+        <h1 className="ptitle"><Tile n={crypto ? "bitcoin" : "trending-up"} size={22} /> {crypto ? T("Crypto Signals") : T("Equity Signals")}</h1>
         <div className="right">
           {trades.crypto && trades.equity && (
             <div className="seg" role="tablist" aria-label={T("Market")}>
