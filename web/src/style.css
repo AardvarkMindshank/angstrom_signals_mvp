@@ -400,8 +400,11 @@ table.t td { border-top-color: var(--ang-border); }
 body.docked .shell { padding-right: var(--panel-w, 420px); transition: padding-right .22s ease; }
 /* ↔ the panel's resize edge (wide screens): a thin grab line that shows on hover or while dragging */
 .spgrip { position: absolute; left: -4px; top: 0; bottom: 0; width: 9px; cursor: col-resize; z-index: 2; touch-action: none; }
-.spgrip::after { content: ""; position: absolute; left: 3px; top: 0; bottom: 0; width: 3px; border-radius: 3px; background: transparent; transition: background .15s; }
-.spgrip:hover::after, .spgrip:focus-visible::after, body.resizing .spgrip::after { background: var(--gold); }
+/* the same grip as Lattice's list divider (.lat .split): a 4 x 48 px pill, grey, darker on hover or while dragging */
+.spgrip::after { content: ""; position: absolute; left: 2px; top: 50%; width: 4px; height: 48px; margin-top: -24px; border-radius: 999px; background: #9ca3af; }
+.spgrip:hover::after, .spgrip:focus-visible::after, body.resizing .spgrip::after { background: #111827; }
+html.night .spgrip::after { background: #6b7280; }
+html.night .spgrip:hover::after, html.night .spgrip:focus-visible::after, html.night body.resizing .spgrip::after { background: #e5e7eb; }
 .spgrip:focus-visible { outline: none; }
 body.resizing, body.resizing * { cursor: col-resize !important; user-select: none !important; }
 body.resizing .shell, body.resizing .sidepanel { transition: none !important; }
@@ -1170,7 +1173,3 @@ button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent)
 .navtable table { border-collapse: collapse; font-size: 13px; min-width: 60%; }
 .navtable th, .navtable td { border-bottom: 1px solid var(--ang-border); padding: 5px 10px 5px 0; text-align: left; vertical-align: top; }
 .navtable th { font-weight: 600; color: var(--ang-soft); }
-/* ↔ a small grip, always visible, halfway down the panel's resize edge, so the handle is easy to find */
-.spgrip::before { content: ""; position: absolute; left: 1px; top: 50%; width: 7px; height: 44px; margin-top: -22px; border-radius: 4px;
-  background: var(--ang-border); box-shadow: inset 2px 0 0 var(--ang-page), inset -2px 0 0 var(--ang-page); }
-.spgrip:hover::before, body.resizing .spgrip::before { background: var(--gold); }
