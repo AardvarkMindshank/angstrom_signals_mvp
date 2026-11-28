@@ -104,6 +104,19 @@ EXTRA_SYMBOLS = ("BTC-USD", "XLY", "XLP", "IWM", "^TYX", "HG=F")
 
 # ------------------------------------------------------------------------------------------------ data
 
+
+def mid(name: str) -> str:
+    """A current's name inside a sentence: "Credit" → "credit", but "US dollar" and "VIX" keep their capitals (28 Nov
+    2026: the snapshot card said "us dollar"). Languages that capitalise nouns (German) keep the name as written."""
+    s = str(name or "")
+    try:
+        import i18n
+        if str(i18n.current() or "").startswith("de"):
+            return s
+    except Exception:
+        pass
+    return s[:1].lower() + s[1:] if len(s) > 1 and s[1:2].islower() else s
+
 def symbols_needed() -> tuple[set[str], set[str]]:
     yahoo, fred = set(EXTRA_SYMBOLS), set()
     for c in CURRENTS:
@@ -418,12 +431,12 @@ def summary(snap: dict, upcoming: list[dict] | None = None, now: datetime | None
         lines.append(tr("Strongest currents.") + " " + ". ".join(bits) + ".")
     for w in (snap.get("winds") or {}).values():
         if w["wind"] != "neither":
-            led = tr(" and ").join(tr(SPEC[k]["name"]).lower() for k in w["drivers"])
+            led = tr(" and ").join(mid(tr(SPEC[k]["name"])) for k in w["drivers"])
             line = (tr("A headwind for {who}, led by {led}", who=tr(w["name"]).lower(), led=led) if w["wind"] == "headwind"
                     else tr("A tailwind for {who}, led by {led}", who=tr(w["name"]).lower(), led=led))
             if w.get("against"):
                 line += tr("; pushing the other way: {what}",
-                           what=", ".join(tr(SPEC[k]["name"]).lower() for k in w["against"]))
+                           what=", ".join(mid(tr(SPEC[k]["name"])) for k in w["against"]))
             lines.append(line + ".")
     if upcoming:
         import macro_calendar as mc

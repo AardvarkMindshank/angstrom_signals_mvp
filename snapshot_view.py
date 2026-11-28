@@ -79,7 +79,7 @@ def tides_card(snap: dict | None, now: datetime | None = None, min_height: int =
             continue
         word = str(w.get("wind") or "")
         wc = {"tailwind": "#22c55e", "headwind": "#ef4444"}.get(word, GREY)
-        drivers = ", ".join(t(td.SPEC[k]["name"]).lower() for k in w.get("drivers") or [] if k in td.SPEC)
+        drivers = ", ".join(td.mid(t(td.SPEC[k]["name"])) for k in w.get("drivers") or [] if k in td.SPEC)
         winds.append(f"<div style='font-size:.9rem;'>{icon} {_e(t(w.get('name') or key))}: "
                      f"<b style='color:{wc};'>{_e(t(word))}</b>"
                      + (f"<span class='ang-kicker' style='margin:0;'> · {_e(drivers)}</span>" if drivers else "")

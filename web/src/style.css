@@ -569,7 +569,9 @@ body.docked .top { gap: 12px; }
 .ttiles .m { font-size: 12px; }
 .twind { font-size: 14px; }
 .tevent { display: flex; gap: 8px; align-items: center; border-radius: 10px; padding: 8px 10px; background: rgba(245,165,36,.14); font-size: 14px; }
-.topen { margin-top: auto; text-align: right; font-weight: 600; font-size: 13.5px; color: var(--ang-soft); }
+.topen { font-weight: 600; font-size: 13.5px; color: var(--ang-soft); white-space: nowrap; }
+.tidecard .kick { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.tidecard .kick > span:first-child { display: inline-flex; align-items: center; gap: 6px; }
 .changes { display: flex; flex-direction: column; }
 .change { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 18px; padding: 12px 0; border-top: 1px solid var(--ang-border); text-decoration: none; }
 .change:first-child { border-top: 0; }

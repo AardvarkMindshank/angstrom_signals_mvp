@@ -200,12 +200,11 @@ function Tides({ card }) {
   const tip = T("🌊 Tides: the macro picture (money and rates, safe havens, growth and credit, rotation), what it means for crypto and equity longs, and the next scheduled event. Click to open the Tides panel. A description, not a forecast.");
   return (
     <a className={"tidecard " + card.label} href="#tides" title={tip}>
-      <div className="kick"><Icon n="waves-horizontal" size={16} /> {T("Tides")}</div>
+      <div className="kick"><span><Icon n="waves-horizontal" size={16} /> {T("Tides")}</span><span className="topen">{T("Open Tides ›")}</span></div>
       <div className="tidehead"><span className="tarrow"><Arrow a={arrow} size={26} /></span><div><div className="tname">{plain(card.name)}</div><div className="m">{card.plain}{card.held ? ` · ${card.held}` : ""}</div></div></div>
       {card.tiles.length > 0 && <div className="ttiles">{card.tiles.map((x) => <div key={x.k}><div className="m"><Lead text={x.k} size={14} /></div><b>{x.v}</b><div className="m">{x.sub}</div></div>)}</div>}
       {card.winds.map((w) => <div key={w.name} className="twind"><Emo e={w.icon} /> {plain(w.name)}: <b className={w.wind === "tailwind" ? "good" : w.wind === "headwind" ? "bad" : ""}>{w.word}</b>{w.drivers && <span className="m"> · {w.drivers}</span>}</div>)}
       {card.event && <div className="tevent"><span><Emo e={card.event.icon} /></span><span><b>{plain(card.event.name)}</b><span className="m"> · {card.event.when}</span></span></div>}
-      <div className="topen">{T("Open Tides ›")}</div>
     </a>
   );
 }

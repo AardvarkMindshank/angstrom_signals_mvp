@@ -196,7 +196,7 @@ def tides_card(db) -> dict | None:
         if w:
             card["winds"].append({"icon": icon, "name": i18n.t(w.get("name") or key), "wind": str(w.get("wind") or ""),
                                   "word": i18n.t(str(w.get("wind") or "")),
-                                  "drivers": ", ".join(i18n.t(td.SPEC[k]["name"]).lower() for k in w.get("drivers") or [] if k in td.SPEC)})
+                                  "drivers": ", ".join(td.mid(i18n.t(td.SPEC[k]["name"])) for k in w.get("drivers") or [] if k in td.SPEC)})
     e = sv.next_event()
     if e:
         card["event"] = {"icon": mc.pennants(e["tier"]) or "📅", "name": e.get("short") or e["name"],
