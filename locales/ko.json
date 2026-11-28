@@ -3259,5 +3259,7 @@
   "Use the flag beside a comment that breaks these rules. Only the MarketNavi team sees reports. A comment that breaks the rules can be removed and its writer warned, and an account that keeps breaking them can be closed.": "규칙을 어긴 댓글은 옆의 깃발 아이콘으로 신고하세요. 신고는 MarketNavi 팀만 봅니다. 규칙을 어긴 댓글은 삭제되고 작성자에게 경고가 갈 수 있으며, 계속 어기는 계정은 폐쇄될 수 있습니다.",
   "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "MarketNavi를 사용하면 이용약관과 위의 소셜 정책에 동의하는 것입니다. 전체 내용은 웹사이트에 영어로 있습니다.",
   "Beta": "베타",
-  "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi는 경험 많은 트레이더들과 함께 개발하는 동안 비공개 베타로 운영됩니다."
+  "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi는 경험 많은 트레이더들과 함께 개발하는 동안 비공개 베타로 운영됩니다.",
+  "Resize the panel": "패널 너비 조절",
+  "Drag to resize · double-click to reset": "드래그하여 크기 조절 · 더블클릭으로 초기화"
 }

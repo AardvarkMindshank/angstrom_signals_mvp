@@ -32,6 +32,35 @@ export default function SidePanel({ onScreen }) {
   }, [pinned]);
   useEffect(() => { document.body.classList.toggle("docked", open && pinned && wide); }, [open, pinned, wide]);
 
+  // ↔ Width, on a wide screen only: drag the left edge (or arrow keys on it), double-click to reset. Kept per device.
+  // Between 320px (chat stays readable) and half the screen (the page never gets squeezed out); pinned, the page
+  // follows as you drag. Phones and tablets keep the panel full width.
+  const DEFAULT_W = 420;
+  const clampW = (w) => Math.round(Math.max(320, Math.min(w, Math.max(320, window.innerWidth * 0.5))));
+  const [width, setWidth] = useState(() => read("mn_panel_w", DEFAULT_W));
+  useEffect(() => {
+    const root = document.documentElement;
+    if (wide) root.style.setProperty("--panel-w", clampW(width) + "px"); else root.style.removeProperty("--panel-w");
+  }, [width, wide]);
+  useEffect(() => { const f = () => setWidth((w) => clampW(w)); window.addEventListener("resize", f); return () => window.removeEventListener("resize", f); }, []);
+  const setW = (w) => { const v = clampW(w); setWidth(v); write("mn_panel_w", v); };
+  const drag = (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    document.body.classList.add("resizing");
+    const move = (m) => setWidth(clampW(window.innerWidth - m.clientX));
+    const up = (u) => {
+      document.body.classList.remove("resizing");
+      window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up);
+      setW(window.innerWidth - u.clientX);
+    };
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up);
+  };
+  const keys = (e) => {
+    if (e.key === "ArrowLeft") { e.preventDefault(); setW(width + 20); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); setW(width - 20); }
+  };
+
   const btn = (t, icon, label, tip) => (
     <button type="button" className={"panelbtn" + (open && tab === t ? " on" : "")} aria-pressed={open && tab === t} title={tip}
       onClick={() => (open && tab === t ? close() : show(t))}>{icon}<span>{label}</span></button>
@@ -42,6 +71,9 @@ export default function SidePanel({ onScreen }) {
       {btn("navigator", <Sparkle />, T("Navigator"), T("Ask the AI Navigator about the app, a reading, an asset or an idea."))}
       {createPortal(
         <aside className={"sidepanel" + (open ? " open" : "") + (pinned && wide ? " pinned" : "")} aria-label={tab === "social" ? T("Social") : T("AI Navigator")} aria-hidden={!open}>
+          {wide && <div className="spgrip" role="separator" aria-orientation="vertical" tabIndex={0} aria-label={T("Resize the panel")}
+            aria-valuenow={clampW(width)} title={T("Drag to resize · double-click to reset")} onPointerDown={drag} onKeyDown={keys}
+            onDoubleClick={() => setW(DEFAULT_W)} />}
           <div className="sphead">
             <div className="sptabs" role="tablist">
               <button type="button" role="tab" aria-selected={tab === "social"} className={tab === "social" ? "on" : ""} onClick={() => show("social")}>{T("Social")}</button>

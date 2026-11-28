@@ -3259,5 +3259,7 @@
   "Use the flag beside a comment that breaks these rules. Only the MarketNavi team sees reports. A comment that breaks the rules can be removed and its writer warned, and an account that keeps breaking them can be closed.": "ルールに反するコメントは横の旗アイコンで報告してください。報告はMarketNaviチームだけが確認します。違反したコメントは削除され投稿者に警告が出ることがあり、違反を繰り返すアカウントは閉鎖されることがあります。",
   "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "MarketNaviを利用すると、利用規約と上記のソーシャルポリシーに同意したことになります。全文は当社ウェブサイトに英語で掲載しています。",
   "Beta": "ベータ",
-  "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNaviは経験豊富なトレーダーと共に開発中のため、クローズドベータです。"
+  "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNaviは経験豊富なトレーダーと共に開発中のため、クローズドベータです。",
+  "Resize the panel": "パネルの幅を変更",
+  "Drag to resize · double-click to reset": "ドラッグで幅を変更 · ダブルクリックで元に戻す"
 }

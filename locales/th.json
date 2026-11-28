@@ -3259,5 +3259,7 @@
   "Use the flag beside a comment that breaks these rules. Only the MarketNavi team sees reports. A comment that breaks the rules can be removed and its writer warned, and an account that keeps breaking them can be closed.": "ใช้ธงข้างความคิดเห็นที่ผิดกฎเหล่านี้ เฉพาะทีม MarketNavi เท่านั้นที่เห็นรายงาน ความคิดเห็นที่ผิดกฎอาจถูกลบและผู้เขียนได้รับคำเตือน และบัญชีที่ทำผิดซ้ำอาจถูกปิด",
   "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "การใช้ MarketNavi หมายถึงคุณยอมรับข้อกำหนดการใช้งานและนโยบายโซเชียลข้างต้น ฉบับเต็มอยู่บนเว็บไซต์ของเราเป็นภาษาอังกฤษ",
   "Beta": "เบต้า",
-  "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi อยู่ในช่วงเบต้าแบบปิด ขณะที่เราพัฒนาร่วมกับเทรดเดอร์ที่มีประสบการณ์"
+  "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi อยู่ในช่วงเบต้าแบบปิด ขณะที่เราพัฒนาร่วมกับเทรดเดอร์ที่มีประสบการณ์",
+  "Resize the panel": "ปรับความกว้างแผง",
+  "Drag to resize · double-click to reset": "ลากเพื่อปรับขนาด · ดับเบิลคลิกเพื่อรีเซ็ต"
 }

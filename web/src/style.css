@@ -392,12 +392,19 @@ table.t td { border-top-color: var(--ang-border); }
 .panelbtn:hover { background: var(--ang-field); color: var(--ang-text); }
 .panelbtn.on { background: var(--ang-field); color: var(--ang-text); }
 .panelbtn:nth-of-type(2), .panelbtn:nth-of-type(2).on { color: var(--gold); }
-.sidepanel { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100vw); z-index: 40; background: var(--ang-raised);
+.sidepanel { position: fixed; top: 0; right: 0; bottom: 0; width: min(var(--panel-w, 420px), 100vw); z-index: 40; background: var(--ang-raised);
   box-shadow: -18px 0 50px rgba(11,18,32,.16), -1px 0 0 var(--ang-border); display: flex; flex-direction: column;
   transform: translateX(105%); visibility: hidden; transition: transform .22s ease, visibility 0s linear .22s; }
 .sidepanel.open { transform: none; visibility: visible; transition: transform .22s ease; }
 .sidepanel.pinned { box-shadow: -1px 0 0 var(--ang-border); background: var(--ang-page); }
-body.docked .shell { padding-right: 420px; transition: padding-right .22s ease; }
+body.docked .shell { padding-right: var(--panel-w, 420px); transition: padding-right .22s ease; }
+/* ↔ the panel's resize edge (wide screens): a thin grab line that shows on hover or while dragging */
+.spgrip { position: absolute; left: -4px; top: 0; bottom: 0; width: 9px; cursor: col-resize; z-index: 2; touch-action: none; }
+.spgrip::after { content: ""; position: absolute; left: 3px; top: 0; bottom: 0; width: 3px; border-radius: 3px; background: transparent; transition: background .15s; }
+.spgrip:hover::after, .spgrip:focus-visible::after, body.resizing .spgrip::after { background: var(--gold); }
+.spgrip:focus-visible { outline: none; }
+body.resizing, body.resizing * { cursor: col-resize !important; user-select: none !important; }
+body.resizing .shell, body.resizing .sidepanel { transition: none !important; }
 body.docked .top { padding-right: 24px; }
 .sphead { display: flex; align-items: center; gap: 4px; padding: 10px 12px 10px 16px; border-bottom: 1px solid var(--ang-border); }
 .sptabs { display: flex; gap: 2px; margin-right: auto; }
