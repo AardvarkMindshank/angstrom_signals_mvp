@@ -105,7 +105,7 @@ export default function App() {
   if (!session) return <SignIn />;
   if (needPassword) return <SetPassword type={arrival.type} email={session.user.email || ""} onDone={() => setNeedPassword(false)} />;
   if (account && account.nda && account.nda.needed && !signed) {
-    return <div className="shell"><header className="top"><a className="brand" href="#snapshot" aria-label="MarketNavi"><img src="/logo.png" alt="" width="28" height="28" /><span>MarketNavi</span></a></header>
+    return <div className="shell"><header className="top"><a className="brand" href="#snapshot" aria-label="MarketNavi"><img src={`${import.meta.env.BASE_URL}logo.png`} alt="" width="28" height="28" /><span>MarketNavi</span></a></header>
       <main className="main"><Nda info={account.nda} onDone={(copy) => { setSigned(copy); setAccount({ ...account, nda: { ...account.nda, needed: false } }); }} /></main></div>;
   }
   if (page === "ndapreview" && account && account.admin && account.nda && account.nda.title) {
@@ -116,7 +116,7 @@ export default function App() {
     <div className="shell">
       <header className="top">
         <a className="brand" href="#snapshot" aria-label="MarketNavi">
-          <img src="/logo.png" alt="" width="28" height="28" />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" width="28" height="28" />
           <span>MarketNavi</span>
           <span className="beta" title={T("MarketNavi is in closed beta while we build it with experienced traders.")}>{T("Beta")}</span>
         </a>

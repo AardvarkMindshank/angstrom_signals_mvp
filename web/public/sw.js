@@ -1,11 +1,11 @@
 // MarketNavi (new app) service worker: phone and desktop notifications only. It caches nothing and never answers
-// page requests, so the home-screen app always shows the live site. Scope /new/. The worker's pushes carry the
+// page requests, so the home-screen app always shows the live site. Scope: the folder it is served from (/ on app.marketnavi.ai). The worker's pushes carry the
 // classic app's link (/?note=…); here a tap opens the new app's Alerts page instead.
 
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
 
-const HOME = new URL("./", self.registration.scope).href;          // https://marketnavi.ai/new/
+const HOME = new URL("./", self.registration.scope).href;          // https://app.marketnavi.ai/
 
 self.addEventListener("push", (event) => {
   let note = {};

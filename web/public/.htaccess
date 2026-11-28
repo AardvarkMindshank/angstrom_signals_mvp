@@ -1,4 +1,10 @@
 # The page itself is always fetched fresh, so a new build shows at once; the built files have hashed names and keep.
+# Always HTTPS (app.marketnavi.ai is its own HostGator subdomain).
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
 <IfModule mod_headers.c>
   <FilesMatch "\.(html)$">
     Header set Cache-Control "no-cache"
@@ -8,6 +14,9 @@
   </FilesMatch>
   <FilesMatch "\.(js|css)$">
     Header set Cache-Control "max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "^(sw\.js|manifest\.webmanifest)$">
+    Header set Cache-Control "no-cache"
   </FilesMatch>
   Header set X-Robots-Tag "noindex"
 </IfModule>

@@ -1,5 +1,6 @@
 name: Deploy the new app (beta)
-# Builds web/ (the new React app) and copies it to marketnavi.ai/new/ on HostGator by FTP. The website deploy
+# Builds web/ (the React app) and copies it to HostGator by FTP: marketnavi.ai/new/ and the app/ folder behind
+# app.marketnavi.ai. The website deploy
 # (deploy-marketnavi.yml) keeps its own list of the files it uploaded and never touches /new/.
 # Secrets: SUPABASE_URL, SUPABASE_ANON_KEY (the public anon key; row rules guard the data), FTP_SERVER,
 # MARKETNAVI_FTP_USERNAME, MARKETNAVI_FTP_PASSWORD, VAPID_PUBLIC_KEY (push notifications).
@@ -46,6 +47,7 @@ jobs:
           if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then echo "::error::Add the SUPABASE_ANON_KEY secret first."; exit 1; fi
           npm ci
           npm run build
+          VITE_BASE=/ npx vite build --outDir dist-app      # the same app for app.marketnavi.ai (served from /)
       - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -54,5 +56,17 @@ jobs:
           protocol: ftps
           local-dir: ./web/dist/
           server-dir: ./new/
+          dry-run: ${{ github.event.inputs.dry_run == 'true' }}
+          log-level: standard
+      # app.marketnavi.ai: a HostGator subdomain whose folder is "app" beside "new" (made in cPanel at the switch-over).
+      # Until the address points at HostGator, this copy sits unused.
+      - uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.MARKETNAVI_FTP_USERNAME }}
+          password: ${{ secrets.MARKETNAVI_FTP_PASSWORD }}
+          protocol: ftps
+          local-dir: ./web/dist-app/
+          server-dir: ./app/
           dry-run: ${{ github.event.inputs.dry_run == 'true' }}
           log-level: standard
