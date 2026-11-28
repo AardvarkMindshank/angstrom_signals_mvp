@@ -294,6 +294,8 @@ def _notice_rows(supabase, table: str, columns: str) -> list[dict]:
     try:
         return supabase.table(table).select(columns).is_("emailed_at", "null").limit(25).execute().data or []
     except Exception as exc:
+        if "images" in str(exc) and ", images" in columns:     # screenshots column not added yet: notes without them
+            return _notice_rows(supabase, table, columns.replace(", images", ""))
         if "emailed_at" not in str(exc):
             print(f"Admin notices skipped ({table}): {str(exc)[:120]}")
         return []

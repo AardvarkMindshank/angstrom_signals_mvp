@@ -1133,3 +1133,9 @@ button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent)
 .pushbox p { margin: 0; }
 .pushbox .row { display: flex; gap: 8px; flex-wrap: wrap; }
 .pushon { display: flex; align-items: center; gap: 8px; }
+/* ✦ Social score pill beside a name */
+.sscore { display: inline-flex; align-items: center; gap: 3px; flex: none; font-size: 11px; font-weight: 600; line-height: 1.5; color: var(--ang-muted); background: var(--ang-field); border-radius: 999px; padding: 0 7px; vertical-align: middle; white-space: nowrap; font-variant-numeric: tabular-nums; max-width: 7ch; overflow: hidden; cursor: default; }
+.sscore .ic { flex: none; }
+.chead .sscore { align-self: center; }
+.profscore { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.profscore .sscore { font-size: 12.5px; padding: 1px 9px; max-width: none; }

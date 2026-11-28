@@ -3,6 +3,7 @@ import Icon from "./Icon.jsx";
 import { ConfirmButton } from "./Confirm.jsx";
 import { ReportButton, ReportBox } from "./Report.jsx";
 import { InviteBox } from "./Communities.jsx";
+import Score from "./Score.jsx";
 import { T } from "../lib/i18n.js";
 import * as social from "../lib/social.js";
 import { watchlists, keyFor, universe } from "../lib/assets.js";
@@ -143,7 +144,7 @@ function Note({ n, kind, act, head, person, reply }) {
     <div className="cnote">
       <span className="cav" aria-hidden="true">{n.avatar_url ? <img src={n.avatar_url} alt="" /> : String(n.author_name || "M").slice(0, 1)}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="chead"><b>{n.author_name || T("Member")}</b>{head}<span className="m">{ago(n.created_at)}</span></div>
+        <div className="chead"><b>{n.author_name || T("Member")}</b>{n.social_score != null && <Score n={n.social_score} />}{head}<span className="m">{ago(n.created_at)}</span></div>
         <div className="cbody">{n.body}</div>
         <div className="cacts">
           <button type="button" className={"linkish" + (v === 1 ? " on" : "")} onClick={() => act(() => thumb(v === 1 ? 0 : 1))} aria-label={T("Thumbs up")}><Icon n="thumbs-up" size={15} /> {+n.thumbs_up || 0}</button>

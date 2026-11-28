@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ConfirmButton } from "../../components/Confirm.jsx";
+import Score from "../../components/Score.jsx";
 import { ReportButton, ReportBox } from "../../components/Report.jsx";
 import Icon from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
@@ -82,7 +83,7 @@ function Note({ n, kind, act, asset }) {
     <div className="cnote">
       <span className="cav" aria-hidden="true">{n.avatar_url ? <img src={n.avatar_url} alt="" /> : String(n.author_name || "M").slice(0, 1)}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div><b>{n.author_name || T("Member")}</b> <span className="m">· {ago(n.created_at)}</span>
+        <div><b>{n.author_name || T("Member")}</b>{n.social_score != null && <> <Score n={n.social_score} /></>} <span className="m">· {ago(n.created_at)}</span>
           {n.responded_score != null && kind === "comment" && <span className="m"> · {T("on a mood of {s}", { s: signed(n.responded_score) })}</span>}</div>
         <div>{n.body}</div>
         <div className="cacts">

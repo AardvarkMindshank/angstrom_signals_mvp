@@ -3251,5 +3251,6 @@
   "A test is already on its way.": "测试通知已在发送中。",
   "Test on its way: it arrives within about five minutes.": "测试通知正在发送，约五分钟内送达。",
   "Notifications on this device": "此设备上的通知",
-  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "除铃铛外，提醒也会以手机或电脑通知的形式送达。请在每台使用的设备上开启。"
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "除铃铛外，提醒也会以手机或电脑通知的形式送达。请在每台使用的设备上开启。",
+  "Your social score: 5 points a comment, 1 a reply, and 100 for each friend you invite who joins.": "你的社交积分：每条评论 5 分，每条回复 1 分，每邀请一位好友加入得 100 分。"
 }

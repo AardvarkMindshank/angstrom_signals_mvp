@@ -3251,5 +3251,6 @@
   "A test is already on its way.": "테스트가 이미 전송 중입니다.",
   "Test on its way: it arrives within about five minutes.": "테스트 전송 중: 약 5분 안에 도착합니다.",
   "Notifications on this device": "이 기기의 알림",
-  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "알림을 종 아이콘뿐 아니라 휴대폰이나 컴퓨터 알림으로도 받습니다. 사용하는 기기마다 켜 주세요."
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "알림을 종 아이콘뿐 아니라 휴대폰이나 컴퓨터 알림으로도 받습니다. 사용하는 기기마다 켜 주세요.",
+  "Your social score: 5 points a comment, 1 a reply, and 100 for each friend you invite who joins.": "내 소셜 점수: 댓글 1개에 5점, 답글에 1점, 초대한 친구가 가입하면 100점."
 }

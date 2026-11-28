@@ -10,6 +10,7 @@ import { call } from "../../lib/service.js";
 import { assetHref } from "../../components/Search.jsx";
 import Communities from "../../components/Communities.jsx";
 import Push from "../../components/Push.jsx";
+import Score from "../../components/Score.jsx";
 
 // ⚙️ Settings: one page, sections down the left, each choice saved the moment it changes. Everything is stored
 // where the classic app keeps it, so both apps stay in step.
@@ -123,6 +124,7 @@ function Account({ s, set, account, flash }) {
             </button>
             <input ref={file} type="file" accept="image/png,image/jpeg,image/webp" hidden onChange={(e) => photo(e.target.files[0])} />
             <div className="form" style={{ flex: 1, minWidth: 220 }}>
+              <div className="profscore"><Score n={p.social_score} /><span className="m">{T("Your social score: 5 points a comment, 1 a reply, and 100 for each friend you invite who joins.")}</span></div>
               <label>{T("Display name")}<input type="text" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} /></label>
               <label>{T("Short bio")}<textarea rows={2} maxLength={160} value={bio} onChange={(e) => setBio(e.target.value)} /></label>
               <div><button type="submit" className="primary" disabled={busy}>{T("Save profile")}</button></div>

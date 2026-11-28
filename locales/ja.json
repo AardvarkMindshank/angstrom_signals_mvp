@@ -3251,5 +3251,6 @@
   "A test is already on its way.": "テスト通知はすでに送信中です。",
   "Test on its way: it arrives within about five minutes.": "テストを送信中です。5分ほどで届きます。",
   "Notifications on this device": "このデバイスの通知",
-  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "アラートをベルに加えて、スマホやパソコンの通知でも受け取れます。使うデバイスごとにオンにしてください。"
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "アラートをベルに加えて、スマホやパソコンの通知でも受け取れます。使うデバイスごとにオンにしてください。",
+  "Your social score: 5 points a comment, 1 a reply, and 100 for each friend you invite who joins.": "あなたのソーシャルスコア：コメント1件で5ポイント、返信で1ポイント、招待した友達が参加すると100ポイント。"
 }
