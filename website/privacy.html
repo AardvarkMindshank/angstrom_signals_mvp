@@ -20,44 +20,58 @@
 
 <div class="page-head"><div class="wrap">
   <h1>Privacy</h1>
-  <p>Last updated 17 November 2026</p>
+  <p>Last updated 28 November 2026</p>
 </div></div>
 <div class="prose"><div class="narrow">
   <p>This explains what MarketNavi stores about you and who helps us run it. MarketNavi is a product of Angstrom Signals, operated by Angus Marshall, a sole trader based in Thailand, who is responsible for your data. Contact: <a href="mailto:info@marketnavi.ai">info@marketnavi.ai</a>.</p>
   <h2>What we store</h2>
   <ul class="plain">
     <li>Your email address and, if you sign in with Google, your name and profile picture.</li>
-    <li>What you save in the dashboard: watchlists, factor weights, alert rules, chart choices and settings.</li>
+    <li>Your profile: display name, short bio and picture, and your social score (points for posting and for friends you invite who join).</li>
+    <li>What you save in the app: watchlists, alert choices, settings, chart drawings, and your Lattice Groups, Sets, scans and funnels.</li>
     <li>What you post: community notes, chat messages (public, community and private), thumbs, scores you give, and any communities, favourites and blocks you set up.</li>
-    <li>What you ask the <b class="bt">AI Navigator</b>, and its answers, so you can return to the conversation.</li>
+    <li>Your alerts and notifications, and your Logbook: the daily Passage Plans written for you.</li>
+    <li>If you connect a broker to the <b class="bt">Trade Log</b>: your closed and open trades from it, what MarketNavi read at each entry and exit, your notes and tags, and the weekly reviews written from them. The broker key you paste is a read-only key; it is stored encrypted (Supabase Vault) and only our server can read it back. It cannot place, change or close a trade. Removing the connection deletes its key and its trades.</li>
+    <li>Feedback you send from the app, with any screenshots you attach. Screenshots are kept privately: only you and our administrators can see them.</li>
+    <li>Comments you report, with the reason and any note you add.</li>
+    <li>If you invite a friend, the email address you give. We email them one invitation on your behalf (and again only if you ask, at most once a day), and note whether they join so you get your points. Ask us and we will delete it.</li>
+    <li>If you turn on notifications on a phone or computer, that device's push address and its type (for example "iPhone"). Turning them off removes it.</li>
+    <li>How you use the app: when you last visited, how many visits, roughly how long the app was open, and how many questions you asked the AI. We use this to run your plan's limits and to understand which parts of the app are used. It is not shared or sold.</li>
     <li>If you buy a paid plan, your plan, its status and renewal date. Card and payment details are taken by Paddle and never reach us.</li>
-    <li>Your sign-in session, which your browser keeps so you stay signed in.</li>
+    <li>Your sign-in session, which your browser keeps so you stay signed in. Your browser also remembers a few display choices on that device, such as day or night mode. We do not use advertising or tracking cookies.</li>
     <li>If you use the contact form, the name, email address, phone, country and message you type. They are emailed to us and kept in our inbox.</li>
     <li>If you ask for beta access, what you type in the request form: your name, email address, telephone number, country, the markets you trade, how many years you have traded, how active you are, the tools you use, and your reasons for wanting access. See "Beta access requests" below.</li>
   </ul>
+  <h2>The AI Navigator</h2>
+  <p>What you ask the <b class="bt">AI Navigator</b>, with the readings and app details it needs to answer, is sent to the AI provider you choose in Settings (Claude by Anthropic unless you pick another). The conversation stays in your browser tab and is not stored on our servers; we keep only a count of your questions for your plan's daily limit. Your daily Passage Plan is written by an AI from your watchlist and the day's readings. Trade Log weekly reviews send the AI only numbers and asset names from your trades, never your name, email or keys. We use these providers' business services, which do not use what we send to train their models.</p>
   <h2>Beta access requests</h2>
   <p>MarketNavi is invite-only while we build with experienced traders. We use what you put in the request form only to decide whether to offer you a seat, to contact you about it, and to understand who our beta traders are. The request is emailed to the small team that runs MarketNavi and saved in our database, where only administrators can read it. We do not use your telephone number for marketing, and we do not share your request with anyone outside the services listed below.</p>
   <p>We keep a request while it is being considered and for as long as you hold a seat or an account. You can ask us to see or delete your request at any time by emailing <a href="mailto:info@marketnavi.ai">info@marketnavi.ai</a>. Declining a request does not stop you applying again later.</p>
+  <h2>The beta non-disclosure agreement</h2>
+  <p>Beta traders sign a non-disclosure agreement in the app before they start. Signing records the full name and country you type, your drawn signature, the time, your IP address and browser, and which version of the agreement you signed. A signed copy is emailed to you and to us. We keep this record for as long as the agreement applies, as evidence that it was signed.</p>
   <h2>What other people can see</h2>
-  <p>Your name and picture appear beside community notes and chat messages you post. A public message can be read by every member; a community message by that community's members; a private message by you and the person you sent it to. Your watchlists are private. Other people only see how many accounts watch an asset, not who.</p>
+  <p>Your name, picture and social score appear beside community notes and chat messages you post. A public message can be read by every member; a community message by that community's members; a private message by you and the person you sent it to. Members of a community you belong to can see its member list. Your watchlists, trades and Logbook are private. Other people only see how many accounts watch an asset, not who.</p>
   <h2>Messages and moderation</h2>
   <p>Messages are stored on our database, encrypted in transit and at rest, but not end-to-end encrypted. When a message is reported, administrators can read it, and the conversation around it, to decide whether it breaks the rules. Administrators can also look at messages when the law requires it or to deal with abuse, but we do not read private messages otherwise.</p>
   <h2>Who processes data for us</h2>
   <ul class="plain">
-    <li>Supabase stores accounts and data, including beta requests, and handles sign-in.</li>
-    <li>HostGator hosts this website and sends the emails from its contact and beta request forms.</li>
-    <li>Render hosts the dashboard.</li>
-    <li>Paddle.com is our reseller and Merchant of Record: it takes payments, handles tax, invoices and refunds, and keeps your billing details under its own <a href="https://www.paddle.com/legal/privacy" target="_blank" rel="noopener">privacy notice</a>.</li>
-    <li>Anthropic (Claude) answers questions you ask the <b class="bt">AI Navigator</b>. What you type there, and the readings it needs, are sent to answer you; they are not used to train its models.</li>
-    <li>GitHub runs our background jobs (alerts, scans and funnels) on stored market data.</li>
-    <li>Resend sends emails, such as alerts and sign-in messages.</li>
-    <li>Google provides Google sign-in, if you choose it.</li>
+    <li>Supabase stores accounts and data, including beta requests, feedback screenshots and encrypted broker keys, and handles sign-in.</li>
+    <li>HostGator hosts this website and the MarketNavi app, and sends the emails from its contact and beta request forms.</li>
+    <li>Render runs the data service that prepares charts, readings and AI Navigator answers for the app.</li>
+    <li>GitHub runs our background jobs (alerts, scans, funnels, Trade Log imports and the emails and notifications they send) on stored data.</li>
+    <li>Resend sends emails, such as alerts, sign-in messages, invitations and signed agreements.</li>
+    <li>Apple, Google and Mozilla deliver phone and computer notifications to the devices you turned them on for, through their push services. A notification carries the alert's title and text.</li>
+    <li>Anthropic (Claude) answers the AI Navigator by default; xAI (Grok), OpenAI (ChatGPT) or Google (Gemini) answers it if you choose one of them in Settings. The same providers write Passage Plans and Trade Log reviews.</li>
     <li>xAI processes public news headlines to produce sentiment scores. Your personal details are not sent for this.</li>
+    <li>eToro (and Binance, when available) supplies your trades to the Trade Log, using the read-only key you gave, if you connect it.</li>
+    <li>Google provides Google sign-in, if you choose it.</li>
+    <li>Paddle.com is our reseller and Merchant of Record: it takes payments, handles tax, invoices and refunds, and keeps your billing details under its own <a href="https://www.paddle.com/legal/privacy" target="_blank" rel="noopener">privacy notice</a>.</li>
+    <li>Market prices, company details and news come from data providers such as Binance, Yahoo Finance, CoinGecko and Finnhub. No personal details are sent to them.</li>
   </ul>
   <h2>What we do not do</h2>
-  <p>We do not sell your data.</p>
+  <p>We do not sell your data, and we do not show advertising.</p>
   <h2>Your choices</h2>
-  <p>To see, correct or delete your data, or to close your account, email <a href="mailto:info@marketnavi.ai">info@marketnavi.ai</a>.</p>
+  <p>To see, correct or delete your data, or to close your account, email <a href="mailto:info@marketnavi.ai">info@marketnavi.ai</a>. In the app you can delete your own messages, remove a broker connection, turn notifications off on a device, and leave or delete communities at any time.</p>
   <h2>Changes</h2>
   <p>If this page changes in a way that matters, the date at the top will change.</p>
 </div></div>
