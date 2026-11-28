@@ -8,6 +8,7 @@ import * as acct from "../../lib/account.js";
 import { universe, match, keyFor, watchlists, coinLabel } from "../../lib/assets.js";
 import { call } from "../../lib/service.js";
 import { assetHref } from "../../components/Search.jsx";
+import Communities from "../../components/Communities.jsx";
 
 // ⚙️ Settings: one page, sections down the left, each choice saved the moment it changes. Everything is stored
 // where the classic app keeps it, so both apps stay in step.
@@ -18,7 +19,7 @@ const SECTIONS = () => [
   ["alerts", T("Alerts & email"), "bell"],
   ["logbook", T("Logbook & podcasts"), "notebook"],
   ["ai", T("AI"), "sparkles"],
-  ["privacy", T("Chat & privacy"), "lock"],
+  ["privacy", T("Chat & communities"), "users"],
   ["lattice", T("Lattice"), "puzzle"],
 ];
 
@@ -412,13 +413,16 @@ function Privacy({ s, set }) {
   const names = s.blocked_names && typeof s.blocked_names === "object" ? s.blocked_names : {};
   return (
     <>
+      <Section title={T("Communities")} sub={T("A community is a small private circle in the chat: its members can post to each other. Invite people with the add-person icon beside their name in the chat or comments.")}>
+        <Communities />
+      </Section>
       <Section title={T("Private messages")}>
         <Row title={T("Who can message me privately")} help={T("In the chat, a message to one person is private between the two of you.")}>
           <Seg label={T("Who can message me privately")} value={s.dm_from || "everyone"} options={[["everyone", T("Everyone")], ["favourites", T("Only my ⭐ favourites")], ["nobody", T("No one")]]} onChange={(v) => set({ dm_from: v })} />
         </Row>
       </Section>
       <Section title={T("Blocked people")} sub={T("You don't see their chat messages, and neither of you can message the other privately.")}>
-        {!blocked.length ? <p className="sub">{T("No one blocked. Press 🚫 beside a name in the chat to block someone.")}</p> : blocked.map((id) => (
+        {!blocked.length ? <p className="sub">{T("No one blocked. Press the block icon beside a name in the chat to block someone.")}</p> : blocked.map((id) => (
           <Row key={id} title={names[id] || T("Member")}>
             <button type="button" className="ghost" onClick={() => { const n = { ...names }; delete n[id]; set({ blocked: blocked.filter((b) => b !== id), blocked_names: n }); }}>{T("Unblock")}</button>
           </Row>

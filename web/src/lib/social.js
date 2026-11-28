@@ -61,3 +61,16 @@ export function realtime(onChange) {
   const timer = setInterval(onChange, 60000);
   return () => { clearInterval(timer); supabase.removeChannel(ch); };
 }
+
+// 👥 Communities: a leader invites people (create_group_invite makes the community on the first invite), removes
+// members or deletes it; a member leaves. The same database functions as the classic app; each returns a short code.
+const code = (r) => String(must(r) || "").replace(/"/g, "").trim();
+export async function invite(target, name, groupId) {
+  try { return code(await supabase.rpc("create_group_invite", { target, group_name: String(name || "").trim().slice(0, 40), chosen_group: groupId ? +groupId : null })); }
+  catch (e) { return "error"; }
+}
+export async function removeMember(groupId, person) {
+  try { return code(await supabase.rpc("remove_group_member", { chosen_group: +groupId, person })); } catch (e) { return "error"; }
+}
+export async function leaveCommunity(groupId) { must(await supabase.rpc("leave_group", { chosen_group: +groupId })); }
+export async function deleteCommunity(groupId) { must(await supabase.rpc("delete_my_group", { chosen_group: +groupId })); }

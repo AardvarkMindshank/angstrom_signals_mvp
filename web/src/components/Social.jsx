@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import Icon from "./Icon.jsx";
 import { ConfirmButton } from "./Confirm.jsx";
 import { ReportButton, ReportBox } from "./Report.jsx";
+import { InviteBox } from "./Communities.jsx";
 import { T } from "../lib/i18n.js";
 import * as social from "../lib/social.js";
 import { watchlists, keyFor, universe } from "../lib/assets.js";
@@ -45,6 +46,9 @@ function Comments({ visible }) {
   const label = (k) => (k === "Mood|crypto" ? T("Crypto market") : k === "Mood|stock" ? T("Stock market") : k === "Tides|macro" ? T("Tides") : names[k] || k.split("|")[1]);
   const shown = (rows || []).filter((r) => scope === "all" || (scope === "crypto" ? /^(Crypto|Mood\|crypto)/.test(r.asset_key) : /^(Stock|Mood\|stock)/.test(r.asset_key)));
   const act = async (fn) => { try { await fn(); } catch (e) { /* the row rules said no */ } load(); };
+  const [groups, setGroups] = useState([]);
+  useEffect(() => { if (visible) social.communities().then(setGroups); }, [visible]);
+  const person = { groups, regroup: () => social.communities().then(setGroups) };
   return (
     <>
       <div className="chips" role="group" aria-label={T("Show")} style={{ margin: "10px 0 4px" }}>
@@ -55,7 +59,7 @@ function Comments({ visible }) {
         <ol className="comments compact">
           {shown.map((n) => (
             <li key={n.id}>
-              <Note n={n} kind="comment" act={act}
+              <Note n={n} kind="comment" act={act} person={person}
                 head={n.asset_key.includes("|") && /^(Crypto|Stock)/.test(n.asset_key) ? <a className="tag" href={assetHref(n.asset_key, "community")}>{label(n.asset_key)}</a> : <span className="tag">{label(n.asset_key)}</span>} />
             </li>
           ))}
@@ -80,6 +84,7 @@ function Chat({ visible }) {
   }, []);
   // ⭐ a favourite (they can message you when "Only my favourites" is chosen) or 🚫 block (their messages disappear).
   const person = {
+    groups, regroup: () => social.communities().then(setGroups),
     fav: (id) => mine.favourites.includes(String(id)),
     star: (id) => act(async () => { const f = mine.favourites.includes(String(id)) ? mine.favourites.filter((x) => x !== String(id)) : [...mine.favourites, String(id)]; setMine({ ...mine, favourites: f }); await acct.saveSettings({ favourites: f }); }),
     block: (id, name) => act(async () => { const b = [...new Set([...mine.blocked, String(id)])], n = { ...mine.blocked_names, [id]: name }; setMine({ ...mine, blocked: b, blocked_names: n }); await acct.saveSettings({ blocked: b, blocked_names: n }); }),
@@ -131,6 +136,7 @@ function Chat({ visible }) {
 function Note({ n, kind, act, head, person, reply }) {
   const v = n.my_vote == null ? 0 : +n.my_vote;
   const [reporting, setReporting] = useState(false);
+  const [inviting, setInviting] = useState(false);
   const thumb = (x) => (kind === "chat" ? social.vote(n.id, x) : voteNote(n.id, kind, x));
   const del = () => (kind === "chat" ? social.remove(n.id) : deleteNote(n.id, kind));
   return (
@@ -144,8 +150,12 @@ function Note({ n, kind, act, head, person, reply }) {
           <button type="button" className={"linkish" + (v === -1 ? " on" : "")} onClick={() => act(() => thumb(v === -1 ? 0 : -1))} aria-label={T("Thumbs down")}><Icon n="thumbs-down" size={15} /> {+n.thumbs_down || 0}</button>
           {n.responded_score != null && kind === "comment" && <span className="m">{T("on a mood of {s}", { s: signed(n.responded_score) })}</span>}
           {n.mine && <ConfirmButton onYes={() => act(del)}>{T("Delete")}</ConfirmButton>}
-          {!n.mine && <ReportButton onOpen={() => setReporting(true)} />}
+          {!n.mine && <ReportButton onOpen={() => { setReporting(true); setInviting(false); }} />}
           {person && !n.mine && n.author_id && (
+            <button type="button" className={"linkish" + (inviting ? " on" : "")} onClick={() => { setInviting(!inviting); setReporting(false); }}
+              title={T("Invite to a community")} aria-label={T("Invite to a community")}><Icon n="user-plus" size={15} /></button>
+          )}
+          {person && person.fav && !n.mine && n.author_id && (
             <>
               <button type="button" className={"linkish" + (person.fav(n.author_id) ? " on" : "")} aria-pressed={person.fav(n.author_id)} onClick={() => person.star(n.author_id)}
                 title={person.fav(n.author_id) ? T("Remove from favourites") : T("Add to favourites")}><Icon n="star" size={15} className={person.fav(n.author_id) ? "filled" : ""} /></button>
@@ -153,6 +163,7 @@ function Note({ n, kind, act, head, person, reply }) {
             </>
           )}
         </div>
+        {inviting && <InviteBox person={{ id: n.author_id, name: n.author_name || T("Member") }} groups={person.groups} onClose={() => setInviting(false)} onSent={person.regroup} />}
         {reporting && <ReportBox n={n} place={kind === "chat" ? "chat" : "signal"} kind={reply ? "reply" : "comment"} onClose={() => setReporting(false)} />}
       </div>
     </div>
