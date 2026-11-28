@@ -95,6 +95,15 @@ def download_link(url: str, name: str) -> str:
     return url + ("&" if "?" in url else "?") + "download=" + name
 
 
+def pack_link(day: str, caps: dict, links: dict) -> str:
+    """The video pack page on the website (website/pack.html, 28 Nov 2026): saves the videos to the phone's Photos
+    through the share sheet, or downloads them on a computer, and copies the caption. Downloads from the email's link
+    landed in Chrome's own folder on the iPhone, where neither he nor TikTok could find them."""
+    from urllib.parse import urlencode
+    return f"{SITE.rstrip('/')}/pack.html?" + urlencode({"d": day, "t": links["tall"], "w": links["wide"],
+                                                              "tk": caps["tiktok"], "fb": caps["facebook"], "ig": caps["instagram"]})
+
+
 def post_email(day: str, caps: dict, links: dict) -> str:
     """The morning pack for posting by hand (TikTok for now): the tall video and its caption."""
     to = os.getenv("SOCIAL_PACK_TO", "").strip()
@@ -105,11 +114,14 @@ def post_email(day: str, caps: dict, links: dict) -> str:
     when = datetime.fromisoformat(day).strftime("%A %d %B")
     page, plain = render_email(
         f"Today's video is ready: {when}",
-        ["It has gone out automatically to the connected channels. For TikTok, download the tall video and paste "
-         "this caption:", caps["tiktok"]],
-        button=("Download the tall video", download_link(links["tall"], f"MarketNavi-{day}-tall.mp4")), tone="info",
-        footnote=f"Wide version: {links['wide']}", preheader="The daily video and its TikTok caption.")
-    return "sent" if beta_worker._send_resend(to, f"Daily video {when}: TikTok pack", page, plain) else "failed"
+        ["Open the pack to post it by hand (TikTok, Facebook, Instagram): it saves the tall or wide video straight to "
+         "your phone's Photos, or shares it to the app, and has each app's caption ready to copy. The TikTok caption:",
+         caps["tiktok"]],
+        button=("Open the video pack", pack_link(day, caps, links)), tone="info",
+        footnote=f"Direct downloads: tall {download_link(links['tall'], f'MarketNavi-{day}-tall.mp4')} · "
+                 f"wide {download_link(links['wide'], f'MarketNavi-{day}-wide.mp4')}",
+        preheader="The daily video, both sizes, with the TikTok, Facebook and Instagram captions.")
+    return "sent" if beta_worker._send_resend(to, f"Daily video {when}: posting pack", page, plain) else "failed"
 
 
 def _youtube_token() -> str:
