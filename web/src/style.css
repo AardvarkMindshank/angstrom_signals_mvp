@@ -1164,3 +1164,4 @@ button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent)
 .signlegal a { color: inherit; }
 .contacts { display: flex; flex-direction: column; gap: 6px; }
 .contacts span { display: inline-flex; align-items: center; gap: 6px; }
+.fline { margin: 2px 0 0; }

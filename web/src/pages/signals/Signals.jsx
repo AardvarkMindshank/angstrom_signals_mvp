@@ -219,11 +219,12 @@ function FunnelBar({ f, onPick }) {
                 </button>
               ))}
             </div>
+            {/* each funnel's own flow: the pool, then how many hold each stage, ending in Candidates / Flagged */}
+            {(x.line || (x.id === f.picked && f.line)) && <p className="m fline"><Glyphs text={x.line || f.line} size={14} /></p>}
+            {x.id === f.picked && f.health && <p className="note bad">{plain(f.health)}</p>}
           </div>
         ))}
       </div>
-      {f.line && <p className="m" style={{ margin: "6px 0 0" }}><Glyphs text={f.line} size={14} /></p>}
-      {f.health && <p className="note bad">{plain(f.health)}</p>}
     </div>
   );
 }

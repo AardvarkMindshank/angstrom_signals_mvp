@@ -105,7 +105,7 @@ def funnel_view(db, uid: str, market: str, settings: dict, pick: str | None, sta
         new, _ = sv.candidate_changes(before, fv.coins_for("candidate", states))
         rows.append({"id": f["id"], "name": f["name"], "direction": f["direction"],
                      "dir_icon": fv.fn.DIRECTION_ICONS.get(f["direction"], ""), "paused": bool(f.get("paused")),
-                     "checked": funnel_rows.status(f, runs),
+                     "checked": funnel_rows.status(f, runs), "line": fv.counts_line(f, states, pool),
                      "chips": funnel_rows.chips(f, states, len(new), funnel_runner.hover(f))})
     rows = funnel_rows.order(rows)
     out["funnels"] = rows
