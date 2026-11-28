@@ -80,6 +80,17 @@ export default function App() {
     };
     window.addEventListener("hashchange", f); return () => window.removeEventListener("hashchange", f);
   }, []);
+  // Tell the database this account has the app open (the admin Members list: last seen, visits, time in the app), at
+  // most once a minute while the tab is in view, as the classic app does.
+  useEffect(() => {
+    if (!account) return;
+    let last = 0;
+    const touch = () => { if (document.visibilityState !== "visible" || Date.now() - last < 60000) return; last = Date.now(); supabase.rpc("touch_activity").then(() => {}, () => {}); };
+    touch();
+    const t = setInterval(touch, 120000);
+    document.addEventListener("visibilitychange", touch);
+    return () => { clearInterval(t); document.removeEventListener("visibilitychange", touch); };
+  }, [!!account]);
   useEffect(() => {
     if (!account) return;
     const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));

@@ -753,6 +753,16 @@ def navigator(q: Question, who: Member = Depends(member)):
     if q.on_screen.strip():
         extra = (extra + "\n\nOn the person's screen right now: " + q.on_screen.strip()).strip()
     started = time.time()
+
+    # Each answer's tokens go on this member's account (the admin Members list), as in the classic app.
+    def meter(provider_used, model_name, used):
+        try:
+            who.db.rpc("log_ai_use", {"p_provider": provider_used, "p_model": model_name, "p_input": used.get("input", 0),
+                                      "p_output": used.get("output", 0), "p_cache_read": used.get("cache_read", 0),
+                                      "p_cache_write": used.get("cache_write", 0)}).execute()
+        except Exception:
+            pass
+    ai_providers.set_meter(meter)
     with i18n.using(q.language if q.language in i18n.BY_CODE else "en"):
         toolbox = navigator_tools.ToolBox(None, who.db, who.id, saved, watch)
         system = advisor.system_parts(saved, who.id, q.start if q.start in advisor.START else "panel", extra,
@@ -763,6 +773,8 @@ def navigator(q: Question, who: Member = Depends(member)):
         except Exception as exc:
             print(f"navigator: failed after {time.time() - started:.1f}s ({type(exc).__name__})", flush=True)
             raise HTTPException(502, "The Navigator couldn't answer just now. Please try again.")
+        finally:
+            ai_providers.set_meter(None)          # the worker thread serves other members next
     _asked[(who.id, day)] = used + 1
     print(f"navigator: answered in {time.time() - started:.1f}s", flush=True)
     return {"answer": answer, "notes": toolbox.notes, "used": used + 1, "limit": limit}
