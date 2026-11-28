@@ -48,6 +48,13 @@ export default function Alerts() {
   const open = async (n) => {
     if (!n.is_read && isAlert(n)) { supabase.from("user_notifications").update({ is_read: true }).eq("id", n.id).then(() => {}, () => {}); }
   };
+  // The name as the watchlist has it now ("Polkadot (DOT)"), not as an old alert stored it ("Dot").
+  const shownName = (n) => {
+    const s = String(n.asset_symbol || "").trim();
+    const c = s && Object.keys(wl.crypto || {}).find((k) => k.toLowerCase() === s.toLowerCase());
+    const v = c ? (wl.crypto || {})[c] : null;
+    return (typeof v === "string" && v) || n.asset_name || T("Alert");
+  };
   const target = (n) => {
     const s = String(n.asset_symbol || "").trim();
     if (s.toLowerCase().startsWith("market:")) return `#mood/${s.slice(7).toLowerCase() === "stock" ? "stock" : "crypto"}`;
@@ -88,7 +95,7 @@ export default function Alerts() {
               <>
                 <span className="aicon" aria-hidden="true"><Icon n={ICON[n.alert_type] || "bell"} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div className="ahead"><b>{n.asset_name || T("Alert")}</b><span className="m">{stamp(n.created_at)}</span></div>
+                  <div className="ahead"><b>{shownName(n)}</b><span className="m">{stamp(n.created_at)}</span></div>
                   <div className="abody">{alertText(n.message)}</div>
                   {quiet && n.alert_type === "group_invite" && <Invite n={n} onDone={load} />}
                 </div>
