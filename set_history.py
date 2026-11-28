@@ -272,8 +272,11 @@ def full_daily(kind: str, asset_id: str) -> pd.DataFrame | None:
                     frame = calculate_indicators(raw.iloc[: pos + 1])
         except Exception:
             frame = None
-    if len(_FRAMES) > 64:
-        _FRAMES.clear()
+    while len(_FRAMES) >= 64:                 # the oldest goes, not all of them (a big Set refilled them all)
+        try:
+            _FRAMES.pop(next(iter(_FRAMES)), None)
+        except (RuntimeError, StopIteration):    # another download thread changed it meanwhile
+            break
     _FRAMES[key] = frame
     return frame
 
@@ -341,6 +344,23 @@ def covers(strip: dict, years: int) -> bool:
     return covered == 0 or (years != 0 and years <= covered)
 
 
+def prefetch(frames, pairs, workers: int = 6) -> None:
+    """Download the assets' daily histories side by side instead of one after another (28 Nov 2026: a 28-asset
+    Visualize History waited about a minute for its first year, almost all of it downloads). Each lands in the
+    day's memory, so the steps after this read them at once."""
+    if frames is not full_daily or len(pairs) < 2:
+        return
+    from concurrent.futures import ThreadPoolExecutor
+
+    def one(pair):
+        try:
+            frames(*pair)
+        except Exception:
+            pass
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(one, list(dict.fromkeys(pairs))))
+
+
 def quick_rows(supabase, doc: dict, assets: list[tuple[str, str, str]], progress=None, frames=full_daily) -> dict:
     """Visualize History, first look: assets whose history is saved come back whole (brought up to date with the new
     days); the others get just their last year, marked not "full" (complete_row does the rest, one at a time)."""
@@ -349,6 +369,7 @@ def quick_rows(supabase, doc: dict, assets: list[tuple[str, str, str]], progress
     h = def_hash(doc)
     keys = [asset_key(k, i) for k, i, _ in assets]
     stored = load(supabase, [h], keys)
+    prefetch(frames, [(k, i) for k, i, _ in assets] + list(subjects_of(doc)))
     rows = []
     for n, (kind, asset_id, name) in enumerate(assets):
         if progress:
