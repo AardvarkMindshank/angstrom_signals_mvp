@@ -1061,3 +1061,8 @@ button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent)
   background: color-mix(in srgb, var(--gold) 16%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); }
 .wlitem a.gone:hover { text-decoration: line-through; }
 .wlitem a.gone { text-decoration: line-through; }
+/* the Set filter icons (Prism and funnel stages): always in their colours; a border marks the chosen one */
+.classic .lat.lat .pvf button:not(.on) { border-color: transparent; background: transparent; box-shadow: none; }
+.classic .lat.lat .pvf button:not(.on):hover { background: var(--ang-field); }
+.classic .lat .pvf button .ic[data-tone] { color: var(--tc); }
+.classic .lat .pvf button.on, .classic .lat.prism .pvf button.on { border-color: var(--ang-text); background: var(--ang-field); }
