@@ -1170,3 +1170,7 @@ button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent)
 .navtable table { border-collapse: collapse; font-size: 13px; min-width: 60%; }
 .navtable th, .navtable td { border-bottom: 1px solid var(--ang-border); padding: 5px 10px 5px 0; text-align: left; vertical-align: top; }
 .navtable th { font-weight: 600; color: var(--ang-soft); }
+/* ↔ a small grip, always visible, halfway down the panel's resize edge, so the handle is easy to find */
+.spgrip::before { content: ""; position: absolute; left: 1px; top: 50%; width: 7px; height: 44px; margin-top: -22px; border-radius: 4px;
+  background: var(--ang-border); box-shadow: inset 2px 0 0 var(--ang-page), inset -2px 0 0 var(--ang-page); }
+.spgrip:hover::before, body.resizing .spgrip::before { background: var(--gold); }
