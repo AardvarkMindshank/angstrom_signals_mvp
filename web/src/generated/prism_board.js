@@ -144,7 +144,7 @@ export function prismBoard(component) {
       const nm = el("div", "nm" + (s.locked ? " dim" : ""));
       const title = el("div", "", s.name);
       const pv = el("span", "pv");
-      (s.icons || []).forEach((p) => { const i = el("span", "", p.icon); i.title = p.hover; i.setAttribute("aria-label", p.hover); pv.appendChild(i); });
+      (s.icons || []).forEach((p) => { const i = el("span", "", p.icon); if (p.key) i.dataset.k = p.key; i.title = p.hover; i.setAttribute("aria-label", p.hover); pv.appendChild(i); });
       title.appendChild(pv);
       if (s.evidence) { const ev = el("span", "ev", s.evidence.icon); ev.title = s.evidence.hover; ev.setAttribute("aria-label", s.evidence.hover); title.appendChild(ev); }
       nm.appendChild(title);
@@ -200,7 +200,7 @@ export function prismBoard(component) {
       }));
       if (kinds.length) {
         const pv = el("span", "pv");
-        kinds.forEach((p) => { const i = el("span", "", p.icon); i.title = p.hover; i.setAttribute("aria-label", p.hover); pv.appendChild(i); });
+        kinds.forEach((p) => { const i = el("span", "", p.icon); if (p.key) i.dataset.k = p.key; i.title = p.hover; i.setAttribute("aria-label", p.hover); pv.appendChild(i); });
         top.appendChild(pv);
       }
       const ev = s.evidence;

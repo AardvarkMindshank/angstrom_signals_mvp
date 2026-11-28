@@ -1066,3 +1066,13 @@ button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent)
 .classic .lat.lat .pvf button:not(.on):hover { background: var(--ang-field); }
 .classic .lat .pvf button .ic[data-tone] { color: var(--tc); }
 .classic .lat .pvf button.on, .classic .lat.prism .pvf button.on { border-color: var(--ang-text); background: var(--ang-field); }
+/* the eight things a Set can look at (perspectives.py), each its own colour in the filter row and beside each Set */
+:root { --t-pink: #d6336c; --t-lime: #5f9412; } .night { --t-pink: #f06595; --t-lime: #a3d65c; }
+.lat [data-k=trend] .ic { color: var(--t-green) !important; }
+.lat [data-k=stretch] .ic { color: var(--t-pink) !important; }
+.lat [data-k=volume] .ic { color: var(--t-blue) !important; }
+.lat [data-k=structure] .ic { color: var(--t-purple) !important; }
+.lat [data-k=volatility] .ic { color: var(--t-teal) !important; }
+.lat [data-k=other] .ic { color: var(--t-gold) !important; }
+.lat [data-k=sentiment] .ic { color: var(--t-orange) !important; }
+.lat [data-k=positioning] .ic { color: var(--t-lime) !important; }
