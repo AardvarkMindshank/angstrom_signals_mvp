@@ -316,6 +316,11 @@ def view(scan: dict, runs: list[dict], latched: list[str], choices: dict, assets
     results, results_title = stored, (last_text if stored else "")
     if session_result:
         results, results_title = session_result["rows"], session_result["title"]
+        # The badges follow what is shown: after ▶ or ⏪ they count that answer, not the last scheduled run (28 Nov
+        # 2026: a Play said "No 12" while the badges stayed at Yes 0 · No 0 · ? 0).
+        counts = {"yes": 0, "no": 0, "unknown": 0}
+        for row in results:
+            counts[row.get("answer") if row.get("answer") in counts else "unknown"] += 1
     order = {"yes": 0, "unknown": 1, "no": 2}
     results = sorted(results, key=lambda r: (order.get(r.get("answer"), 3), str(r.get("asset"))))
     notify = obj["notify"]
