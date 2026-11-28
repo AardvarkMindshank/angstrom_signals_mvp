@@ -79,6 +79,10 @@
   var q = new URLSearchParams(location.search);
   var day = (q.get("d") || "").replace(/[^0-9-]/g, "");
   var ok = function (u) { return /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\//.test(u || ""); };
+  // The videos' addresses are built here from the project, day and version: the web host refuses a page address that
+  // carries a full web address in it (HTTP 406).
+  var ref = (q.get("p") || "").replace(/[^a-z0-9]/g, ""), ver = (q.get("v") || "").replace(/[^0-9]/g, "");
+  var vid = function (kind) { return ref && day ? "https://" + ref + ".supabase.co/storage/v1/object/public/briefings/video/" + day + "_" + kind + ".mp4" + (ver ? "?v=" + ver : "") : ""; };
   if (day) document.getElementById("title").textContent = "Video for " + new Date(day + "T12:00:00").toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
   // One caption per place, each with its own Copy button (tk TikTok, fb Facebook, ig Instagram, th Threads).
   [["tk", "TikTok"], ["fb", "Facebook"], ["ig", "Instagram"], ["th", "Threads"]].forEach(function (c) {
@@ -147,8 +151,8 @@
     };
     if (auto) fetchIt(); else if (load) load.onclick = fetchIt;
   }
-  setup("tall", q.get("t"), "MarketNavi-" + (day || "video") + "-tall.mp4", true);
-  setup("wide", q.get("w"), "MarketNavi-" + (day || "video") + "-wide.mp4", false);
+  setup("tall", vid("port"), "MarketNavi-" + (day || "video") + "-tall.mp4", true);
+  setup("wide", vid("land"), "MarketNavi-" + (day || "video") + "-wide.mp4", false);
 })();
 </script>
 </body>

@@ -99,10 +99,15 @@ def pack_link(day: str, caps: dict, links: dict) -> str:
     """The video pack page on the website (website/pack.html, 28 Nov 2026): saves the videos to the phone's Photos
     through the share sheet, or downloads them on a computer, and copies the caption. Downloads from the email's link
     landed in Chrome's own folder on the iPhone, where neither he nor TikTok could find them."""
-    from urllib.parse import urlencode
-    return f"{SITE.rstrip('/')}/pack.html?" + urlencode({"d": day, "t": links["tall"], "w": links["wide"],
-                                                              "tk": caps["tiktok"], "fb": caps["facebook"], "ig": caps["instagram"],
-                                                              "th": caps["threads"]})
+    from urllib.parse import urlencode, urlparse
+    ref = (urlparse(_base()).hostname or "").split(".")[0]
+    ver = (re.search(r"[?&]v=(\d+)", links["tall"]) or [None, ""])[1]
+    # No full web address in it: the web host refuses a page address carrying one (406). The page builds the videos'
+    # addresses, and the captions say marketnavi.ai, which every app turns into a link anyway.
+    bare = lambda c: re.sub(r"https?://", "", c)    # noqa: E731
+    return f"{SITE.rstrip('/')}/pack.html?" + urlencode({"d": day, "p": ref, "v": ver, "tk": bare(caps["tiktok"]),
+                                                          "fb": bare(caps["facebook"]), "ig": bare(caps["instagram"]),
+                                                          "th": bare(caps["threads"])})
 
 
 def post_email(day: str, caps: dict, links: dict) -> str:
