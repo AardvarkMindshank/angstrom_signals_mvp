@@ -101,7 +101,8 @@ def pack_link(day: str, caps: dict, links: dict) -> str:
     landed in Chrome's own folder on the iPhone, where neither he nor TikTok could find them."""
     from urllib.parse import urlencode
     return f"{SITE.rstrip('/')}/pack.html?" + urlencode({"d": day, "t": links["tall"], "w": links["wide"],
-                                                              "tk": caps["tiktok"], "fb": caps["facebook"], "ig": caps["instagram"]})
+                                                              "tk": caps["tiktok"], "fb": caps["facebook"], "ig": caps["instagram"],
+                                                              "th": caps["threads"]})
 
 
 def post_email(day: str, caps: dict, links: dict) -> str:
@@ -114,13 +115,13 @@ def post_email(day: str, caps: dict, links: dict) -> str:
     when = datetime.fromisoformat(day).strftime("%A %d %B")
     page, plain = render_email(
         f"Today's video is ready: {when}",
-        ["Open the pack to post it by hand (TikTok, Facebook, Instagram): it saves the tall or wide video straight to "
+        ["Open the pack to post it by hand (TikTok, Facebook, Instagram, Threads): it saves the tall or wide video straight to "
          "your phone's Photos, or shares it to the app, and has each app's caption ready to copy. The TikTok caption:",
          caps["tiktok"]],
         button=("Open the video pack", pack_link(day, caps, links)), tone="info",
         footnote=f"Direct downloads: tall {download_link(links['tall'], f'MarketNavi-{day}-tall.mp4')} · "
                  f"wide {download_link(links['wide'], f'MarketNavi-{day}-wide.mp4')}",
-        preheader="The daily video, both sizes, with the TikTok, Facebook and Instagram captions.")
+        preheader="The daily video, both sizes, with the TikTok, Facebook, Instagram and Threads captions.")
     return "sent" if beta_worker._send_resend(to, f"Daily video {when}: posting pack", page, plain) else "failed"
 
 

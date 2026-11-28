@@ -45,7 +45,7 @@
   <h1 id="title">Today's video</h1>
 
   <section class="card" id="tall">
-    <h2>Tall video <small>TikTok, Instagram Reels, Facebook Reels</small></h2>
+    <h2>Tall video <small>TikTok, Instagram and Facebook Reels, Threads</small></h2>
     <video controls playsinline preload="metadata"></video>
     <div class="bar"><i></i></div>
     <div class="state">Getting the video ready…</div>
@@ -80,8 +80,8 @@
   var day = (q.get("d") || "").replace(/[^0-9-]/g, "");
   var ok = function (u) { return /^https:\/\/[a-z0-9-]+\.supabase\.co\/storage\/v1\/object\/public\//.test(u || ""); };
   if (day) document.getElementById("title").textContent = "Video for " + new Date(day + "T12:00:00").toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
-  // One caption per place, each with its own Copy button (tk TikTok, fb Facebook, ig Instagram).
-  [["tk", "TikTok"], ["fb", "Facebook"], ["ig", "Instagram"]].forEach(function (c) {
+  // One caption per place, each with its own Copy button (tk TikTok, fb Facebook, ig Instagram, th Threads).
+  [["tk", "TikTok"], ["fb", "Facebook"], ["ig", "Instagram"], ["th", "Threads"]].forEach(function (c) {
     var text = q.get(c[0]) || (c[0] === "tk" ? q.get("c") : "");
     if (!text) return;
     var box = document.createElement("div"); box.className = "cap";
