@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { supabase, linkAuth, arrival, APP_HOME, BETA_FORM, CLASSIC } from "../lib/supabase.js";
+import { supabase, linkAuth, arrival, APP_HOME, BETA_FORM } from "../lib/supabase.js";
 import { T } from "../lib/i18n.js";
 
 // Sign in with the same account as the classic app: Google, or email and password; Forgot password sends a link that
@@ -99,7 +99,6 @@ export default function SignIn() {
         <div className="signlegal">
           <a href="https://marketnavi.ai/terms.html" target="_blank" rel="noopener noreferrer">{T("Terms of use")}</a> · <a href="https://marketnavi.ai/privacy.html" target="_blank" rel="noopener noreferrer">{T("Privacy")}</a>
         </div>
-        <a className="back" href={CLASSIC}>{T("Back to the classic app")}</a>
       </div>
     </div>
   );

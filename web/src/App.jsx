@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, startTransition, useEffect, useState } from "react";
-import { supabase, configured, CLASSIC, arrival, arrived } from "./lib/supabase.js";
+import { supabase, configured, arrival, arrived } from "./lib/supabase.js";
 import { T, loadWords, pickLanguage } from "./lib/i18n.js";
 import { applyTheme } from "./lib/theme.js";
 import * as api from "./lib/api.js";
@@ -26,8 +26,7 @@ const Lattice = lazy(LOAD.Lattice = () => import("./pages/lattice/Lattice.jsx"))
 const Help = lazy(LOAD.Help = () => import("./pages/help/Help.jsx"));
 const Admin = lazy(LOAD.Admin = () => import("./pages/admin/Admin.jsx"));
 
-// The new MarketNavi app (beta). One page so far, the Trade Log; each page moves across from the classic app in
-// turn, and the classic app keeps running until every page is here.
+// The MarketNavi app. Every page has moved across from the classic (Streamlit) app, which is being retired.
 const PAGES = [["snapshot", () => T("Quick Snapshot"), "camera"], ["signals", () => T("Signals"), "activity"], ["tides", () => T("Tides"), "waves-horizontal"], ["lattice", () => T("Lattice"), "puzzle"], ["logbook", () => T("Logbook"), "notebook"], ["tradelog", () => T("Trade Log"), "book-open"]];
 
 // The address after # picks the page: #tradelog, or #asset/<asset key>/<tab>.
@@ -119,7 +118,7 @@ export default function App() {
         <a className="brand" href="#snapshot" aria-label="MarketNavi">
           <img src="/logo.png" alt="" width="28" height="28" />
           <span>MarketNavi</span>
-          <span className="beta" title={T("The new MarketNavi app, being built page by page. The classic app keeps working meanwhile.")}>{T("New · beta")}</span>
+          <span className="beta" title={T("MarketNavi is in closed beta while we build it with experienced traders.")}>{T("Beta")}</span>
         </a>
         <Search />
         <nav className="pages" aria-label={T("Pages")}>
@@ -127,9 +126,6 @@ export default function App() {
         </nav>
         <div className="right">
           <SidePanel onScreen={page === "asset" ? `The person is looking at the asset page for ${route[1]} (${route[2] || "chart"} tab).` : page === "search" ? `The person searched for “${route[1]}”.` : `The person is on the ${page} page.`} />
-          <a className="ghost icon" href={CLASSIC} title={T("Everything not moved across yet is in the classic app.") + " · " + T("Classic app")} aria-label={T("Classic app")}>
-            <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 4h6v6M20 4 10 14M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg>
-          </a>
           <Bell on={page === "alerts"} />
           {account && account.admin && <a className={"ghost icon" + (page === "admin" ? " on" : "")} href="#admin" title="Admin" aria-label="Admin" aria-current={page === "admin" ? "page" : undefined}><Icon n="shield" /></a>}
           <a className={"ghost icon" + (page === "help" ? " on" : "")} href="#help" title={T("Help and guides")} aria-label={T("Help and guides")} aria-current={page === "help" ? "page" : undefined}><Icon n="circle-question-mark" /></a>

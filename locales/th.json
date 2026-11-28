@@ -2660,13 +2660,9 @@
   "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "eToro จ่ายรางวัล Staking คริปโตเป็นสถานะใหม่ขนาดเล็กทุกเดือน จึงไม่นับรวมในตัวเลขเทรด นี่คือมูลค่าเมื่อขาย",
   "The new app isn't set up yet.": "แอปใหม่ยังไม่พร้อมใช้งาน",
   "The new MarketNavi app, being built page by page. The classic app keeps working meanwhile.": "แอป MarketNavi ใหม่ ที่กำลังสร้างทีละหน้า ระหว่างนี้แอปคลาสสิกยังใช้งานได้ตามปกติ",
-  "New · beta": "ใหม่ · เบต้า",
   "Pages": "หน้า",
-  "Everything not moved across yet is in the classic app.": "ทุกอย่างที่ยังไม่ได้ย้ายมาอยู่ในแอปคลาสสิก",
-  "Classic app": "แอปคลาสสิก",
   "Log out": "ออกจากระบบ",
   "That email and password didn't match an account.": "อีเมลและรหัสผ่านนี้ไม่ตรงกับบัญชีใด",
-  "Back to the classic app": "กลับไปที่แอปคลาสสิก",
   "Size after a loss": "ขนาดหลังขาดทุน",
   "Trades after a loss are {x} times the size": "เทรดหลังขาดทุนมีขนาด {x} เท่า",
   "Trades after a loss are smaller": "เทรดหลังขาดทุนมีขนาดเล็กลง",
@@ -3261,5 +3257,7 @@
   "Terms and policies": "ข้อกำหนดและนโยบาย",
   "The comments and the chat are for reacting to the markets and the readings in MarketNavi.": "ความคิดเห็นและแชตมีไว้เพื่อแสดงความเห็นต่อตลาดและค่าที่อ่านได้ใน MarketNavi",
   "Use the flag beside a comment that breaks these rules. Only the MarketNavi team sees reports. A comment that breaks the rules can be removed and its writer warned, and an account that keeps breaking them can be closed.": "ใช้ธงข้างความคิดเห็นที่ผิดกฎเหล่านี้ เฉพาะทีม MarketNavi เท่านั้นที่เห็นรายงาน ความคิดเห็นที่ผิดกฎอาจถูกลบและผู้เขียนได้รับคำเตือน และบัญชีที่ทำผิดซ้ำอาจถูกปิด",
-  "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "การใช้ MarketNavi หมายถึงคุณยอมรับข้อกำหนดการใช้งานและนโยบายโซเชียลข้างต้น ฉบับเต็มอยู่บนเว็บไซต์ของเราเป็นภาษาอังกฤษ"
+  "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "การใช้ MarketNavi หมายถึงคุณยอมรับข้อกำหนดการใช้งานและนโยบายโซเชียลข้างต้น ฉบับเต็มอยู่บนเว็บไซต์ของเราเป็นภาษาอังกฤษ",
+  "Beta": "เบต้า",
+  "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi อยู่ในช่วงเบต้าแบบปิด ขณะที่เราพัฒนาร่วมกับเทรดเดอร์ที่มีประสบการณ์"
 }

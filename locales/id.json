@@ -2660,13 +2660,9 @@
   "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "eToro membayar hadiah staking kripto sebagai posisi baru kecil setiap bulan. Hadiah ini tidak masuk angka trade; ini nilainya saat dijual.",
   "The new app isn't set up yet.": "Aplikasi baru belum disiapkan.",
   "The new MarketNavi app, being built page by page. The classic app keeps working meanwhile.": "Aplikasi MarketNavi baru, dibangun halaman demi halaman. Aplikasi klasik tetap berjalan sementara itu.",
-  "New · beta": "Baru · beta",
   "Pages": "Halaman",
-  "Everything not moved across yet is in the classic app.": "Semua yang belum dipindahkan ada di aplikasi klasik.",
-  "Classic app": "Aplikasi klasik",
   "Log out": "Keluar",
   "That email and password didn't match an account.": "Email dan kata sandi itu tidak cocok dengan akun mana pun.",
-  "Back to the classic app": "Kembali ke aplikasi klasik",
   "Size after a loss": "Ukuran setelah rugi",
   "Trades after a loss are {x} times the size": "Trade setelah rugi berukuran {x} kali lipat",
   "Trades after a loss are smaller": "Trade setelah rugi lebih kecil",
@@ -3261,5 +3257,7 @@
   "Terms and policies": "Ketentuan dan kebijakan",
   "The comments and the chat are for reacting to the markets and the readings in MarketNavi.": "Komentar dan chat untuk menanggapi pasar dan pembacaan di MarketNavi.",
   "Use the flag beside a comment that breaks these rules. Only the MarketNavi team sees reports. A comment that breaks the rules can be removed and its writer warned, and an account that keeps breaking them can be closed.": "Gunakan bendera di samping komentar yang melanggar aturan ini. Hanya tim MarketNavi yang melihat laporan. Komentar yang melanggar dapat dihapus dan penulisnya diperingatkan, dan akun yang terus melanggar dapat ditutup.",
-  "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "Dengan memakai MarketNavi, kamu menerima ketentuan penggunaan dan kebijakan sosial di atas. Versi lengkapnya ada di situs web kami, dalam bahasa Inggris."
+  "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "Dengan memakai MarketNavi, kamu menerima ketentuan penggunaan dan kebijakan sosial di atas. Versi lengkapnya ada di situs web kami, dalam bahasa Inggris.",
+  "Beta": "Beta",
+  "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi sedang dalam beta tertutup selagi kami membangunnya bersama trader berpengalaman."
 }

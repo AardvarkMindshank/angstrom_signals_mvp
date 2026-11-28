@@ -2660,13 +2660,9 @@
   "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "A eToro paga recompensas de staking de cripto como pequenas posições novas todo mês. Elas ficam fora dos números das operações; este é o valor delas na venda.",
   "The new app isn't set up yet.": "O novo app ainda não está configurado.",
   "The new MarketNavi app, being built page by page. The classic app keeps working meanwhile.": "O novo app MarketNavi, construído página por página. O app clássico continua funcionando enquanto isso.",
-  "New · beta": "Novo · beta",
   "Pages": "Páginas",
-  "Everything not moved across yet is in the classic app.": "Tudo o que ainda não foi movido está no app clássico.",
-  "Classic app": "App clássico",
   "Log out": "Sair",
   "That email and password didn't match an account.": "Esse e-mail e essa senha não correspondem a nenhuma conta.",
-  "Back to the classic app": "Voltar ao app clássico",
   "Size after a loss": "Tamanho após uma perda",
   "Trades after a loss are {x} times the size": "Trades após uma perda têm {x} vezes o tamanho",
   "Trades after a loss are smaller": "Trades após uma perda são menores",
@@ -3261,5 +3257,7 @@
   "Terms and policies": "Termos e políticas",
   "The comments and the chat are for reacting to the markets and the readings in MarketNavi.": "Os comentários e o chat são para reagir aos mercados e às leituras do MarketNavi.",
   "Use the flag beside a comment that breaks these rules. Only the MarketNavi team sees reports. A comment that breaks the rules can be removed and its writer warned, and an account that keeps breaking them can be closed.": "Use a bandeira ao lado de um comentário que quebre estas regras. Só a equipe MarketNavi vê as denúncias. Um comentário que as quebre pode ser removido e seu autor advertido, e uma conta que as quebre repetidamente pode ser encerrada.",
-  "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "Usar o MarketNavi significa aceitar os termos de uso e a política social acima. As versões completas estão no nosso site, em inglês."
+  "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "Usar o MarketNavi significa aceitar os termos de uso e a política social acima. As versões completas estão no nosso site, em inglês.",
+  "Beta": "Beta",
+  "MarketNavi is in closed beta while we build it with experienced traders.": "O MarketNavi está em beta fechado enquanto o construímos com traders experientes."
 }

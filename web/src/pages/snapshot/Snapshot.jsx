@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { T, lang } from "../../lib/i18n.js";
 import { call } from "../../lib/service.js";
-import { SUPABASE_URL, CLASSIC } from "../../lib/supabase.js";
+import { SUPABASE_URL } from "../../lib/supabase.js";
 import { saveSettings } from "../../lib/account.js";
 import { usd, signed, weekday } from "../../lib/format.js";
 import { assetHref, Logo } from "../../components/Search.jsx";

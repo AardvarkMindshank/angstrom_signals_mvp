@@ -2660,13 +2660,9 @@
   "eToro pays crypto staking rewards as small new positions each month. They are kept out of the trade numbers; this is what they were worth when sold.": "eToro trả phần thưởng staking crypto dưới dạng các vị thế mới nhỏ mỗi tháng. Chúng không được tính vào số liệu giao dịch; đây là giá trị khi bán.",
   "The new app isn't set up yet.": "Ứng dụng mới chưa được thiết lập.",
   "The new MarketNavi app, being built page by page. The classic app keeps working meanwhile.": "Ứng dụng MarketNavi mới, đang được xây dựng từng trang. Trong lúc đó, ứng dụng cổ điển vẫn hoạt động.",
-  "New · beta": "Mới · beta",
   "Pages": "Trang",
-  "Everything not moved across yet is in the classic app.": "Mọi thứ chưa được chuyển sang đều nằm trong ứng dụng cổ điển.",
-  "Classic app": "Ứng dụng cổ điển",
   "Log out": "Đăng xuất",
   "That email and password didn't match an account.": "Email và mật khẩu này không khớp với tài khoản nào.",
-  "Back to the classic app": "Quay lại ứng dụng cổ điển",
   "Size after a loss": "Quy mô sau khi lỗ",
   "Trades after a loss are {x} times the size": "Giao dịch sau khi lỗ lớn gấp {x} lần",
   "Trades after a loss are smaller": "Giao dịch sau khi lỗ nhỏ hơn",
@@ -3261,5 +3257,7 @@
   "Terms and policies": "Điều khoản và chính sách",
   "The comments and the chat are for reacting to the markets and the readings in MarketNavi.": "Bình luận và trò chuyện dùng để phản hồi về thị trường và các chỉ số trong MarketNavi.",
   "Use the flag beside a comment that breaks these rules. Only the MarketNavi team sees reports. A comment that breaks the rules can be removed and its writer warned, and an account that keeps breaking them can be closed.": "Dùng biểu tượng cờ cạnh bình luận vi phạm các quy tắc này. Chỉ đội ngũ MarketNavi xem được báo cáo. Bình luận vi phạm có thể bị gỡ và người viết bị cảnh cáo, tài khoản vi phạm nhiều lần có thể bị đóng.",
-  "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "Sử dụng MarketNavi nghĩa là bạn chấp nhận điều khoản sử dụng và chính sách xã hội ở trên. Bản đầy đủ có trên trang web của chúng tôi, bằng tiếng Anh."
+  "Using MarketNavi means you accept the terms of use and the socials policy above. The full versions are on our website, in English.": "Sử dụng MarketNavi nghĩa là bạn chấp nhận điều khoản sử dụng và chính sách xã hội ở trên. Bản đầy đủ có trên trang web của chúng tôi, bằng tiếng Anh.",
+  "Beta": "Beta",
+  "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi đang ở giai đoạn beta kín trong khi chúng tôi xây dựng cùng các nhà giao dịch giàu kinh nghiệm."
 }
