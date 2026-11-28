@@ -59,6 +59,18 @@ def refresh_due(supabase, catalog: dict) -> None:
 
     keys = [asset_market_key(k, a) for k, a in catalog]
     rows = _rows(supabase, keys)
+    # Stocks someone opened (an asset page, a search) but nobody watches: their report date is looked up too, once,
+    # so an asset page never says "no date" just because the stock isn't on a watchlist.
+    try:
+        extra = (supabase.table("asset_market").select("asset_key, kind, asset_id, logo_url, market_stats_updated_at, "
+                                                       "next_earnings, earnings_checked_at")
+                 .eq("kind", "Stock").is_("earnings_checked_at", "null").limit(EARNINGS_PER_RUN).execute().data or [])
+        for r in extra:
+            if r.get("asset_id") and r.get("asset_key") not in rows:
+                rows[r["asset_key"]] = r
+                catalog = {**catalog, ("Stock", str(r["asset_id"]).upper()): None} if isinstance(catalog, dict) else catalog
+    except Exception:
+        pass
     minute = datetime.now(timezone.utc).minute
     try:
         due = earnings_due(catalog, rows)[:EARNINGS_PER_RUN]
