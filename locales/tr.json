@@ -3212,5 +3212,19 @@
   "Apply for the closed beta": "Kapalı betaya başvurun",
   "Welcome to MarketNavi": "MarketNavi'ye hoş geldiniz",
   "Choose a password for {email}, and you're in.": "{email} için bir şifre seçin, hepsi bu.",
-  "Skip: I'll use Google": "Atla: Google kullanacağım"
+  "Skip: I'll use Google": "Atla: Google kullanacağım",
+  "Report this comment": "Bu yorumu bildir",
+  "Promoting an asset": "Bir varlığın tanıtımı",
+  "Presented as financial advice": "Yatırım tavsiyesi gibi sunulmuş",
+  "Harassment or a personal attack": "Taciz ya da kişisel saldırı",
+  "Spam": "Spam",
+  "Something else": "Başka bir şey",
+  "Send report": "Bildirimi gönder",
+  "Reason": "Neden",
+  "What should we look at? Add a note for Something else.": "Neye bakmalıyız? Başka bir şey için not ekleyin.",
+  "Only the MarketNavi team sees reports.": "Bildirimleri yalnızca MarketNavi ekibi görür.",
+  "Sent. Thank you: it's with the MarketNavi team, and you'll be told as it moves along.": "Gönderildi. Teşekkürler: MarketNavi ekibinde, ilerledikçe bilgilendirileceksiniz.",
+  "Remove": "Kaldır",
+  "Sending…": "Gönderiliyor…",
+  "Your feedback": "Geri bildiriminiz"
 }

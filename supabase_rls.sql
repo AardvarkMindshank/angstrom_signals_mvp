@@ -629,6 +629,7 @@ create table if not exists public.feedback_notes (
     created_at timestamptz not null default now()
 );
 
+alter table public.feedback_notes add column if not exists emailed_at timestamptz;      -- the worker's admin email
 alter table public.feedback_notes enable row level security;
 
 drop policy if exists "insert own feedback" on public.feedback_notes;
@@ -2294,6 +2295,7 @@ create table if not exists public.comment_reports (
     created_at timestamptz not null default now(),
     unique (user_id, place, message_id, message_kind)
 );
+alter table public.comment_reports add column if not exists emailed_at timestamptz;     -- the worker's admin email
 
 alter table public.comment_reports enable row level security;
 

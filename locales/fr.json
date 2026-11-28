@@ -3212,5 +3212,19 @@
   "Apply for the closed beta": "Demander l'accès à la bêta fermée",
   "Welcome to MarketNavi": "Bienvenue sur MarketNavi",
   "Choose a password for {email}, and you're in.": "Choisissez un mot de passe pour {email}, et c'est fait.",
-  "Skip: I'll use Google": "Passer : j'utiliserai Google"
+  "Skip: I'll use Google": "Passer : j'utiliserai Google",
+  "Report this comment": "Signaler ce commentaire",
+  "Promoting an asset": "Promotion d'un actif",
+  "Presented as financial advice": "Présenté comme un conseil financier",
+  "Harassment or a personal attack": "Harcèlement ou attaque personnelle",
+  "Spam": "Spam",
+  "Something else": "Autre chose",
+  "Send report": "Envoyer le signalement",
+  "Reason": "Motif",
+  "What should we look at? Add a note for Something else.": "Que devons-nous examiner ? Ajoutez une note pour Autre chose.",
+  "Only the MarketNavi team sees reports.": "Seule l'équipe MarketNavi voit les signalements.",
+  "Sent. Thank you: it's with the MarketNavi team, and you'll be told as it moves along.": "Envoyé. Merci : l'équipe MarketNavi s'en occupe, et vous serez informé de son avancement.",
+  "Remove": "Retirer",
+  "Sending…": "Envoi…",
+  "Your feedback": "Vos retours"
 }

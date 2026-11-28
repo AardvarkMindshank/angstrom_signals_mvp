@@ -3212,5 +3212,19 @@
   "Apply for the closed beta": "申请封闭测试",
   "Welcome to MarketNavi": "欢迎使用 MarketNavi",
   "Choose a password for {email}, and you're in.": "为 {email} 设置密码，即可开始使用。",
-  "Skip: I'll use Google": "跳过：我使用 Google"
+  "Skip: I'll use Google": "跳过：我使用 Google",
+  "Report this comment": "举报此评论",
+  "Promoting an asset": "推广某个资产",
+  "Presented as financial advice": "以投资建议的形式呈现",
+  "Harassment or a personal attack": "骚扰或人身攻击",
+  "Spam": "垃圾信息",
+  "Something else": "其他",
+  "Send report": "发送举报",
+  "Reason": "原因",
+  "What should we look at? Add a note for Something else.": "我们应该查看什么？选择“其他”时请附上说明。",
+  "Only the MarketNavi team sees reports.": "只有 MarketNavi 团队能看到举报。",
+  "Sent. Thank you: it's with the MarketNavi team, and you'll be told as it moves along.": "已发送。谢谢：MarketNavi 团队已收到，进展时会通知你。",
+  "Remove": "移除",
+  "Sending…": "正在发送…",
+  "Your feedback": "你的反馈"
 }

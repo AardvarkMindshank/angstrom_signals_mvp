@@ -510,7 +510,7 @@ select:focus { outline: 2px solid var(--gold); }
   .settings { grid-template-columns: 1fr; gap: 18px; }
   .snav { position: static; flex-direction: row; overflow-x: auto; scrollbar-width: none; gap: 4px; margin: 0 -16px; padding: 0 16px; flex-wrap: wrap; }
   .snav h1 { width: 100%; margin: 0 0 8px; }
-  .snav a { white-space: nowrap; padding: 7px 12px; border-radius: 999px; font-size: 13.5px; } .snav a svg { display: none; }
+  .snav a { white-space: nowrap; padding: 7px 12px; border-radius: 999px; font-size: 13.5px; } .snav a svg, .snav a .itile { display: none; }
   .srow2 { flex-wrap: wrap; } .sctl { justify-content: flex-start; }
 }
 .srow2.wide { padding-bottom: 10px; }
@@ -847,6 +847,7 @@ button .ic, a .ic { vertical-align: -0.2em; }
 
 /* 📖 Help and guides */
 .help .snav a .ic { margin-right: 2px; }
+.help .helph { margin-bottom: -22px; }   /* the heading sits with its topic, not a section away */
 .helph { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
 .md { font-size: 14.5px; line-height: 1.6; color: var(--ang-soft); max-width: 860px; }
 .md p { margin: 0 0 12px; } .md ul, .md ol { margin: 0 0 12px; padding-left: 22px; } .md li { margin: 3px 0; }
@@ -1081,3 +1082,19 @@ button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent)
 .signbox .signfoot .linkish { font-weight: 600; color: var(--ang-text); }
 .signbox .signh { text-align: center; margin: 0; font-family: Montserrat, Inter, sans-serif; font-size: 22px; }
 .signbox button.back { align-self: center; }
+.reportbox { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; padding: 10px 12px; border: 1px solid color-mix(in srgb, var(--bad) 35%, var(--ang-border)); border-radius: 10px; background: var(--ang-surface); font-size: 13px; }
+.reportbox label { display: flex; flex-direction: column; gap: 4px; }
+.reportbox select, .reportbox textarea { font: inherit; padding: 7px 9px; border: 1px solid var(--ang-border); border-radius: 8px; background: var(--ang-field); color: var(--ang-text); }
+.reportbox .row { display: flex; gap: 8px; }
+/* 💬 Feedback (Help › Feedback) */
+.fbk { display: flex; flex-direction: column; gap: 14px; max-width: 720px; }
+.fbl { display: flex; flex-direction: column; gap: 6px; font-weight: 500; }
+.fbl textarea { font: inherit; font-weight: 400; padding: 10px 12px; border: 1px solid var(--ang-border); border-radius: 10px; background: var(--ang-field); color: var(--ang-text); resize: vertical; }
+.fbshots { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.fbfile { position: relative; } .fbfile img { height: 64px; border-radius: 8px; border: 1px solid var(--ang-border); display: block; }
+.fbfile button { position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; background: var(--ang-surface); border: 1px solid var(--ang-border); border-radius: 50%; }
+.fbmine { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.fbrow { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--ang-border); font-size: 13.5px; }
+.fbtext { flex: 1; min-width: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.fbstat { white-space: nowrap; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--ang-field); }
+.fbstat.accepted, .fbstat.in_development, .fbstat.in_production { color: var(--good-ink); } .fbstat.rejected { color: var(--bad-ink); }

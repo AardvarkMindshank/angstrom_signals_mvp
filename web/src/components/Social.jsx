@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Icon from "./Icon.jsx";
 import { ConfirmButton } from "./Confirm.jsx";
+import { ReportButton, ReportBox } from "./Report.jsx";
 import { T } from "../lib/i18n.js";
 import * as social from "../lib/social.js";
 import { watchlists, keyFor, universe } from "../lib/assets.js";
@@ -117,7 +118,7 @@ function Chat({ visible }) {
           {rows.map((n) => (
             <li key={n.id}>
               <Note n={n} kind="chat" act={act} person={person} head={n.audience === "group" ? <span className="tag"><Icon n="users" size={13} /> {n.group_name}</span> : n.audience === "direct" ? <span className="tag"><Icon n="lock" size={13} /> {n.mine ? T("to {name}", { name: n.recipient_name || T("Member") }) : T("private")}</span> : null} />
-              {n.replies.map((r) => <div key={r.id} className="reply"><Note n={r} kind="chat" act={act} person={person} /></div>)}
+              {n.replies.map((r) => <div key={r.id} className="reply"><Note n={r} kind="chat" act={act} person={person} reply /></div>)}
               <ReplyBox onSend={(t) => act(() => social.post(t, null, n.id))} />
             </li>
           ))}
@@ -127,8 +128,9 @@ function Chat({ visible }) {
   );
 }
 
-function Note({ n, kind, act, head, person }) {
+function Note({ n, kind, act, head, person, reply }) {
   const v = n.my_vote == null ? 0 : +n.my_vote;
+  const [reporting, setReporting] = useState(false);
   const thumb = (x) => (kind === "chat" ? social.vote(n.id, x) : voteNote(n.id, kind, x));
   const del = () => (kind === "chat" ? social.remove(n.id) : deleteNote(n.id, kind));
   return (
@@ -142,6 +144,7 @@ function Note({ n, kind, act, head, person }) {
           <button type="button" className={"linkish" + (v === -1 ? " on" : "")} onClick={() => act(() => thumb(v === -1 ? 0 : -1))} aria-label={T("Thumbs down")}><Icon n="thumbs-down" size={15} /> {+n.thumbs_down || 0}</button>
           {n.responded_score != null && kind === "comment" && <span className="m">{T("on a mood of {s}", { s: signed(n.responded_score) })}</span>}
           {n.mine && <ConfirmButton onYes={() => act(del)}>{T("Delete")}</ConfirmButton>}
+          {!n.mine && <ReportButton onOpen={() => setReporting(true)} />}
           {person && !n.mine && n.author_id && (
             <>
               <button type="button" className={"linkish" + (person.fav(n.author_id) ? " on" : "")} aria-pressed={person.fav(n.author_id)} onClick={() => person.star(n.author_id)}
@@ -150,6 +153,7 @@ function Note({ n, kind, act, head, person }) {
             </>
           )}
         </div>
+        {reporting && <ReportBox n={n} place={kind === "chat" ? "chat" : "signal"} kind={reply ? "reply" : "comment"} onClose={() => setReporting(false)} />}
       </div>
     </div>
   );

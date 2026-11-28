@@ -3,11 +3,12 @@ import { T, lang, noEmoji } from "../../lib/i18n.js";
 import Icon, { Tile } from "../../components/Icon.jsx";
 import Markdown from "../../components/Markdown.jsx";
 import { showAgain } from "../../components/GettingStarted.jsx";
+import Feedback from "./Feedback.jsx";
 
 // 📖 Help and guides: the topics down the left (as Settings), each the same explanation the classic app gives, in
 // the member's language (web/scripts/help.py writes them at build time), and the training videos.
 // The topics' icons (named in web/scripts/help.py), listed so web/scripts/icons.py copies them.
-export const HELP_ICONS = ["rocket", "trending-up", "chart-column", "newspaper", "waves-horizontal", "puzzle", "funnel", "bell", "message-circle", "clapperboard"];
+export const HELP_ICONS = ["message-square-text", "lightbulb", "image", "rocket", "trending-up", "chart-column", "newspaper", "waves-horizontal", "puzzle", "funnel", "bell", "message-circle", "clapperboard"];
 let cache = null;
 const load = () => (cache = cache || fetch(`${import.meta.env.BASE_URL}help/${lang}.json`).then((r) => (r.ok ? r.json() : fetch(`${import.meta.env.BASE_URL}help/en.json`).then((x) => x.json())))
   .catch(() => { cache = null; return null; }));
@@ -17,7 +18,7 @@ export default function Help({ topic, account }) {
   const [video, setVideo] = useState(null);
   useEffect(() => { load().then(setD); }, []);
   if (!d) return <div className="page"><div className="empty" style={{ height: 300 }}>{T("Loading…")}</div></div>;
-  const all = [...d.topics, { key: "videos", title: T("Training videos"), icon: "clapperboard" }];
+  const all = [...d.topics, { key: "videos", title: T("Training videos"), icon: "clapperboard" }, { key: "feedback", title: T("Feedback"), icon: "message-square-text" }];
   const on = all.some((x) => x.key === topic) ? topic : "start";
   const cur = all.find((x) => x.key === on);
   return (
@@ -32,13 +33,13 @@ export default function Help({ topic, account }) {
       </nav>
       <div className="sbody">
         <h2 className="helph"><Tile n={cur.icon} size={18} /> {noEmoji(cur.title)}</h2>
-        {on === "videos" ? <Videos series={d.videos} play={setVideo} />
+        {on === "feedback" ? <Feedback /> : on === "videos" ? <Videos series={d.videos} play={setVideo} />
           : cur.blocks.map((b, i) => <Markdown key={i} text={b} />)}
         {on === "start" && (
           <button type="button" className="ghost bordered" onClick={async () => { await showAgain(account); window.location.hash = "snapshot"; window.location.reload(); }}
             title={T("Brings back the checklist at the top of the page.")}><Icon n="rocket" size={16} /> {T("🚀 Show the getting-started checklist")}</button>
         )}
-        <p className="sub">{T("Descriptive readings, not financial advice.")}</p>
+        {on !== "feedback" && <p className="sub">{T("Descriptive readings, not financial advice.")}</p>}
       </div>
       {video && <Player video={video} series={d.videos} onClose={() => setVideo(null)} onPick={setVideo} />}
     </div>

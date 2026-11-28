@@ -11,7 +11,8 @@ import requests
 import beta_emails
 
 
-def _send_resend(to_email: str, subject: str, page: str, plain: str, attachments: list | None = None) -> bool:
+def _send_resend(to_email: str, subject: str, page: str, plain: str, attachments: list | None = None,
+                 reply_to: str = "") -> bool:
     api_key = (os.getenv("RESEND_API_KEY") or "").strip()
     if not api_key or not to_email:
         return False
@@ -20,7 +21,8 @@ def _send_resend(to_email: str, subject: str, page: str, plain: str, attachments
         response = requests.post(
             "https://api.resend.com/emails",
             json={"from": sender, "to": [to_email], "subject": subject, "html": page, "text": plain,
-                  **({"attachments": attachments} if attachments else {})},
+                  **({"attachments": attachments} if attachments else {}),
+                  **({"reply_to": reply_to} if "@" in (reply_to or "") else {})},
             headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
             timeout=15,
         )
@@ -281,4 +283,88 @@ def send_barred_notes(supabase, send=None, now=None) -> int:
                 pass
     if sent:
         print(f"Barred emails sent: {sent}")
+    return sent
+
+
+REASONS = {"promotion": "Promoting an asset", "advice": "Presented as financial advice",
+           "harassment": "Harassment or a personal attack", "spam": "Spam", "other": "Something else"}
+
+
+def _notice_rows(supabase, table: str, columns: str) -> list[dict]:
+    try:
+        return supabase.table(table).select(columns).is_("emailed_at", "null").limit(25).execute().data or []
+    except Exception as exc:
+        if "emailed_at" not in str(exc):
+            print(f"Admin notices skipped ({table}): {str(exc)[:120]}")
+        return []
+
+
+def _claim(supabase, table: str, row_id, stamp) -> bool:
+    try:
+        return bool(supabase.table(table).update({"emailed_at": stamp}).eq("id", row_id).is_("emailed_at", "null").execute().data)
+    except Exception:
+        return False
+
+
+def send_admin_notices(supabase, send=None, admin_emails=None, shots=None, now=None) -> int:
+    """Email the admins each new feedback note (with its screenshots) and each new comment report, once."""
+    import base64
+    import html
+    from datetime import datetime, timezone
+
+    from email_brand import render_email
+
+    send = send or _send_resend
+    if send is _send_resend and not (os.getenv("RESEND_API_KEY") or "").strip():
+        return 0
+    stamp = (now or datetime.now(timezone.utc)).isoformat()
+    notes = _notice_rows(supabase, "feedback_notes", "id, user_email, kind, body, images, created_at")
+    reports = _notice_rows(supabase, "comment_reports", "id, user_email, place, message_kind, asset_key, comment_body, reason, note, created_at")
+    if not notes and not reports:
+        return 0
+    admins = admin_emails if admin_emails is not None else _admin_emails(supabase)
+    if not admins:
+        return 0
+
+    def download(path):
+        try:
+            return supabase.storage.from_("feedback").download(path)
+        except Exception:
+            return None
+    shots = shots or download
+    sent = 0
+    for row in notes:
+        if not _claim(supabase, "feedback_notes", row["id"], stamp):
+            continue
+        label = "Enhancement" if row.get("kind") == "enhancement" else "Issue"
+        files = [b for b in (shots(p) for p in (row.get("images") or [])[:3]) if b]
+        page, plain = render_email(f"Feedback: {label}", [
+            f"From {html.escape(str(row.get('user_email') or 'unknown account'))}. Reply to this email to answer them.",
+            "<br>".join(html.escape(str(row.get("body") or "")).splitlines()),
+            (f"{len(files)} screenshot(s) attached; also in Admin › Feedback." if files else "Also in Admin › Feedback."),
+        ])
+        attach = [{"filename": f"screenshot-{i}.jpg", "content": base64.b64encode(b).decode()} for i, b in enumerate(files, 1)]
+        ok = [send(a, f"MarketNavi feedback: {label}", page, plain, attach, str(row.get("user_email") or "")) for a in admins]
+        if any(ok):
+            sent += 1
+        else:
+            supabase.table("feedback_notes").update({"emailed_at": None}).eq("id", row["id"]).execute()
+    for row in reports:
+        if not _claim(supabase, "comment_reports", row["id"], stamp):
+            continue
+        label = REASONS.get(row.get("reason"), "Comment report")
+        where = ("General chat" if row.get("place") == "chat" else "Social signals") + " " + ("reply" if row.get("message_kind") == "reply" else "comment")
+        page, plain = render_email(f"Report: {label}", [
+            f"{html.escape(where)}" + (f" · {html.escape(str(row.get('asset_key') or ''))}" if row.get("asset_key") else ""),
+            f"Comment: {html.escape(str(row.get('comment_body') or ''))}",
+            f"Note: {html.escape(str(row.get('note') or '')) or 'None'}",
+            f"Reported by {html.escape(str(row.get('user_email') or 'unknown account'))}. Review it in Admin › Reported comments.",
+        ], tone="down")
+        ok = [send(a, f"MarketNavi report: {label}", page, plain, None, str(row.get("user_email") or "")) for a in admins]
+        if any(ok):
+            sent += 1
+        else:
+            supabase.table("comment_reports").update({"emailed_at": None}).eq("id", row["id"]).execute()
+    if sent:
+        print(f"Admin notices sent: {sent}")
     return sent

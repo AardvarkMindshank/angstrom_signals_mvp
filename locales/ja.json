@@ -3212,5 +3212,19 @@
   "Apply for the closed beta": "クローズドベータに申し込む",
   "Welcome to MarketNavi": "MarketNavi へようこそ",
   "Choose a password for {email}, and you're in.": "{email} のパスワードを設定すれば、すぐに使えます。",
-  "Skip: I'll use Google": "スキップ：Google を使う"
+  "Skip: I'll use Google": "スキップ：Google を使う",
+  "Report this comment": "このコメントを報告",
+  "Promoting an asset": "資産の宣伝",
+  "Presented as financial advice": "投資助言として提示",
+  "Harassment or a personal attack": "嫌がらせまたは個人攻撃",
+  "Spam": "スパム",
+  "Something else": "その他",
+  "Send report": "報告を送信",
+  "Reason": "理由",
+  "What should we look at? Add a note for Something else.": "何を確認すればよいですか？「その他」の場合はメモを添えてください。",
+  "Only the MarketNavi team sees reports.": "報告はMarketNaviチームだけが確認します。",
+  "Sent. Thank you: it's with the MarketNavi team, and you'll be told as it moves along.": "送信しました。ありがとうございます。MarketNaviチームが確認し、進捗をお知らせします。",
+  "Remove": "削除",
+  "Sending…": "送信中…",
+  "Your feedback": "あなたのフィードバック"
 }

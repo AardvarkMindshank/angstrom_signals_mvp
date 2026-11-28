@@ -10579,7 +10579,7 @@ def _apply_comment_report(action) -> str:
         if "duplicate" in text or "23505" in text:
             return t("Report already sent for this comment.")
         return t("Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.")
-    sent, why = _email_report(reason, note, place, kind, row, asset)
+    sent, why = True, ""                  # the worker emails the admins (beta_worker.send_admin_notices)
     if sent:
         return t("Report sent. Thank you.")
     return t('Report saved. The email was not sent: {why}.', why=why)
@@ -11827,7 +11827,7 @@ def _store_feedback(kind: str, body: str, files=None) -> tuple[str, str]:
             shot_problem = t("The screenshots could not be stored yet, so the note was saved without them.")
         except Exception:
             return "error", t("That could not be saved. Please try again.")
-    sent, reason = _email_feedback(kind, text[:4000], user_email, user_id, shots)
+    sent, reason = True, ""               # the worker emails the admins (beta_worker.send_admin_notices)
     if sent and not shot_problem:
         return "ok", t("Saved and emailed. Thank you.")
     words = t("Saved and emailed. Thank you.") if sent else t('Saved. The email was not sent: {reason}.', reason=reason)

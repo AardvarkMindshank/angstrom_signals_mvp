@@ -3212,5 +3212,19 @@
   "Apply for the closed beta": "สมัครเบต้าแบบปิด",
   "Welcome to MarketNavi": "ยินดีต้อนรับสู่ MarketNavi",
   "Choose a password for {email}, and you're in.": "ตั้งรหัสผ่านสำหรับ {email} แล้วเข้าใช้ได้เลย",
-  "Skip: I'll use Google": "ข้าม: ฉันจะใช้ Google"
+  "Skip: I'll use Google": "ข้าม: ฉันจะใช้ Google",
+  "Report this comment": "รายงานความคิดเห็นนี้",
+  "Promoting an asset": "โปรโมตสินทรัพย์",
+  "Presented as financial advice": "นำเสนอเหมือนคำแนะนำทางการเงิน",
+  "Harassment or a personal attack": "คุกคามหรือโจมตีบุคคล",
+  "Spam": "สแปม",
+  "Something else": "อย่างอื่น",
+  "Send report": "ส่งรายงาน",
+  "Reason": "เหตุผล",
+  "What should we look at? Add a note for Something else.": "เราควรตรวจสอบอะไร? หากเลือก อย่างอื่น โปรดเพิ่มหมายเหตุ",
+  "Only the MarketNavi team sees reports.": "เฉพาะทีม MarketNavi เท่านั้นที่เห็นรายงาน",
+  "Sent. Thank you: it's with the MarketNavi team, and you'll be told as it moves along.": "ส่งแล้ว ขอบคุณ: ทีม MarketNavi ได้รับแล้ว และจะแจ้งให้ทราบเมื่อมีความคืบหน้า",
+  "Remove": "นำออก",
+  "Sending…": "กำลังส่ง…",
+  "Your feedback": "ความคิดเห็นของคุณ"
 }

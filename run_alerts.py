@@ -22,7 +22,7 @@ from supabase import create_client
 from alerts import READING_ALERTS, _email_open_crossings, evaluate_alerts, facts_by_symbol, logos_by_symbol, market_rows
 from alerts import reading_alert_on
 from alerts import SETTINGS_KEYS as READING_SETTINGS_KEYS
-from beta_worker import send_barred_notes, send_beta_decision_emails, send_nda_copies, send_welcome_links
+from beta_worker import send_admin_notices, send_barred_notes, send_beta_decision_emails, send_nda_copies, send_welcome_links
 from digest import send_due_digest
 from email_brand import alert_tone, asset_logo, render_email
 import group_readings
@@ -358,7 +358,7 @@ def run_background_checks() -> None:
     except Exception as exc:
         print(f"NDA copies failed: {exc}")
 
-    for step in (send_welcome_links, send_barred_notes):
+    for step in (send_welcome_links, send_barred_notes, send_admin_notices):
         try:
             step(supabase)
         except Exception as exc:

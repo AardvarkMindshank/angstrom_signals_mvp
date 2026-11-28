@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ConfirmButton } from "../../components/Confirm.jsx";
+import { ReportButton, ReportBox } from "../../components/Report.jsx";
 import Icon from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
 import { crowd, vote, comments, replies, postComment, deleteNote, voteNote, postReply, COMMENT_LIMIT } from "../../lib/assets.js";
@@ -62,8 +63,8 @@ export default function Community({ row, score, votes, about }) {
           <ol className="comments">
             {notes.map((n) => (
               <li key={n.id}>
-                <Note n={n} kind="comment" act={act} />
-                {(reps[n.id] || []).map((r) => <div key={r.id} className="reply"><Note n={r} kind="reply" act={act} /></div>)}
+                <Note n={n} kind="comment" act={act} asset={key} />
+                {(reps[n.id] || []).map((r) => <div key={r.id} className="reply"><Note n={r} kind="reply" act={act} asset={key} /></div>)}
                 <ReplyBox onSend={(t) => act(() => postReply(n.id, t))} />
               </li>
             ))}
@@ -74,8 +75,9 @@ export default function Community({ row, score, votes, about }) {
   );
 }
 
-function Note({ n, kind, act }) {
+function Note({ n, kind, act, asset }) {
   const v = n.my_vote == null ? 0 : +n.my_vote;
+  const [reporting, setReporting] = useState(false);
   return (
     <div className="cnote">
       <span className="cav" aria-hidden="true">{n.avatar_url ? <img src={n.avatar_url} alt="" /> : String(n.author_name || "M").slice(0, 1)}</span>
@@ -87,7 +89,9 @@ function Note({ n, kind, act }) {
           <button type="button" className={"linkish" + (v === 1 ? " on" : "")} onClick={() => act(() => voteNote(n.id, kind, v === 1 ? 0 : 1))} aria-label={T("Thumbs up")}><Icon n="thumbs-up" size={15} /> {+n.thumbs_up || 0}</button>
           <button type="button" className={"linkish" + (v === -1 ? " on" : "")} onClick={() => act(() => voteNote(n.id, kind, v === -1 ? 0 : -1))} aria-label={T("Thumbs down")}><Icon n="thumbs-down" size={15} /> {+n.thumbs_down || 0}</button>
           {n.mine && <ConfirmButton onYes={() => act(() => deleteNote(n.id, kind))}>{T("Delete")}</ConfirmButton>}
+          {!n.mine && <ReportButton onOpen={() => setReporting(true)} />}
         </div>
+        {reporting && <ReportBox n={n} place="signal" kind={kind === "reply" ? "reply" : "comment"} asset={asset} onClose={() => setReporting(false)} />}
       </div>
     </div>
   );
