@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { ConfirmButton } from "../../components/Confirm.jsx";
 import Icon from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
 import { crowd, vote, comments, replies, postComment, deleteNote, voteNote, postReply, COMMENT_LIMIT } from "../../lib/assets.js";
@@ -85,7 +86,7 @@ function Note({ n, kind, act }) {
         <div className="cacts">
           <button type="button" className={"linkish" + (v === 1 ? " on" : "")} onClick={() => act(() => voteNote(n.id, kind, v === 1 ? 0 : 1))} aria-label={T("Thumbs up")}><Icon n="thumbs-up" size={15} /> {+n.thumbs_up || 0}</button>
           <button type="button" className={"linkish" + (v === -1 ? " on" : "")} onClick={() => act(() => voteNote(n.id, kind, v === -1 ? 0 : -1))} aria-label={T("Thumbs down")}><Icon n="thumbs-down" size={15} /> {+n.thumbs_down || 0}</button>
-          {n.mine && <button type="button" className="linkish" onClick={() => act(() => deleteNote(n.id, kind))}>{T("Delete")}</button>}
+          {n.mine && <ConfirmButton onYes={() => act(() => deleteNote(n.id, kind))}>{T("Delete")}</ConfirmButton>}
         </div>
       </div>
     </div>

@@ -1045,3 +1045,19 @@ button.on .ic[data-tone], button[aria-selected=true] .ic[data-tone], button[aria
 .classic .lat.prism .ctl button .ic, .classic .lat.fun .stage .ctl button .ic { color: #fff; }
 .gsteps li a { display: inline-flex; align-items: center; gap: 8px; }
 .gsteps li.done .itile { opacity: .55; }
+
+/* 🗑️ Confirming and undoing in place (components/Confirm.jsx) */
+.confirm { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.confirm .m { font-weight: 600; color: var(--bad); }
+.danger-btn.sm, .ghost.sm { padding: 3px 10px; font-size: 12.5px; min-height: 0; border-radius: 8px; }
+button.undo { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+  background: color-mix(in srgb, var(--gold) 16%, transparent); color: var(--ang-text); border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); animation: undo-in .18s ease-out; }
+button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent); }
+@keyframes undo-in { from { transform: scale(.92); opacity: 0; } to { transform: none; opacity: 1; } }
+.gone { opacity: .45; text-decoration: line-through; }
+.classic .lat.prism .ctl button.cancel { background: var(--ang-surface); color: var(--ang-text); border: 1px solid var(--ang-border); }
+.classic .lat.prism .ctl .ask .q { color: var(--bad); }
+.wlitem button.undo { width: auto; height: 24px; border-radius: 999px; padding: 0 9px; margin-left: 6px; font-size: 12px; color: var(--ang-text);
+  background: color-mix(in srgb, var(--gold) 16%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent); }
+.wlitem a.gone:hover { text-decoration: line-through; }
+.wlitem a.gone { text-decoration: line-through; }

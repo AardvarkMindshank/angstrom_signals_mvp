@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Icon from "./Icon.jsx";
+import { ConfirmButton } from "./Confirm.jsx";
 import { T } from "../lib/i18n.js";
 import * as social from "../lib/social.js";
 import { watchlists, keyFor, universe } from "../lib/assets.js";
@@ -140,12 +141,12 @@ function Note({ n, kind, act, head, person }) {
           <button type="button" className={"linkish" + (v === 1 ? " on" : "")} onClick={() => act(() => thumb(v === 1 ? 0 : 1))} aria-label={T("Thumbs up")}><Icon n="thumbs-up" size={15} /> {+n.thumbs_up || 0}</button>
           <button type="button" className={"linkish" + (v === -1 ? " on" : "")} onClick={() => act(() => thumb(v === -1 ? 0 : -1))} aria-label={T("Thumbs down")}><Icon n="thumbs-down" size={15} /> {+n.thumbs_down || 0}</button>
           {n.responded_score != null && kind === "comment" && <span className="m">{T("on a mood of {s}", { s: signed(n.responded_score) })}</span>}
-          {n.mine && <button type="button" className="linkish" onClick={() => act(del)}>{T("Delete")}</button>}
+          {n.mine && <ConfirmButton onYes={() => act(del)}>{T("Delete")}</ConfirmButton>}
           {person && !n.mine && n.author_id && (
             <>
               <button type="button" className={"linkish" + (person.fav(n.author_id) ? " on" : "")} aria-pressed={person.fav(n.author_id)} onClick={() => person.star(n.author_id)}
                 title={person.fav(n.author_id) ? T("Remove from favourites") : T("Add to favourites")}><Icon n="star" size={15} className={person.fav(n.author_id) ? "filled" : ""} /></button>
-              <button type="button" className="linkish" title={T("Block: hide their messages and stop private messages both ways")} onClick={() => person.block(n.author_id, n.author_name || "")}><Icon n="ban" size={15} /></button>
+              <ConfirmButton title={T("Block: hide their messages and stop private messages both ways")} ask={T("Block {name}?", { name: n.author_name || T("Member") })} yes={T("Block")} onYes={() => person.block(n.author_id, n.author_name || "")}><Icon n="ban" size={15} /></ConfirmButton>
             </>
           )}
         </div>

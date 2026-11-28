@@ -5,6 +5,7 @@ import { usd, pct, signed, tone, dayMonthYear, stamp } from "../../lib/format.js
 import { Logo, assetHref } from "../../components/Search.jsx";
 import { label, WIND, COVERAGE } from "./words.js";
 import Chart from "./Chart.jsx";
+import { useDelayed, UndoButton } from "../../components/Confirm.jsx";
 import Readings from "./Readings.jsx";
 import News from "./News.jsx";
 import Derivatives from "./Derivatives.jsx";
@@ -24,6 +25,7 @@ export default function Asset({ assetKey, tab, account }) {
   const [sea, setSea] = useState(null);
   const [watched, setWatched] = useState(false);
   const [busy, setBusy] = useState(false);
+  const later = useDelayed();
 
   useEffect(() => {
     let live = true;
@@ -60,9 +62,12 @@ export default function Asset({ assetKey, tab, account }) {
     ["activity", T("Your activity")], ["community", T("Community")]];
   const on = tabs.some((x) => x[0] === tab) ? tab : "chart";
 
+  // Adding saves at once; removing shows "Undo" beside the button for a few seconds before it is saved.
   const toggle = async () => {
+    if (watched) { setWatched(false); later.run("watch", () => saveWatch(who.kind, who.id, name, false).catch(() => {})); return; }
+    if (later.held("watch")) { later.undo("watch"); setWatched(true); return; }
     setBusy(true);
-    try { await saveWatch(who.kind, who.id, name, !watched); setWatched(!watched); } catch (e) { /* the row rules said no */ }
+    try { await saveWatch(who.kind, who.id, name, true); setWatched(true); } catch (e) { /* the row rules said no */ }
     setBusy(false);
   };
   const arrow = (d) => (d == null || Math.round(d) === 0 ? "" : (d > 0 ? "▲ " : "▼ ") + Math.abs(Math.round(d)) + " " + T("in a week"));
@@ -82,6 +87,7 @@ export default function Asset({ assetKey, tab, account }) {
             <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill={watched ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M6 3h12v18l-6-4-6 4z" /></svg>
             {watched ? T("On your watchlist") : T("Add to watchlist")}
           </button>
+          {later.held("watch") && <UndoButton onUndo={() => { later.undo("watch"); setWatched(true); }} />}
         </div>
       </div>
 

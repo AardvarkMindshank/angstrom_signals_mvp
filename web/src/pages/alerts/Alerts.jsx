@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useDelayed, UndoButton } from "../../components/Confirm.jsx";
 import Icon, { Tile } from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
 import { supabase } from "../../lib/supabase.js";
@@ -59,6 +60,11 @@ export default function Alerts() {
     return null;
   };
   const list = (rows || []).slice().sort((a, b) => (Number(!!a.is_read && isAlert(a)) - Number(!!b.is_read && isAlert(b))) || String(b.created_at).localeCompare(String(a.created_at)));
+  // Clearing hides those alerts at once and shows Undo where you pressed; they are cleared a few seconds later.
+  const later = useDelayed();
+  const [hold, setHold] = useState(null);
+  const clear = (what) => { setHold(what); later.run("clear", async () => { await act(what); setHold(null); }); };
+  const shown = hold ? list.filter((n) => !isAlert(n) || (hold === "clear" && !n.is_read)) : list;
   const unread = list.filter((n) => isAlert(n) && !n.is_read).length;
   return (
     <div className="page">
@@ -66,14 +72,16 @@ export default function Alerts() {
         <h1 className="ptitle" style={{ marginRight: "auto" }}><Tile n="bell" size={22} /> {T("Alerts")}{unread ? <span className="pcount">{unread}</span> : null}</h1>
         <div className="right">
           <button type="button" className="ghost" disabled={busy || !unread} onClick={() => act("read")} title={T("Mark all as read")} aria-label={T("Mark all as read")}><Icon n="check-check" /></button>
-          <button type="button" className="ghost" disabled={busy || !list.some((n) => isAlert(n) && n.is_read)} onClick={() => act("clear")} title={T("Clear read alerts")} aria-label={T("Clear read alerts")}><Icon n="brush-cleaning" /></button>
-          <button type="button" className="ghost" disabled={busy || !list.some(isAlert)} onClick={() => act("all")} title={T("Clear all alerts. Each one was already sent by email or in your digest.")} aria-label={T("Clear all")}><Icon n="trash" /></button>
+          {hold ? <UndoButton onUndo={() => { later.undo("clear"); setHold(null); }} /> : <>
+          <button type="button" className="ghost" disabled={busy || !list.some((n) => isAlert(n) && n.is_read)} onClick={() => clear("clear")} title={T("Clear read alerts")} aria-label={T("Clear read alerts")}><Icon n="brush-cleaning" /></button>
+          <button type="button" className="ghost" disabled={busy || !list.some(isAlert)} onClick={() => clear("all")} title={T("Clear all alerts. Each one was already sent by email or in your digest.")} aria-label={T("Clear all")}><Icon n="trash" /></button>
+          </>}
         </div>
       </div>
       <p className="sub">{T("Alerts arrive here when a watchlist asset crosses one of your alert lines, a market's sentiment crosses its line, a Prism scan finds a match, a funnel has new Candidates, or a study you started finishes. Choose them in")} <a className="linkish" href="#settings/alerts"><Icon n="settings" size={15} /> {T("Settings")}</a>.</p>
-      {rows === null ? <div className="empty" style={{ height: 200 }}>{T("Loading…")}</div> : !list.length ? <p className="sub">{T("No alerts yet.")}</p> : (
+      {rows === null ? <div className="empty" style={{ height: 200 }}>{T("Loading…")}</div> : !shown.length ? <p className="sub">{T("No alerts yet.")}</p> : (
         <ol className="alist">
-          {list.map((n) => {
+          {shown.map((n) => {
             const href = target(n);
             const quiet = QUIET.includes(n.alert_type);
             const body = (

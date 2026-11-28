@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Icon, { Lead, plain, Tile } from "../../components/Icon.jsx";
+import { useDelayed, UndoButton } from "../../components/Confirm.jsx";
 import { T, lang } from "../../lib/i18n.js";
 import { applyTheme } from "../../lib/theme.js";
 import { supabase, SUPABASE_URL } from "../../lib/supabase.js";
@@ -193,6 +194,9 @@ function Markets({ s, set, prefs, setPrefs, flash }) {
 }
 
 function Watchlist({ kind, title, list, setList, flash }) {
+  const later = useDelayed();
+  const latest = useRef(list);
+  latest.current = list;
   const [all, setAll] = useState([]);
   const [q, setQ] = useState("");
   useEffect(() => { universe().then((u) => setAll(u.filter((a) => a.kind === kind))).catch(() => {}); }, [kind]);
@@ -205,8 +209,10 @@ function Watchlist({ kind, title, list, setList, flash }) {
       <div className="wl">
         {ids.map((id) => (
           <span key={id} className="wlitem">
-            <a href={assetHref(keyFor(kind, id))}>{label(id)}</a>
-            <button type="button" aria-label={T("Remove from your watchlist")} title={T("Remove from your watchlist")} onClick={() => { const n = { ...list }; delete n[id]; save(n); }}>✕</button>
+            <a href={assetHref(keyFor(kind, id))} className={later.held(id) ? "gone" : ""}>{label(id)}</a>
+            {later.held(id) ? <UndoButton onUndo={() => later.undo(id)} />
+              : <button type="button" aria-label={T("Remove from your watchlist")} title={T("Remove from your watchlist")}
+                onClick={() => later.run(id, () => { const n = { ...latest.current }; delete n[id]; save(n); })}><Icon n="x" size={14} /></button>}
           </span>
         ))}
         {!ids.length && <span className="m">{T("Nothing here yet.")}</span>}

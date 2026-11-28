@@ -75,7 +75,8 @@ CSS = lattice_component.CSS + """
 .lat.prism .ctl button:hover{background:linear-gradient(180deg,#7898c2,#486d9b);color:#fff}
 .lat.prism .ctl button.del{border-color:#b91c1c;background:linear-gradient(180deg,#ef6b6b,#c62828)}
 .lat.prism .ctl button.del:hover{background:linear-gradient(180deg,#e35d5d,#b42020)}
-.lat.prism .ctl button.del.arm{width:auto;padding:0 10px}
+.lat.prism .ctl button.del.arm,.lat.prism .ctl button.cancel{width:auto;padding:0 10px}
+.lat.prism .ctl .ask{display:inline-flex;align-items:center;gap:6px}.lat.prism .ctl .ask .q{font-weight:600;color:#dc2626}
 .lat.prism .pill{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid rgba(127,127,127,.45)}
 .lat.prism .pill.upd{border-color:#d97706;color:#b45309;cursor:pointer;background:transparent;min-height:0}
 .lat.prism .body{border-top:1px solid rgba(127,127,127,.25);padding:8px 0 4px 44px;display:flex;flex-direction:column;gap:10px}
@@ -579,10 +580,14 @@ export default function(component) {
       ctl.appendChild(ib);
     }
     ctl.appendChild(iconButton("copy", T("Duplicate this scan: same Set, to run on other assets or with another schedule or alerts (the copy runs only when you press Play until you schedule it). To change what the Set checks, use 🔍 Look inside → Open in Signal Sets"), () => act("duplicate", {scan: s.id})));
+    // Delete asks in its own place: "Delete?" with a red Delete and a Cancel, back by itself after a few seconds.
     const del = iconButton("del", T("Delete this scan"), () => {
-      if (del.classList.contains("arm")) { act("delete", {scan: s.id}); return; }
-      del.classList.add("arm"); del.textContent = T("Delete?"); del.title = T("Press again to delete");
-      setTimeout(() => { if (del.isConnected) redraw(); }, 4000);
+      const ask = el("span", "ask");
+      ask.appendChild(el("span", "q", T("Delete?")));
+      ask.appendChild(button(T("Delete"), T("Delete this scan"), () => act("delete", {scan: s.id}), "del arm"));
+      ask.appendChild(button(T("Cancel"), "", () => redraw(), "cancel"));
+      del.replaceWith(ask);
+      setTimeout(() => { if (ask.isConnected) redraw(); }, 6000);
     }, "del");
     ctl.appendChild(del);
     head.appendChild(ctl);
