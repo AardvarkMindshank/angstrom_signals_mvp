@@ -19,8 +19,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-<script>/* one address for the app: www.marketnavi.ai keeps its own sign-in, so send it to marketnavi.ai */
-if (location.hostname.indexOf("www.") === 0) location.replace(location.href.replace("//www.", "//"));</script>
+<script>/* one address for the app, app.marketnavi.ai (28 Nov 2026): the old copy at marketnavi.ai/new/ (and www, and the
+   raw app/ folder) forwards there with its link and any sign-in details, so old bookmarks, emails and notifications land */
+(function () { var h = location.hostname;
+  if (h !== "app.marketnavi.ai" && /(^|\.)marketnavi\.ai$/.test(h)) location.replace("https://app.marketnavi.ai/" + location.search + location.hash); })();</script>
 <script>/* the remembered day or night, before the app loads (src/lib/theme.js) */
 try { var m = localStorage.getItem("mn_ui_mode") || "auto"; var n = m === "night" || (m === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.style.background = n ? "#0d1015" : "#ffffff"; } catch (e) {}</script>

@@ -185,7 +185,7 @@ def _admin_emails(supabase) -> list[str]:
 
 
 # Where a welcome link lands: the new app, which sees the one-time sign-in in the address and asks for a password.
-WELCOME_URL = (os.getenv("WELCOME_URL") or "https://marketnavi.ai/new/?welcome=1").strip()
+WELCOME_URL = (os.getenv("WELCOME_URL") or "https://app.marketnavi.ai/?welcome=1").strip()
 
 
 def welcome_link(supabase, address: str) -> str:
@@ -372,7 +372,7 @@ def send_admin_notices(supabase, send=None, admin_emails=None, shots=None, now=N
     return sent
 
 
-APP_URL = (os.getenv("APP_URL") or "https://marketnavi.ai/new/").strip()
+APP_URL = (os.getenv("APP_URL") or "https://app.marketnavi.ai/").strip()
 BETA_FORM_URL = "https://marketnavi.ai/beta.html"
 
 
