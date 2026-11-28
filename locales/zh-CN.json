@@ -116,7 +116,6 @@
   "Fold a section here when I pop it out": "弹出某部分时在这里折叠它",
   "Close pop-out tabs when I log out": "退出登录时关闭弹出的标签页",
   "Resend returned status {response_status_code}": "Resend 返回状态 {response_status_code}",
-  "You are invited to MarketNavi": "你受邀加入 MarketNavi",
   "Report needs a few words when the reason is Something else.": "原因为“其他”时,举报需要写几句话。",
   "Report could not find that comment. It may already have expired.": "举报找不到该评论。它可能已经过期。",
   "Report your own comment by deleting it.": "如需举报自己的评论,请直接删除。",
@@ -241,8 +240,6 @@
   "Press a theme's button to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.": "点击主题按钮即可试用。之后仍可更改任何颜色，撤销箭头会恢复到您保存的颜色。",
   "**Fine tune**": "**微调**",
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "逐个更改界面元素的颜色。拖放颜色即可复制。使用上方图标保存和重置。",
-  "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi 借助 AI 引导的分析与提醒，帮助你驾驭市场，社区与你同行。",
-  "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "在我们与资深交易者共同打造期间，仅限受邀使用。如果您还未加入，可以<a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">申请名额</a>。",
   "Report could not be sent.": "无法发送举报。",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "无法保存举报。请在 Supabase SQL 编辑器中运行最新的 supabase_rls.sql，然后重试。",
   "Market overview (status)": "市场概览（状态）",
@@ -419,7 +416,6 @@
   ":material/restart_alt:": ":material/restart_alt:",
   "**Day**": "**日间**",
   "**Night**": "**夜间**",
-  "Open MarketNavi": "打开 MarketNavi",
   "Resend could not be reached": "无法连接 Resend",
   "Report already sent for this comment.": "已就此评论发送过举报。",
   "Saved by the worker": "由后台进程保存",
@@ -3240,5 +3236,12 @@
   "You have no communities yet. Press the add-person icon beside a name in the chat or comments to start one.": "你还没有社区。点击聊天或评论中名字旁的添加人员图标即可创建。",
   "Chat & communities": "聊天与社区",
   "A community is a small private circle in the chat: its members can post to each other. Invite people with the add-person icon beside their name in the chat or comments.": "社区是聊天中的小型私密圈子，成员之间可以互相发帖。点击聊天或评论中名字旁的添加人员图标即可邀请。",
-  "No one blocked. Press the block icon beside a name in the chat to block someone.": "没有屏蔽任何人。点击聊天中名字旁的屏蔽图标即可屏蔽。"
+  "No one blocked. Press the block icon beside a name in the chat to block someone.": "没有屏蔽任何人。点击聊天中名字旁的屏蔽图标即可屏蔽。",
+  "Invite a friend": "邀请好友",
+  "They were emailed in the last day. Try again tomorrow.": "过去一天内已给对方发过邮件，请明天再试。",
+  "They have already joined.": "对方已加入。",
+  "That invite couldn't be saved. Please try again.": "邀请未能保存，请重试。",
+  "it was emailed in the last day": "过去一天内已发送",
+  "they have already joined": "对方已加入",
+  "please try again": "请重试"
 }

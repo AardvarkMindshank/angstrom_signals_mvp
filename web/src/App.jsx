@@ -93,6 +93,8 @@ export default function App() {
     document.addEventListener("visibilitychange", touch);
     return () => { clearInterval(t); document.removeEventListener("visibilitychange", touch); };
   }, [!!account]);
+  // 👋 A new account that was invited: the inviter gets their 100 social points (once; the database checks).
+  useEffect(() => { if (account) supabase.rpc("claim_invite_points").then(() => {}, () => {}); }, [!!account]);
   useEffect(() => {
     if (!account) return;
     const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));

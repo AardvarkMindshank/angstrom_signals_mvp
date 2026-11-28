@@ -116,7 +116,6 @@
   "Fold a section here when I pop it out": "Lipat bagian di sini saat saya memisahkannya",
   "Close pop-out tabs when I log out": "Tutup tab terpisah saat saya keluar",
   "Resend returned status {response_status_code}": "Resend mengembalikan status {response_status_code}",
-  "You are invited to MarketNavi": "Anda diundang ke MarketNavi",
   "Report needs a few words when the reason is Something else.": "Laporan perlu beberapa kata jika alasannya Hal lain.",
   "Report could not find that comment. It may already have expired.": "Laporan tidak menemukan komentar itu. Mungkin sudah kedaluwarsa.",
   "Report your own comment by deleting it.": "Untuk melaporkan komentar Anda sendiri, hapus saja.",
@@ -241,8 +240,6 @@
   "Press a theme's button to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.": "Tekan tombol tema untuk mencobanya. Setelahnya Anda tetap bisa mengubah warna apa pun, dan panah urungkan kembali ke warna tersimpan Anda.",
   "**Fine tune**": "**Penyetelan halus**",
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "Ubah warna elemen UI satu per satu. Seret dan lepas warna untuk menyalinnya. Simpan dan atur ulang dengan ikon di atas.",
-  "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi membantu Anda menavigasi pasar dengan analisis dan peringatan berpanduan AI, bersama komunitas.",
-  "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "Saat ini hanya dengan undangan selagi kami membangunnya bersama trader berpengalaman. Jika Anda belum masuk, Anda bisa <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">meminta tempat</a>.",
   "Report could not be sent.": "Laporan tidak dapat dikirim.",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "Laporan tidak dapat disimpan. Jalankan supabase_rls.sql terbaru di editor SQL Supabase, lalu coba lagi.",
   "Market overview (status)": "Ikhtisar pasar (status)",
@@ -419,7 +416,6 @@
   ":material/restart_alt:": ":material/restart_alt:",
   "**Day**": "**Siang**",
   "**Night**": "**Malam**",
-  "Open MarketNavi": "Buka MarketNavi",
   "Resend could not be reached": "Resend tidak dapat dihubungi",
   "Report already sent for this comment.": "Laporan untuk komentar ini sudah dikirim.",
   "Saved by the worker": "Disimpan oleh proses latar belakang",
@@ -3240,5 +3236,12 @@
   "You have no communities yet. Press the add-person icon beside a name in the chat or comments to start one.": "Kamu belum punya komunitas. Tekan ikon tambah orang di samping nama di chat atau komentar untuk memulainya.",
   "Chat & communities": "Chat & komunitas",
   "A community is a small private circle in the chat: its members can post to each other. Invite people with the add-person icon beside their name in the chat or comments.": "Komunitas adalah lingkaran pribadi kecil di chat: anggotanya bisa saling mengirim pesan. Undang orang dengan ikon tambah orang di samping nama mereka di chat atau komentar.",
-  "No one blocked. Press the block icon beside a name in the chat to block someone.": "Tidak ada yang diblokir. Tekan ikon blokir di samping nama di chat untuk memblokir seseorang."
+  "No one blocked. Press the block icon beside a name in the chat to block someone.": "Tidak ada yang diblokir. Tekan ikon blokir di samping nama di chat untuk memblokir seseorang.",
+  "Invite a friend": "Undang teman",
+  "They were emailed in the last day. Try again tomorrow.": "Mereka sudah dikirimi email dalam sehari terakhir. Coba lagi besok.",
+  "They have already joined.": "Mereka sudah bergabung.",
+  "That invite couldn't be saved. Please try again.": "Undangan tidak dapat disimpan. Silakan coba lagi.",
+  "it was emailed in the last day": "sudah dikirim dalam sehari terakhir",
+  "they have already joined": "mereka sudah bergabung",
+  "please try again": "silakan coba lagi"
 }

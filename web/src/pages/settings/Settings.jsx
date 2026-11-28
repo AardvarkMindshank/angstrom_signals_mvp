@@ -137,12 +137,72 @@ function Account({ s, set, account, flash }) {
           <Seg label={T("Features not in my plan")} value={s.plan_display === "grey" ? "grey" : "hide"} options={[["hide", T("Hide")], ["grey", T("Grey out")]]} onChange={(v) => set({ plan_display: v })} />
         </Row>
       </Section>
+      <InviteFriend account={account} />
       <Section title={T("Sign-in")}>
         <Row title={account.user.email} help={T("The email you sign in with.")}>
           <button type="button" className="ghost" onClick={() => supabase.auth.signOut()}>{T("Log out")}</button>
         </Row>
       </Section>
     </>
+  );
+}
+
+// 👋 Invite a friend, as the classic app: the invite is saved here and the worker emails it within five minutes. The
+// inviter gets 100 social points when they join (claim_invite_points, when the new account first signs in).
+const cleanEmail = (v) => { const t = String(v || "").trim().toLowerCase(); return /^[^@\s]+@[^@\s]+\.[^@\s.]+$/.test(t) ? t : ""; };
+function InviteFriend({ account }) {
+  const [email, setEmail] = useState("");
+  const [msg, setMsg] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [list, setList] = useState(null);
+  const load = () => supabase.from("invites").select("email, created_at, credited_at").order("created_at", { ascending: false }).limit(500)
+    .then(({ data }) => setList(data || []), () => setList([]));
+  useEffect(() => { load(); }, []);
+  const send = async (e) => {
+    e.preventDefault();
+    const to = cleanEmail(email);
+    if (!to) { setMsg(["bad", T("Enter a valid email address.")]); return; }
+    if (to === String(account.user.email || "").toLowerCase()) { setMsg(["bad", T("Use someone else's email address.")]); return; }
+    setBusy(true);
+    const { error } = await supabase.from("invites").insert({ inviter_id: account.user.id, email: to });
+    let m = ["ok", T("Invite sent.")];
+    if (error) {
+      const text = String(error.message || "").toLowerCase();
+      if (error.code === "23505" || text.includes("duplicate")) {
+        const { data } = await supabase.rpc("invite_again", { address: to });
+        const c = String(data || "").replace(/"/g, "");
+        m = c === "ok" ? ["ok", T("That invite was already saved. The email was sent again.")]
+          : c === "recent" ? ["bad", T("They were emailed in the last day. Try again tomorrow.")]
+          : c === "joined" ? ["ok", T("They have already joined.")] : ["bad", T("That invite couldn't be saved. Please try again.")];
+      } else if (text.includes("invite limit")) m = ["bad", T("The day's invites are used. Try again tomorrow.")];
+      else if (text.includes("someone else")) m = ["bad", T("Use someone else's email address.")];
+      else m = ["bad", T("That invite couldn't be saved. Please try again.")];
+    }
+    setBusy(false); setMsg(m);
+    if (m[0] === "ok") setEmail("");
+    load();
+  };
+  const joined = (list || []).filter((r) => r.credited_at).length;
+  return (
+    <Section title={T("Invite a friend")} sub={T("Know an experienced trader who would suit the beta? We will email them. Seats are approved by our team, and you get 100 social points once they join.")}>
+      <form className="invform" onSubmit={send}>
+        <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setMsg(null); }} placeholder={T("name@example.com")} aria-label={T("Their email")} autoComplete="off" />
+        <button type="submit" className="primary" disabled={busy || !email.trim()}><Icon n="send" size={15} /> {T("Send invite")}</button>
+      </form>
+      {msg && <p className={"note " + (msg[0] === "ok" ? "good" : "bad")}>{msg[1]}</p>}
+      {list && list.length > 0 && (
+        <div className="invlist">
+          <div className="m">{T("Invited {n} · joined {j}", { n: list.length, j: joined })}</div>
+          <ul>
+            {list.map((r) => {
+              const done = !!r.credited_at, when = String((done ? r.credited_at : r.created_at) || "").slice(0, 10);
+              return <li key={r.email} title={done ? T("Joined on {date}", { date: when }) : T("Invited on {date}, not joined yet", { date: when })}>
+                <Icon n={done ? "circle-check" : "hourglass"} size={15} tone={done ? "green" : false} /><span>{r.email}</span></li>;
+            })}
+          </ul>
+        </div>
+      )}
+    </Section>
   );
 }
 

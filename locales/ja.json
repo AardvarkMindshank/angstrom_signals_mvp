@@ -116,7 +116,6 @@
   "Fold a section here when I pop it out": "ポップアウトしたセクションをここで折りたたむ",
   "Close pop-out tabs when I log out": "ログアウト時にポップアウトのタブを閉じる",
   "Resend returned status {response_status_code}": "Resend がステータス {response_status_code} を返しました",
-  "You are invited to MarketNavi": "MarketNavi への招待",
   "Report needs a few words when the reason is Something else.": "理由が「その他」の場合は、報告に一言添えてください。",
   "Report could not find that comment. It may already have expired.": "そのコメントが見つかりませんでした。すでに期限切れかもしれません。",
   "Report your own comment by deleting it.": "自分のコメントは削除することで報告できます。",
@@ -241,8 +240,6 @@
   "Press a theme's button to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.": "テーマのボタンを押して試せます。その後も色は自由に変えられ、元に戻す矢印で保存した色に戻ります。",
   "**Fine tune**": "**微調整**",
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "UI要素ごとに色を変えられます。色をドラッグ＆ドロップしてコピーできます。上のアイコンで保存とリセットができます。",
-  "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNaviは、AIガイドの分析とアラートで、コミュニティと一緒にマーケットを航海するお手伝いをします。",
-  "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "経験豊富なトレーダーと開発を進めている間は招待制です。まだ参加していない場合は、<a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">参加を申請</a>できます。",
   "Report could not be sent.": "報告を送信できませんでした。",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "報告を保存できませんでした。SupabaseのSQLエディターで最新のsupabase_rls.sqlを実行してから、もう一度お試しください。",
   "Market overview (status)": "市場概要（ステータス）",
@@ -419,7 +416,6 @@
   ":material/restart_alt:": ":material/restart_alt:",
   "**Day**": "**昼**",
   "**Night**": "**夜**",
-  "Open MarketNavi": "MarketNaviを開く",
   "Resend could not be reached": "Resendに接続できませんでした",
   "Report already sent for this comment.": "このコメントの報告はすでに送信済みです。",
   "Saved by the worker": "バックグラウンド処理で保存",
@@ -3240,5 +3236,12 @@
   "You have no communities yet. Press the add-person icon beside a name in the chat or comments to start one.": "まだコミュニティがありません。チャットやコメントの名前の横にある人物追加アイコンを押して作成しましょう。",
   "Chat & communities": "チャットとコミュニティ",
   "A community is a small private circle in the chat: its members can post to each other. Invite people with the add-person icon beside their name in the chat or comments.": "コミュニティはチャット内の小さな非公開グループで、メンバー同士で投稿できます。チャットやコメントで名前の横の人物追加アイコンから招待できます。",
-  "No one blocked. Press the block icon beside a name in the chat to block someone.": "ブロック中の人はいません。チャットで名前の横のブロックアイコンを押すとブロックできます。"
+  "No one blocked. Press the block icon beside a name in the chat to block someone.": "ブロック中の人はいません。チャットで名前の横のブロックアイコンを押すとブロックできます。",
+  "Invite a friend": "友達を招待",
+  "They were emailed in the last day. Try again tomorrow.": "この1日以内にメールを送信済みです。明日もう一度お試しください。",
+  "They have already joined.": "すでに参加しています。",
+  "That invite couldn't be saved. Please try again.": "招待を保存できませんでした。もう一度お試しください。",
+  "it was emailed in the last day": "この1日以内に送信済みです",
+  "they have already joined": "すでに参加しています",
+  "please try again": "もう一度お試しください"
 }

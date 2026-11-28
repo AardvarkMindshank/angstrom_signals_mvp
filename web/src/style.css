@@ -1118,3 +1118,12 @@ button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent)
 .cmfind .wladd { display: flex; align-items: center; gap: 8px; max-width: none; }
 .cmfind .wladd > .ic { color: var(--ang-muted); flex: none; }
 .cmty .confirm { flex-wrap: wrap; }
+/* 👋 Invite a friend (Settings › Account) */
+.invform { display: flex; gap: 8px; flex-wrap: wrap; max-width: 520px; }
+.invform input { flex: 1 1 220px; min-width: 0; font: inherit; font-size: 14px; color: var(--ang-text); background: var(--ang-field); border: 1px solid transparent; border-radius: 999px; padding: 9px 16px; }
+.invform input:focus { outline: 2px solid var(--gold); }
+.invlist { max-width: 520px; }
+.invlist ul { list-style: none; margin: 6px 0 0; padding: 4px 10px; max-height: 13rem; overflow-y: auto; border: 1px solid var(--ang-border); border-radius: 10px; }
+.invlist li { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.9; }
+.invlist li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.invlist li .ic:not([data-tone]) { color: var(--ang-muted); }

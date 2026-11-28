@@ -368,3 +368,56 @@ def send_admin_notices(supabase, send=None, admin_emails=None, shots=None, now=N
     if sent:
         print(f"Admin notices sent: {sent}")
     return sent
+
+
+APP_URL = (os.getenv("APP_URL") or "https://marketnavi.ai/new/").strip()
+BETA_FORM_URL = "https://marketnavi.ai/beta.html"
+
+
+def _inviter_names(supabase, ids: list[str]) -> dict:
+    try:
+        rows = supabase.table("profiles").select("user_id, display_name").in_("user_id", ids).execute().data or []
+    except Exception:
+        return {}
+    return {str(r.get("user_id")): " ".join(str(r.get("display_name") or "").split())[:40] for r in rows}
+
+
+def invite_email(inviter: str) -> tuple[str, str, str]:
+    import html
+
+    from email_brand import render_email
+
+    who = inviter or "A MarketNavi member"
+    page, plain = render_email(f"{html.escape(who)} invited you to MarketNavi", [
+        "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.",
+        f'It is invite-only while we build with experienced traders. If you are not in yet, you can '
+        f'<a href="{BETA_FORM_URL}" style="color:#1d5fd1;">ask for a seat</a>.',
+    ], button=("Open MarketNavi", APP_URL), preheader=f"{who} invited you to MarketNavi.")
+    return "You are invited to MarketNavi", page, plain
+
+
+def send_invite_emails(supabase, send=None, now=None) -> int:
+    """Email each new (or re-sent) Invite a friend once. Rows the worker can't send go back for the next run."""
+    from datetime import datetime, timezone
+
+    send = send or _send_resend
+    if send is _send_resend and not (os.getenv("RESEND_API_KEY") or "").strip():
+        return 0
+    rows = _notice_rows(supabase, "invites", "id, inviter_id, email, credited_at")
+    rows = [r for r in rows if not r.get("credited_at") and "@" in str(r.get("email") or "")]
+    if not rows:
+        return 0
+    stamp = (now or datetime.now(timezone.utc)).isoformat()
+    names = _inviter_names(supabase, sorted({str(r["inviter_id"]) for r in rows}))
+    sent = 0
+    for row in rows:
+        if not _claim(supabase, "invites", row["id"], stamp):
+            continue
+        subject, page, plain = invite_email(names.get(str(row["inviter_id"]), ""))
+        if send(str(row["email"]), subject, page, plain):
+            sent += 1
+        else:
+            supabase.table("invites").update({"emailed_at": None}).eq("id", row["id"]).execute()
+    if sent:
+        print(f"Invite emails sent: {sent}")
+    return sent

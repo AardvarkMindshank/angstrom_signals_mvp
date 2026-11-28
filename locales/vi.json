@@ -116,7 +116,6 @@
   "Fold a section here when I pop it out": "Thu gọn mục ở đây khi tôi tách nó ra",
   "Close pop-out tabs when I log out": "Đóng các tab tách rời khi tôi đăng xuất",
   "Resend returned status {response_status_code}": "Resend trả về trạng thái {response_status_code}",
-  "You are invited to MarketNavi": "Bạn được mời tham gia MarketNavi",
   "Report needs a few words when the reason is Something else.": "Báo cáo cần vài chữ khi lý do là Khác.",
   "Report could not find that comment. It may already have expired.": "Báo cáo không tìm thấy bình luận đó. Có thể nó đã hết hạn.",
   "Report your own comment by deleting it.": "Để báo cáo bình luận của chính bạn, hãy xóa nó.",
@@ -241,8 +240,6 @@
   "Press a theme's button to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.": "Nhấn nút của một chủ đề để thử. Sau đó bạn vẫn có thể đổi bất kỳ màu nào, và mũi tên hoàn tác sẽ quay về màu đã lưu của bạn.",
   "**Fine tune**": "**Tinh chỉnh**",
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "Đổi màu từng thành phần giao diện. Kéo và thả màu để sao chép. Lưu và đặt lại bằng các biểu tượng phía trên.",
-  "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi giúp bạn định hướng thị trường với phân tích và cảnh báo do AI dẫn dắt, cùng cộng đồng bên cạnh.",
-  "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "Hiện chỉ dành cho người được mời trong khi chúng tôi xây dựng cùng các trader giàu kinh nghiệm. Nếu bạn chưa tham gia, bạn có thể <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">xin một suất</a>.",
   "Report could not be sent.": "Không gửi được báo cáo.",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "Không lưu được báo cáo. Hãy chạy supabase_rls.sql mới nhất trong trình soạn SQL của Supabase, rồi thử lại.",
   "Market overview (status)": "Tổng quan thị trường (trạng thái)",
@@ -419,7 +416,6 @@
   ":material/restart_alt:": ":material/restart_alt:",
   "**Day**": "**Ngày**",
   "**Night**": "**Đêm**",
-  "Open MarketNavi": "Mở MarketNavi",
   "Resend could not be reached": "Không kết nối được với Resend",
   "Report already sent for this comment.": "Đã gửi báo cáo cho bình luận này rồi.",
   "Saved by the worker": "Được lưu bởi tiến trình nền",
@@ -3240,5 +3236,12 @@
   "You have no communities yet. Press the add-person icon beside a name in the chat or comments to start one.": "Bạn chưa có cộng đồng nào. Nhấn biểu tượng thêm người cạnh một tên trong trò chuyện hoặc bình luận để tạo.",
   "Chat & communities": "Trò chuyện & cộng đồng",
   "A community is a small private circle in the chat: its members can post to each other. Invite people with the add-person icon beside their name in the chat or comments.": "Cộng đồng là một nhóm riêng nhỏ trong trò chuyện: các thành viên có thể đăng cho nhau. Mời mọi người bằng biểu tượng thêm người cạnh tên họ trong trò chuyện hoặc bình luận.",
-  "No one blocked. Press the block icon beside a name in the chat to block someone.": "Chưa chặn ai. Nhấn biểu tượng chặn cạnh một tên trong trò chuyện để chặn."
+  "No one blocked. Press the block icon beside a name in the chat to block someone.": "Chưa chặn ai. Nhấn biểu tượng chặn cạnh một tên trong trò chuyện để chặn.",
+  "Invite a friend": "Mời bạn bè",
+  "They were emailed in the last day. Try again tomorrow.": "Họ đã được gửi email trong ngày qua. Hãy thử lại vào ngày mai.",
+  "They have already joined.": "Họ đã tham gia.",
+  "That invite couldn't be saved. Please try again.": "Không lưu được lời mời. Vui lòng thử lại.",
+  "it was emailed in the last day": "đã được gửi trong ngày qua",
+  "they have already joined": "họ đã tham gia",
+  "please try again": "vui lòng thử lại"
 }

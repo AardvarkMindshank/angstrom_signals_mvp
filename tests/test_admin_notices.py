@@ -65,3 +65,15 @@ def test_release_on_failure():
     n = beta_worker.send_admin_notices(db, send=lambda *a: False, admin_emails=["admin@x.io"], shots=lambda p: None)
     assert n == 0
     assert all(r["emailed_at"] is None for t in db.db.values() for r in t)
+
+
+def test_invite_emails_once_and_skip_joined(monkeypatch):
+    db = DB()
+    db.db["invites"] = [{"id": 7, "inviter_id": "u1", "email": "friend@x.io", "credited_at": None, "emailed_at": None},
+                        {"id": 8, "inviter_id": "u1", "email": "in@x.io", "credited_at": "2026-01-01", "emailed_at": None}]
+    db.db["profiles"] = []
+    sent = []
+    monkeypatch.setattr(beta_worker, "_inviter_names", lambda supabase, ids: {"u1": "Captain <Ada>"})
+    n = beta_worker.send_invite_emails(db, send=lambda to, subj, page, plain: sent.append((to, page)) or True)
+    assert n == 1 and sent[0][0] == "friend@x.io" and "Captain &lt;Ada&gt;" in sent[0][1]
+    assert beta_worker.send_invite_emails(db, send=lambda *a: True) == 0

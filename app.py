@@ -7148,10 +7148,17 @@ def invite_someone() -> None:
                     t("That invite could not be saved. Run the latest supabase_rls.sql in Supabase, then try again.")
                 )
             else:
-                inviter = (st.session_state.get("profile") or {}).get("display_name")
-                if not inviter:
-                    inviter = own.split("@")[0] if own else "Someone"
-                sent, reason = _email_invite(address, str(inviter))
+                # The worker emails it (beta_worker.send_invite_emails); an address already invited goes again,
+                # at most once a day.
+                again = ""
+                if stored == "exists":
+                    try:
+                        again = str(supabase.rpc("invite_again", {"address": address}).execute().data or "").strip('"')
+                    except Exception:
+                        again = "error"
+                sent, reason = (again in ("", "ok")), (t("it was emailed in the last day") if again == "recent"
+                                                        else t("they have already joined") if again == "joined"
+                                                        else t("please try again"))
                 if sent and stored == "exists":
                     st.success(t("That invite was already saved. The email was sent again."))
                 elif sent:
@@ -10348,43 +10355,6 @@ def _resend_reason(response) -> str:
     if not message or "re_" in message.lower():
         return t('Resend returned status {response_status_code}', response_status_code=response.status_code)
     return message[:180]
-
-
-def _email_invite(address: str, inviter_name: str) -> tuple[bool, str]:
-    """Mail one invite. The reason is empty when the send is accepted."""
-    api_key, sender, _inbox = _feedback_mail_settings()
-    if not api_key:
-        return False, "the Resend key is missing from the Streamlit secrets"
-    safe_name = html.escape(inviter_name or "Someone")
-    link = html.escape(_app_url(), quote=True)
-    page, plain = render_email(
-        f"{safe_name} invited you to MarketNavi",
-        [
-            t("MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside."),
-            t('It is invite-only while we build with experienced traders. If you are not in yet, you can <a href="{BETA_REQUEST_URL}" style="color:#1d5fd1;">ask for a seat</a>.', BETA_REQUEST_URL=BETA_REQUEST_URL),
-        ],
-        button=(t("Open MarketNavi"), _app_url()),
-        preheader=f"{inviter_name or 'Someone'} invited you to MarketNavi.",
-    )
-    payload = {
-        "from": sender,
-        "to": [address],
-        "subject": t("You are invited to MarketNavi"),
-        "html": page,
-        "text": plain,
-    }
-    try:
-        response = requests.post(
-            "https://api.resend.com/emails",
-            json=payload,
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            timeout=15,
-        )
-    except Exception:
-        return False, t("Resend could not be reached")
-    if response.status_code < 300:
-        return True, ""
-    return False, _resend_reason(response)
 
 
 def _email_feedback(kind: str, body: str, user_email: str, user_id: str,

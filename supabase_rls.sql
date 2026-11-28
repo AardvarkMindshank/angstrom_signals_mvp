@@ -135,6 +135,7 @@ create table if not exists public.invites (
     credited_at timestamptz,
     unique (inviter_id, email)
 );
+alter table public.invites add column if not exists emailed_at timestamptz;   -- the worker's invite email
 
 alter table public.invites enable row level security;
 
@@ -156,6 +157,7 @@ begin
     new.credited_at := null;
     new.joined_user_id := null;
     new.created_at := now();
+    new.emailed_at := null;
     if new.email !~ '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' then
         raise exception 'Enter a valid email address';
     end if;
@@ -193,6 +195,40 @@ create policy "users send own invites" on public.invites
     with check (auth.uid() = inviter_id);
 
 grant select, insert on public.invites to authenticated;
+
+-- 'ok' (the worker emails it again within five minutes), 'recent' (emailed in the last day), 'joined', or 'missing'.
+create or replace function public.invite_again(address text)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    me uuid := auth.uid();
+    rec public.invites%rowtype;
+begin
+    if me is null then
+        return 'missing';
+    end if;
+    select * into rec from public.invites
+    where inviter_id = me and email = lower(btrim(coalesce(address, '')));
+    if rec.id is null then
+        return 'missing';
+    end if;
+    if rec.credited_at is not null then
+        return 'joined';
+    end if;
+    if rec.emailed_at is not null and rec.emailed_at > now() - interval '1 day' then
+        return 'recent';
+    end if;
+    update public.invites set emailed_at = null where id = rec.id;
+    return 'ok';
+end;
+$$;
+
+revoke all on function public.invite_again(text) from public;
+revoke all on function public.invite_again(text) from anon;
+grant execute on function public.invite_again(text) to authenticated;
 
 -- Award 100 social points to every person who invited this account before it existed.
 -- Each of those people also gets one notification in their alert feed.

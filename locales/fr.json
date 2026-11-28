@@ -116,7 +116,6 @@
   "Fold a section here when I pop it out": "Replier ici une section quand je la détache",
   "Close pop-out tabs when I log out": "Fermer les onglets détachés à la déconnexion",
   "Resend returned status {response_status_code}": "Resend a renvoyé le statut {response_status_code}",
-  "You are invited to MarketNavi": "Vous êtes invité sur MarketNavi",
   "Report needs a few words when the reason is Something else.": "Le signalement demande quelques mots quand le motif est Autre chose.",
   "Report could not find that comment. It may already have expired.": "Le signalement n'a pas trouvé ce commentaire. Il a peut-être déjà expiré.",
   "Report your own comment by deleting it.": "Pour signaler votre propre commentaire, supprimez-le.",
@@ -241,8 +240,6 @@
   "Press a theme's button to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.": "Appuyez sur le bouton d'un thème pour l'essayer. Vous pouvez ensuite modifier n'importe quelle couleur, et la flèche d'annulation revient à vos couleurs enregistrées.",
   "**Fine tune**": "**Réglage fin**",
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "Changez la couleur des éléments de l'interface un par un. Glissez-déposez des couleurs pour les copier. Enregistrez et réinitialisez avec les icônes ci-dessus.",
-  "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi vous aide à naviguer sur les marchés avec des analyses et des alertes guidées par l'IA, avec la communauté à vos côtés.",
-  "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "L'accès se fait sur invitation pendant que nous construisons avec des traders expérimentés. Si vous n'y êtes pas encore, vous pouvez <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">demander une place</a>.",
   "Report could not be sent.": "Le signalement n'a pas pu être envoyé.",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "Le signalement n'a pas pu être enregistré. Exécutez le dernier supabase_rls.sql dans l'éditeur SQL de Supabase, puis réessayez.",
   "Market overview (status)": "Aperçu du marché (état)",
@@ -419,7 +416,6 @@
   ":material/restart_alt:": ":material/restart_alt:",
   "**Day**": "**Jour**",
   "**Night**": "**Nuit**",
-  "Open MarketNavi": "Ouvrir MarketNavi",
   "Resend could not be reached": "Resend est injoignable",
   "Report already sent for this comment.": "Un signalement a déjà été envoyé pour ce commentaire.",
   "Saved by the worker": "Enregistré par le processus en arrière-plan",
@@ -3240,5 +3236,12 @@
   "You have no communities yet. Press the add-person icon beside a name in the chat or comments to start one.": "Vous n'avez pas encore de communauté. Appuyez sur l'icône d'ajout de personne à côté d'un nom dans le chat ou les commentaires pour en créer une.",
   "Chat & communities": "Chat et communautés",
   "A community is a small private circle in the chat: its members can post to each other. Invite people with the add-person icon beside their name in the chat or comments.": "Une communauté est un petit cercle privé dans le chat : ses membres peuvent s'écrire entre eux. Invitez des personnes avec l'icône d'ajout à côté de leur nom dans le chat ou les commentaires.",
-  "No one blocked. Press the block icon beside a name in the chat to block someone.": "Personne n'est bloqué. Appuyez sur l'icône de blocage à côté d'un nom dans le chat pour bloquer quelqu'un."
+  "No one blocked. Press the block icon beside a name in the chat to block someone.": "Personne n'est bloqué. Appuyez sur l'icône de blocage à côté d'un nom dans le chat pour bloquer quelqu'un.",
+  "Invite a friend": "Inviter un ami",
+  "They were emailed in the last day. Try again tomorrow.": "Un e-mail lui a déjà été envoyé dans la dernière journée. Réessayez demain.",
+  "They have already joined.": "Cette personne a déjà rejoint.",
+  "That invite couldn't be saved. Please try again.": "L'invitation n'a pas pu être enregistrée. Veuillez réessayer.",
+  "it was emailed in the last day": "il a déjà été envoyé dans la dernière journée",
+  "they have already joined": "cette personne a déjà rejoint",
+  "please try again": "veuillez réessayer"
 }

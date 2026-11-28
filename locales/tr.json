@@ -116,7 +116,6 @@
   "Fold a section here when I pop it out": "Bir bölümü ayırdığımda burada daralt",
   "Close pop-out tabs when I log out": "Çıkış yaptığımda ayrılan sekmeleri kapat",
   "Resend returned status {response_status_code}": "Resend {response_status_code} durumunu döndürdü",
-  "You are invited to MarketNavi": "MarketNavi'a davet edildiniz",
   "Report needs a few words when the reason is Something else.": "Neden Başka bir şey olduğunda şikâyete birkaç sözcük eklenmeli.",
   "Report could not find that comment. It may already have expired.": "Şikâyet bu yorumu bulamadı. Süresi dolmuş olabilir.",
   "Report your own comment by deleting it.": "Kendi yorumunuzu şikâyet etmek için silin.",
@@ -241,8 +240,6 @@
   "Press a theme's button to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.": "Denemek için bir temanın düğmesine basın. Sonrasında herhangi bir rengi yine değiştirebilirsiniz; geri al oku kayıtlı renklerinize döner.",
   "**Fine tune**": "**İnce ayar**",
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "Arayüz öğelerinin rengini tek tek değiştirin. Kopyalamak için renkleri sürükleyip bırakın. Yukarıdaki simgelerle kaydedin ve sıfırlayın.",
-  "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi, yapay zekâ rehberliğinde analiz ve uyarılarla piyasalarda yolunu bulmana yardım eder, topluluk yanında.",
-  "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "Deneyimli trader'larla geliştirirken yalnızca davetle kullanılabilir. Henüz katılmadıysanız <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">yer isteyebilirsiniz</a>.",
   "Report could not be sent.": "Bildirim gönderilemedi.",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "Bildirim kaydedilemedi. Supabase SQL düzenleyicisinde en son supabase_rls.sql dosyasını çalıştırın, sonra yeniden deneyin.",
   "Market overview (status)": "Piyasa genel görünümü (durum)",
@@ -419,7 +416,6 @@
   ":material/restart_alt:": ":material/restart_alt:",
   "**Day**": "**Gündüz**",
   "**Night**": "**Gece**",
-  "Open MarketNavi": "MarketNavi'ı aç",
   "Resend could not be reached": "Resend'e ulaşılamadı",
   "Report already sent for this comment.": "Bu yorum için zaten bildirim gönderildi.",
   "Saved by the worker": "Arka plan işlemi tarafından kaydedildi",
@@ -3240,5 +3236,12 @@
   "You have no communities yet. Press the add-person icon beside a name in the chat or comments to start one.": "Henüz topluluğunuz yok. Başlatmak için sohbette veya yorumlarda bir adın yanındaki kişi ekle simgesine basın.",
   "Chat & communities": "Sohbet ve topluluklar",
   "A community is a small private circle in the chat: its members can post to each other. Invite people with the add-person icon beside their name in the chat or comments.": "Topluluk, sohbette küçük ve özel bir çevredir: üyeleri birbirine yazabilir. Sohbette veya yorumlarda adın yanındaki kişi ekle simgesiyle kişileri davet edin.",
-  "No one blocked. Press the block icon beside a name in the chat to block someone.": "Engellenen kimse yok. Birini engellemek için sohbette adın yanındaki engelle simgesine basın."
+  "No one blocked. Press the block icon beside a name in the chat to block someone.": "Engellenen kimse yok. Birini engellemek için sohbette adın yanındaki engelle simgesine basın.",
+  "Invite a friend": "Bir arkadaşını davet et",
+  "They were emailed in the last day. Try again tomorrow.": "Son bir gün içinde zaten e-posta gönderildi. Yarın tekrar deneyin.",
+  "They have already joined.": "Zaten katıldı.",
+  "That invite couldn't be saved. Please try again.": "Davet kaydedilemedi. Lütfen tekrar deneyin.",
+  "it was emailed in the last day": "son bir gün içinde zaten gönderildi",
+  "they have already joined": "zaten katıldı",
+  "please try again": "lütfen tekrar deneyin"
 }

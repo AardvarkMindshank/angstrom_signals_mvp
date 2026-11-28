@@ -116,7 +116,6 @@
   "Fold a section here when I pop it out": "팝아웃하면 여기서 섹션 접기",
   "Close pop-out tabs when I log out": "로그아웃할 때 팝아웃 탭 닫기",
   "Resend returned status {response_status_code}": "Resend가 상태 {response_status_code}을(를) 반환했습니다",
-  "You are invited to MarketNavi": "MarketNavi에 초대되었습니다",
   "Report needs a few words when the reason is Something else.": "사유가 기타일 때는 신고에 몇 마디를 적어 주세요.",
   "Report could not find that comment. It may already have expired.": "그 댓글을 찾지 못했습니다. 이미 만료되었을 수 있습니다.",
   "Report your own comment by deleting it.": "내 댓글은 삭제하는 것으로 신고합니다.",
@@ -241,8 +240,6 @@
   "Press a theme's button to try it. You can still change any colour afterwards, and the undo arrow returns to your saved colours.": "테마 버튼을 눌러 써 보세요. 그 후에도 어떤 색이든 바꿀 수 있고, 되돌리기 화살표로 저장한 색으로 돌아갑니다.",
   "**Fine tune**": "**세부 조정**",
   "Change the colour of individual UI elements. Drag and drop colours to copy them. Save and reset using the icons above.": "UI 요소별로 색을 바꿉니다. 색을 끌어다 놓아 복사하세요. 위 아이콘으로 저장하고 초기화합니다.",
-  "MarketNavi helps you navigate the markets with AI-guided analysis and alerts, with a community alongside.": "MarketNavi는 AI 가이드 분석과 알림으로 커뮤니티와 함께 시장을 항해하도록 돕습니다.",
-  "It is invite-only while we build with experienced traders. If you are not in yet, you can <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">ask for a seat</a>.": "경험 많은 트레이더와 함께 만드는 동안은 초대제로 운영합니다. 아직 참여하지 않았다면 <a href=\"{BETA_REQUEST_URL}\" style=\"color:#1d5fd1;\">자리를 요청</a>할 수 있습니다.",
   "Report could not be sent.": "신고를 보내지 못했습니다.",
   "Report could not be saved. Run the latest supabase_rls.sql in the Supabase SQL editor, then try again.": "신고를 저장하지 못했습니다. Supabase SQL 편집기에서 최신 supabase_rls.sql을 실행한 뒤 다시 시도하세요.",
   "Market overview (status)": "시장 개요(상태)",
@@ -419,7 +416,6 @@
   ":material/restart_alt:": ":material/restart_alt:",
   "**Day**": "**낮**",
   "**Night**": "**밤**",
-  "Open MarketNavi": "MarketNavi 열기",
   "Resend could not be reached": "Resend에 연결할 수 없습니다",
   "Report already sent for this comment.": "이 댓글에 대한 신고는 이미 보냈습니다.",
   "Saved by the worker": "백그라운드 작업이 저장함",
@@ -3240,5 +3236,12 @@
   "You have no communities yet. Press the add-person icon beside a name in the chat or comments to start one.": "아직 커뮤니티가 없습니다. 채팅이나 댓글에서 이름 옆의 사람 추가 아이콘을 눌러 만들어 보세요.",
   "Chat & communities": "채팅 및 커뮤니티",
   "A community is a small private circle in the chat: its members can post to each other. Invite people with the add-person icon beside their name in the chat or comments.": "커뮤니티는 채팅 속 작은 비공개 모임으로, 멤버끼리 글을 주고받을 수 있습니다. 채팅이나 댓글에서 이름 옆의 사람 추가 아이콘으로 초대하세요.",
-  "No one blocked. Press the block icon beside a name in the chat to block someone.": "차단한 사람이 없습니다. 채팅에서 이름 옆의 차단 아이콘을 눌러 차단할 수 있습니다."
+  "No one blocked. Press the block icon beside a name in the chat to block someone.": "차단한 사람이 없습니다. 채팅에서 이름 옆의 차단 아이콘을 눌러 차단할 수 있습니다.",
+  "Invite a friend": "친구 초대",
+  "They were emailed in the last day. Try again tomorrow.": "최근 하루 안에 이미 이메일을 보냈습니다. 내일 다시 시도해 주세요.",
+  "They have already joined.": "이미 가입했습니다.",
+  "That invite couldn't be saved. Please try again.": "초대를 저장하지 못했습니다. 다시 시도해 주세요.",
+  "it was emailed in the last day": "최근 하루 안에 이미 보냈습니다",
+  "they have already joined": "이미 가입했습니다",
+  "please try again": "다시 시도해 주세요"
 }
