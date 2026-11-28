@@ -78,7 +78,7 @@ export function Sparkle() {
   return <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z" /><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" /></svg>;
 }
 
-// A small, safe Markdown subset: paragraphs, bullet and numbered lists, **bold**, *italic*, `code` and headings.
+// A small, safe Markdown subset: paragraphs, bullet and numbered lists, tables, **bold**, *italic*, `code` and headings.
 function inline(s) {
   const out = []; const re = /(\*\*[^*]+\*\*|\*[^*\s][^*]*\*|`[^`]+`)/g; let last = 0, m, k = 0;
   while ((m = re.exec(s))) {
@@ -95,6 +95,14 @@ export function Rich({ text }) {
   String(text || "").split("\n").forEach((raw, i) => {
     const line = raw.trimEnd();
     const bullet = /^\s*[-*•]\s+(.*)/.exec(line), num = /^\s*\d+[.)]\s+(.*)/.exec(line), head = /^#{1,4}\s+(.*)/.exec(line);
+    const row = /^\s*\|(.*)\|\s*$/.exec(line);
+    if (row) {                                   // "| a | b |" tables (28 Nov 2026: they showed as raw pipes)
+      if (/^[\s|:-]+$/.test(row[1])) return;     // the |---|---| line
+      if (!list || list.kind !== "table") { list = { kind: "table", rows: [] }; blocks.push(list); }
+      list.rows.push(row[1].split("|").map((c) => c.trim()));
+      return;
+    }
+    if (list && list.kind === "table" && !line.trim()) return;   // a blank line inside a table keeps it whole
     if (bullet || num) {
       const kind = bullet ? "ul" : "ol";
       if (!list || list.kind !== kind) { list = { kind, items: [] }; blocks.push(list); }
@@ -105,7 +113,10 @@ export function Rich({ text }) {
     if (!line.trim()) return;
     blocks.push(head ? { kind: "h", text: head[1] } : { kind: "p", text: line });
   });
-  return <>{blocks.map((b, i) => b.kind === "ul" ? <ul key={i}>{b.items.map((x, j) => <li key={j}>{inline(x)}</li>)}</ul>
+  return <>{blocks.map((b, i) => b.kind === "table" ? (
+    <div key={i} className="navtable"><table><thead><tr>{b.rows[0].map((c, j) => <th key={j}>{inline(c)}</th>)}</tr></thead>
+      <tbody>{b.rows.slice(1).map((r, j) => <tr key={j}>{r.map((c, k) => <td key={k}>{inline(c)}</td>)}</tr>)}</tbody></table></div>)
+    : b.kind === "ul" ? <ul key={i}>{b.items.map((x, j) => <li key={j}>{inline(x)}</li>)}</ul>
     : b.kind === "ol" ? <ol key={i}>{b.items.map((x, j) => <li key={j}>{inline(x)}</li>)}</ol>
     : b.kind === "h" ? <p key={i}><b>{inline(b.text)}</b></p> : <p key={i}>{inline(b.text)}</p>)}</>;
 }

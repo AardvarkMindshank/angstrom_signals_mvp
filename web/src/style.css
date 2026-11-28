@@ -1165,3 +1165,8 @@ button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent)
 .contacts { display: flex; flex-direction: column; gap: 6px; }
 .contacts span { display: inline-flex; align-items: center; gap: 6px; }
 .fline { margin: 2px 0 0; }
+/* the AI Navigator's tables */
+.navtable { overflow-x: auto; margin: 6px 0 10px; }
+.navtable table { border-collapse: collapse; font-size: 13px; min-width: 60%; }
+.navtable th, .navtable td { border-bottom: 1px solid var(--ang-border); padding: 5px 10px 5px 0; text-align: left; vertical-align: top; }
+.navtable th { font-weight: 600; color: var(--ang-soft); }
