@@ -1,9 +1,9 @@
 // The account's own settings, stored where the classic app keeps them, so a change here shows there too:
 // user_preferences.settings (merged, other keys kept), alert_preferences (alerts and emails) and profiles.
-import { supabase } from "./supabase.js";
+import { supabase, me } from "./supabase.js";
 
 const must = ({ data, error }) => { if (error) throw error; return data; };
-const uid = async () => { const { data } = await supabase.auth.getUser(); return data.user.id; };
+const uid = async () => { const data = await me(); return data.user.id; };
 
 export async function preferences() {
   const id = await uid();

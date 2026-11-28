@@ -11,6 +11,7 @@ release that latch. The background worker is the only writer.
 from __future__ import annotations
 
 from i18n import mark, t
+from log_safe import tag
 
 from datetime import datetime, timedelta, timezone
 
@@ -384,7 +385,7 @@ def evaluate_alerts(supabase, user_id, results, alerts_config, notify_email=None
                 supabase.table("user_notifications").insert(
                     [{k: v for k, v in r.items() if k != "digested_at"} for r in rows]).execute()
             except Exception as exc:
-                print(f"{spec['name']} alerts start not recorded for {user_id}; trying again next run. {str(exc)[:120]}")
+                print(f"{spec['name']} alerts start not recorded for {tag(user_id)}; trying again next run. {str(exc)[:120]}")
         # Never alert for these on this run, whether or not the start was recorded.
         actions = [a for a in actions if a not in silent]
 

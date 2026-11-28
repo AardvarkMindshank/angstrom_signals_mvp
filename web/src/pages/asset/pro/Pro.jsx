@@ -3,7 +3,7 @@ import Icon, { Lead, watchIcons } from "../../../components/Icon.jsx";
 import Ladder from "./Ladder.jsx";
 import { T, lang } from "../../../lib/i18n.js";
 import { call } from "../../../lib/service.js";
-import { supabase } from "../../../lib/supabase.js";
+import { supabase, me } from "../../../lib/supabase.js";
 import { saveSettings } from "../../../lib/account.js";
 import { drawingKey } from "../../../lib/assets.js";
 import { mount } from "./engine.js";
@@ -61,7 +61,7 @@ export default function Pro({ assetKey, who, title, account }) {
     drawRec.current = null;
     (async () => {
       try {
-        const { data: u } = await supabase.auth.getUser();
+        const u = await me();
         const { data } = await supabase.from("chart_drawings").select("items, updated_at").eq("user_id", u.user.id).eq("asset_key", drawingKey(who.kind, who.id)).limit(1);
         drawRec.current = { items: (data && data[0] && data[0].items) || [], updated: data && data[0] ? data[0].updated_at : null, user: u.user.id };
       } catch (e) { drawRec.current = { items: [], updated: null, user: null }; }
@@ -103,7 +103,7 @@ export default function Pro({ assetKey, who, title, account }) {
     const key = drawingKey(who.kind, who.id);
     data.draw = { asset: key, items: rec ? rec.items : [], updated: rec ? rec.updated : null, share: false,
       save: async (items) => {
-        const { data: u } = await supabase.auth.getUser();
+        const u = await me();
         const { error } = await supabase.from("chart_drawings").upsert({ user_id: u.user.id, asset_key: key, items, updated_at: new Date().toISOString() }, { onConflict: "user_id,asset_key" });
         if (!error && drawRec.current) { drawRec.current.items = items; drawRec.current.updated = new Date().toISOString(); }
         return !error;

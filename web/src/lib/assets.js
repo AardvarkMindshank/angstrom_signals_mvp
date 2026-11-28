@@ -1,7 +1,7 @@
 // Assets: what the search finds and what an asset page reads. Everything comes from the same shared tables the classic
 // app and the background worker fill (asset_market, the crypto and equity universes, readings_daily, tides_daily),
 // so every number matches the rest of MarketNavi. Member rows (alerts, trades, watchlists) go through the row rules.
-import { supabase } from "./supabase.js";
+import { supabase, me } from "./supabase.js";
 
 const must = ({ data, error }) => { if (error) throw error; return data; };
 const once = (fn) => { let p = null; const get = () => (p = p || fn().catch((e) => { p = null; throw e; })); get.reset = () => { p = null; }; return get; };
@@ -27,7 +27,7 @@ export const universe = once(async () => {
 });
 
 export const watchlists = once(async () => {
-  const { data: u } = await supabase.auth.getUser();
+  const u = await me();
   if (!u || !u.user) return { crypto: {}, equity: {} };
   const rows = must(await supabase.from("user_preferences").select("crypto_watchlist,stock_watchlist").eq("user_id", u.user.id).limit(1)) || [];
   return { crypto: (rows[0] && rows[0].crypto_watchlist) || {}, equity: (rows[0] && rows[0].stock_watchlist) || {} };
@@ -180,7 +180,7 @@ export async function watchName(kind, id, fallback) {
 // ---- the watchlist button -----------------------------------------------------------------------------------------
 // The classic app keeps each watchlist as {id: name} on the account's preferences row; this changes one entry.
 export async function setWatched(kind, id, name, on) {
-  const { data: u } = await supabase.auth.getUser();
+  const u = await me();
   const col = kind === "crypto" ? "crypto_watchlist" : "stock_watchlist";
   const rows = must(await supabase.from("user_preferences").select(col).eq("user_id", u.user.id).limit(1)) || [];
   const list = { ...((rows[0] && rows[0][col]) || {}) };
@@ -198,7 +198,7 @@ export async function crowd(key) {
   } catch (e) { return { up: 0, down: 0, mine: null }; }
 }
 export async function vote(key, at, v) {
-  const { data: u } = await supabase.auth.getUser();
+  const u = await me();
   if (v !== 1 && v !== -1) { one(await supabase.from("sentiment_votes").delete().eq("user_id", u.user.id).eq("asset_key", key)); return; }
   one(await supabase.from("sentiment_votes").upsert({ user_id: u.user.id, asset_key: key, sentiment_at: at, vote: v, alt_score: null }, { onConflict: "user_id,asset_key" }));
 }
@@ -211,19 +211,19 @@ export async function replies() {
 export const COMMENT_LIMIT = 160;
 const clean = (s) => String(s || "").split(/\s+/).filter(Boolean).join(" ").slice(0, COMMENT_LIMIT);
 export async function postComment(key, at, body, score, summary) {
-  const { data: u } = await supabase.auth.getUser();
+  const u = await me();
   one(await supabase.from("sentiment_comments").upsert({ user_id: u.user.id, asset_key: key, sentiment_at: at, body: clean(body),
     created_at: new Date().toISOString(), responded_score: score, responded_summary: String(summary || "").slice(0, 220) || null }, { onConflict: "user_id,asset_key" }));
 }
 export async function deleteNote(id, kind) { one(await supabase.rpc("delete_own_signal_message", { target_id: id, target_kind: kind })); }
 export async function voteNote(id, kind, v) {
-  const { data: u } = await supabase.auth.getUser();
+  const u = await me();
   const table = kind === "reply" ? "sentiment_reply_votes" : "sentiment_comment_votes", col = kind === "reply" ? "reply_id" : "comment_id";
   if (v !== 1 && v !== -1) { one(await supabase.from(table).delete().eq("user_id", u.user.id).eq(col, id)); return; }
   one(await supabase.from(table).upsert({ user_id: u.user.id, [col]: id, vote: v }, { onConflict: `user_id,${col}` }));
 }
 export async function postReply(commentId, body) {
-  const { data: u } = await supabase.auth.getUser();
+  const u = await me();
   one(await supabase.from("sentiment_replies").insert({ user_id: u.user.id, comment_id: commentId, body: clean(body) }));
 }
 
@@ -231,7 +231,7 @@ export async function postReply(commentId, body) {
 export const drawingKey = (kind, id) => (kind === "crypto" ? `crypto:${String(id).toLowerCase()}` : `equity:${String(id).toUpperCase()}`);
 export async function drawings(kind, id) {
   try {
-    const { data: u } = await supabase.auth.getUser();
+    const u = await me();
     const rows = must(await supabase.from("chart_drawings").select("items").eq("user_id", u.user.id).eq("asset_key", drawingKey(kind, id)).limit(1)) || [];
     return (rows[0] && rows[0].items) || [];
   } catch (e) { return []; }

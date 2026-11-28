@@ -1,5 +1,5 @@
 import React, { Suspense, lazy, startTransition, useEffect, useState } from "react";
-import { supabase, configured, arrival, arrived } from "./lib/supabase.js";
+import { supabase, configured, arrival, arrived, me } from "./lib/supabase.js";
 import { T, loadWords, pickLanguage } from "./lib/i18n.js";
 import { applyTheme } from "./lib/theme.js";
 import * as api from "./lib/api.js";
@@ -163,7 +163,7 @@ function Bell({ on }) {
     let live = true;
     const count = async () => {
       try {
-        const { data: u } = await supabase.auth.getUser();
+        const u = await me();
         const { count: c } = await supabase.from("user_notifications").select("id", { count: "exact", head: true })
           .eq("user_id", u.user.id).eq("is_read", false).neq("alert_type", "group_invite").not("alert_type", "like", "%_HELD");
         if (live) setN(c || 0);

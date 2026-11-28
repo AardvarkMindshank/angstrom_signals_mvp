@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDelayed, UndoButton } from "../../components/Confirm.jsx";
 import Icon, { Tile } from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
-import { supabase } from "../../lib/supabase.js";
+import { supabase, me } from "../../lib/supabase.js";
 import { watchlists } from "../../lib/assets.js";
 import { stamp } from "../../lib/format.js";
 import { assetHref } from "../../components/Search.jsx";
@@ -23,7 +23,7 @@ export default function Alerts() {
   const [busy, setBusy] = useState(false);
   const load = async () => {
     try {
-      const { data: u } = await supabase.auth.getUser();
+      const u = await me();
       try { await supabase.rpc("expire_my_group_invites"); } catch (e) { /* not installed */ }
       const { data } = await supabase.from("user_notifications").select("*").eq("user_id", u.user.id)
         .not("alert_type", "in", `(${[...HELD, "test"].join(",")})`).order("created_at", { ascending: false }).limit(60);
@@ -35,11 +35,11 @@ export default function Alerts() {
   const act = async (what) => {
     setBusy(true);
     try {
-      const { data: u } = await supabase.auth.getUser(), me = u.user.id;
-      if (what === "read" || what === "all") await supabase.from("user_notifications").update({ is_read: true }).eq("user_id", me).neq("alert_type", "group_invite");
+      const u = await me(), uid = u.user.id;
+      if (what === "read" || what === "all") await supabase.from("user_notifications").update({ is_read: true }).eq("user_id", uid).neq("alert_type", "group_invite");
       if (what === "clear" || what === "all") {
-        for (const k of OPEN) await supabase.from("user_notifications").update({ alert_type: k + "_HELD", is_read: true }).eq("user_id", me).eq("is_read", true).eq("alert_type", k);
-        await supabase.from("user_notifications").delete().eq("user_id", me).eq("is_read", true).neq("alert_type", "group_invite")
+        for (const k of OPEN) await supabase.from("user_notifications").update({ alert_type: k + "_HELD", is_read: true }).eq("user_id", uid).eq("is_read", true).eq("alert_type", k);
+        await supabase.from("user_notifications").delete().eq("user_id", uid).eq("is_read", true).neq("alert_type", "group_invite")
           .not("alert_type", "in", `(${[...HELD, "moderation_warning", "report_update"].join(",")})`);
       }
     } catch (e) { /* the list reloads as it is */ }

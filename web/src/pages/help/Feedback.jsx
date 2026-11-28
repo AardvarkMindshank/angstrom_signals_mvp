@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { T } from "../../lib/i18n.js";
-import { supabase } from "../../lib/supabase.js";
+import { supabase, me } from "../../lib/supabase.js";
 import Icon from "../../components/Icon.jsx";
 
 // 💬 Feedback: an issue or an idea, with up to three screenshots (made smaller here, as the classic app does: JPEG,
@@ -46,7 +46,7 @@ export default function Feedback() {
     const text = body.trim();
     if (!text) { setMsg(["bad", T("Write a few words first.")]); return; }
     setBusy(true); setMsg(null);
-    const { data: u } = await supabase.auth.getUser();
+    const u = await me();
     const uid = u.user.id;
     let problem = "", paths = [];
     for (const f of files) {

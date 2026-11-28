@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { T } from "../lib/i18n.js";
-import { supabase } from "../lib/supabase.js";
+import { supabase, me } from "../lib/supabase.js";
 import { saveSettings } from "../lib/account.js";
 import { watchlists } from "../lib/assets.js";
 import Icon, { Tile } from "./Icon.jsx";
@@ -31,7 +31,7 @@ export default function GettingStarted({ account }) {
       const a = {};
       try { const w = await watchlists(); a.watchlist = Object.keys(w.crypto || {}).length + Object.keys(w.equity || {}).length >= 3; } catch (e) { /* unknown */ }
       try {
-        const { data: u } = await supabase.auth.getUser();
+        const u = await me();
         const { data } = await supabase.from("prism_scans").select("id").eq("owner_id", u.user.id).is("builtin", null).limit(1);
         a.prism = !!(data && data.length);
       } catch (e) { /* unknown */ }

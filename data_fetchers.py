@@ -343,6 +343,21 @@ def fetch_crypto_data(coin_id: str, days: int = 200) -> tuple[pd.DataFrame, str 
         except Exception as exc:
             yahoo_error = str(exc)
 
+    # No usable Yahoo history (a delisted ticker such as STX-USD): Binance spot's daily candles, finished days only,
+    # before CoinGecko, whose free tier is often busy (28 Nov 2026: Stacks failed every 5-minute run).
+    try:
+        import binance_data as bn
+
+        pair = bn.pair_for("crypto", coin_id, ticker, None)
+        if pair:
+            raw = bn.klines(pair, "1D", pd.Timestamp.now(tz="UTC") - pd.Timedelta(days=int(days) + 2))
+            if raw is not None and len(raw) >= 16:
+                raw = raw.iloc[:-1]                                  # today's candle is still forming
+                raw.index = raw.index.tz_convert(None)
+                return _ohlcv(raw), None
+    except Exception as exc:
+        yahoo_error = yahoo_error or str(exc)
+
     try:
         df = _coingecko_ohlc(coin_id, days)
         if len(df) >= 15:

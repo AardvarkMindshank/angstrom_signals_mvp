@@ -8,6 +8,7 @@ so neither can send or hide the other's alerts.
 
 from __future__ import annotations
 
+from log_safe import tag
 import i18n
 from i18n import t
 
@@ -557,7 +558,7 @@ def send_due_digest(
             or []
         )
     except Exception as exc:
-        print(f"Prism notes skipped in the digest for {user_id}: {str(exc)[:120]}")
+        print(f"Prism notes skipped in the digest for {tag(user_id)}: {str(exc)[:120]}")
 
     funnels, funnel_notes = [], []
     try:
@@ -570,7 +571,7 @@ def send_due_digest(
                             .eq("alert_type", "funnel").is_("digested_at", "null").gte("created_at", since)
                             .execute().data or [])
     except Exception as exc:
-        print(f"Funnels skipped in the digest for {user_id}: {str(exc)[:120]}")
+        print(f"Funnels skipped in the digest for {tag(user_id)}: {str(exc)[:120]}")
     if not any(f["count"] for f in funnels):
         funnels = funnels if funnel_notes else []
 
@@ -591,7 +592,7 @@ def send_due_digest(
         try:
             _stamp(supabase, user_id, now)
         except Exception as exc:
-            print(f"Digest day could not be recorded for {user_id}: {exc}")
+            print(f"Digest day could not be recorded for {tag(user_id)}: {exc}")
         return "quiet"
 
     subject, page, plain = render_digest(notes, results, config, app_url, markets=markets, prism=prism,
@@ -599,7 +600,7 @@ def send_due_digest(
     try:
         sent = bool(send_email(notify_email, subject, page, plain))
     except Exception as exc:
-        print(f"Digest email failed for {user_id}: {exc}")
+        print(f"Digest email failed for {tag(user_id)}: {exc}")
         return "error"
     if not sent:
         return "error"
@@ -613,5 +614,5 @@ def send_due_digest(
             )
         _stamp(supabase, user_id, now)
     except Exception as exc:
-        print(f"Digest was sent to {user_id} but could not be marked. {exc}")
+        print(f"Digest was sent to {tag(user_id)} but could not be marked. {exc}")
     return "sent"

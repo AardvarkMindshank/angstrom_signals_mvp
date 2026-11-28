@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { T } from "../lib/i18n.js";
-import { supabase } from "../lib/supabase.js";
+import { supabase, me } from "../lib/supabase.js";
 import Icon from "./Icon.jsx";
 
 // 🚩 Report a comment or chat message that breaks the socials policy, right under it: a reason, a note, Send report.
@@ -21,7 +21,7 @@ export function ReportBox({ n, place, kind, asset = "", onClose }) {
     const words = note.split(/\s+/).join(" ").trim().slice(0, 500);
     if (reason === "other" && words.length < 4) { setMsg(["bad", T("Report needs a few words when the reason is Something else.")]); return; }
     setBusy(true);
-    const { data: u } = await supabase.auth.getUser();
+    const u = await me();
     const row = { user_id: u.user.id, user_email: u.user.email || "unknown", place, message_id: Number(n.id), message_kind: kind,
       asset_key: String(asset || n.asset_key || "").slice(0, 200), comment_body: String(n.body || "").split(/\s+/).join(" ").slice(0, 160),
       reason, note: words, status: "reported", ...(n.author_id ? { author_id: n.author_id } : {}) };

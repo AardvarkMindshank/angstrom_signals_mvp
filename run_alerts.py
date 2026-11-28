@@ -7,6 +7,7 @@ in the Streamlit app.
 
 from __future__ import annotations
 
+from log_safe import tag
 import i18n
 from i18n import t
 
@@ -101,7 +102,7 @@ def user_email(supabase, user_id: str) -> str | None:
             return None
         return getattr(user, "email", None) or (user.get("email") if isinstance(user, dict) else None)
     except Exception as exc:
-        print(f"Could not look up the account email for {user_id}: {exc}")
+        print(f"Could not look up the account email for {tag(user_id)}: {exc}")
         return None
 
 
@@ -528,9 +529,9 @@ def run_background_checks() -> None:
                 builtin_out = builtin_alerts.run_account(builtin_store, user_id, list(mine.values()),
                                                          (crypto_list, stock_list), shared_readings, now=now_utc)
                 if builtin_out.get("ran"):
-                    print(f"Built-in alerts for {user_id}: {builtin_out['ran']} runs, {len(builtin_out['notes'])} alerts")
+                    print(f"Built-in alerts for {tag(user_id)}: {builtin_out['ran']} runs, {len(builtin_out['notes'])} alerts")
             except Exception as exc:
-                print(f"Built-in alerts failed for user {user_id}: {str(exc)[:200]}")
+                print(f"Built-in alerts failed for user {tag(user_id)}: {str(exc)[:200]}")
             # The old every-pass check of the three readings is off: market sentiment alerts only.
             alert_config = {**alert_config, "enabled": False, "stretch_alert_on": False, "flow_alert_on": False}
         summary_only = alert_config.get("digest_enabled") and alert_config.get("digest_watchlist") is not False
@@ -548,7 +549,7 @@ def run_background_checks() -> None:
         # a quiet pass reads no stored price histories at all.
         need_rows = need_readings or bool(builtin_out["notes"])
         results = []
-        print(f"Checking assets for user {user_id}")
+        print(f"Checking assets for {tag(user_id)}")
 
         for kind, assets, name_for in ((
             ("Crypto", crypto_list, lambda asset_id, name: name),
@@ -590,7 +591,7 @@ def run_background_checks() -> None:
                 markets=markets,
             )
         except Exception as exc:
-            print(f"Alerts failed for user {user_id}: {exc}")
+            print(f"Alerts failed for user {tag(user_id)}: {exc}")
             continue
         for alert in opened:
             print(f"Opened {alert['alert_type']} for {alert['asset_name']}")
@@ -599,7 +600,7 @@ def run_background_checks() -> None:
                 _email_open_crossings(supabase, user_id, user_email(supabase, user_id), send_alert_email,
                                       logos_by_symbol(results), facts_by_symbol(results))
             except Exception as exc:
-                print(f"Built-in alert emails failed for user {user_id}: {str(exc)[:160]}")
+                print(f"Built-in alert emails failed for user {tag(user_id)}: {str(exc)[:160]}")
 
         digest_state = send_due_digest(
             supabase,
@@ -612,7 +613,7 @@ def run_background_checks() -> None:
             markets=markets,
         )
         if digest_state in ("sent", "error", "start"):
-            print(f"Daily digest for user {user_id}: {digest_state}")
+            print(f"Daily digest for user {tag(user_id)}: {digest_state}")
 
     i18n.set_language(None)
     # Prism scheduled scans (docs/design/lattice_prism.md §5.2): after all existing work, in the time left.

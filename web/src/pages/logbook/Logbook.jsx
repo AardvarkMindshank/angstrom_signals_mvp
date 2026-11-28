@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Icon, { Tile } from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
-import { supabase } from "../../lib/supabase.js";
+import { supabase, me } from "../../lib/supabase.js";
 import { dayMonthYear } from "../../lib/format.js";
 import { Video, Outlook, Passage } from "../snapshot/Snapshot.jsx";
 import { Rich } from "../../components/Navigator.jsx";
@@ -21,7 +21,7 @@ export default function Logbook({ account }) {
   useEffect(() => {
     (async () => {
       try {
-        const { data: u } = await supabase.auth.getUser();
+        const u = await me();
         const { data } = await supabase.from("navigator_logbook").select("day, body, created_at").eq("owner_id", u.user.id).eq("kind", "passage_plan")
           .gte("day", oldest).order("created_at", { ascending: false }).limit(40);
         const by = {}; (data || []).forEach((r) => { const d = String(r.day || r.created_at || "").slice(0, 10); if (!by[d]) by[d] = r.body || ""; });

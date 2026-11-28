@@ -1,9 +1,9 @@
 // The social side: members' comments on the assets you follow (and on the markets and Tides), and the chat, with
 // communities and private messages. The same database functions as the classic app's social panel.
-import { supabase } from "./supabase.js";
+import { supabase, me } from "./supabase.js";
 
 const must = ({ data, error }) => { if (error) throw error; return data; };
-const uid = async () => { const { data } = await supabase.auth.getUser(); return data.user.id; };
+const uid = async () => { const data = await me(); return data.user.id; };
 export const LIMIT = 160;
 const clean = (s) => String(s || "").split(/\s+/).filter(Boolean).join(" ").slice(0, LIMIT);
 

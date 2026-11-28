@@ -272,6 +272,18 @@ def fill_snapshots(supabase, conn: dict, inputs: Inputs, deadline: float) -> int
     # The member's own trades only: copied trades (often thousands of small ones) get no snapshot, which keeps the
     # table and each pass small (26 Nov 2026). Read in pages: Supabase returns at most 1,000 rows per ask, and a
     # capped "done" list had the worker rewriting the same snapshots every pass.
+    # Two counts first (a few bytes each): when every own trade already has its entry and exit snapshot, stop here
+    # instead of reading every trade and snapshot back each 5-minute pass (28 Nov 2026: that was half the worker's
+    # database traffic while nothing was missing).
+    try:
+        n_trips = supabase.table("trade_round_trips").select("id", count="exact", head=True) \
+            .eq("user_id", conn["user_id"]).eq("copied", False).execute().count or 0
+        n_snaps = supabase.table("trade_snapshots").select("round_trip_id", count="exact", head=True) \
+            .eq("user_id", conn["user_id"]).execute().count or 0
+        if n_snaps >= 2 * n_trips:
+            return 0
+    except Exception:
+        pass
     trips = _pages(lambda: supabase.table("trade_round_trips").select("id,asset_key,asset_class,opened_at,closed_at")
                    .eq("connection_id", conn["id"]).eq("copied", False).order("closed_at", desc=True))
     if not trips:

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Icon, { Tile } from "../../components/Icon.jsx";
 import { T } from "../../lib/i18n.js";
-import { supabase } from "../../lib/supabase.js";
+import { supabase, me } from "../../lib/supabase.js";
 import News from "../asset/News.jsx";
 import Community from "../asset/Community.jsx";
 
@@ -29,7 +29,7 @@ export default function Mood({ market: wanted, account }) {
       } catch (e) { return { up: 0, down: 0, mine: null }; }
     },
     vote: async (v) => {
-      const { data: u } = await supabase.auth.getUser();
+      const u = await me();
       if (v !== 1 && v !== -1) { const { error } = await supabase.from("market_mood_votes").delete().eq("user_id", u.user.id).eq("market_key", market); if (error) throw error; return; }
       const { error } = await supabase.from("market_mood_votes").upsert({ user_id: u.user.id, market_key: market, sentiment_at: row.sentiment_updated_at, vote: v, alt_score: null }, { onConflict: "user_id,market_key" });
       if (error) throw error;

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import Icon, { Arrow, Emo, Lead, plain, Tile } from "../../components/Icon.jsx";
 import { T, lang } from "../../lib/i18n.js";
 import { call } from "../../lib/service.js";
-import { supabase } from "../../lib/supabase.js";
+import { supabase, me } from "../../lib/supabase.js";
 import { saveSettings } from "../../lib/account.js";
 import { postComment } from "../../lib/assets.js";
 import { signed } from "../../lib/format.js";
@@ -145,7 +145,7 @@ function Take({ since, score, words }) {
   useEffect(() => { if (since) load(); }, [since]);
   const vote = async (v, altScore) => {
     try {
-      const { data: u } = await supabase.auth.getUser();
+      const u = await me();
       if (v !== 1 && v !== -1) await supabase.from("tides_votes").delete().eq("user_id", u.user.id).eq("since", since);
       else await supabase.from("tides_votes").upsert({ user_id: u.user.id, since, vote: v, alt_score: v === -1 && altScore != null ? toStored(altScore) : null }, { onConflict: "user_id,since" });
       load();

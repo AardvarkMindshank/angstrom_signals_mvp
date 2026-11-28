@@ -35,3 +35,11 @@ export const linkAuth = configured
 export const APP_HOME = typeof window !== "undefined" ? window.location.origin + import.meta.env.BASE_URL : "";
 export const BETA_FORM = "https://marketnavi.ai/beta.html";
 export const CLASSIC = "https://app.marketnavi.ai";
+
+// The signed-in member, from the session kept in this browser: no trip to the sign-in server. (getUser() asks the
+// server every time, and the pages called it on every load and every bell check; the database checks the token on
+// every request anyway.)
+export async function me() {
+  const { data } = await supabase.auth.getSession();
+  return { user: data && data.session ? data.session.user : null };
+}
