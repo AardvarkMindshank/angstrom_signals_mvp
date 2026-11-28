@@ -1127,3 +1127,9 @@ button.undo:hover { background: color-mix(in srgb, var(--gold) 26%, transparent)
 .invlist li { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.9; }
 .invlist li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .invlist li .ic:not([data-tone]) { color: var(--ang-muted); }
+/* 📱 Notifications on this device (Settings › Alerts & email) */
+.pushbox { display: flex; flex-direction: column; gap: 10px; }
+.pushbox ol { margin: 0; padding-left: 20px; line-height: 1.6; }
+.pushbox p { margin: 0; }
+.pushbox .row { display: flex; gap: 8px; flex-wrap: wrap; }
+.pushon { display: flex; align-items: center; gap: 8px; }

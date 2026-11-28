@@ -9,6 +9,7 @@ import { universe, match, keyFor, watchlists, coinLabel } from "../../lib/assets
 import { call } from "../../lib/service.js";
 import { assetHref } from "../../components/Search.jsx";
 import Communities from "../../components/Communities.jsx";
+import Push from "../../components/Push.jsx";
 
 // ⚙️ Settings: one page, sections down the left, each choice saved the moment it changes. Everything is stored
 // where the classic app keeps it, so both apps stay in step.
@@ -330,6 +331,9 @@ function Alerts({ s, set, alerts, setAlert, account }) {
   const pro = ["pro", "elite"].includes(account.plan);
   return (
     <>
+      <Section title={T("Notifications on this device")} sub={T("Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.")}>
+        <Push />
+      </Section>
       <Section title={T("Reading alerts")} sub={T("An alert when a reading of an asset on your watchlists crosses a colour border you tick, once the new colour holds at the daily close.")}>
         <Row title={<><Icon n="trending-up" size={16} /> {T("Trend alerts")}</>} wide={trendOn}>
           <Switch label={T("Trend alerts")} on={trendOn} onChange={(v) => setAlert({ enabled: v })} />

@@ -3243,5 +3243,13 @@
   "That invite couldn't be saved. Please try again.": "บันทึกคำเชิญไม่สำเร็จ โปรดลองอีกครั้ง",
   "it was emailed in the last day": "ส่งไปแล้วภายในวันที่ผ่านมา",
   "they have already joined": "คนนี้เข้าร่วมแล้ว",
-  "please try again": "โปรดลองอีกครั้ง"
+  "please try again": "โปรดลองอีกครั้ง",
+  "Notifications are <b>on</b> for this {device}.": "การแจ้งเตือน<b>เปิดอยู่</b>สำหรับ {device} นี้",
+  "Turn on for this device": "เปิดสำหรับอุปกรณ์นี้",
+  "Send a test": "ส่งทดสอบ",
+  "Notifications are on for this device.": "เปิดการแจ้งเตือนสำหรับอุปกรณ์นี้แล้ว",
+  "A test is already on its way.": "มีการทดสอบกำลังส่งอยู่แล้ว",
+  "Test on its way: it arrives within about five minutes.": "กำลังส่งการทดสอบ: จะมาถึงภายในราวห้านาที",
+  "Notifications on this device": "การแจ้งเตือนบนอุปกรณ์นี้",
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "รับการแจ้งเตือนบนโทรศัพท์หรือคอมพิวเตอร์ นอกเหนือจากที่ไอคอนกระดิ่ง เปิดใช้บนทุกอุปกรณ์ที่คุณใช้"
 }

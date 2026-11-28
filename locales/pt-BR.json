@@ -3243,5 +3243,13 @@
   "That invite couldn't be saved. Please try again.": "Não foi possível salvar o convite. Tente novamente.",
   "it was emailed in the last day": "já foi enviado no último dia",
   "they have already joined": "essa pessoa já entrou",
-  "please try again": "tente novamente"
+  "please try again": "tente novamente",
+  "Notifications are <b>on</b> for this {device}.": "As notificações estão <b>ativadas</b> neste {device}.",
+  "Turn on for this device": "Ativar neste dispositivo",
+  "Send a test": "Enviar um teste",
+  "Notifications are on for this device.": "As notificações estão ativas neste dispositivo.",
+  "A test is already on its way.": "Um teste já está a caminho.",
+  "Test on its way: it arrives within about five minutes.": "Teste a caminho: chega em cerca de cinco minutos.",
+  "Notifications on this device": "Notificações neste dispositivo",
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "Seus alertas como notificações no celular ou computador, além do sino. Ative em cada dispositivo que você usa."
 }

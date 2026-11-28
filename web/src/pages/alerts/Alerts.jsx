@@ -26,7 +26,7 @@ export default function Alerts() {
       const { data: u } = await supabase.auth.getUser();
       try { await supabase.rpc("expire_my_group_invites"); } catch (e) { /* not installed */ }
       const { data } = await supabase.from("user_notifications").select("*").eq("user_id", u.user.id)
-        .not("alert_type", "in", `(${HELD.join(",")})`).order("created_at", { ascending: false }).limit(60);
+        .not("alert_type", "in", `(${[...HELD, "test"].join(",")})`).order("created_at", { ascending: false }).limit(60);
       setRows(data || []);
     } catch (e) { setRows([]); }
   };

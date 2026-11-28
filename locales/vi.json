@@ -3243,5 +3243,13 @@
   "That invite couldn't be saved. Please try again.": "Không lưu được lời mời. Vui lòng thử lại.",
   "it was emailed in the last day": "đã được gửi trong ngày qua",
   "they have already joined": "họ đã tham gia",
-  "please try again": "vui lòng thử lại"
+  "please try again": "vui lòng thử lại",
+  "Notifications are <b>on</b> for this {device}.": "Thông báo đang <b>bật</b> cho {device} này.",
+  "Turn on for this device": "Bật cho thiết bị này",
+  "Send a test": "Gửi thử",
+  "Notifications are on for this device.": "Thông báo đang bật trên thiết bị này.",
+  "A test is already on its way.": "Một thông báo thử đang được gửi.",
+  "Test on its way: it arrives within about five minutes.": "Đang gửi thử: sẽ đến trong khoảng năm phút.",
+  "Notifications on this device": "Thông báo trên thiết bị này",
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "Nhận cảnh báo dưới dạng thông báo trên điện thoại hoặc máy tính, ngoài biểu tượng chuông. Bật trên từng thiết bị bạn dùng."
 }

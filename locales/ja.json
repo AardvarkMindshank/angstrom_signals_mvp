@@ -3243,5 +3243,13 @@
   "That invite couldn't be saved. Please try again.": "招待を保存できませんでした。もう一度お試しください。",
   "it was emailed in the last day": "この1日以内に送信済みです",
   "they have already joined": "すでに参加しています",
-  "please try again": "もう一度お試しください"
+  "please try again": "もう一度お試しください",
+  "Notifications are <b>on</b> for this {device}.": "この {device} で通知は<b>オン</b>です。",
+  "Turn on for this device": "このデバイスでオンにする",
+  "Send a test": "テストを送信",
+  "Notifications are on for this device.": "このデバイスで通知がオンになっています。",
+  "A test is already on its way.": "テスト通知はすでに送信中です。",
+  "Test on its way: it arrives within about five minutes.": "テストを送信中です。5分ほどで届きます。",
+  "Notifications on this device": "このデバイスの通知",
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "アラートをベルに加えて、スマホやパソコンの通知でも受け取れます。使うデバイスごとにオンにしてください。"
 }

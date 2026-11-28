@@ -3980,3 +3980,35 @@ create policy "read own plan" on public.user_plans
 revoke insert, update, delete on public.user_plans from anon, authenticated;
 grant select on public.user_plans to authenticated;
 grant all on public.user_plans to service_role;
+
+-- 📱 "Send a test" in the new app (Settings › Alerts & email): a test notification for your own devices. The worker
+-- pushes it within about five minutes, then deletes it, so it never shows in the alert feed. At most one every two
+-- minutes. 'ok', 'none' (no device has notifications on), 'recent', or 'missing' (not signed in).
+create or replace function public.push_test()
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+    me uuid := auth.uid();
+begin
+    if me is null then
+        return 'missing';
+    end if;
+    if not exists (select 1 from public.push_subscriptions where user_id = me) then
+        return 'none';
+    end if;
+    if exists (select 1 from public.user_notifications
+               where user_id = me and alert_type = 'test' and created_at > now() - interval '2 minutes') then
+        return 'recent';
+    end if;
+    insert into public.user_notifications (user_id, asset_symbol, asset_name, alert_type, message, is_read)
+    values (me, 'test', 'MarketNavi', 'test', 'Test: notifications work on this device.', true);
+    return 'ok';
+end;
+$$;
+
+revoke all on function public.push_test() from public;
+revoke all on function public.push_test() from anon;
+grant execute on function public.push_test() to authenticated;

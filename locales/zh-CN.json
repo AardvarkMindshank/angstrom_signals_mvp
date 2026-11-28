@@ -3243,5 +3243,13 @@
   "That invite couldn't be saved. Please try again.": "邀请未能保存，请重试。",
   "it was emailed in the last day": "过去一天内已发送",
   "they have already joined": "对方已加入",
-  "please try again": "请重试"
+  "please try again": "请重试",
+  "Notifications are <b>on</b> for this {device}.": "此 {device} 的通知已<b>开启</b>。",
+  "Turn on for this device": "在此设备上开启",
+  "Send a test": "发送测试",
+  "Notifications are on for this device.": "此设备已开启通知。",
+  "A test is already on its way.": "测试通知已在发送中。",
+  "Test on its way: it arrives within about five minutes.": "测试通知正在发送，约五分钟内送达。",
+  "Notifications on this device": "此设备上的通知",
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "除铃铛外，提醒也会以手机或电脑通知的形式送达。请在每台使用的设备上开启。"
 }

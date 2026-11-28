@@ -3243,5 +3243,13 @@
   "That invite couldn't be saved. Please try again.": "Davet kaydedilemedi. Lütfen tekrar deneyin.",
   "it was emailed in the last day": "son bir gün içinde zaten gönderildi",
   "they have already joined": "zaten katıldı",
-  "please try again": "lütfen tekrar deneyin"
+  "please try again": "lütfen tekrar deneyin",
+  "Notifications are <b>on</b> for this {device}.": "Bu {device} için bildirimler <b>açık</b>.",
+  "Turn on for this device": "Bu cihaz için aç",
+  "Send a test": "Test gönder",
+  "Notifications are on for this device.": "Bu cihazda bildirimler açık.",
+  "A test is already on its way.": "Bir test zaten yolda.",
+  "Test on its way: it arrives within about five minutes.": "Test yolda: yaklaşık beş dakika içinde ulaşır.",
+  "Notifications on this device": "Bu cihazdaki bildirimler",
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "Uyarılarınız zilin yanı sıra telefon veya bilgisayar bildirimi olarak da gelir. Kullandığınız her cihazda açın."
 }

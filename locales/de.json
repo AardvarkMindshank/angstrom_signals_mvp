@@ -3243,5 +3243,13 @@
   "That invite couldn't be saved. Please try again.": "Die Einladung konnte nicht gespeichert werden. Bitte versuche es erneut.",
   "it was emailed in the last day": "sie wurde in den letzten 24 Stunden bereits gesendet",
   "they have already joined": "die Person ist bereits dabei",
-  "please try again": "bitte versuche es erneut"
+  "please try again": "bitte versuche es erneut",
+  "Notifications are <b>on</b> for this {device}.": "Benachrichtigungen sind für dieses {device} <b>an</b>.",
+  "Turn on for this device": "Für dieses Gerät einschalten",
+  "Send a test": "Test senden",
+  "Notifications are on for this device.": "Benachrichtigungen sind auf diesem Gerät eingeschaltet.",
+  "A test is already on its way.": "Ein Test ist bereits unterwegs.",
+  "Test on its way: it arrives within about five minutes.": "Test unterwegs: Er kommt in etwa fünf Minuten an.",
+  "Notifications on this device": "Benachrichtigungen auf diesem Gerät",
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "Deine Alerts als Benachrichtigung auf Handy oder Computer, zusätzlich unter der Glocke. Schalte sie auf jedem Gerät ein, das du nutzt."
 }

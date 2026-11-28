@@ -2,7 +2,7 @@ name: Deploy the new app (beta)
 # Builds web/ (the new React app) and copies it to marketnavi.ai/new/ on HostGator by FTP. The website deploy
 # (deploy-marketnavi.yml) keeps its own list of the files it uploaded and never touches /new/.
 # Secrets: SUPABASE_URL, SUPABASE_ANON_KEY (the public anon key; row rules guard the data), FTP_SERVER,
-# MARKETNAVI_FTP_USERNAME, MARKETNAVI_FTP_PASSWORD.
+# MARKETNAVI_FTP_USERNAME, MARKETNAVI_FTP_PASSWORD, VAPID_PUBLIC_KEY (push notifications).
 on:
   push:
     branches: [main]
@@ -41,6 +41,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          VITE_VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}   # the public push key (not secret; the worker signs)
         run: |
           if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then echo "::error::Add the SUPABASE_ANON_KEY secret first."; exit 1; fi
           npm ci

@@ -147,7 +147,10 @@ def run_pending(supabase, now=None, webpush=None, log=print) -> dict:
             elif result == "gone":
                 dead.add(sub["id"])
                 gone += 1
-        supabase.table("user_notifications").update({"pushed_at": now.isoformat()}).eq("id", note["id"]).execute()
+        if note.get("alert_type") == "test":         # the Settings test: pushed once, never kept in the feed
+            supabase.table("user_notifications").delete().eq("id", note["id"]).execute()
+        else:
+            supabase.table("user_notifications").update({"pushed_at": now.isoformat()}).eq("id", note["id"]).execute()
     for sub_id in dead:
         supabase.table("push_subscriptions").delete().eq("id", sub_id).execute()
     if notes:

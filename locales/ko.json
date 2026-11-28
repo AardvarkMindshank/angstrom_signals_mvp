@@ -3243,5 +3243,13 @@
   "That invite couldn't be saved. Please try again.": "초대를 저장하지 못했습니다. 다시 시도해 주세요.",
   "it was emailed in the last day": "최근 하루 안에 이미 보냈습니다",
   "they have already joined": "이미 가입했습니다",
-  "please try again": "다시 시도해 주세요"
+  "please try again": "다시 시도해 주세요",
+  "Notifications are <b>on</b> for this {device}.": "이 {device}에서 알림이 <b>켜져</b> 있습니다.",
+  "Turn on for this device": "이 기기에서 켜기",
+  "Send a test": "테스트 보내기",
+  "Notifications are on for this device.": "이 기기에서 알림이 켜져 있습니다.",
+  "A test is already on its way.": "테스트가 이미 전송 중입니다.",
+  "Test on its way: it arrives within about five minutes.": "테스트 전송 중: 약 5분 안에 도착합니다.",
+  "Notifications on this device": "이 기기의 알림",
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "알림을 종 아이콘뿐 아니라 휴대폰이나 컴퓨터 알림으로도 받습니다. 사용하는 기기마다 켜 주세요."
 }

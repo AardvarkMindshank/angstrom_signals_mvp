@@ -3243,5 +3243,13 @@
   "That invite couldn't be saved. Please try again.": "Undangan tidak dapat disimpan. Silakan coba lagi.",
   "it was emailed in the last day": "sudah dikirim dalam sehari terakhir",
   "they have already joined": "mereka sudah bergabung",
-  "please try again": "silakan coba lagi"
+  "please try again": "silakan coba lagi",
+  "Notifications are <b>on</b> for this {device}.": "Notifikasi <b>aktif</b> untuk {device} ini.",
+  "Turn on for this device": "Aktifkan untuk perangkat ini",
+  "Send a test": "Kirim tes",
+  "Notifications are on for this device.": "Notifikasi aktif untuk perangkat ini.",
+  "A test is already on its way.": "Tes sudah dalam perjalanan.",
+  "Test on its way: it arrives within about five minutes.": "Tes sedang dikirim: akan tiba dalam sekitar lima menit.",
+  "Notifications on this device": "Notifikasi di perangkat ini",
+  "Your alerts as phone or computer notifications, as well as under the bell. Turn them on for each device you use.": "Peringatanmu sebagai notifikasi di ponsel atau komputer, selain di ikon lonceng. Aktifkan di setiap perangkat yang kamu gunakan."
 }
