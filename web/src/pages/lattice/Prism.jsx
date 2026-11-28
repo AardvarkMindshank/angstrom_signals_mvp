@@ -102,6 +102,7 @@ function History({ scan, onClose }) {
   const [showNo, setShowNo] = useState(false);
   const [view, setView] = useState(null);
   const [msg, setMsg] = useState("");
+  const [drawn, setDrawn] = useState(false);
   const host = useRef(null);
   const live = useRef(true);
   useEffect(() => () => { live.current = false; }, []);
@@ -134,12 +135,16 @@ function History({ scan, onClose }) {
   useEffect(() => {                                       // draw with the Pro chart's engine; a tapped pane goes on top
     if (!view || !view.chart || !host.current) return;
     let stop = null, gone = false;
-    import("../asset/pro/engine.js").then(({ mount }) => {
+    // The chart code loads on demand; if that load fails (a dropped connection), try once more, then say so rather
+    // than leave a blank space (28 Nov 2026: the caption showed with no chart under it).
+    const load = () => import("../asset/pro/engine.js");
+    load().catch(() => new Promise((ok) => setTimeout(ok, 1500)).then(load)).then(({ mount }) => {
       if (gone || !host.current) return;
       stop = mount(host.current, view.chart);
       const root = host.current.querySelector(".ang-lwc");
       if (root) root.__trigger = (name, key) => { if (name === "pane" && key) setTop(key); };
-    });
+      setDrawn(true);
+    }).catch(() => { if (!gone) setMsg(T("The chart couldn't be drawn just now. Close and open Visualize History again.")); });
     return () => { gone = true; if (stop) stop(); };
   }, [view]);
   const asset = sum && view && sum.assets.find((a) => a.key === view.top);
@@ -167,6 +172,7 @@ function History({ scan, onClose }) {
           {sum.pending > 0 && <p className="m"><Icon n="hourglass" size={14} /> {T("Older years are being filled in.")} ({sum.total - sum.pending}/{sum.total})</p>}
           {view && view.note && <p className="m">{view.note}</p>}
           {view && !view.chart && <p className="sub">{view.message}</p>}
+          {(!view || (view.chart && !drawn)) && !msg && <p className="note"><Icon n="hourglass" size={15} /> {T("Drawing the chart…")}</p>}
           <div ref={host} className="histchart" />
           {view && view.caption && <p className="sub">{view.caption}</p>}
           {asset && <a className="ghost bordered" href={assetHref(`${asset.kind === "crypto" ? "Crypto" : "Stock"}|${asset.id}`, "chart")}

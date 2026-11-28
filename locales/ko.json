@@ -3261,5 +3261,7 @@
   "Beta": "베타",
   "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi는 경험 많은 트레이더들과 함께 개발하는 동안 비공개 베타로 운영됩니다.",
   "Resize the panel": "패널 너비 조절",
-  "Drag to resize · double-click to reset": "드래그하여 크기 조절 · 더블클릭으로 초기화"
+  "Drag to resize · double-click to reset": "드래그하여 크기 조절 · 더블클릭으로 초기화",
+  "Drawing the chart…": "차트를 그리는 중…",
+  "The chart couldn't be drawn just now. Close and open Visualize History again.": "지금은 차트를 그릴 수 없었습니다. Visualize History를 닫았다가 다시 여세요."
 }

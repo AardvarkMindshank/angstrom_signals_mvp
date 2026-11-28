@@ -3261,5 +3261,7 @@
   "Beta": "Beta",
   "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi sedang dalam beta tertutup selagi kami membangunnya bersama trader berpengalaman.",
   "Resize the panel": "Ubah lebar panel",
-  "Drag to resize · double-click to reset": "Seret untuk mengubah ukuran · klik dua kali untuk mengatur ulang"
+  "Drag to resize · double-click to reset": "Seret untuk mengubah ukuran · klik dua kali untuk mengatur ulang",
+  "Drawing the chart…": "Menggambar grafik…",
+  "The chart couldn't be drawn just now. Close and open Visualize History again.": "Grafik tidak dapat digambar saat ini. Tutup lalu buka lagi Visualize History."
 }

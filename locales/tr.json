@@ -3261,5 +3261,7 @@
   "Beta": "Beta",
   "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi, deneyimli yatırımcılarla geliştirirken kapalı betada.",
   "Resize the panel": "Paneli yeniden boyutlandır",
-  "Drag to resize · double-click to reset": "Boyutlandırmak için sürükleyin · sıfırlamak için çift tıklayın"
+  "Drag to resize · double-click to reset": "Boyutlandırmak için sürükleyin · sıfırlamak için çift tıklayın",
+  "Drawing the chart…": "Grafik çiziliyor…",
+  "The chart couldn't be drawn just now. Close and open Visualize History again.": "Grafik şu anda çizilemedi. Visualize History'yi kapatıp yeniden açın."
 }

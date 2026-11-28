@@ -3261,5 +3261,7 @@
   "Beta": "Beta",
   "MarketNavi is in closed beta while we build it with experienced traders.": "O MarketNavi está em beta fechado enquanto o construímos com traders experientes.",
   "Resize the panel": "Redimensionar o painel",
-  "Drag to resize · double-click to reset": "Arraste para redimensionar · clique duas vezes para redefinir"
+  "Drag to resize · double-click to reset": "Arraste para redimensionar · clique duas vezes para redefinir",
+  "Drawing the chart…": "Desenhando o gráfico…",
+  "The chart couldn't be drawn just now. Close and open Visualize History again.": "Não foi possível desenhar o gráfico agora. Feche e abra o Visualize History novamente."
 }

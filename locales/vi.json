@@ -3261,5 +3261,7 @@
   "Beta": "Beta",
   "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi đang ở giai đoạn beta kín trong khi chúng tôi xây dựng cùng các nhà giao dịch giàu kinh nghiệm.",
   "Resize the panel": "Đổi độ rộng bảng",
-  "Drag to resize · double-click to reset": "Kéo để đổi kích thước · nhấp đúp để đặt lại"
+  "Drag to resize · double-click to reset": "Kéo để đổi kích thước · nhấp đúp để đặt lại",
+  "Drawing the chart…": "Đang vẽ biểu đồ…",
+  "The chart couldn't be drawn just now. Close and open Visualize History again.": "Không vẽ được biểu đồ lúc này. Hãy đóng rồi mở lại Visualize History."
 }

@@ -3261,5 +3261,7 @@
   "Beta": "测试版",
   "MarketNavi is in closed beta while we build it with experienced traders.": "MarketNavi 正与资深交易者共同打造，目前处于封闭测试阶段。",
   "Resize the panel": "调整面板宽度",
-  "Drag to resize · double-click to reset": "拖动以调整大小 · 双击恢复默认"
+  "Drag to resize · double-click to reset": "拖动以调整大小 · 双击恢复默认",
+  "Drawing the chart…": "正在绘制图表…",
+  "The chart couldn't be drawn just now. Close and open Visualize History again.": "暂时无法绘制图表。请关闭后重新打开 Visualize History。"
 }
